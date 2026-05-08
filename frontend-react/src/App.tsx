@@ -1,6 +1,6 @@
 import { RouterProvider } from 'react-router-dom';
 import { AppProviders } from '@/core/providers/AppProviders';
-import { ErrorBoundary } from '@/shared/components/feedback/ErrorBoundary';
+import { ErrorBoundary } from '@/common/components/feedback/ErrorBoundary';
 import { router } from '@/core/router/router';
 
 function App() {

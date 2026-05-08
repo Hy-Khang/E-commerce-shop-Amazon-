@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { useMemo } from 'react';
-import type { PaginationParams } from '@/shared/types/common.types';
+import type { PaginationParams } from '@/common/types/common.types';
 
 export function usePagination(defaults?: Partial<PaginationParams>) {
   const [searchParams, setSearchParams] = useSearchParams();

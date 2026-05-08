@@ -28,7 +28,7 @@ const AdminProductEditPage = lazy(() => import('@/features/product/components/Ad
 const AdminOrderListPage = lazy(() => import('@/features/order/components/AdminOrderListPage'));
 const AdminOrderDetailPage = lazy(() => import('@/features/order/components/AdminOrderDetailPage'));
 
-const NotFoundPage = lazy(() => import('@/shared/components/feedback/NotFoundPage'));
+const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
