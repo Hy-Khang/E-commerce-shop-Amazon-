@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -14,8 +16,15 @@ import { RoleRepository } from './repositories/role.repository';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { AdminUserQueryDto } from './dto/admin-user-query.dto';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { IJwtPayload, ILoginResponse, ITokenPair } from './types/auth.types';
 import { hashToken } from './utils/auth.util';
+import { Role } from './entities/role.entity';
+import { User } from './entities/user.entity';
+import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 
 @Injectable()
 export class AuthService {
@@ -155,6 +164,137 @@ export class AuthService {
   async logoutAll(userId: number): Promise<void> {
     await this.refreshTokenRepository.revokeAllByUserId(userId);
     this.logger.log(`All tokens revoked for user ${userId}`);
+  }
+
+  // ─── Admin: User Management ───
+
+  async findAllUsers(query: AdminUserQueryDto): Promise<IPaginatedResult<User>> {
+    return this.userRepository.findAllPaginated(query);
+  }
+
+  async findUserById(id: number): Promise<User & { orderCount: number; reviewCount: number }> {
+    const user = await this.userRepository.findByIdWithStats(id);
+    if (!user) {
+      throw new NotFoundException({
+        code: 'USER_002',
+        message: 'User not found',
+      });
+    }
+    return user;
+  }
+
+  async toggleActivate(id: number): Promise<User> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new NotFoundException({
+        code: 'USER_002',
+        message: 'User not found',
+      });
+    }
+
+    const newStatus = !user.is_active;
+    await this.userRepository.updateIsActive(id, newStatus);
+    this.logger.log(`User ${id} ${newStatus ? 'activated' : 'deactivated'}`);
+
+    return { ...user, is_active: newStatus };
+  }
+
+  async changeUserRole(id: number, dto: UpdateUserRoleDto): Promise<User> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new NotFoundException({
+        code: 'USER_002',
+        message: 'User not found',
+      });
+    }
+
+    const role = await this.roleRepository.findById(dto.role_id);
+    if (!role) {
+      throw new NotFoundException({
+        code: 'COMMON_001',
+        message: 'Role not found',
+      });
+    }
+
+    await this.userRepository.updateRoleId(id, dto.role_id);
+    this.logger.log(`User ${id} role changed to ${role.name}`);
+
+    return { ...user, role_id: dto.role_id, role };
+  }
+
+  // ─── Admin: Role Management ───
+
+  async findAllRoles(): Promise<(Role & { userCount: number })[]> {
+    return this.roleRepository.findAllWithUserCount();
+  }
+
+  async findRoleById(id: number): Promise<Role & { userCount: number }> {
+    const role = await this.roleRepository.findByIdWithUserCount(id);
+    if (!role) {
+      throw new NotFoundException({
+        code: 'COMMON_001',
+        message: 'Role not found',
+      });
+    }
+    return role;
+  }
+
+  async createRole(dto: CreateRoleDto): Promise<Role> {
+    const exists = await this.roleRepository.existsByName(dto.name);
+    if (exists) {
+      throw new ConflictException({
+        code: 'ROLE_001',
+        message: `Role "${dto.name}" already exists`,
+      });
+    }
+    const role = await this.roleRepository.create({ name: dto.name });
+    this.logger.log(`Role created: ${role.name}`);
+    return role;
+  }
+
+  async updateRole(id: number, dto: UpdateRoleDto): Promise<Role> {
+    const role = await this.roleRepository.findById(id);
+    if (!role) {
+      throw new NotFoundException({
+        code: 'COMMON_001',
+        message: 'Role not found',
+      });
+    }
+
+    if (dto.name && dto.name !== role.name) {
+      const exists = await this.roleRepository.existsByName(dto.name);
+      if (exists) {
+        throw new ConflictException({
+          code: 'ROLE_001',
+          message: `Role "${dto.name}" already exists`,
+        });
+      }
+    }
+
+    const updated = await this.roleRepository.update(id, dto);
+    this.logger.log(`Role updated: ${id}`);
+    return updated!;
+  }
+
+  async deleteRole(id: number): Promise<void> {
+    const role = await this.roleRepository.findById(id);
+    if (!role) {
+      throw new NotFoundException({
+        code: 'COMMON_001',
+        message: 'Role not found',
+      });
+    }
+
+    const hasUsers = await this.roleRepository.hasUsers(id);
+    if (hasUsers) {
+      throw new BadRequestException({
+        code: 'ROLE_002',
+        message: 'Cannot delete role with assigned users',
+      });
+    }
+
+    await this.roleRepository.delete(id);
+    this.logger.log(`Role deleted: ${role.name}`);
   }
 
   private async generateTokenPair(

@@ -5,6 +5,8 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthController } from './auth.controller';
+import { AdminRoleController } from './admin-role.controller';
+import { AdminUserController } from './admin-user.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -41,7 +43,7 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
       },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, AdminRoleController, AdminUserController],
   providers: [
     AuthService,
     JwtStrategy,
