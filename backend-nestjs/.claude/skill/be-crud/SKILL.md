@@ -14,22 +14,16 @@ allowed-tools:
 
 # Backend CRUD Feature Generator
 
-**Scope:** Scaffold a complete NestJS feature module following the project's architecture, conventions, and API spec. Generates entities, repositories, DTOs, service, controller, module, types, utils, and tests for a given feature.
+**Scope:** Scaffold one feature module under `src/features/<feature-name>/`. Does NOT touch other features.
 
 ---
 
 ## Pre-flight Checks
 
-1. **Argument provided?** `<feature-name>` is required (e.g., `product`, `cart`, `order`, `review`, `auth`, `user-profile`)
-
-2. **NestJS project initialized?** Check `src/app.module.ts` exists
-   - If missing → Suggest: "Initialize the NestJS project first"
-
-3. **Feature already exists?** Check `src/features/<feature-name>/` directory
-   - If found → Ask: "Feature `<feature-name>` already exists. Overwrite or skip?"
-
-4. **Common layer exists?** Check `src/common/` directory has guards, interceptors, filters, decorators
-   - If missing → Generate common layer first (guards, interceptors, filters, decorators, pipes, dto, constants, interfaces)
+1. **Argument provided?** `<feature-name>` is required
+2. **Project initialized?** `src/app.module.ts` must exist
+3. **Feature already exists?** If `src/features/<feature-name>/` has real files → ask overwrite or skip
+4. **Common layer exists?** `src/common/` must have guards, interceptors, filters, decorators
 
 ---
 
@@ -37,10 +31,12 @@ allowed-tools:
 
 | Doc | Purpose |
 |-----|---------|
-| `DATABASE.md` | Entity fields, types, constraints, relations, indexes, TypeORM patterns |
-| `API_SPEC.md` | Endpoints, request/response format, error codes, auth levels, pagination |
-| `BE-ARCHITECTURE.md` | Folder structure, layer responsibilities, cross-feature communication, request flow |
-| `BE-PROJECT-RULES.md` | Naming conventions, code patterns, anti-patterns, repository pattern, validation |
+| `DATABASE.md` | Entity fields, types, constraints, relations, indexes |
+| `API_SPEC.md` | Endpoints, request/response format, error codes, auth levels |
+| `BE-ARCHITECTURE.md` | Folder structure, layer responsibilities, cross-feature dependencies |
+| `BE-PROJECT-RULES.md` | Naming, code patterns, repository pattern, validation, anti-patterns |
+
+All generation must follow conventions from these docs. Do not invent patterns — use what's documented.
 
 ---
 
@@ -48,115 +44,55 @@ allowed-tools:
 
 ### Step 1: Identify Feature Scope
 
-- Map `<feature-name>` to owned entities from DATABASE.md:
-  - `auth` → roles, users, refresh_tokens
-  - `user-profile` → addresses
-  - `product` → categories, products, product_variants, product_images
-  - `cart` → carts, cart_items
-  - `order` → orders, order_items
-  - `review` → reviews
-- Identify endpoints from API_SPEC.md for this feature
-- Identify cross-feature dependencies from BE-ARCHITECTURE.md dependency map
+Map `<feature-name>` to owned entities:
 
-### Step 2: Present Execution Plan & Wait for Confirmation
+| Feature | Entities |
+|---------|----------|
+| `auth` | roles, users, refresh_tokens |
+| `user-profile` | addresses |
+| `product` | categories, products, product_variants, product_images |
+| `cart` | carts, cart_items |
+| `order` | orders, order_items |
+| `review` | reviews |
 
-- **STOP before writing any code.** Print a summary for the user including:
-  - **Feature name** and owned entities
-  - **Files to CREATE** — full file list with paths
-  - **Files to UPDATE** — e.g., `src/app.module.ts`
-  - **Endpoints** — list of routes from API_SPEC.md this feature will implement
-  - **Cross-feature dependencies** — which modules will be imported, which services injected
-  - **Events** — any events emitted or listened to
-  - **Notes** — any assumptions, missing dependencies, or potential conflicts
-- Ask user: **"Proceed with generation? (yes / adjust)"**
-- **Do NOT generate any files until user confirms.**
-- If user requests adjustments → update the plan and re-confirm
+From the docs, identify: endpoints, cross-feature dependencies, events emitted/listened.
 
-### Step 3: Generate Entities
+### Step 2: Present Plan & Confirm
 
-- One file per entity at `src/features/<feature-name>/entities/<entity>.entity.ts`
-- Use `@Entity('<table_name>')` with plural snake_case table name
-- Column types from DATABASE.md:
-  - Strings → `nvarchar` with specified length
-  - Money → `decimal`, precision: 10, scale: 2
-  - Booleans → `BIT` mapped as `boolean` with default
-  - Timestamps → `datetime2` with `default: () => 'SYSUTCDATETIME()'`
-  - Enums → stored as `nvarchar` string columns, NOT TypeORM enum type
-- Define all relations: `@ManyToOne`, `@OneToMany`, `@JoinColumn({ name: 'fk_column' })`
-- Set eager/lazy loading per BE-ARCHITECTURE.md relation loading strategy table
-- Add indexes via `@Index('idx_<table>_<column>')` per DATABASE.md indexing strategy
+**STOP before writing code.** Show the user:
 
-### Step 4: Generate Repositories
+- Feature name and owned entities
+- Files to create (with paths)
+- Files to update (e.g., `app.module.ts`)
+- Endpoints from API_SPEC.md
+- Cross-feature dependencies (modules imported, services injected)
+- Events emitted or listened to
 
-- One file per entity at `src/features/<feature-name>/repositories/<entity>.repository.ts`
-- Class is `@Injectable()`, wraps `@InjectRepository(Entity)` → `Repository<Entity>`
-- **Never** expose raw TypeORM Repository — all queries go through custom methods
-- Use QueryBuilder for complex queries (search, pagination, filtering, joins)
-- Stock deduction uses optimistic locking pattern: `SET stock_quantity = stock_quantity - :qty WHERE stock_quantity >= :qty`
-- Pagination methods accept `{ page, limit, sort, order, ...filters }` and return `{ data, total }`
+Ask: **"Proceed? (yes / adjust)"** — do NOT generate until confirmed.
 
-### Step 5: Generate DTOs
+### Step 3: Generate Feature Files
 
-- Location: `src/features/<feature-name>/dto/`
-- Files: `create-<entity>.dto.ts`, `update-<entity>.dto.ts`, `<entity>-response.dto.ts`
-- All fields decorated with `class-validator` validators (`@IsString`, `@IsInt`, `@IsEnum`, `@IsOptional`, etc.)
-- All fields decorated with `@ApiProperty()` for Swagger
-- Update DTOs use `PartialType(CreateDto)` from `@nestjs/swagger`
-- Response DTOs **never** expose: `password_hash`, `token_hash`, `is_revoked`
-- Pagination DTO: extend shared `PaginationDto` from `src/common/dto/pagination.dto.ts`
-- Filter DTOs: per feature as defined in API_SPEC.md filtering section
+Generate all files following BE-PROJECT-RULES.md conventions:
 
-### Step 6: Generate Service
+| File | Location | Key rule |
+|------|----------|----------|
+| Entities | `entities/<entity>.entity.ts` | One per entity, columns + relations from DATABASE.md |
+| Repositories | `repositories/<entity>.repository.ts` | `@Injectable()`, wraps `@InjectRepository`, all data access here |
+| DTOs | `dto/create-<entity>.dto.ts`, `update-<entity>.dto.ts`, `<entity>-response.dto.ts` | `class-validator` + `@ApiProperty()`, update uses `PartialType` |
+| Service | `<feature>.service.ts` | All business logic, inject own repos + cross-feature services via DI |
+| Controller | `<feature>.controller.ts` | Thin — route, extract params, delegate to service |
+| Module | `<feature>.module.ts` | `TypeOrmModule.forFeature([...entities])`, export service only |
+| Types | `types/<feature>.types.ts` | Enums, filter param interfaces, event payload interfaces |
+| Utils | `utils/<feature>.util.ts` | Domain-specific pure functions only |
+| Tests | `tests/<feature>.controller.spec.ts`, `<feature>.service.spec.ts` | Unit test skeletons, Arrange → Act → Assert |
+| Context | `context.md` | Feature purpose, entities, dependencies, key decisions |
 
-- File: `src/features/<feature-name>/<feature-name>.service.ts`
-- `@Injectable()` class with `private readonly logger = new Logger(<ServiceName>.name)`
-- Inject own repositories + cross-feature services via DI (never import another feature's repo directly)
-- All business logic lives here — controllers are thin
-- Use `EventEmitter2` for async side effects (e.g., `order.created` → stock deduction)
-- Use `@OnEvent('event.name')` handlers for listening to cross-feature events
-- Error handling: throw NestJS built-in exceptions or custom domain exceptions from `src/common/exceptions/`
-- Map error codes from API_SPEC.md (e.g., `PRODUCT_001`, `CART_002`, `ORDER_003`)
-
-### Step 7: Generate Controller
-
-- File: `src/features/<feature-name>/<feature-name>.controller.ts`
-- `@Controller()` with correct route prefix per API_SPEC.md
-- `@ApiTags('<Feature Name>')` for Swagger grouping
-- Each endpoint decorated with:
-  - `@ApiOperation({ summary: '...' })`
-  - `@ApiResponse({ status, description })` for success + each error code
-  - `@ApiBearerAuth()` if authenticated
-  - `@Public()` if no auth needed
-  - `@Roles('admin')` or `@Roles('customer')` per endpoint auth level
-  - `@ApiQuery()` for pagination/filter params on list endpoints
-- Use `@CurrentUser()` to extract user from JWT — never `@Req()`
-- Use `@Body()`, `@Param()`, `@Query()` for input extraction
-- Controller methods: parse request → call service → return data (no business logic)
-- DELETE endpoints return `HttpCode(204)` with no body
-
-### Step 8: Generate Module
-
-- File: `src/features/<feature-name>/<feature-name>.module.ts`
-- `@Module({})` with:
-  - `imports`: `TypeOrmModule.forFeature([...entities])` + dependent feature modules per dependency map
-  - `controllers`: `[<FeatureName>Controller]`
-  - `providers`: `[<FeatureName>Service, ...Repositories]`
-  - `exports`: `[<FeatureName>Service]` — only export service, never repositories
-- Register module in `src/app.module.ts` imports array
-
-### Step 9: Generate Supporting Files
-
-- `src/features/<feature-name>/types/<feature-name>.types.ts` — sort enums, filter param interfaces, event payload interfaces
-- `src/features/<feature-name>/utils/<feature-name>.util.ts` — pure helper functions (slug generation, discount calculation, etc.)
-- `src/features/<feature-name>/context.md` — feature purpose, owned entities, dependencies, key decisions
-- `src/features/<feature-name>/tests/<feature-name>.controller.spec.ts` — controller unit test skeleton
-- `src/features/<feature-name>/tests/<feature-name>.service.spec.ts` — service unit test skeleton (Arrange → Act → Assert pattern)
-
-### Step 10: Register & Verify
+### Step 4: Register & Verify
 
 - Add feature module to `src/app.module.ts` imports
 - Verify no circular dependencies
 - Verify cross-feature imports use module exports only (never direct repo/entity imports)
+- Run `npm run build` to verify zero errors
 
 ---
 
@@ -191,31 +127,24 @@ allowed-tools:
 - src/app.module.ts                   (added feature module to imports)
 
 ⚠️ Risks / Notes:
-- Run `npm run build` to verify no TypeScript errors
 - If cross-feature dependencies exist, ensure dependent modules are already generated
 - Migrations are NOT auto-generated — run `npx typeorm migration:generate` separately
 
 🚀 Next steps:
-1. Review generated code against DATABASE.md and API_SPEC.md
-2. Run `npm run build` to verify compilation
-3. Generate migration: `npx typeorm migration:generate src/database/migrations/<MigrationName> -d src/database/data-source.ts`
-4. Run `npm run start:dev` to verify endpoints in Swagger at `/api/v1/docs`
+1. Run `npm run build` to verify compilation
+2. Generate migration if needed
+3. Run `npm run start:dev` to verify endpoints in Swagger at `/api/v1/docs`
 ```
 
 ---
 
 ## Important Rules
 
-1. **Layer separation is strict** — Controllers: route + extract params only. Services: all business logic. Repositories: all data access. Never put QueryBuilder in a service or business logic in a controller.
-2. **Cross-feature communication** — Import the MODULE, inject the SERVICE. Never import another feature's repository, entity, or DTO directly. Use EventEmitter2 for async side effects.
-3. **Response format** — All responses wrapped by `TransformInterceptor` into `{ success, data, meta? }`. Errors wrapped by `HttpExceptionFilter` into `{ success: false, error: { code, message } }`. Do not manually wrap responses.
-4. **Entity-to-DTO mapping** — Never return raw entity objects from controllers. Always map to response DTOs. Never expose `password_hash`, `token_hash`, `is_revoked`, or other internal fields.
-5. **Validation at DTO level only** — Use `class-validator` decorators on DTOs. Global `ValidationPipe` handles validation automatically. Services assume input is already validated.
-6. **Database conventions** — All string columns use `nvarchar`. Money uses `decimal(10,2)`. Timestamps use `datetime2` with UTC default. Enums stored as string columns. Table names are plural snake_case.
-7. **Auth decorators** — Use `@Public()` to skip auth. Use `@Roles('admin')` for admin-only. Use `@CurrentUser()` to extract JWT user. Never access `req.user` directly.
-8. **Error codes** — Follow `[FEATURE]_[3-digit]` format from API_SPEC.md. Throw NestJS built-in exceptions or custom exceptions from `src/common/exceptions/`.
-9. **No `synchronize: true`** — Schema changes via TypeORM migrations only. Never auto-sync in any environment.
-10. **Swagger decorators** — Every DTO field gets `@ApiProperty()`. Every controller gets `@ApiTags()`. Every endpoint gets `@ApiOperation()` and `@ApiResponse()`.
+1. **Layer separation is strict** — Controllers: routing only. Services: business logic. Repositories: data access.
+2. **Cross-feature via module exports + DI** — import MODULE, inject SERVICE. Use EventEmitter2 for async side effects.
+3. **Never return raw entities** — map to response DTOs. Never expose `password_hash`, `token_hash`, `is_revoked`.
+4. **Error codes from API_SPEC.md** — follow `[FEATURE]_[3-digit]` format, throw NestJS built-in or custom exceptions.
+5. **Follow the docs** — all patterns (repository, guards, DTOs, Swagger, validation) are in BE-PROJECT-RULES.md.
 
 ---
 
@@ -226,6 +155,6 @@ allowed-tools:
 | Missing `<feature-name>` argument | Ask: "Which feature? Available: `auth`, `user-profile`, `product`, `cart`, `order`, `review`" |
 | Feature not in known list | Ask user to provide entity definitions, endpoints, and dependencies manually |
 | Feature directory already exists | Ask: "Feature `<name>` already exists. Overwrite, merge, or skip?" |
-| Dependent feature module not found | Warn: "Feature `<dep>` not found. Generate it first or proceed without cross-feature injection." |
-| `src/common/` missing guards/interceptors | Generate common layer scaffolding before feature generation |
+| Dependent feature module not found | Warn and proceed without cross-feature injection |
+| `src/common/` missing | Suggest: "Generate common layer first (guards, interceptors, filters, decorators)" |
 | DATABASE.md or API_SPEC.md not found | Ask user to provide entity schema and endpoint definitions manually |

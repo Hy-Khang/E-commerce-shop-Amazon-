@@ -18,3 +18,14 @@ A full-featured e-commerce platform. Includes product catalog, user authenticati
 ## Shared Docs
 - @share-docs/API_SPEC.md — REST endpoints, request/response format, auth flow, error codes
 - @share-docs/DATABASE.md — schema, entities, relationships, TypeORM patterns, migration rules
+
+## Available Skills
+
+### Project Setup
+- `/init-base [backend|frontend]` - Setup project architecture & environment
+
+### Feature Development
+- `/be-crud [feature]` - Generate backend CRUD (entity, controller, service, dto)
+- `/fe-crud [feature]` - Generate frontend CRUD (pages, components, hooks)
+- `/be-test [feature]` - Write backend tests (unit + integration)
+- `/fe-test [feature]` - Write frontend tests (component + hook)

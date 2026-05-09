@@ -3,7 +3,11 @@
     "allow": [
       "Bash(node -e \"try { const ms = require\\('ms'\\); console.log\\(typeof ms.StringValue\\); } catch\\(e\\) { console.log\\(e.message\\); }\")",
       "Bash(npx nest *)",
-      "Bash(npx jest *)"
+      "Bash(npx jest *)",
+      "Bash(del /q \"src\\\\features\\\\auth\\\\components\\\\.gitkeep\" \"src\\\\features\\\\auth\\\\hooks\\\\.gitkeep\" \"src\\\\features\\\\auth\\\\services\\\\.gitkeep\" \"src\\\\features\\\\auth\\\\stores\\\\.gitkeep\" \"src\\\\features\\\\auth\\\\types\\\\.gitkeep\")",
+      "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\pages\" -Force)",
+      "PowerShell(Move-Item \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\components\\\\LoginPage.tsx\" \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\pages\\\\LoginPage.tsx\")",
+      "PowerShell(Move-Item \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\components\\\\RegisterPage.tsx\" \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\pages\\\\RegisterPage.tsx\")"
     ]
   }
 }
