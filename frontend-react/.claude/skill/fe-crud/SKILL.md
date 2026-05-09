@@ -61,7 +61,22 @@ allowed-tools:
 - Identify pages and routes from FE-ARCHITECTURE.md routing structure
 - Identify cross-feature dependencies from dependency map
 
-### Step 2: Generate Types
+### Step 2: Present Execution Plan & Wait for Confirmation
+
+- **STOP before writing any code.** Print a summary for the user including:
+  - **Feature name** and scope (pages, components)
+  - **Files to CREATE** — full file list with paths
+  - **Files to UPDATE** — e.g., `src/core/router/router.tsx`
+  - **Pages & routes** — list of routes this feature will register
+  - **API endpoints consumed** — from API_SPEC.md
+  - **Cross-feature dependencies** — barrel imports needed from other features
+  - **State decisions** — Zustand store (yes/no), TanStack Query keys
+  - **Notes** — any assumptions, missing dependencies, or potential conflicts
+- Ask user: **"Proceed with generation? (yes / adjust)"**
+- **Do NOT generate any files until user confirms.**
+- If user requests adjustments → update the plan and re-confirm
+
+### Step 3: Generate Types
 
 - File: `src/features/<feature-name>/types/<feature-name>.types.ts`
 - Define all TypeScript interfaces matching API_SPEC.md response shapes:
@@ -73,7 +88,7 @@ allowed-tools:
   - Export both the schema and inferred type: `export type LoginRequest = z.infer<typeof loginSchema>`
 - Use `PaginationParams` and `PaginatedResponse<T>` from `src/shared/types/`
 
-### Step 3: Generate Services
+### Step 4: Generate Services
 
 - File: `src/features/<feature-name>/services/<feature-name>.service.ts`
 - Export a plain object `export const <featureName>Service = { ... }`
@@ -87,7 +102,7 @@ allowed-tools:
   - `DELETE /cart/items/:id` → `removeItem(id: number)`
 - Service layer does NOT handle errors — that's for hooks and interceptors
 
-### Step 4: Generate Hooks (TanStack Query)
+### Step 5: Generate Hooks (TanStack Query)
 
 - Location: `src/features/<feature-name>/hooks/`
 - One file per operation: `use<Action>.ts` (e.g., `useProducts.ts`, `useAddToCart.ts`, `useCreateOrder.ts`)
@@ -120,7 +135,7 @@ export const <feature>Keys = {
 **Prefetch hooks** (where applicable):
 - Product detail prefetch on `ProductCard` hover: `queryClient.prefetchQuery({ queryKey: productKeys.detail(slug), queryFn: ... })`
 
-### Step 5: Generate Store (Zustand — only if needed)
+### Step 6: Generate Store (Zustand — only if needed)
 
 - File: `src/features/<feature-name>/stores/<feature-name>.store.ts`
 - Only create for features that need cross-feature client state:
@@ -129,7 +144,7 @@ export const <feature>Keys = {
 - Do NOT create stores for server data — TanStack Query is the source of truth
 - Export as `export const use<FeatureName>Store = create<StoreType>(...)`
 
-### Step 6: Generate Components
+### Step 7: Generate Components
 
 - Location: `src/features/<feature-name>/components/`
 - One component per file, named export, PascalCase filename
@@ -167,7 +182,7 @@ export const <feature>Keys = {
 - `order` → `CheckoutPage`, `OrderHistoryPage`, `OrderDetailPage`, `OrderItemRow`, `OrderStatusBadge`, `OrderListSkeleton` + admin pages
 - `review` → `ReviewForm`, `ReviewList`, `ReviewCard`, `MyReviewsPage`
 
-### Step 7: Generate Utils
+### Step 8: Generate Utils
 
 - File: `src/features/<feature-name>/utils/<feature-name>.util.ts`
 - Pure helper functions specific to this feature's domain:
@@ -177,7 +192,7 @@ export const <feature>Keys = {
   - `review` → `getAverageRating`, `formatRatingStars`
 - Generic utils (formatPrice, formatDate) belong in `src/shared/utils/`
 
-### Step 8: Generate Barrel File
+### Step 9: Generate Barrel File
 
 - File: `src/features/<feature-name>/index.ts`
 - Export ONLY what other features consume — not everything:
@@ -187,12 +202,12 @@ export const <feature>Keys = {
   - Types that other features reference
 - Do NOT export: internal components, services, utils used only within the feature
 
-### Step 9: Generate Context File
+### Step 10: Generate Context File
 
 - File: `src/features/<feature-name>/context.md`
 - Document: feature purpose, owned pages, API dependencies (endpoints consumed), state decisions (why Zustand or not), cross-feature exports, key design decisions
 
-### Step 10: Register Routes & Verify
+### Step 11: Register Routes & Verify
 
 - Add feature pages to `src/core/router/router.tsx` with `React.lazy`
 - Wrap with appropriate guards: `AuthGuard` for protected, `RoleGuard` for admin

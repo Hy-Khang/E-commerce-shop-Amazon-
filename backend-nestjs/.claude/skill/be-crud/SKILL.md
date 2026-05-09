@@ -28,6 +28,9 @@ allowed-tools:
 3. **Feature already exists?** Check `src/features/<feature-name>/` directory
    - If found → Ask: "Feature `<feature-name>` already exists. Overwrite or skip?"
 
+4. **Common layer exists?** Check `src/common/` directory has guards, interceptors, filters, decorators
+   - If missing → Generate common layer first (guards, interceptors, filters, decorators, pipes, dto, constants, interfaces)
+
 ---
 
 ## Required Reading (READ FIRST)
@@ -55,7 +58,21 @@ allowed-tools:
 - Identify endpoints from API_SPEC.md for this feature
 - Identify cross-feature dependencies from BE-ARCHITECTURE.md dependency map
 
-### Step 2: Generate Entities
+### Step 2: Present Execution Plan & Wait for Confirmation
+
+- **STOP before writing any code.** Print a summary for the user including:
+  - **Feature name** and owned entities
+  - **Files to CREATE** — full file list with paths
+  - **Files to UPDATE** — e.g., `src/app.module.ts`
+  - **Endpoints** — list of routes from API_SPEC.md this feature will implement
+  - **Cross-feature dependencies** — which modules will be imported, which services injected
+  - **Events** — any events emitted or listened to
+  - **Notes** — any assumptions, missing dependencies, or potential conflicts
+- Ask user: **"Proceed with generation? (yes / adjust)"**
+- **Do NOT generate any files until user confirms.**
+- If user requests adjustments → update the plan and re-confirm
+
+### Step 3: Generate Entities
 
 - One file per entity at `src/features/<feature-name>/entities/<entity>.entity.ts`
 - Use `@Entity('<table_name>')` with plural snake_case table name
@@ -69,7 +86,7 @@ allowed-tools:
 - Set eager/lazy loading per BE-ARCHITECTURE.md relation loading strategy table
 - Add indexes via `@Index('idx_<table>_<column>')` per DATABASE.md indexing strategy
 
-### Step 3: Generate Repositories
+### Step 4: Generate Repositories
 
 - One file per entity at `src/features/<feature-name>/repositories/<entity>.repository.ts`
 - Class is `@Injectable()`, wraps `@InjectRepository(Entity)` → `Repository<Entity>`
@@ -78,7 +95,7 @@ allowed-tools:
 - Stock deduction uses optimistic locking pattern: `SET stock_quantity = stock_quantity - :qty WHERE stock_quantity >= :qty`
 - Pagination methods accept `{ page, limit, sort, order, ...filters }` and return `{ data, total }`
 
-### Step 4: Generate DTOs
+### Step 5: Generate DTOs
 
 - Location: `src/features/<feature-name>/dto/`
 - Files: `create-<entity>.dto.ts`, `update-<entity>.dto.ts`, `<entity>-response.dto.ts`
@@ -89,7 +106,7 @@ allowed-tools:
 - Pagination DTO: extend shared `PaginationDto` from `src/common/dto/pagination.dto.ts`
 - Filter DTOs: per feature as defined in API_SPEC.md filtering section
 
-### Step 5: Generate Service
+### Step 6: Generate Service
 
 - File: `src/features/<feature-name>/<feature-name>.service.ts`
 - `@Injectable()` class with `private readonly logger = new Logger(<ServiceName>.name)`
@@ -100,7 +117,7 @@ allowed-tools:
 - Error handling: throw NestJS built-in exceptions or custom domain exceptions from `src/common/exceptions/`
 - Map error codes from API_SPEC.md (e.g., `PRODUCT_001`, `CART_002`, `ORDER_003`)
 
-### Step 6: Generate Controller
+### Step 7: Generate Controller
 
 - File: `src/features/<feature-name>/<feature-name>.controller.ts`
 - `@Controller()` with correct route prefix per API_SPEC.md
@@ -117,7 +134,7 @@ allowed-tools:
 - Controller methods: parse request → call service → return data (no business logic)
 - DELETE endpoints return `HttpCode(204)` with no body
 
-### Step 7: Generate Module
+### Step 8: Generate Module
 
 - File: `src/features/<feature-name>/<feature-name>.module.ts`
 - `@Module({})` with:
@@ -127,7 +144,7 @@ allowed-tools:
   - `exports`: `[<FeatureName>Service]` — only export service, never repositories
 - Register module in `src/app.module.ts` imports array
 
-### Step 8: Generate Supporting Files
+### Step 9: Generate Supporting Files
 
 - `src/features/<feature-name>/types/<feature-name>.types.ts` — sort enums, filter param interfaces, event payload interfaces
 - `src/features/<feature-name>/utils/<feature-name>.util.ts` — pure helper functions (slug generation, discount calculation, etc.)
@@ -135,7 +152,7 @@ allowed-tools:
 - `src/features/<feature-name>/tests/<feature-name>.controller.spec.ts` — controller unit test skeleton
 - `src/features/<feature-name>/tests/<feature-name>.service.spec.ts` — service unit test skeleton (Arrange → Act → Assert pattern)
 
-### Step 9: Register & Verify
+### Step 10: Register & Verify
 
 - Add feature module to `src/app.module.ts` imports
 - Verify no circular dependencies
