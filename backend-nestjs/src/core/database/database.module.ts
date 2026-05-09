@@ -14,7 +14,9 @@ import { ConfigService } from '@nestjs/config';
         password: config.get<string>('database.password'),
         database: config.get<string>('database.database'),
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: config.get<boolean>('database.synchronize') ?? false,
+        logging: config.get<boolean>('database.logging') ?? false,
+        charset: 'utf8mb4',
         options: {
           trustServerCertificate: true,
         },
@@ -22,4 +24,4 @@ import { ConfigService } from '@nestjs/config';
     }),
   ],
 })
-export class DatabaseModule {}
+export class DatabaseModule { }

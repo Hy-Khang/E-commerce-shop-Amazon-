@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"try { const ms = require\\('ms'\\); console.log\\(typeof ms.StringValue\\); } catch\\(e\\) { console.log\\(e.message\\); }\")",
+      "Bash(npx nest *)",
+      "Bash(npx jest *)"
+    ]
+  }
+}

@@ -5,6 +5,7 @@ import {
   HttpException,
   Logger,
 } from '@nestjs/common';
+import { error } from 'console';
 import { Response } from 'express';
 
 @Catch(HttpException)
@@ -36,5 +37,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       `${status} — ${errorBody.error.code}: ${errorBody.error.message}`,
     );
     response.status(status).json(errorBody);
+
+    console.log(exception);
   }
 }

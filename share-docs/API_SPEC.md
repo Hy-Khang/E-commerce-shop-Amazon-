@@ -153,6 +153,8 @@ GET /products?sort=created_at&order=desc
 | ORDER_004 | 403 | Order does not belong to user |
 | REVIEW_001 | 403 | Product not purchased — `order_id` verification failed |
 | REVIEW_002 | 409 | Review already exists for this order + product |
+| CATEGORY_001 | 400 | Cannot delete category with existing products or children |
+| VARIANT_001 | 400 | Cannot delete variant referenced by active cart items |
 
 ### HTTP Status Usage
 
@@ -171,7 +173,7 @@ GET /products?sort=created_at&order=desc
 
 ---
 
-## 6. Endpoints by Feature
+## 6. Customer & Public Endpoints
 
 ### Auth — `/api/v1/auth`
 
@@ -200,20 +202,9 @@ GET /products?sort=created_at&order=desc
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | GET | `/categories` | List category tree | Public |
-| GET | `/categories/:slug` | Get category with products | Public |
-| POST | `/categories` | Create category | Admin |
-| PATCH | `/categories/:id` | Update category | Admin |
-| DELETE | `/categories/:id` | Delete category (if no products) | Admin |
-| GET | `/products` | List products (paginated, filtered, sorted) | Public |
+| GET | `/categories/:slug` | Get category with products (paginated) | Public |
+| GET | `/products` | List active products (paginated, filtered, sorted) | Public |
 | GET | `/products/:slug` | Get product detail (variants + images) | Public |
-| POST | `/products` | Create product | Admin |
-| PATCH | `/products/:id` | Update product | Admin |
-| PATCH | `/products/:id/activate` | Toggle `is_active` | Admin |
-| POST | `/products/:id/variants` | Add variant to product | Admin |
-| PATCH | `/variants/:id` | Update variant (price, stock, sale_price) | Admin |
-| POST | `/products/:id/images` | Add image to product | Admin |
-| PATCH | `/images/:id` | Update image sort_order | Admin |
-| DELETE | `/images/:id` | Delete image | Admin |
 
 ### Cart — `/api/v1/cart`
 
@@ -231,24 +222,88 @@ GET /products?sort=created_at&order=desc
 |--------|------|-------------|------|
 | POST | `/orders` | Checkout — create order from cart | Customer |
 | GET | `/orders` | List my orders (paginated) | Customer |
-| GET | `/orders/:id` | Get order detail + order_items | Customer (own) or Admin |
-| PATCH | `/orders/:id/status` | Update order status | Admin |
-| PATCH | `/orders/:id/payment-status` | Update payment status | Admin |
-| PATCH | `/orders/:id/cancel` | Cancel order (if status = pending) | Customer (own) |
-| GET | `/admin/orders` | List all orders (filtered, paginated) | Admin |
+| GET | `/orders/:id` | Get order detail + order_items (own only) | Customer |
+| PATCH | `/orders/:id/cancel` | Cancel order (if status = pending) | Customer |
 
 ### Review — `/api/v1/reviews`
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | POST | `/reviews` | Create review (purchase-verified) | Customer |
-| GET | `/products/:productId/reviews` | List reviews for a product | Public |
-| GET | `/reviews/me` | List my reviews | Customer |
-| DELETE | `/reviews/:id` | Delete own review | Customer (own) or Admin |
+| GET | `/products/:productId/reviews` | List reviews for a product (paginated) | Public |
+| GET | `/reviews/me` | List my reviews (paginated) | Customer |
+| DELETE | `/reviews/:id` | Delete own review | Customer |
 
 ---
 
-## 7. Endpoint Details
+## 7. Admin Endpoints
+
+All admin endpoints require `@Roles('admin')`. Accessing with a customer token returns `AUTH_004 (403)`.
+
+### Admin: User Management — `/api/v1/admin/users`
+
+| Method | Path | Description | Filter/Sort |
+|--------|------|-------------|-------------|
+| GET | `/admin/users` | List all users (paginated) | `?search=keyword&role=customer&is_active=true&sort=created_at&order=desc` |
+| GET | `/admin/users/:id` | Get user detail (profile + order count + review count) | — |
+| PATCH | `/admin/users/:id/activate` | Toggle `is_active` (soft ban/unban) | — |
+| PATCH | `/admin/users/:id/role` | Change user role | — |
+
+> **Note:** Admin cannot edit user profile (full_name, phone, password) — only the user themselves via `/users/me`. Admin can only ban/unban and change roles. Respects auth feature boundary: admin manages identity-level attributes, not profile data.
+
+### Admin: Category Management — `/api/v1/admin/categories`
+
+| Method | Path | Description | Filter/Sort |
+|--------|------|-------------|-------------|
+| GET | `/admin/categories` | List all categories flat (paginated, includes product count) | `?search=keyword&parent_id=5&sort=name&order=asc` |
+| GET | `/admin/categories/:id` | Get category detail (parent info + direct children + product count) | — |
+| POST | `/admin/categories` | Create category (name, slug, parent_id?) | — |
+| PATCH | `/admin/categories/:id` | Update category (name, slug, parent_id) | — |
+| DELETE | `/admin/categories/:id` | Delete category (fails if has products or children) | — |
+
+### Admin: Product Management — `/api/v1/admin/products`
+
+| Method | Path | Description | Filter/Sort |
+|--------|------|-------------|-------------|
+| GET | `/admin/products` | List all products including inactive (paginated) | `?search=keyword&category_id=5&is_active=true&sort=created_at&order=desc` |
+| GET | `/admin/products/:id` | Get product detail (variants + images + review stats) | — |
+| POST | `/admin/products` | Create product (name, slug, category_id, description, thumbnail_url) | — |
+| PATCH | `/admin/products/:id` | Update product (name, slug, category_id, description, thumbnail_url) | — |
+| PATCH | `/admin/products/:id/activate` | Toggle `is_active` (show/hide from storefront) | — |
+| POST | `/admin/products/:id/variants` | Add variant (sku, color, size, price, sale_price, stock_quantity) | — |
+| PATCH | `/admin/variants/:id` | Update variant (price, sale_price, stock_quantity, color, size) | — |
+| DELETE | `/admin/variants/:id` | Delete variant (fails if referenced by active cart_items) | — |
+| POST | `/admin/products/:id/images` | Add image (image_url, sort_order) | — |
+| PATCH | `/admin/images/:id` | Update image sort_order | — |
+| DELETE | `/admin/images/:id` | Delete image | — |
+
+### Admin: Order Management — `/api/v1/admin/orders`
+
+| Method | Path | Description | Filter/Sort |
+|--------|------|-------------|-------------|
+| GET | `/admin/orders` | List all orders (paginated) | `?status=pending&payment_status=unpaid&user_id=123&sort=created_at&order=desc` |
+| GET | `/admin/orders/:id` | Get order detail + order_items + user info | — |
+| PATCH | `/admin/orders/:id/status` | Update order status (valid transitions only) | — |
+| PATCH | `/admin/orders/:id/payment-status` | Update payment status (unpaid → paid) | — |
+
+> **Valid status transitions:** `pending → confirmed → shipping → delivered`, `pending → cancelled`, `confirmed → cancelled`. Invalid transitions (e.g. `delivered → pending`) return `ORDER_003 (400)`.
+
+### Admin: Review Management — `/api/v1/admin/reviews`
+
+| Method | Path | Description | Filter/Sort |
+|--------|------|-------------|-------------|
+| GET | `/admin/reviews` | List all reviews (paginated) | `?product_id=10&user_id=5&rating=1&sort=created_at&order=desc` |
+| DELETE | `/admin/reviews/:id` | Delete any review (moderation) | — |
+
+### Admin: Dashboard — `/api/v1/admin/dashboard`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/admin/dashboard/stats` | Summary: total users, orders, revenue, products | Admin |
+
+---
+
+## 8. Endpoint Details
 
 ### POST `/api/v1/auth/login`
 
@@ -409,12 +464,14 @@ Read cart → validate stock for each variant → snapshot product_name/sku/pric
 
 ---
 
-## 8. Swagger Integration
+## 9. Swagger Integration
 
 - **Library:** `@nestjs/swagger`
 - **URL:** `/api/v1/docs` (development only)
-- **Tags:** Auth, User Profile, Product Catalog, Cart, Order, Review
+- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Cart, Order, Review
+- **Tags (Admin):** Admin: Users, Admin: Categories, Admin: Products, Admin: Orders, Admin: Reviews, Admin: Dashboard
 - **Decorators:**
   - DTOs: `@ApiProperty()` on every field
-  - Controllers: `@ApiTags('Product Catalog')`, `@ApiBearerAuth()`
+  - Controllers: `@ApiTags('Admin: Products')`, `@ApiBearerAuth()`
   - Endpoints: `@ApiOperation()`, `@ApiResponse()`, `@ApiQuery()` for pagination/filter params
+  - Admin controllers: separate controller files per feature (e.g. `admin-product.controller.ts`)
