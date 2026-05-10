@@ -28,6 +28,10 @@ const AdminProductEditPage = lazy(() => import('@/features/product/components/Ad
 const AdminOrderListPage = lazy(() => import('@/features/order/components/AdminOrderListPage'));
 const AdminOrderDetailPage = lazy(() => import('@/features/order/components/AdminOrderDetailPage'));
 
+const AdminRoleListPage = lazy(() => import('@/features/auth/pages/AdminRoleListPage'));
+const AdminUserListPage = lazy(() => import('@/features/auth/pages/AdminUserListPage'));
+const AdminUserDetailPage = lazy(() => import('@/features/auth/pages/AdminUserDetailPage'));
+
 const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
@@ -81,6 +85,9 @@ export const router = createBrowserRouter([
               { path: 'admin/products/:id/edit', element: <SuspenseWrapper><AdminProductEditPage /></SuspenseWrapper> },
               { path: 'admin/orders', element: <SuspenseWrapper><AdminOrderListPage /></SuspenseWrapper> },
               { path: 'admin/orders/:id', element: <SuspenseWrapper><AdminOrderDetailPage /></SuspenseWrapper> },
+              { path: 'admin/users', element: <SuspenseWrapper><AdminUserListPage /></SuspenseWrapper> },
+              { path: 'admin/users/:id', element: <SuspenseWrapper><AdminUserDetailPage /></SuspenseWrapper> },
+              { path: 'admin/roles', element: <SuspenseWrapper><AdminRoleListPage /></SuspenseWrapper> },
             ],
           },
         ],

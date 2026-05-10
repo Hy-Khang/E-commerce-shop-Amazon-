@@ -8,7 +8,9 @@
       "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\pages\" -Force)",
       "PowerShell(Move-Item \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\components\\\\LoginPage.tsx\" \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\pages\\\\LoginPage.tsx\")",
       "PowerShell(Move-Item \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\components\\\\RegisterPage.tsx\" \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\pages\\\\RegisterPage.tsx\")",
-      "Bash(Get-ChildItem \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\backend-nestjs\\\\src\\\\common\" -Force)"
+      "Bash(Get-ChildItem \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\backend-nestjs\\\\src\\\\common\" -Force)",
+      "Bash(Get-ChildItem -Path \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\\" -Recurse -Include \"*.tsx\", \"*.ts\", \"*.json\" | Select-Object FullName | Sort-Object FullName)",
+      "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\tests\\\\mocks\" -Force)"
     ]
   }
 }

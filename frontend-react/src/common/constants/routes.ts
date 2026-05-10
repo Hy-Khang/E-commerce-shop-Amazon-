@@ -21,6 +21,9 @@ export const ROUTES = {
   ADMIN_PRODUCT_EDIT: (id: number) => `/admin/products/${id}/edit`,
   ADMIN_ORDERS: '/admin/orders',
   ADMIN_ORDER_DETAIL: (id: number) => `/admin/orders/${id}`,
+  ADMIN_ROLES: '/admin/roles',
+  ADMIN_USERS: '/admin/users',
+  ADMIN_USER_DETAIL: (id: number) => `/admin/users/${id}`,
 } as const;
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {

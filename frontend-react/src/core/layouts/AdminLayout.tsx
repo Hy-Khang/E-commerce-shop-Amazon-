@@ -3,6 +3,8 @@ import { Outlet, NavLink } from 'react-router-dom';
 const adminLinks = [
   { to: '/admin/products', label: 'Products' },
   { to: '/admin/orders', label: 'Orders' },
+  { to: '/admin/users', label: 'Users' },
+  { to: '/admin/roles', label: 'Roles' },
 ];
 
 export function AdminLayout() {

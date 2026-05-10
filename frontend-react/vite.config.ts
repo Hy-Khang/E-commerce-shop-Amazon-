@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import path from 'path'
 import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
@@ -16,9 +17,15 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 5173,
     proxy: {
-      '/api': 'http://localhost:3001',
+      '/api': process.env.VITE_API_BASE_URL,
     },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test-setup.ts'],
+    css: false,
   },
 })
