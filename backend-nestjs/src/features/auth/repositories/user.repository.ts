@@ -113,4 +113,9 @@ export class UserRepository {
   async updateRoleId(id: number, roleId: number): Promise<void> {
     await this.repo.update(id, { role_id: roleId });
   }
+
+  async updateProfile(id: number, data: { full_name?: string; phone?: string }): Promise<User | null> {
+    await this.repo.update(id, { ...data, updated_at: new Date() });
+    return this.repo.findOne({ where: { id }, relations: ['role'] });
+  }
 }

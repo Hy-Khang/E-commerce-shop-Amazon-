@@ -1,0 +1,157 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ProductService } from './product.service';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductQueryDto } from './dto/product-query.dto';
+import { CreateVariantDto } from './dto/create-variant.dto';
+import { UpdateVariantDto } from './dto/update-variant.dto';
+import { CreateImageDto } from './dto/create-image.dto';
+import { UpdateImageDto } from './dto/update-image.dto';
+import {
+  ProductResponseDto,
+  AdminProductDetailResponseDto,
+  VariantResponseDto,
+  ImageResponseDto,
+} from './dto/product-response.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+
+@ApiTags('Admin: Products')
+@ApiBearerAuth()
+@Roles('admin')
+@Controller('admin')
+export class AdminProductController {
+  constructor(private readonly productService: ProductService) {}
+
+  // ─── Products ───
+
+  @Get('products')
+  @ApiOperation({ summary: 'List all products including inactive (paginated)' })
+  @ApiResponse({ status: 200, description: 'Returns paginated product list', type: [ProductResponseDto] })
+  async findAll(@Query() query: ProductQueryDto) {
+    return this.productService.findAllProducts(query);
+  }
+
+  @Get('products/:id')
+  @ApiOperation({ summary: 'Get product detail (variants + images + review stats)' })
+  @ApiResponse({ status: 200, description: 'Returns product detail', type: AdminProductDetailResponseDto })
+  @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productService.findProductById(id);
+  }
+
+  @Post('products')
+  @ApiOperation({ summary: 'Create product' })
+  @ApiResponse({ status: 201, description: 'Product created', type: ProductResponseDto })
+  @ApiResponse({ status: 404, description: 'PRODUCT_004: Category not found' })
+  @ApiResponse({ status: 409, description: 'PRODUCT_005: Duplicate slug' })
+  async create(@Body() dto: CreateProductDto) {
+    return this.productService.createProduct(dto);
+  }
+
+  @Patch('products/:id')
+  @ApiOperation({ summary: 'Update product' })
+  @ApiResponse({ status: 200, description: 'Product updated', type: ProductResponseDto })
+  @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
+  @ApiResponse({ status: 409, description: 'PRODUCT_005: Duplicate slug' })
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateProductDto,
+  ) {
+    return this.productService.updateProduct(id, dto);
+  }
+
+  @Patch('products/:id/activate')
+  @ApiOperation({ summary: 'Toggle product is_active (show/hide from storefront)' })
+  @ApiResponse({ status: 200, description: 'Product activation toggled', type: ProductResponseDto })
+  @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
+  async toggleActivate(@Param('id', ParseIntPipe) id: number) {
+    return this.productService.toggleProductActive(id);
+  }
+
+  // ─── Variants ───
+
+  @Post('products/:id/variants')
+  @ApiOperation({ summary: 'Add variant to product' })
+  @ApiResponse({ status: 201, description: 'Variant created', type: VariantResponseDto })
+  @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
+  @ApiResponse({ status: 409, description: 'PRODUCT_003: Duplicate SKU' })
+  async addVariant(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateVariantDto,
+  ) {
+    return this.productService.addVariant(id, dto);
+  }
+
+  @Patch('variants/:id')
+  @ApiOperation({ summary: 'Update variant' })
+  @ApiResponse({ status: 200, description: 'Variant updated', type: VariantResponseDto })
+  @ApiResponse({ status: 404, description: 'PRODUCT_002: Variant not found' })
+  @ApiResponse({ status: 409, description: 'PRODUCT_003: Duplicate SKU' })
+  async updateVariant(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateVariantDto,
+  ) {
+    return this.productService.updateVariant(id, dto);
+  }
+
+  @Delete('variants/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete variant (fails if referenced by active cart items)' })
+  @ApiResponse({ status: 204, description: 'Variant deleted' })
+  @ApiResponse({ status: 400, description: 'VARIANT_001: Cannot delete variant referenced by active cart items' })
+  @ApiResponse({ status: 404, description: 'PRODUCT_002: Variant not found' })
+  async deleteVariant(@Param('id', ParseIntPipe) id: number) {
+    await this.productService.deleteVariant(id);
+  }
+
+  // ─── Images ───
+
+  @Post('products/:id/images')
+  @ApiOperation({ summary: 'Add image to product' })
+  @ApiResponse({ status: 201, description: 'Image created', type: ImageResponseDto })
+  @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
+  async addImage(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateImageDto,
+  ) {
+    return this.productService.addImage(id, dto);
+  }
+
+  @Patch('images/:id')
+  @ApiOperation({ summary: 'Update image sort order' })
+  @ApiResponse({ status: 200, description: 'Image updated', type: ImageResponseDto })
+  @ApiResponse({ status: 404, description: 'COMMON_001: Image not found' })
+  async updateImage(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateImageDto,
+  ) {
+    return this.productService.updateImageSortOrder(id, dto);
+  }
+
+  @Delete('images/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete image' })
+  @ApiResponse({ status: 204, description: 'Image deleted' })
+  @ApiResponse({ status: 404, description: 'COMMON_001: Image not found' })
+  async deleteImage(@Param('id', ParseIntPipe) id: number) {
+    await this.productService.deleteImage(id);
+  }
+}

@@ -222,6 +222,19 @@ export class AuthService {
     return { ...user, role_id: dto.role_id, role };
   }
 
+  async updateProfile(userId: number, data: { full_name?: string; phone?: string }): Promise<User> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException({
+        code: 'USER_002',
+        message: 'User not found',
+      });
+    }
+
+    const updated = await this.userRepository.updateProfile(userId, data);
+    return updated!;
+  }
+
   // ─── Admin: Role Management ───
 
   async findAllRoles(): Promise<(Role & { userCount: number })[]> {
