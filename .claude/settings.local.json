@@ -11,7 +11,14 @@
       "Bash(Get-ChildItem \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\backend-nestjs\\\\src\\\\common\" -Force)",
       "Bash(Get-ChildItem -Path \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\\" -Recurse -Include \"*.tsx\", \"*.ts\", \"*.json\" | Select-Object FullName | Sort-Object FullName)",
       "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\Self_learning\\\\Courses\\\\AI\\\\Claude\\\\E-commerce-shop-Amazon-\\\\frontend-react\\\\src\\\\features\\\\auth\\\\tests\\\\mocks\" -Force)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(ls -la \"d:\\\\\\\\Self_learning\\\\\\\\Courses\\\\\\\\AI\\\\\\\\Claude\\\\\\\\E-commerce-shop-Amazon-\\\\\\\\backend-nestjs\\\\\\\\\")",
+      "Bash(find \"d:\\\\\\\\Self_learning\\\\\\\\Courses\\\\\\\\AI\\\\\\\\Claude\\\\\\\\E-commerce-shop-Amazon-\\\\\\\\backend-nestjs\\\\\\\\src\" -type f -name \"*.ts\")",
+      "Bash(find \"d:\\\\\\\\Self_learning\\\\\\\\Courses\\\\\\\\AI\\\\\\\\Claude\\\\\\\\E-commerce-shop-Amazon-\\\\\\\\backend-nestjs\\\\\\\\src\\\\\\\\common\" -type f)",
+      "Bash(find \"d:\\\\\\\\Self_learning\\\\\\\\Courses\\\\\\\\AI\\\\\\\\Claude\\\\\\\\E-commerce-shop-Amazon-\\\\\\\\backend-nestjs\\\\\\\\src\\\\\\\\features\\\\\\\\product\\\\\\\\entities\" -name \"*.ts\" -type f)",
+      "Bash(ls -la \"d:\\\\\\\\Self_learning\\\\\\\\Courses\\\\\\\\AI\\\\\\\\Claude\\\\\\\\E-commerce-shop-Amazon-\\\\\\\\backend-nestjs\\\\\\\\src\\\\\\\\features\\\\\\\\order\\\\\\\\\")",
+      "Bash(find \"d:\\\\\\\\Self_learning\\\\\\\\Courses\\\\\\\\AI\\\\\\\\Claude\\\\\\\\E-commerce-shop-Amazon-\\\\\\\\backend-nestjs\\\\\\\\src\\\\\\\\features\\\\\\\\order\" -type f)",
+      "Bash(find \"d:\\\\\\\\Self_learning\\\\\\\\Courses\\\\\\\\AI\\\\\\\\Claude\\\\\\\\E-commerce-shop-Amazon-\\\\\\\\backend-nestjs\\\\\\\\src\\\\\\\\features\\\\\\\\cart\\\\\\\\dto\" -name \"*.ts\" -type f)"
     ]
   }
 }

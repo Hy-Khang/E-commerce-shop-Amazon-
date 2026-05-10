@@ -92,6 +92,12 @@ export class UserProfileService {
     this.logger.log(`Address deleted for user ${userId}: ${id}`);
   }
 
+  // ─── Cross-feature: consumed by order ───
+
+  async findAddressById(userId: number, addressId: number): Promise<Address | null> {
+    return this.addressRepository.findByIdAndUserId(addressId, userId);
+  }
+
   async setDefaultAddress(userId: number, id: number): Promise<Address> {
     const address = await this.addressRepository.findByIdAndUserId(id, userId);
     if (!address) {

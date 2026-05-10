@@ -6,6 +6,7 @@ import { AuthModule } from './features/auth/auth.module';
 import { UserProfileModule } from './features/user-profile/user-profile.module';
 import { ProductModule } from './features/product/product.module';
 import { CartModule } from './features/cart/cart.module';
+import { OrderModule } from './features/order/order.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -18,6 +19,7 @@ import { AppService } from './app.service';
     UserProfileModule,
     ProductModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

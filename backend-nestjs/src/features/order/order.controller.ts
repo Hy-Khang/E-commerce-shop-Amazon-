@@ -1,0 +1,76 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { OrderService } from './order.service';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { OrderQueryDto } from './dto/order-query.dto';
+import { OrderResponseDto, OrderListItemResponseDto } from './dto/order-response.dto';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { ICurrentUser } from '../../common/interfaces/current-user.interface';
+
+@ApiTags('Order')
+@ApiBearerAuth()
+@Controller('orders')
+export class OrderController {
+  constructor(private readonly orderService: OrderService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Checkout — create order from cart' })
+  @ApiResponse({ status: 201, description: 'Order created', type: OrderResponseDto })
+  @ApiResponse({ status: 400, description: 'CART_002: Cart empty / ORDER_002: Insufficient stock' })
+  @ApiResponse({ status: 404, description: 'COMMON_001: Address not found' })
+  async checkout(
+    @CurrentUser() user: ICurrentUser,
+    @Body() dto: CreateOrderDto,
+  ) {
+    return this.orderService.checkout(user.id, dto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List my orders (paginated)' })
+  @ApiResponse({ status: 200, description: 'Returns paginated order list', type: [OrderListItemResponseDto] })
+  async findMyOrders(
+    @CurrentUser() user: ICurrentUser,
+    @Query() query: OrderQueryDto,
+  ) {
+    return this.orderService.findMyOrders(user.id, query);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get order detail + order_items (own only)' })
+  @ApiResponse({ status: 200, description: 'Returns order detail', type: OrderResponseDto })
+  @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
+  @ApiResponse({ status: 403, description: 'ORDER_004: Order does not belong to user' })
+  async findOne(
+    @CurrentUser() user: ICurrentUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.orderService.findMyOrderById(user.id, id);
+  }
+
+  @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Cancel order (if status = pending)' })
+  @ApiResponse({ status: 200, description: 'Order cancelled', type: OrderResponseDto })
+  @ApiResponse({ status: 400, description: 'ORDER_003: Invalid status transition' })
+  @ApiResponse({ status: 403, description: 'ORDER_004: Order does not belong to user' })
+  @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
+  async cancel(
+    @CurrentUser() user: ICurrentUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.orderService.cancelOrder(user.id, id);
+  }
+}
