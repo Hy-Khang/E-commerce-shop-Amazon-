@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useAuthStore, useLogout } from '@/features/auth';
+import { CartBadge } from '@/features/cart';
 import { ROUTES } from '@/common/constants/routes';
 
 export function MainLayout() {
@@ -18,9 +19,7 @@ export function MainLayout() {
             </Link>
             {isAuthenticated ? (
               <>
-                <Link to={ROUTES.CART} className="text-sm text-gray-600 hover:text-gray-900">
-                  Cart
-                </Link>
+                <CartBadge />
                 <Link to={ROUTES.ORDERS} className="text-sm text-gray-600 hover:text-gray-900">
                   Orders
                 </Link>

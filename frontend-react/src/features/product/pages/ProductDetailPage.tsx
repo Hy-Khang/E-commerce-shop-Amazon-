@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatPrice } from '@/common/utils/format.util';
+import { AddToCartButton } from '@/features/cart';
 import { useProduct } from '../hooks/useProduct';
 import { ImageGallery } from '../components/ImageGallery';
 import { VariantSelector } from '../components/VariantSelector';
@@ -66,12 +67,19 @@ export default function ProductDetailPage() {
             />
           )}
 
-          <button
-            disabled={!active || !isInStock(active)}
-            className="w-full rounded-md bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-          >
-            {active && isInStock(active) ? 'Add to Cart' : 'Out of Stock'}
-          </button>
+          {active && isInStock(active) ? (
+            <AddToCartButton
+              variantId={active.id}
+              className="w-full rounded-md bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            />
+          ) : (
+            <button
+              disabled
+              className="w-full rounded-md bg-gray-300 px-6 py-3 text-sm font-semibold text-white cursor-not-allowed"
+            >
+              Out of Stock
+            </button>
+          )}
 
           {product.description && (
             <div>

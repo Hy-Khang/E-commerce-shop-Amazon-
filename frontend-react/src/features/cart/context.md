@@ -6,6 +6,14 @@ Shopping cart: view items, add/update/remove items, guest cart via session_id, m
 ## Pages
 - `CartPage` — cart items list, quantity controls, subtotal, checkout button
 
+## Components
+- `CartItemList` — renders list of cart item rows
+- `CartItemRow` — single item: variant info, quantity +/-, remove button
+- `CartSummary` — subtotal, shipping note, checkout + continue shopping buttons
+- `CartBadge` — header cart icon with item count badge (from Zustand store)
+- `AddToCartButton` — reusable button exported for product detail page
+- `CartPageSkeleton` — loading skeleton for cart page
+
 ## API Dependencies
 - `GET /cart` — current cart with items + variant details
 - `POST /cart/items` — add item (product_variant_id + quantity)

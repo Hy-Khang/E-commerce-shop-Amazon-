@@ -14,7 +14,7 @@ const CategoryPage = lazy(() => import('@/features/product/pages/CategoryPage'))
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 
-const CartPage = lazy(() => import('@/features/cart/components/CartPage'));
+const CartPage = lazy(() => import('@/features/cart/pages/CartPage'));
 const CheckoutPage = lazy(() => import('@/features/order/components/CheckoutPage'));
 const OrderHistoryPage = lazy(() => import('@/features/order/components/OrderHistoryPage'));
 const OrderDetailPage = lazy(() => import('@/features/order/components/OrderDetailPage'));
