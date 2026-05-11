@@ -1,0 +1,17 @@
+import { api } from '@/core/api/axios-instance';
+import type { SuccessResponse, PaginatedResponse } from '@/core/api/api.types';
+import type { Product, ProductListItem, Category, ProductListParams } from '../types/product.types';
+
+export const productService = {
+  getList: (params: ProductListParams) =>
+    api.get<PaginatedResponse<ProductListItem>>('/products', { params }),
+
+  getBySlug: (slug: string) =>
+    api.get<SuccessResponse<Product>>(`/products/${slug}`),
+
+  getCategories: () =>
+    api.get<SuccessResponse<Category[]>>('/categories'),
+
+  getCategoryBySlug: (slug: string) =>
+    api.get<SuccessResponse<Category & { products: ProductListItem[] }>>(`/categories/${slug}`),
+};

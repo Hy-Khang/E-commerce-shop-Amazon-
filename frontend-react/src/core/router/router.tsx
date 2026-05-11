@@ -6,10 +6,10 @@ import { AdminLayout } from '@/core/layouts/AdminLayout';
 import { AuthGuard } from './AuthGuard';
 import { RoleGuard } from './RoleGuard';
 
-const HomePage = lazy(() => import('@/features/product/components/HomePage'));
-const ProductListPage = lazy(() => import('@/features/product/components/ProductListPage'));
-const ProductDetailPage = lazy(() => import('@/features/product/components/ProductDetailPage'));
-const CategoryPage = lazy(() => import('@/features/product/components/CategoryPage'));
+const HomePage = lazy(() => import('@/features/product/pages/HomePage'));
+const ProductListPage = lazy(() => import('@/features/product/pages/ProductListPage'));
+const ProductDetailPage = lazy(() => import('@/features/product/pages/ProductDetailPage'));
+const CategoryPage = lazy(() => import('@/features/product/pages/CategoryPage'));
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
@@ -22,9 +22,9 @@ const OrderDetailPage = lazy(() => import('@/features/order/components/OrderDeta
 const ProfilePage = lazy(() => import('@/features/user-profile/components/ProfilePage'));
 const AddressListPage = lazy(() => import('@/features/user-profile/components/AddressListPage'));
 
-const AdminProductListPage = lazy(() => import('@/features/product/components/AdminProductListPage'));
-const AdminProductCreatePage = lazy(() => import('@/features/product/components/AdminProductCreatePage'));
-const AdminProductEditPage = lazy(() => import('@/features/product/components/AdminProductEditPage'));
+const AdminProductListPage = lazy(() => import('@/features/product/pages/AdminProductListPage'));
+const AdminProductCreatePage = lazy(() => import('@/features/product/pages/AdminProductCreatePage'));
+const AdminProductEditPage = lazy(() => import('@/features/product/pages/AdminProductEditPage'));
 const AdminOrderListPage = lazy(() => import('@/features/order/components/AdminOrderListPage'));
 const AdminOrderDetailPage = lazy(() => import('@/features/order/components/AdminOrderDetailPage'));
 

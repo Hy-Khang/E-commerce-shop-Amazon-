@@ -1,31 +1,32 @@
 # Product Feature
 
 ## Purpose
-Product catalog: listing with filters/pagination, product detail with variants and images, category tree navigation, and admin CRUD.
+Product catalog browsing (public) and product management (admin). Covers product listing, detail with variants + images, category navigation, and full admin CRUD for products, variants, images, and categories.
 
 ## Pages
-- `HomePage` — featured products
-- `ProductListPage` — paginated, filtered, sorted product grid
-- `ProductDetailPage` — full product info, variant selection, images, reviews
-- `CategoryPage` — products filtered by category
-- `AdminProductListPage` — admin product management
-- `AdminProductCreatePage` — create new product with variants
-- `AdminProductEditPage` — edit product, manage variants and images
 
-## API Dependencies
-- `GET /products` — list (paginated, filtered)
-- `GET /products/:slug` — detail with variants + images
-- `GET /categories` — category tree
-- `GET /categories/:slug` — category with products
-- Admin: `POST /products`, `PATCH /products/:id`, `PATCH /products/:id/activate`
-- Admin: `POST /products/:id/variants`, `PATCH /variants/:id`
-- Admin: `POST /products/:id/images`, `PATCH /images/:id`, `DELETE /images/:id`
+| Page | Route | Auth |
+|------|-------|------|
+| HomePage | `/` | Public |
+| ProductListPage | `/products` | Public |
+| ProductDetailPage | `/products/:slug` | Public |
+| CategoryPage | `/categories/:slug` | Public |
+| AdminProductListPage | `/admin/products` | Admin |
+| AdminProductCreatePage | `/admin/products/new` | Admin |
+| AdminProductEditPage | `/admin/products/:id/edit` | Admin |
 
-## State
-- Server state via TanStack Query (staleTime: 5min for products/categories)
-- URL params for filters: category_id, min_price, max_price, search, page, sort
+## API Endpoints
 
-## Cross-Feature
-- Cart uses ProductVariant type for add-to-cart
-- Review renders on ProductDetailPage
-- Prefetch product detail on ProductCard hover
+**Public:** `GET /products`, `GET /products/:slug`, `GET /categories`, `GET /categories/:slug`
+
+**Admin:** `GET/POST/PATCH /admin/products`, `PATCH /admin/products/:id/activate`, `POST /admin/products/:id/variants`, `PATCH/DELETE /admin/variants/:id`, `POST /admin/products/:id/images`, `PATCH/DELETE /admin/images/:id`, `GET/POST/PATCH/DELETE /admin/categories`
+
+## State Decisions
+- No Zustand store — all product data lives in TanStack Query cache
+- URL state for filters/pagination via `usePagination` + `useSearchParams`
+- Prefetch product detail on card hover
+
+## Cross-Feature Dependencies
+- **auth** — admin guards handled by router (AuthGuard + RoleGuard)
+- **cart** — ProductDetailPage has inline add-to-cart button (will import AddToCartButton from cart feature when available)
+- **review** — ProductDetailPage can render review list when review feature is built
