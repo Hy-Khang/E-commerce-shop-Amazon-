@@ -4,6 +4,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
 import { CartRepository } from './repositories/cart.repository';
 import { CartItemRepository } from './repositories/cart-item.repository';
 import { ProductService } from '../product/product.service';
@@ -204,11 +205,11 @@ export class CartService {
     return cart;
   }
 
-  async clearCart(userId: number): Promise<void> {
+  async clearCart(userId: number, manager?: EntityManager): Promise<void> {
     const cart = await this.cartRepository.findByUserId(userId);
     if (cart) {
-      await this.cartItemRepository.deleteByCartId(cart.id);
-      await this.cartRepository.delete(cart.id);
+      await this.cartItemRepository.deleteByCartId(cart.id, manager);
+      await this.cartRepository.delete(cart.id, manager);
     }
   }
 

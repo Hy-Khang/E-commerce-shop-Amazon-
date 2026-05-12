@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DataSource } from 'typeorm';
 import { OrderRepository } from './repositories/order.repository';
 import { OrderItemRepository } from './repositories/order-item.repository';
 import { CartService } from '../cart/cart.service';
@@ -21,6 +22,7 @@ import {
   OrderListItemResponseDto,
 } from './dto/order-response.dto';
 import { Order } from './entities/order.entity';
+import { OrderItem } from './entities/order-item.entity';
 import {
   VALID_STATUS_TRANSITIONS,
   DEFAULT_SHIPPING_FEE,
@@ -46,6 +48,7 @@ export class OrderService {
     private readonly productService: ProductService,
     private readonly userProfileService: UserProfileService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly dataSource: DataSource,
   ) {}
 
   // ─── Customer endpoints ───
@@ -54,6 +57,8 @@ export class OrderService {
     userId: number,
     dto: CreateOrderDto,
   ): Promise<OrderResponseDto> {
+    // ── Reads (outside transaction — no locks needed) ──
+
     const cart = await this.cartService.getCartWithItems(userId);
 
     for (const item of cart.items) {
@@ -77,6 +82,8 @@ export class OrderService {
         message: 'Address not found',
       });
     }
+
+    // ── Prepare snapshot data ──
 
     const shippingSnapshot: IShippingAddressSnapshot = {
       full_name: address.full_name,
@@ -105,36 +112,58 @@ export class OrderService {
 
     const totalAmount = itemsTotal + shippingFee;
 
-    const order = await this.orderRepository.create({
-      user_id: userId,
-      status: OrderStatus.Pending,
-      payment_method: dto.payment_method,
-      payment_status: 'unpaid',
-      shipping_fee: shippingFee,
-      total_amount: totalAmount,
-      shipping_address: JSON.stringify(shippingSnapshot),
-    });
+    // ── Transaction: create order + items, clear cart ──
 
-    const orderItems = await this.orderItemRepository.createMany(
-      orderItemsData.map((item) => ({ ...item, order_id: order.id })),
-    );
-    order.order_items = orderItems;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    await this.cartService.clearCart(userId);
+    try {
+      const order = await queryRunner.manager.save(
+        queryRunner.manager.create(Order, {
+          user_id: userId,
+          status: OrderStatus.Pending,
+          payment_method: dto.payment_method,
+          payment_status: 'unpaid',
+          shipping_fee: shippingFee,
+          total_amount: totalAmount,
+          shipping_address: JSON.stringify(shippingSnapshot),
+        }),
+      );
 
-    this.eventEmitter.emit('order.created', {
-      orderId: order.id,
-      items: cart.items.map((item) => ({
-        productVariantId: item.product_variant_id,
-        quantity: item.quantity,
-      })),
-    });
+      const orderItems = await queryRunner.manager.save(
+        queryRunner.manager.create(
+          OrderItem,
+          orderItemsData.map((item) => ({ ...item, order_id: order.id })),
+        ),
+      );
+      order.order_items = orderItems;
 
-    this.logger.log(
-      `Order #${order.id} created for user ${userId}, payment: ${dto.payment_method}`,
-    );
+      await this.cartService.clearCart(userId, queryRunner.manager);
 
-    return toOrderResponse(order);
+      await queryRunner.commitTransaction();
+
+      // ── Side effects (after commit) ──
+
+      this.eventEmitter.emit('order.created', {
+        orderId: order.id,
+        items: cart.items.map((item) => ({
+          productVariantId: item.product_variant_id,
+          quantity: item.quantity,
+        })),
+      });
+
+      this.logger.log(
+        `Order #${order.id} created for user ${userId}, payment: ${dto.payment_method}`,
+      );
+
+      return toOrderResponse(order);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async findMyOrders(

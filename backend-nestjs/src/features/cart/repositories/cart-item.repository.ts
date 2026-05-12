@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CartItem } from '../entities/cart-item.entity';
 
 @Injectable()
@@ -40,7 +40,8 @@ export class CartItemRepository {
     await this.repo.delete(id);
   }
 
-  async deleteByCartId(cartId: number): Promise<void> {
-    await this.repo.delete({ cart_id: cartId });
+  async deleteByCartId(cartId: number, manager?: EntityManager): Promise<void> {
+    const repo = manager ? manager.getRepository(CartItem) : this.repo;
+    await repo.delete({ cart_id: cartId } as any);
   }
 }

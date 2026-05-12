@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DataSource } from 'typeorm';
 import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { OrderService } from '../order.service';
 import { OrderRepository } from '../repositories/order.repository';
@@ -8,6 +9,18 @@ import { CartService } from '../../cart/cart.service';
 import { ProductService } from '../../product/product.service';
 import { UserProfileService } from '../../user-profile/user-profile.service';
 import { PaymentMethod, OrderStatus } from '../../../common/constants';
+
+const mockQueryRunner = {
+  connect: jest.fn(),
+  startTransaction: jest.fn(),
+  commitTransaction: jest.fn(),
+  rollbackTransaction: jest.fn(),
+  release: jest.fn(),
+  manager: {
+    create: jest.fn((entity, data) => data),
+    save: jest.fn((data) => Promise.resolve(Array.isArray(data) ? data : { id: 42, ...data })),
+  },
+};
 
 describe('OrderService', () => {
   let service: OrderService;
@@ -19,6 +32,8 @@ describe('OrderService', () => {
   let eventEmitter: jest.Mocked<EventEmitter2>;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrderService,
@@ -54,6 +69,10 @@ describe('OrderService', () => {
           provide: EventEmitter2,
           useValue: { emit: jest.fn() },
         },
+        {
+          provide: DataSource,
+          useValue: { createQueryRunner: jest.fn(() => mockQueryRunner) },
+        },
       ],
     }).compile();
 
@@ -70,7 +89,7 @@ describe('OrderService', () => {
     const userId = 1;
     const dto = { payment_method: PaymentMethod.Cod, address_id: 5 };
 
-    it('should create order with snapshot data from cart items', async () => {
+    it('should create order within a transaction and emit event after commit', async () => {
       // Arrange
       const mockCart = {
         id: 1,
@@ -97,47 +116,64 @@ describe('OrderService', () => {
         address_line: '123 Le Loi',
         city: 'Ho Chi Minh',
       };
-      const mockOrder = {
-        id: 42,
-        user_id: userId,
-        status: 'pending',
-        payment_method: 'cod',
-        payment_status: 'unpaid',
-        shipping_fee: 30000,
-        total_amount: 530000,
-        shipping_address: JSON.stringify(mockAddress),
-        created_at: new Date(),
-        order_items: [],
-      };
 
       cartService.getCartWithItems.mockResolvedValue(mockCart as any);
       productService.findVariantById.mockResolvedValue(mockCart.items[0].product_variant as any);
       userProfileService.findAddressById.mockResolvedValue(mockAddress as any);
-      orderRepository.create.mockResolvedValue(mockOrder as any);
-      orderItemRepository.createMany.mockResolvedValue([
-        {
-          id: 1,
-          order_id: 42,
-          product_variant_id: 10,
-          product_name: 'Áo thun nam',
-          sku: 'ATN-BLK-L',
-          price: 250000,
-          quantity: 2,
-          thumbnail_url: 'http://img.jpg',
-        },
-      ] as any);
 
       // Act
       const result = await service.checkout(userId, dto as any);
 
-      // Assert
-      expect(result.id).toBe(42);
-      expect(result.status).toBe('pending');
-      expect(cartService.clearCart).toHaveBeenCalledWith(userId);
+      // Assert — transaction lifecycle
+      expect(mockQueryRunner.connect).toHaveBeenCalled();
+      expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+      expect(mockQueryRunner.release).toHaveBeenCalled();
+      expect(mockQueryRunner.rollbackTransaction).not.toHaveBeenCalled();
+
+      // Assert — cart cleared within transaction (receives manager)
+      expect(cartService.clearCart).toHaveBeenCalledWith(userId, mockQueryRunner.manager);
+
+      // Assert — event emitted after commit
       expect(eventEmitter.emit).toHaveBeenCalledWith('order.created', {
         orderId: 42,
         items: [{ productVariantId: 10, quantity: 2 }],
       });
+
+      expect(result.id).toBe(42);
+      expect(result.status).toBe('pending');
+    });
+
+    it('should rollback transaction on failure', async () => {
+      const mockCart = {
+        id: 1,
+        items: [
+          {
+            id: 1,
+            product_variant_id: 10,
+            quantity: 2,
+            product_variant: {
+              id: 10,
+              sku: 'ATN-BLK-L',
+              price: 250000,
+              sale_price: null,
+              stock_quantity: 5,
+              product: { name: 'Test', thumbnail_url: null },
+            },
+          },
+        ],
+      };
+
+      cartService.getCartWithItems.mockResolvedValue(mockCart as any);
+      productService.findVariantById.mockResolvedValue(mockCart.items[0].product_variant as any);
+      userProfileService.findAddressById.mockResolvedValue({ id: 5, full_name: 'A', phone: '0', address_line: 'B', city: 'C' } as any);
+      mockQueryRunner.manager.save.mockRejectedValueOnce(new Error('DB error'));
+
+      await expect(service.checkout(userId, dto as any)).rejects.toThrow('DB error');
+
+      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+      expect(mockQueryRunner.release).toHaveBeenCalled();
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
 
     it('should throw InsufficientStockException when stock is not enough', async () => {
