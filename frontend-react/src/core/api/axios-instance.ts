@@ -13,7 +13,14 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  const sessionId = localStorage.getItem('session_id');
+  let sessionId = localStorage.getItem('session_id');
+  if (!sessionId && !token) {
+    sessionId = typeof crypto.randomUUID === 'function' 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2) + Date.now().toString(36);
+    localStorage.setItem('session_id', sessionId);
+  }
+
   if (sessionId && !token) {
     config.headers['x-session-id'] = sessionId;
   }

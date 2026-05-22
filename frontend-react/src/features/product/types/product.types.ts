@@ -64,6 +64,19 @@ export interface AdminProductDetail extends Product {
   average_rating?: number;
 }
 
+export interface CategoryDetail {
+  category: Category;
+  products: {
+    data: ProductListItem[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
 // --- Query params ---
 
 export interface ProductListParams extends PaginationParams {

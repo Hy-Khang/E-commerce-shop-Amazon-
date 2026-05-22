@@ -2,8 +2,11 @@ import { ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/common/constants/routes';
 import { useCartStore } from '../stores/cart.store';
+import { useCart } from '../hooks/useCart';
 
 export function CartBadge() {
+  // Calling useCart ensures that the cart is fetched and itemCount in store is updated
+  useCart();
   const itemCount = useCartStore((s) => s.itemCount);
 
   return (

@@ -49,7 +49,7 @@ export class OrderService {
     private readonly userProfileService: UserProfileService,
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
 
   // ─── Customer endpoints ───
 

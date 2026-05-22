@@ -1,6 +1,6 @@
 import { api } from '@/core/api/axios-instance';
 import type { SuccessResponse, PaginatedResponse } from '@/core/api/api.types';
-import type { Product, ProductListItem, Category, ProductListParams } from '../types/product.types';
+import type { Product, ProductListItem, Category, ProductListParams, CategoryDetail } from '../types/product.types';
 
 export const productService = {
   getList: (params: ProductListParams) =>
@@ -13,5 +13,5 @@ export const productService = {
     api.get<SuccessResponse<Category[]>>('/categories'),
 
   getCategoryBySlug: (slug: string) =>
-    api.get<SuccessResponse<Category & { products: ProductListItem[] }>>(`/categories/${slug}`),
+    api.get<SuccessResponse<CategoryDetail>>(`/categories/${slug}`),
 };

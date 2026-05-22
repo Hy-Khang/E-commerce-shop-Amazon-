@@ -28,10 +28,10 @@ export default function CategoryPage() {
           <div className="py-12 text-center text-gray-500">Category not found.</div>
         ) : (
           <>
-            <h1 className="mb-6 text-2xl font-bold text-gray-900">{data.name}</h1>
-            {data.products && data.products.length > 0 ? (
+            <h1 className="mb-6 text-2xl font-bold text-gray-900">{data.category.name}</h1>
+            {data.products.data && data.products.data.length > 0 ? (
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-                {data.products.map((product) => (
+                {data.products.data.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

@@ -50,11 +50,11 @@ export const router = createBrowserRouter([
       { path: 'products', element: <SuspenseWrapper><ProductListPage /></SuspenseWrapper> },
       { path: 'products/:slug', element: <SuspenseWrapper><ProductDetailPage /></SuspenseWrapper> },
       { path: 'categories/:slug', element: <SuspenseWrapper><CategoryPage /></SuspenseWrapper> },
+      { path: 'cart', element: <SuspenseWrapper><CartPage /></SuspenseWrapper> },
 
       {
         element: <AuthGuard />,
         children: [
-          { path: 'cart', element: <SuspenseWrapper><CartPage /></SuspenseWrapper> },
           { path: 'checkout', element: <SuspenseWrapper><CheckoutPage /></SuspenseWrapper> },
           { path: 'orders', element: <SuspenseWrapper><OrderHistoryPage /></SuspenseWrapper> },
           { path: 'orders/:id', element: <SuspenseWrapper><OrderDetailPage /></SuspenseWrapper> },

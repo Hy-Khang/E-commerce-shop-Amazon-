@@ -17,9 +17,9 @@ export function MainLayout() {
             <Link to={ROUTES.PRODUCTS} className="text-sm text-gray-600 hover:text-gray-900">
               Products
             </Link>
+            <CartBadge />
             {isAuthenticated ? (
               <>
-                <CartBadge />
                 <Link to={ROUTES.ORDERS} className="text-sm text-gray-600 hover:text-gray-900">
                   Orders
                 </Link>

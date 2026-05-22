@@ -8,26 +8,21 @@ export class RoleRepository {
   constructor(
     @InjectRepository(Role)
     private readonly repo: Repository<Role>,
-  ) {}
+  ) { }
 
   async findByName(name: string): Promise<Role | null> {
     return this.repo.findOne({ where: { name } });
   }
 
-  async findById(id: number): Promise<Role | null> {
-    return this.repo.findOne({ where: { id } });
-  }
-
   async findAll(): Promise<Role[]> {
-    return this.repo.find({ order: { id: 'ASC' } });
+    return this.repo.query('EXEC sp_GetAllRoles');
   }
-
+  async findById(id: number): Promise<Role | null> {
+    const result = await this.repo.query('EXEC sp_GetRoleById @id = @0', [id]);
+    return result[0] || null;
+  }
   async findAllWithUserCount(): Promise<(Role & { userCount: number })[]> {
-    return this.repo
-      .createQueryBuilder('role')
-      .loadRelationCountAndMap('role.userCount', 'role.users')
-      .orderBy('role.id', 'ASC')
-      .getMany() as Promise<(Role & { userCount: number })[]>;
+    return this.repo.query('EXEC sp_GetRolesWithUserCount');
   }
 
   async findByIdWithUserCount(id: number): Promise<(Role & { userCount: number }) | null> {
@@ -40,17 +35,15 @@ export class RoleRepository {
   }
 
   async create(data: Partial<Role>): Promise<Role> {
-    const role = this.repo.create(data);
-    return this.repo.save(role);
+    const result = await this.repo.query('EXEC sp_CreateRole @name = @0', [data.name]);
+    return result[0];
   }
-
   async update(id: number, data: Partial<Role>): Promise<Role | null> {
-    await this.repo.update(id, data);
-    return this.findById(id);
+    const result = await this.repo.query('EXEC sp_UpdateRole @id = @0, @name = @1', [id, data.name]);
+    return result[0];
   }
-
   async delete(id: number): Promise<void> {
-    await this.repo.delete(id);
+    await this.repo.query('EXEC sp_DeleteRole @id = @0', [id]);
   }
 
   async existsByName(name: string): Promise<boolean> {
