@@ -30,6 +30,7 @@ export interface OrderItem {
   id: number;
   order_id: number;
   product_variant_id: number | null;
+  product_id: number | null;
   product_name: string;
   sku: string;
   price: number;

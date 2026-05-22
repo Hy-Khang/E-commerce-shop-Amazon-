@@ -19,6 +19,7 @@ function toOrderItemResponse(item: {
   quantity: number;
   thumbnail_url: string | null;
   product_variant_id: number | null;
+  product_variant?: { product_id: number } | null;
 }): OrderItemResponseDto {
   return {
     id: item.id,
@@ -28,6 +29,7 @@ function toOrderItemResponse(item: {
     quantity: item.quantity,
     thumbnail_url: item.thumbnail_url,
     product_variant_id: item.product_variant_id,
+    product_id: item.product_variant?.product_id ?? null,
   };
 }
 

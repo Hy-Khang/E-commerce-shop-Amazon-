@@ -68,6 +68,7 @@ export class ReviewRepository {
   ): Promise<IPaginatedResult<Review>> {
     const [data, total] = await this.repo.findAndCount({
       where: { user_id: userId },
+      relations: ['product'],
       order: { [sort]: order.toUpperCase() },
       skip: (page - 1) * limit,
       take: limit,
@@ -125,6 +126,77 @@ export class ReviewRepository {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  async getReviewStats(
+    productId: number,
+  ): Promise<{
+    average_rating: number;
+    total_reviews: number;
+    rating_distribution: Record<number, number>;
+  }> {
+    const stats = await this.repo
+      .createQueryBuilder('review')
+      .select('AVG(CAST(review.rating AS FLOAT))', 'average_rating')
+      .addSelect('COUNT(*)', 'total_reviews')
+      .where('review.product_id = :productId', { productId })
+      .getRawOne();
+
+    const distribution = await this.repo
+      .createQueryBuilder('review')
+      .select('review.rating', 'rating')
+      .addSelect('COUNT(*)', 'count')
+      .where('review.product_id = :productId', { productId })
+      .groupBy('review.rating')
+      .getRawMany();
+
+    const ratingDistribution: Record<number, number> = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    };
+    for (const row of distribution) {
+      ratingDistribution[row.rating] = parseInt(row.count, 10);
+    }
+
+    return {
+      average_rating: parseFloat(stats.average_rating) || 0,
+      total_reviews: parseInt(stats.total_reviews, 10),
+      rating_distribution: ratingDistribution,
+    };
+  }
+
+  async findVariantInfoForReviews(
+    pairs: { order_id: number; product_id: number }[],
+  ): Promise<Map<string, { color: string | null; size: string | null }>> {
+    if (pairs.length === 0) return new Map();
+
+    const orderIds = [...new Set(pairs.map((p) => p.order_id))];
+
+    const results = await this.repo.manager
+      .createQueryBuilder()
+      .select(['oi.order_id', 'pv.product_id', 'pv.color', 'pv.size'])
+      .from('order_items', 'oi')
+      .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
+      .where('oi.order_id IN (:...orderIds)', { orderIds })
+      .getRawMany();
+
+    const map = new Map<
+      string,
+      { color: string | null; size: string | null }
+    >();
+    for (const row of results) {
+      const key = `${row.oi_order_id}-${row.pv_product_id}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          color: row.pv_color ?? null,
+          size: row.pv_size ?? null,
+        });
+      }
+    }
+    return map;
   }
 
   async create(data: Partial<Review>): Promise<Review> {

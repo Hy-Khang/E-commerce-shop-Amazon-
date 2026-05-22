@@ -9,6 +9,7 @@ export interface PaginatedResponse<T> {
   meta: PaginationMeta;
 }
 
+
 export interface PaginationMeta {
   page: number;
   limit: number;

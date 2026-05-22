@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, MapPin } from 'lucide-react';
+import { User, MapPin, MessageSquare } from 'lucide-react';
 import { useProfile } from '../hooks/useProfile';
 import { ProfileForm } from '../components/ProfileForm';
 import { ROUTES } from '@/common/constants/routes';
@@ -54,6 +54,17 @@ export default function ProfilePage() {
         <div>
           <p className="font-medium text-gray-900">Shipping Addresses</p>
           <p className="text-sm text-gray-500">Manage your delivery addresses</p>
+        </div>
+      </Link>
+
+      <Link
+        to={ROUTES.MY_REVIEWS}
+        className="mt-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 transition hover:bg-gray-50"
+      >
+        <MessageSquare className="h-5 w-5 text-gray-400" />
+        <div>
+          <p className="font-medium text-gray-900">My Reviews</p>
+          <p className="text-sm text-gray-500">View and manage your product reviews</p>
         </div>
       </Link>
     </div>

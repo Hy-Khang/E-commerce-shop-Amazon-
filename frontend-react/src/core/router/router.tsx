@@ -28,9 +28,12 @@ const AdminProductEditPage = lazy(() => import('@/features/product/pages/AdminPr
 const AdminOrderListPage = lazy(() => import('@/features/order/pages/AdminOrderListPage'));
 const AdminOrderDetailPage = lazy(() => import('@/features/order/pages/AdminOrderDetailPage'));
 
+const MyReviewsPage = lazy(() => import('@/features/review/pages/MyReviewsPage'));
+
 const AdminRoleListPage = lazy(() => import('@/features/auth/pages/AdminRoleListPage'));
 const AdminUserListPage = lazy(() => import('@/features/auth/pages/AdminUserListPage'));
 const AdminUserDetailPage = lazy(() => import('@/features/auth/pages/AdminUserDetailPage'));
+const AdminReviewListPage = lazy(() => import('@/features/review/pages/AdminReviewListPage'));
 
 const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
 
@@ -60,6 +63,7 @@ export const router = createBrowserRouter([
           { path: 'orders/:id', element: <SuspenseWrapper><OrderDetailPage /></SuspenseWrapper> },
           { path: 'profile', element: <SuspenseWrapper><ProfilePage /></SuspenseWrapper> },
           { path: 'profile/addresses', element: <SuspenseWrapper><AddressListPage /></SuspenseWrapper> },
+          { path: 'profile/reviews', element: <SuspenseWrapper><MyReviewsPage /></SuspenseWrapper> },
         ],
       },
     ],
@@ -88,6 +92,7 @@ export const router = createBrowserRouter([
               { path: 'admin/users', element: <SuspenseWrapper><AdminUserListPage /></SuspenseWrapper> },
               { path: 'admin/users/:id', element: <SuspenseWrapper><AdminUserDetailPage /></SuspenseWrapper> },
               { path: 'admin/roles', element: <SuspenseWrapper><AdminRoleListPage /></SuspenseWrapper> },
+              { path: 'admin/reviews', element: <SuspenseWrapper><AdminReviewListPage /></SuspenseWrapper> },
             ],
           },
         ],

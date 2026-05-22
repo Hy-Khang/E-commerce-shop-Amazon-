@@ -13,11 +13,14 @@ import { ReviewQueryDto } from './dto/review-query.dto';
 import {
   ReviewResponseDto,
   ReviewWithUserResponseDto,
+  ReviewStatsDto,
+  MyReviewResponseDto,
   AdminReviewResponseDto,
 } from './dto/review-response.dto';
 import {
   toReviewResponse,
   toReviewWithUserResponse,
+  toMyReviewResponse,
   toAdminReviewResponse,
 } from './utils/review.util';
 import { OrderStatus } from '../../common/constants';
@@ -112,7 +115,9 @@ export class ReviewService {
   async findProductReviews(
     productId: number,
     query: ReviewQueryDto,
-  ): Promise<IPaginatedResult<ReviewWithUserResponseDto>> {
+  ): Promise<
+    IPaginatedResult<ReviewWithUserResponseDto> & { stats: ReviewStatsDto }
+  > {
     const result = await this.reviewRepository.findByProductIdPaginated(
       productId,
       query.page || 1,
@@ -121,16 +126,32 @@ export class ReviewService {
       query.order,
     );
 
+    const pairs = result.data.map((r) => ({
+      order_id: r.order_id,
+      product_id: r.product_id,
+    }));
+
+    const [variantMap, stats] = await Promise.all([
+      this.reviewRepository.findVariantInfoForReviews(pairs),
+      this.reviewRepository.getReviewStats(productId),
+    ]);
+
     return {
-      data: result.data.map(toReviewWithUserResponse),
+      data: result.data.map((review) =>
+        toReviewWithUserResponse(
+          review,
+          variantMap.get(`${review.order_id}-${review.product_id}`),
+        ),
+      ),
       meta: result.meta,
+      stats,
     };
   }
 
   async findMyReviews(
     userId: number,
     query: ReviewQueryDto,
-  ): Promise<IPaginatedResult<ReviewResponseDto>> {
+  ): Promise<IPaginatedResult<MyReviewResponseDto>> {
     const result = await this.reviewRepository.findByUserIdPaginated(
       userId,
       query.page || 1,
@@ -139,8 +160,20 @@ export class ReviewService {
       query.order,
     );
 
+    const variantMap = await this.reviewRepository.findVariantInfoForReviews(
+      result.data.map((r) => ({
+        order_id: r.order_id,
+        product_id: r.product_id,
+      })),
+    );
+
     return {
-      data: result.data.map(toReviewResponse),
+      data: result.data.map((review) =>
+        toMyReviewResponse(
+          review,
+          variantMap.get(`${review.order_id}-${review.product_id}`),
+        ),
+      ),
       meta: result.meta,
     };
   }
@@ -172,8 +205,20 @@ export class ReviewService {
   ): Promise<IPaginatedResult<AdminReviewResponseDto>> {
     const result = await this.reviewRepository.findAllPaginated(query);
 
+    const variantMap = await this.reviewRepository.findVariantInfoForReviews(
+      result.data.map((r) => ({
+        order_id: r.order_id,
+        product_id: r.product_id,
+      })),
+    );
+
     return {
-      data: result.data.map(toAdminReviewResponse),
+      data: result.data.map((review) =>
+        toAdminReviewResponse(
+          review,
+          variantMap.get(`${review.order_id}-${review.product_id}`),
+        ),
+      ),
       meta: result.meta,
     };
   }

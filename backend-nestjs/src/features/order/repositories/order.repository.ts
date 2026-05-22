@@ -15,14 +15,14 @@ export class OrderRepository {
   async findByIdWithItems(id: number): Promise<Order | null> {
     return this.repo.findOne({
       where: { id },
-      relations: ['order_items'],
+      relations: ['order_items', 'order_items.product_variant'],
     });
   }
 
   async findByIdWithItemsAndUser(id: number): Promise<Order | null> {
     return this.repo.findOne({
       where: { id },
-      relations: ['order_items', 'user'],
+      relations: ['order_items', 'order_items.product_variant', 'user'],
     });
   }
 

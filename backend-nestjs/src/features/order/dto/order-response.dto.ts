@@ -21,6 +21,9 @@ export class OrderItemResponseDto {
 
   @ApiPropertyOptional()
   product_variant_id: number | null;
+
+  @ApiPropertyOptional()
+  product_id: number | null;
 }
 
 export class ShippingAddressResponseDto {

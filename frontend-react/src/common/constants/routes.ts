@@ -15,6 +15,7 @@ export const ROUTES = {
 
   PROFILE: '/profile',
   ADDRESSES: '/profile/addresses',
+  MY_REVIEWS: '/profile/reviews',
 
   ADMIN_PRODUCTS: '/admin/products',
   ADMIN_PRODUCT_CREATE: '/admin/products/new',
@@ -24,6 +25,7 @@ export const ROUTES = {
   ADMIN_ROLES: '/admin/roles',
   ADMIN_USERS: '/admin/users',
   ADMIN_USER_DETAIL: (id: number) => `/admin/users/${id}`,
+  ADMIN_REVIEWS: '/admin/reviews',
 } as const;
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {

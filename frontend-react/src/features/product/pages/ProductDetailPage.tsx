@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatPrice } from '@/common/utils/format.util';
 import { AddToCartButton } from '@/features/cart';
+import { ReviewList } from '@/features/review';
 import { useProduct } from '../hooks/useProduct';
 import { ImageGallery } from '../components/ImageGallery';
 import { VariantSelector } from '../components/VariantSelector';
@@ -88,6 +89,11 @@ export default function ProductDetailPage() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="rounded-lg border bg-white p-6">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">Customer Reviews</h2>
+        <ReviewList productId={product.id} />
       </div>
     </div>
   );

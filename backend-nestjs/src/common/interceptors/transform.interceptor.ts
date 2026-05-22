@@ -12,7 +12,8 @@ export class TransformInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         if (data && typeof data === 'object' && 'data' in data && 'meta' in data) {
-          return { success: true, data: data.data, meta: data.meta };
+          const { data: responseData, meta, ...rest } = data;
+          return { success: true, data: responseData, meta, ...rest };
         }
         return { success: true, data };
       }),
