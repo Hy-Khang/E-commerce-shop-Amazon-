@@ -25,6 +25,9 @@ export const ROUTES = {
   ADMIN_ROLES: '/admin/roles',
   ADMIN_USERS: '/admin/users',
   ADMIN_USER_DETAIL: (id: number) => `/admin/users/${id}`,
+  ADMIN_CATEGORIES: '/admin/categories',
+  ADMIN_CATEGORY_CREATE: '/admin/categories/new',
+  ADMIN_CATEGORY_EDIT: (id: number) => `/admin/categories/${id}/edit`,
   ADMIN_REVIEWS: '/admin/reviews',
 } as const;
 

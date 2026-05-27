@@ -20,6 +20,7 @@ export {
 } from './hooks/useAdminCategories';
 
 // Components
+export { CategoryForm } from './components/CategoryForm';
 export { ProductCard } from './components/ProductCard';
 export { VariantSelector } from './components/VariantSelector';
 export { ImageGallery } from './components/ImageGallery';

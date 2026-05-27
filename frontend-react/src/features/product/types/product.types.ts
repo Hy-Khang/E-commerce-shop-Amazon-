@@ -12,7 +12,7 @@ export interface Category {
 }
 
 export interface AdminCategory extends Category {
-  product_count: number;
+  productCount: number;
   parent?: Category | null;
 }
 
