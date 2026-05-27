@@ -1,12 +1,11 @@
 import { Link, Outlet } from 'react-router-dom';
-import { useAuthStore, useLogout } from '@/features/auth';
+import { useAuthStore } from '@/features/auth';
 import { CartBadge } from '@/features/cart';
 import { ROUTES } from '@/common/constants/routes';
+import { UserDropdown } from './UserDropdown';
 
 export function MainLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const user = useAuthStore((s) => s.user);
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -19,21 +18,7 @@ export function MainLayout() {
             </Link>
             <CartBadge />
             {isAuthenticated ? (
-              <>
-                <Link to={ROUTES.ORDERS} className="text-sm text-gray-600 hover:text-gray-900">
-                  Orders
-                </Link>
-                <Link to={ROUTES.PROFILE} className="text-sm text-gray-600 hover:text-gray-900">
-                  {user?.full_name || 'Profile'}
-                </Link>
-                <button
-                  onClick={() => logout()}
-                  disabled={isLoggingOut}
-                  className="text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
-                >
-                  {isLoggingOut ? 'Logging out...' : 'Logout'}
-                </button>
-              </>
+              <UserDropdown />
             ) : (
               <>
                 <Link to={ROUTES.LOGIN} className="text-sm text-gray-600 hover:text-gray-900">
