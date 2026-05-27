@@ -1,0 +1,178 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
+import { AuthService } from '../auth.service';
+import { AuthController } from '../auth.controller';
+import { ILoginResponse, ITokenPair } from '../types/auth.types';
+
+describe('Auth — Refresh Token Rotation (e2e)', () => {
+  let app: INestApplication;
+  let authService: jest.Mocked<AuthService>;
+
+  const mockLoginResponse: ILoginResponse = {
+    accessToken: 'access-token-1',
+    refreshToken: 'refresh-token-1',
+    user: { id: 1, email: 'user@example.com', full_name: 'Nguyen Van A', role: 'customer' },
+  };
+
+  const mockNewTokenPair: ITokenPair = {
+    accessToken: 'access-token-2',
+    refreshToken: 'refresh-token-2',
+  };
+
+  beforeAll(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AuthController],
+      providers: [
+        {
+          provide: AuthService,
+          useValue: {
+            register: jest.fn(),
+            login: jest.fn(),
+            refresh: jest.fn(),
+            logout: jest.fn(),
+            logoutAll: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    app = module.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    await app.init();
+
+    authService = module.get(AuthService);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('POST /auth/login → POST /auth/refresh → new token pair', () => {
+    it('should login then refresh to get a new token pair', async () => {
+      // Arrange — login
+      authService.login.mockResolvedValue(mockLoginResponse);
+
+      // Act — login
+      const loginRes = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'user@example.com', password: 'securePassword123' })
+        .expect(200);
+
+      expect(loginRes.body.accessToken).toBe('access-token-1');
+      expect(loginRes.body.refreshToken).toBe('refresh-token-1');
+
+      // Arrange — refresh
+      authService.refresh.mockResolvedValue(mockNewTokenPair);
+
+      // Act — refresh
+      const refreshRes = await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refreshToken: loginRes.body.refreshToken })
+        .expect(200);
+
+      // Assert — new tokens issued
+      expect(refreshRes.body.accessToken).toBe('access-token-2');
+      expect(refreshRes.body.refreshToken).toBe('refresh-token-2');
+      expect(authService.refresh).toHaveBeenCalledWith('refresh-token-1');
+    });
+  });
+
+  describe('POST /auth/refresh with expired/revoked token', () => {
+    it('should return 401 when refresh token is expired', async () => {
+      // Arrange
+      const { UnauthorizedException } = require('@nestjs/common');
+      authService.refresh.mockRejectedValue(
+        new UnauthorizedException({ code: 'AUTH_003', message: 'Refresh token expired or revoked' }),
+      );
+
+      // Act & Assert
+      const res = await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refreshToken: 'expired-token' })
+        .expect(401);
+
+      expect(res.body.message).toBeDefined();
+    });
+  });
+
+  describe('POST /auth/logout → POST /auth/refresh', () => {
+    it('should reject refresh after token is revoked via logout', async () => {
+      // Arrange — login
+      authService.login.mockResolvedValue(mockLoginResponse);
+
+      // Act — login
+      const loginRes = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'user@example.com', password: 'securePassword123' })
+        .expect(200);
+
+      // Arrange — logout succeeds, then refresh fails
+      authService.logout.mockResolvedValue(undefined);
+      const { UnauthorizedException } = require('@nestjs/common');
+      authService.refresh.mockRejectedValue(
+        new UnauthorizedException({ code: 'AUTH_003', message: 'Refresh token expired or revoked' }),
+      );
+
+      // Act — logout with the refresh token
+      await request(app.getHttpServer())
+        .post('/auth/logout')
+        .send({ refreshToken: loginRes.body.refreshToken })
+        .expect(200);
+
+      // Act — attempt refresh with revoked token
+      const refreshRes = await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refreshToken: loginRes.body.refreshToken })
+        .expect(401);
+
+      // Assert
+      expect(refreshRes.body.message).toBeDefined();
+      expect(authService.logout).toHaveBeenCalledWith('refresh-token-1');
+    });
+  });
+
+  describe('POST /auth/register → token pair returned', () => {
+    it('should register and return tokens + user info', async () => {
+      // Arrange
+      const registerResponse: ILoginResponse = {
+        accessToken: 'new-access',
+        refreshToken: 'new-refresh',
+        user: { id: 2, email: 'new@example.com', full_name: 'New User', role: 'customer' },
+      };
+      authService.register.mockResolvedValue(registerResponse);
+
+      // Act
+      const res = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email: 'new@example.com', password: 'securePassword123', full_name: 'New User' })
+        .expect(201);
+
+      // Assert
+      expect(res.body.accessToken).toBe('new-access');
+      expect(res.body.refreshToken).toBe('new-refresh');
+      expect(res.body.user.email).toBe('new@example.com');
+      expect(res.body.user.role).toBe('customer');
+    });
+  });
+
+  describe('POST /auth/logout', () => {
+    it('should revoke refresh token and return 200', async () => {
+      // Arrange
+      authService.logout.mockResolvedValue(undefined);
+
+      // Act
+      await request(app.getHttpServer())
+        .post('/auth/logout')
+        .send({ refreshToken: 'some-token' })
+        .expect(200);
+
+      // Assert
+      expect(authService.logout).toHaveBeenCalledWith('some-token');
+    });
+  });
+});

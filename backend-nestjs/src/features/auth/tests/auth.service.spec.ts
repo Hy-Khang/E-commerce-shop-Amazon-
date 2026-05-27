@@ -47,6 +47,7 @@ describe('AuthService', () => {
             findByIdWithStats: jest.fn(),
             updateIsActive: jest.fn(),
             updateRoleId: jest.fn(),
+            updateProfile: jest.fn(),
           },
         },
         {
@@ -835,6 +836,36 @@ describe('AuthService', () => {
 
       // Act & Assert
       await expect(service.changeUserRole(1, { role_id: 999 })).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ═══════════════════════════════════════════
+  // updateProfile
+  // ═══════════════════════════════════════════
+
+  describe('updateProfile', () => {
+    it('should update user full_name and phone', async () => {
+      // Arrange
+      const user = mockUser({ id: 1 });
+      const updated = mockUser({ id: 1, full_name: 'New Name', phone: '0909999999' });
+      userRepository.findById.mockResolvedValue(user);
+      userRepository.updateProfile.mockResolvedValue(updated);
+
+      // Act
+      const result = await service.updateProfile(1, { full_name: 'New Name', phone: '0909999999' });
+
+      // Assert
+      expect(userRepository.updateProfile).toHaveBeenCalledWith(1, { full_name: 'New Name', phone: '0909999999' });
+      expect(result.full_name).toBe('New Name');
+      expect(result.phone).toBe('0909999999');
+    });
+
+    it('should throw NotFoundException if user not found', async () => {
+      // Arrange
+      userRepository.findById.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(service.updateProfile(999, { full_name: 'Test' })).rejects.toThrow(NotFoundException);
     });
   });
 });
