@@ -175,4 +175,88 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
       expect(authService.logout).toHaveBeenCalledWith('some-token');
     });
   });
+
+  describe('POST /auth/register — validation', () => {
+    it('should return 400 when email is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ password: 'securePassword123', full_name: 'Test User' })
+        .expect(400);
+    });
+
+    it('should return 400 when email is invalid format', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email: 'not-an-email', password: 'securePassword123', full_name: 'Test User' })
+        .expect(400);
+    });
+
+    it('should return 400 when password is too short', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email: 'valid@example.com', password: 'short', full_name: 'Test User' })
+        .expect(400);
+    });
+
+    it('should return 400 when full_name is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ email: 'valid@example.com', password: 'securePassword123' })
+        .expect(400);
+    });
+
+    it('should strip unknown fields (whitelist)', async () => {
+      // Arrange
+      const registerResponse: ILoginResponse = {
+        accessToken: 'token',
+        refreshToken: 'refresh',
+        user: { id: 1, email: 'valid@example.com', full_name: 'Test User', role: 'customer' },
+      };
+      authService.register.mockResolvedValue(registerResponse);
+
+      // Act
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: 'valid@example.com',
+          password: 'securePassword123',
+          full_name: 'Test User',
+          is_admin: true,
+          role_id: 2,
+        })
+        .expect(400);
+    });
+  });
+
+  describe('POST /auth/login — validation', () => {
+    it('should return 400 when email is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ password: 'password123' })
+        .expect(400);
+    });
+
+    it('should return 400 when password is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'user@example.com' })
+        .expect(400);
+    });
+
+    it('should return 400 when body is empty', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({})
+        .expect(400);
+    });
+  });
+
+  describe('POST /auth/refresh — validation', () => {
+    it('should return 400 when refreshToken is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({})
+        .expect(400);
+    });
+  });
 });

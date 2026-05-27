@@ -211,6 +211,21 @@ describe('AuthService', () => {
       expect(userRepository.create).not.toHaveBeenCalled();
     });
 
+    it('should include USER_001 error code in ConflictException', async () => {
+      // Arrange
+      userRepository.existsByEmail.mockResolvedValue(true);
+
+      // Act & Assert
+      try {
+        await service.register(dto);
+        fail('Should have thrown');
+      } catch (e: any) {
+        expect(e.getResponse()).toEqual(
+          expect.objectContaining({ code: 'USER_001' }),
+        );
+      }
+    });
+
     it('should throw Error if default customer role not found in database', async () => {
       // Arrange
       userRepository.existsByEmail.mockResolvedValue(false);
@@ -316,6 +331,21 @@ describe('AuthService', () => {
       await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
     });
 
+    it('should include AUTH_001 error code when user not found', async () => {
+      // Arrange
+      userRepository.findByEmail.mockResolvedValue(null);
+
+      // Act & Assert
+      try {
+        await service.login(dto);
+        fail('Should have thrown');
+      } catch (e: any) {
+        expect(e.getResponse()).toEqual(
+          expect.objectContaining({ code: 'AUTH_001' }),
+        );
+      }
+    });
+
     it('should throw ForbiddenException (AUTH_005) for deactivated user', async () => {
       // Arrange
       userRepository.findByEmail.mockResolvedValue(mockUser({ is_active: false }));
@@ -323,6 +353,21 @@ describe('AuthService', () => {
       // Act & Assert
       await expect(service.login(dto)).rejects.toThrow(ForbiddenException);
       expect(mockedBcrypt.compare).not.toHaveBeenCalled();
+    });
+
+    it('should include AUTH_005 error code for deactivated account', async () => {
+      // Arrange
+      userRepository.findByEmail.mockResolvedValue(mockUser({ is_active: false }));
+
+      // Act & Assert
+      try {
+        await service.login(dto);
+        fail('Should have thrown');
+      } catch (e: any) {
+        expect(e.getResponse()).toEqual(
+          expect.objectContaining({ code: 'AUTH_005' }),
+        );
+      }
     });
 
     it('should throw UnauthorizedException (AUTH_001) for wrong password', async () => {
@@ -333,6 +378,22 @@ describe('AuthService', () => {
       // Act & Assert
       await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
       expect(refreshTokenRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should return same AUTH_001 code for wrong password as for missing user', async () => {
+      // Arrange
+      userRepository.findByEmail.mockResolvedValue(mockUser({ email: dto.email }));
+      (mockedBcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      // Act & Assert
+      try {
+        await service.login(dto);
+        fail('Should have thrown');
+      } catch (e: any) {
+        expect(e.getResponse()).toEqual(
+          expect.objectContaining({ code: 'AUTH_001' }),
+        );
+      }
     });
 
     it('should check is_active before comparing password', async () => {
@@ -430,6 +491,21 @@ describe('AuthService', () => {
       await expect(service.refresh(rawToken)).rejects.toThrow(UnauthorizedException);
     });
 
+    it('should include AUTH_003 error code when token not found', async () => {
+      // Arrange
+      refreshTokenRepository.findByTokenHash.mockResolvedValue(null);
+
+      // Act & Assert
+      try {
+        await service.refresh(rawToken);
+        fail('Should have thrown');
+      } catch (e: any) {
+        expect(e.getResponse()).toEqual(
+          expect.objectContaining({ code: 'AUTH_003' }),
+        );
+      }
+    });
+
     it('should throw UnauthorizedException (AUTH_003) if token expired', async () => {
       // Arrange
       const expiredToken = mockRefreshToken({
@@ -465,6 +541,29 @@ describe('AuthService', () => {
 
       // Act & Assert
       await expect(service.refresh(rawToken)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should generate new JWT with correct user data', async () => {
+      // Arrange
+      const storedToken = mockRefreshToken({
+        user_id: 3,
+        expires_at: new Date(Date.now() + 86400000),
+      });
+      const user = mockUser({ id: 3, email: 'refresh@example.com', role: mockAdminRole() });
+      refreshTokenRepository.findByTokenHash.mockResolvedValue(storedToken);
+      userRepository.findById.mockResolvedValue(user);
+      refreshTokenRepository.revokeByTokenHash.mockResolvedValue(undefined);
+      refreshTokenRepository.create.mockResolvedValue({} as any);
+
+      // Act
+      await service.refresh(rawToken);
+
+      // Assert
+      expect(jwtService.sign).toHaveBeenCalledWith({
+        sub: 3,
+        email: 'refresh@example.com',
+        role: 'admin',
+      });
     });
   });
 
@@ -599,6 +698,32 @@ describe('AuthService', () => {
       // Act & Assert
       await expect(service.createRole({ name: 'customer' })).rejects.toThrow(ConflictException);
     });
+
+    it('should include ROLE_001 error code for duplicate role name', async () => {
+      // Arrange
+      roleRepository.existsByName.mockResolvedValue(true);
+
+      // Act & Assert
+      try {
+        await service.createRole({ name: 'customer' });
+        fail('Should have thrown');
+      } catch (e: any) {
+        expect(e.getResponse()).toEqual(
+          expect.objectContaining({ code: 'ROLE_001' }),
+        );
+      }
+    });
+
+    it('should not call create when name is duplicate', async () => {
+      // Arrange
+      roleRepository.existsByName.mockResolvedValue(true);
+
+      // Act
+      try { await service.createRole({ name: 'customer' }); } catch {}
+
+      // Assert
+      expect(roleRepository.create).not.toHaveBeenCalled();
+    });
   });
 
   // ═══════════════════════════════════════════
@@ -651,6 +776,19 @@ describe('AuthService', () => {
       // Assert
       expect(roleRepository.existsByName).not.toHaveBeenCalled();
     });
+
+    it('should skip name uniqueness check if name is undefined', async () => {
+      // Arrange
+      const existing = mockRole({ id: 3, name: 'seller' });
+      roleRepository.findById.mockResolvedValue(existing);
+      roleRepository.update.mockResolvedValue(existing);
+
+      // Act
+      await service.updateRole(3, {});
+
+      // Assert
+      expect(roleRepository.existsByName).not.toHaveBeenCalled();
+    });
   });
 
   // ═══════════════════════════════════════════
@@ -686,6 +824,34 @@ describe('AuthService', () => {
 
       // Act & Assert
       await expect(service.deleteRole(1)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should include ROLE_002 error code when role has users', async () => {
+      // Arrange
+      roleRepository.findById.mockResolvedValue(mockRole({ id: 1 }));
+      roleRepository.hasUsers.mockResolvedValue(true);
+
+      // Act & Assert
+      try {
+        await service.deleteRole(1);
+        fail('Should have thrown');
+      } catch (e: any) {
+        expect(e.getResponse()).toEqual(
+          expect.objectContaining({ code: 'ROLE_002' }),
+        );
+      }
+    });
+
+    it('should not call delete when role has users', async () => {
+      // Arrange
+      roleRepository.findById.mockResolvedValue(mockRole({ id: 1 }));
+      roleRepository.hasUsers.mockResolvedValue(true);
+
+      // Act
+      try { await service.deleteRole(1); } catch {}
+
+      // Assert
+      expect(roleRepository.delete).not.toHaveBeenCalled();
     });
   });
 
@@ -866,6 +1032,51 @@ describe('AuthService', () => {
 
       // Act & Assert
       await expect(service.updateProfile(999, { full_name: 'Test' })).rejects.toThrow(NotFoundException);
+    });
+
+    it('should update only full_name when phone is not provided', async () => {
+      // Arrange
+      const user = mockUser({ id: 1 });
+      const updated = mockUser({ id: 1, full_name: 'Updated Name' });
+      userRepository.findById.mockResolvedValue(user);
+      userRepository.updateProfile.mockResolvedValue(updated);
+
+      // Act
+      const result = await service.updateProfile(1, { full_name: 'Updated Name' });
+
+      // Assert
+      expect(userRepository.updateProfile).toHaveBeenCalledWith(1, { full_name: 'Updated Name' });
+      expect(result.full_name).toBe('Updated Name');
+    });
+
+    it('should update only phone when full_name is not provided', async () => {
+      // Arrange
+      const user = mockUser({ id: 1 });
+      const updated = mockUser({ id: 1, phone: '0908888888' });
+      userRepository.findById.mockResolvedValue(user);
+      userRepository.updateProfile.mockResolvedValue(updated);
+
+      // Act
+      const result = await service.updateProfile(1, { phone: '0908888888' });
+
+      // Assert
+      expect(userRepository.updateProfile).toHaveBeenCalledWith(1, { phone: '0908888888' });
+      expect(result.phone).toBe('0908888888');
+    });
+
+    it('should include USER_002 error code when user not found', async () => {
+      // Arrange
+      userRepository.findById.mockResolvedValue(null);
+
+      // Act & Assert
+      try {
+        await service.updateProfile(999, { full_name: 'Test' });
+        fail('Should have thrown');
+      } catch (e: any) {
+        expect(e.getResponse()).toEqual(
+          expect.objectContaining({ code: 'USER_002' }),
+        );
+      }
     });
   });
 });
