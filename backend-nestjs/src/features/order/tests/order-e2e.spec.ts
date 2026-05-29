@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   INestApplication,
+  UnauthorizedException,
   ValidationPipe,
 } from '@nestjs/common';
 import request from 'supertest';
@@ -11,6 +12,7 @@ import { AdminOrderController } from '../admin-order.controller';
 import { OrderService } from '../order.service';
 import { PaymentMethod, OrderStatus, PaymentStatus } from '../../../common/constants';
 import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 
 class MockJwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
@@ -19,6 +21,8 @@ class MockJwtAuthGuard implements CanActivate {
       req.user = { id: 1, email: 'admin@test.com', role: 'admin' };
     } else if (req.headers.authorization === 'Bearer customer-token') {
       req.user = { id: 2, email: 'customer@test.com', role: 'customer' };
+    } else {
+      throw new UnauthorizedException('Missing or invalid token');
     }
     return true;
   }
@@ -46,6 +50,7 @@ describe('Order (e2e)', () => {
           },
         },
         { provide: APP_GUARD, useClass: MockJwtAuthGuard },
+        { provide: APP_GUARD, useClass: RolesGuard },
       ],
     }).compile();
 
@@ -68,6 +73,48 @@ describe('Order (e2e)', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  // ─── Auth & Authorization ───
+
+  describe('Authentication', () => {
+    it('should return 401 when no token is provided', async () => {
+      await request(app.getHttpServer())
+        .get('/orders')
+        .expect(401);
+    });
+
+    it('should return 401 for invalid token', async () => {
+      await request(app.getHttpServer())
+        .get('/orders')
+        .set('Authorization', 'Bearer invalid-token')
+        .expect(401);
+    });
+  });
+
+  describe('Authorization', () => {
+    it('should return 403 when customer accesses admin orders', async () => {
+      await request(app.getHttpServer())
+        .get('/admin/orders')
+        .set('Authorization', 'Bearer customer-token')
+        .expect(403);
+    });
+
+    it('should return 403 when customer tries to update order status', async () => {
+      await request(app.getHttpServer())
+        .patch('/admin/orders/1/status')
+        .set('Authorization', 'Bearer customer-token')
+        .send({ status: OrderStatus.Confirmed })
+        .expect(403);
+    });
+
+    it('should return 403 when customer tries to update payment status', async () => {
+      await request(app.getHttpServer())
+        .patch('/admin/orders/1/payment-status')
+        .set('Authorization', 'Bearer customer-token')
+        .send({ payment_status: PaymentStatus.Paid })
+        .expect(403);
+    });
   });
 
   // ─── Customer: Checkout flow ───

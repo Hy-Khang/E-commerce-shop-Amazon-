@@ -68,7 +68,14 @@ Generate all files following BE-PROJECT-RULES.md testing conventions:
 | Mock factories | `tests/mocks/<feature>.mock.ts` | One factory per entity, typed with realistic defaults, supports `Partial<T>` overrides |
 | Service tests | `tests/<feature>.service.spec.ts` | Mock all repos + DI services, test happy path + exceptions + event emissions per method |
 | Controller tests | `tests/<feature>.controller.spec.ts` | Thin — verify correct service method called with correct args |
-| E2E tests | `tests/<feature>.e2e-spec.ts` | **Only** for complex cross-feature flows (`order` checkout, `cart` merge, `auth` refresh) |
+| Admin controller tests | `tests/admin-<feature>.controller.spec.ts` | **Only** if feature has `admin-<feature>.controller.ts` — same thin pattern as controller tests |
+| E2E tests | `tests/<feature>.e2e-spec.ts` | HTTP-level integration via supertest — tests route wiring, DTO validation, auth/authorization, and multi-step flows |
+
+**E2E test scope:** These are HTTP integration tests using `supertest` against controllers with mocked services. They verify: route registration, `ValidationPipe` enforcement (invalid enums, missing fields, `forbidNonWhitelisted`), auth guard behavior (unauthenticated → 401, wrong role → 403), and multi-step flows (checkout → cancel). They do **not** hit a real database.
+
+**Transaction testing:** Features using `DataSource.createQueryRunner()` (e.g., order checkout) need a `mockQueryRunner` with `connect`, `startTransaction`, `commitTransaction`, `rollbackTransaction`, `release`, and `manager.create`/`manager.save`. Test: commit on success, rollback on failure, release always called, events emitted only after commit.
+
+**Cross-feature mock dependencies:** When a feature's mocks need entities from another feature (e.g., order needs `mockProduct` from product), **import from the existing mock factory** (`../product/tests/mocks/product.mock.ts`). Do not duplicate mock factories across features.
 
 **Per service method, cover:**
 - Happy path — correct input → expected return
@@ -97,7 +104,8 @@ Generate all files following BE-PROJECT-RULES.md testing conventions:
   │   └── <feature-name>.mock.ts
   ├── <feature-name>.service.spec.ts
   ├── <feature-name>.controller.spec.ts
-  └── <feature-name>.e2e-spec.ts        (only for complex flows)
+  ├── admin-<feature-name>.controller.spec.ts  (if admin controller exists)
+  └── <feature-name>.e2e-spec.ts               (HTTP integration tests)
 
 ⚙️ Commands to run:
 - npm run test -- --testPathPattern=<feature-name>

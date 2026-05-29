@@ -142,6 +142,27 @@ describe('OrderService', () => {
       expect(result.status).toBe('pending');
     });
 
+    it('should calculate total correctly with multiple cart items', async () => {
+      // Arrange
+      const cart = mockCartForCheckout(3);
+      const address = mockAddress();
+
+      cartService.getCartWithItems.mockResolvedValue(cart as any);
+      for (const item of cart.items) {
+        productService.findVariantById.mockResolvedValueOnce(
+          item.product_variant as any,
+        );
+      }
+      userProfileService.findAddressById.mockResolvedValue(address as any);
+
+      // Act
+      const result = await service.checkout(userId, dto as any);
+
+      // Assert — 3 items: price=250000 * qty(1) + price*qty(2) + price*qty(3) + shipping(30000)
+      const expectedItemsTotal = 250000 * 1 + 250000 * 2 + 250000 * 3;
+      expect(result.total_amount).toBe(expectedItemsTotal + 30000);
+    });
+
     it('should use sale_price when available', async () => {
       // Arrange
       const cart = mockCartForCheckout(1);
@@ -207,7 +228,7 @@ describe('OrderService', () => {
 
       // Act & Assert
       await expect(service.checkout(userId, dto as any)).rejects.toThrow(
-        BadRequestException,
+        InsufficientStockException,
       );
     });
 
@@ -258,6 +279,22 @@ describe('OrderService', () => {
       // Assert
       expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
         1, 1, 20, undefined, undefined,
+      );
+    });
+
+    it('should pass sort and order params to repository', async () => {
+      // Arrange
+      orderRepository.findByUserIdPaginated.mockResolvedValue(
+        mockPaginatedOrders() as any,
+      );
+      const query = { page: 2, limit: 10, sort: 'created_at', order: 'desc' as const };
+
+      // Act
+      await service.findMyOrders(1, query as any);
+
+      // Assert
+      expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
+        1, 2, 10, 'created_at', 'desc',
       );
     });
   });
@@ -423,6 +460,24 @@ describe('OrderService', () => {
         OrderStatus.Confirmed,
       );
       expect(result.status).toBe(OrderStatus.Confirmed);
+    });
+
+    it('should allow valid transition (confirmed → cancelled)', async () => {
+      // Arrange
+      const order = mockOrderWithUser({ status: OrderStatus.Confirmed });
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+
+      // Act
+      const result = await service.updateOrderStatus(1, {
+        status: OrderStatus.Cancelled,
+      });
+
+      // Assert
+      expect(orderRepository.updateStatus).toHaveBeenCalledWith(
+        1,
+        OrderStatus.Cancelled,
+      );
+      expect(result.status).toBe(OrderStatus.Cancelled);
     });
 
     it('should emit order.cancelled when transitioning to cancelled', async () => {
