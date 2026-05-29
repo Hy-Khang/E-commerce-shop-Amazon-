@@ -1,14 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
-import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { OrderService } from '../order.service';
 import { OrderRepository } from '../repositories/order.repository';
 import { OrderItemRepository } from '../repositories/order-item.repository';
 import { CartService } from '../../cart/cart.service';
 import { ProductService } from '../../product/product.service';
 import { UserProfileService } from '../../user-profile/user-profile.service';
-import { PaymentMethod, OrderStatus } from '../../../common/constants';
+import { PaymentMethod, OrderStatus, PaymentStatus } from '../../../common/constants';
+import { InsufficientStockException } from '../../../common/exceptions/insufficient-stock.exception';
+import {
+  mockOrder,
+  mockOrderWithUser,
+  mockCartForCheckout,
+  mockAddress,
+  mockPaginatedOrders,
+} from './mocks/order.mock';
 
 const mockQueryRunner = {
   connect: jest.fn(),
@@ -17,8 +29,10 @@ const mockQueryRunner = {
   rollbackTransaction: jest.fn(),
   release: jest.fn(),
   manager: {
-    create: jest.fn((entity, data) => data),
-    save: jest.fn((data) => Promise.resolve(Array.isArray(data) ? data : { id: 42, ...data })),
+    create: jest.fn((_entity, data) => data),
+    save: jest.fn((data) =>
+      Promise.resolve(Array.isArray(data) ? data : { id: 42, ...data }),
+    ),
   },
 };
 
@@ -85,41 +99,22 @@ describe('OrderService', () => {
     eventEmitter = module.get(EventEmitter2);
   });
 
+  // ─── checkout ───
+
   describe('checkout', () => {
     const userId = 1;
     const dto = { payment_method: PaymentMethod.Cod, address_id: 5 };
 
     it('should create order within a transaction and emit event after commit', async () => {
       // Arrange
-      const mockCart = {
-        id: 1,
-        items: [
-          {
-            id: 1,
-            product_variant_id: 10,
-            quantity: 2,
-            product_variant: {
-              id: 10,
-              sku: 'ATN-BLK-L',
-              price: 250000,
-              sale_price: null,
-              stock_quantity: 5,
-              product: { name: 'Áo thun nam', thumbnail_url: 'http://img.jpg' },
-            },
-          },
-        ],
-      };
-      const mockAddress = {
-        id: 5,
-        full_name: 'Nguyen Van A',
-        phone: '0901234567',
-        address_line: '123 Le Loi',
-        city: 'Ho Chi Minh',
-      };
+      const cart = mockCartForCheckout(1);
+      const address = mockAddress();
 
-      cartService.getCartWithItems.mockResolvedValue(mockCart as any);
-      productService.findVariantById.mockResolvedValue(mockCart.items[0].product_variant as any);
-      userProfileService.findAddressById.mockResolvedValue(mockAddress as any);
+      cartService.getCartWithItems.mockResolvedValue(cart as any);
+      productService.findVariantById.mockResolvedValue(
+        cart.items[0].product_variant as any,
+      );
+      userProfileService.findAddressById.mockResolvedValue(address as any);
 
       // Act
       const result = await service.checkout(userId, dto as any);
@@ -131,96 +126,186 @@ describe('OrderService', () => {
       expect(mockQueryRunner.release).toHaveBeenCalled();
       expect(mockQueryRunner.rollbackTransaction).not.toHaveBeenCalled();
 
-      // Assert — cart cleared within transaction (receives manager)
-      expect(cartService.clearCart).toHaveBeenCalledWith(userId, mockQueryRunner.manager);
+      // Assert — cart cleared within transaction
+      expect(cartService.clearCart).toHaveBeenCalledWith(
+        userId,
+        mockQueryRunner.manager,
+      );
 
       // Assert — event emitted after commit
       expect(eventEmitter.emit).toHaveBeenCalledWith('order.created', {
         orderId: 42,
-        items: [{ productVariantId: 10, quantity: 2 }],
+        items: [{ productVariantId: cart.items[0].product_variant_id, quantity: 1 }],
       });
 
       expect(result.id).toBe(42);
       expect(result.status).toBe('pending');
     });
 
-    it('should rollback transaction on failure', async () => {
-      const mockCart = {
-        id: 1,
-        items: [
-          {
-            id: 1,
-            product_variant_id: 10,
-            quantity: 2,
-            product_variant: {
-              id: 10,
-              sku: 'ATN-BLK-L',
-              price: 250000,
-              sale_price: null,
-              stock_quantity: 5,
-              product: { name: 'Test', thumbnail_url: null },
-            },
-          },
-        ],
-      };
+    it('should use sale_price when available', async () => {
+      // Arrange
+      const cart = mockCartForCheckout(1);
+      cart.items[0].product_variant.sale_price = 200000 as any;
+      cart.items[0].quantity = 1;
+      const address = mockAddress();
 
-      cartService.getCartWithItems.mockResolvedValue(mockCart as any);
-      productService.findVariantById.mockResolvedValue(mockCart.items[0].product_variant as any);
-      userProfileService.findAddressById.mockResolvedValue({ id: 5, full_name: 'A', phone: '0', address_line: 'B', city: 'C' } as any);
+      cartService.getCartWithItems.mockResolvedValue(cart as any);
+      productService.findVariantById.mockResolvedValue(
+        cart.items[0].product_variant as any,
+      );
+      userProfileService.findAddressById.mockResolvedValue(address as any);
+
+      // Act
+      const result = await service.checkout(userId, dto as any);
+
+      // Assert — total = sale_price (200000) * 1 + shipping (30000) = 230000
+      expect(result.total_amount).toBe(230000);
+    });
+
+    it('should rollback transaction on failure', async () => {
+      // Arrange
+      const cart = mockCartForCheckout(1);
+      const address = mockAddress();
+
+      cartService.getCartWithItems.mockResolvedValue(cart as any);
+      productService.findVariantById.mockResolvedValue(
+        cart.items[0].product_variant as any,
+      );
+      userProfileService.findAddressById.mockResolvedValue(address as any);
       mockQueryRunner.manager.save.mockRejectedValueOnce(new Error('DB error'));
 
-      await expect(service.checkout(userId, dto as any)).rejects.toThrow('DB error');
-
+      // Act & Assert
+      await expect(service.checkout(userId, dto as any)).rejects.toThrow(
+        'DB error',
+      );
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
       expect(mockQueryRunner.release).toHaveBeenCalled();
       expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
 
-    it('should throw InsufficientStockException when stock is not enough', async () => {
-      const mockCart = {
-        items: [
-          {
-            product_variant_id: 10,
-            quantity: 10,
-            product_variant: {
-              id: 10,
-              sku: 'ATN-BLK-L',
-              price: 250000,
-              stock_quantity: 5,
-            },
-          },
-        ],
-      };
-      cartService.getCartWithItems.mockResolvedValue(mockCart as any);
+    it('should throw InsufficientStockException when stock is insufficient', async () => {
+      // Arrange
+      const cart = mockCartForCheckout(1);
+      cart.items[0].quantity = 999;
+      cartService.getCartWithItems.mockResolvedValue(cart as any);
       productService.findVariantById.mockResolvedValue({
-        id: 10,
-        sku: 'ATN-BLK-L',
+        ...cart.items[0].product_variant,
         stock_quantity: 5,
       } as any);
 
+      // Act & Assert
+      await expect(service.checkout(userId, dto as any)).rejects.toThrow(
+        InsufficientStockException,
+      );
+    });
+
+    it('should throw InsufficientStockException when variant is not found', async () => {
+      // Arrange
+      const cart = mockCartForCheckout(1);
+      cartService.getCartWithItems.mockResolvedValue(cart as any);
+      productService.findVariantById.mockResolvedValue(null);
+
+      // Act & Assert
       await expect(service.checkout(userId, dto as any)).rejects.toThrow(
         BadRequestException,
       );
     });
+
+    it('should throw NotFoundException when address is not found', async () => {
+      // Arrange
+      const cart = mockCartForCheckout(1);
+      cartService.getCartWithItems.mockResolvedValue(cart as any);
+      productService.findVariantById.mockResolvedValue(
+        cart.items[0].product_variant as any,
+      );
+      userProfileService.findAddressById.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(service.checkout(userId, dto as any)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
   });
+
+  // ─── findMyOrders ───
+
+  describe('findMyOrders', () => {
+    it('should return paginated orders for user', async () => {
+      // Arrange
+      const orders = mockPaginatedOrders();
+      orderRepository.findByUserIdPaginated.mockResolvedValue(orders as any);
+
+      // Act
+      const result = await service.findMyOrders(1, { page: 1, limit: 20 } as any);
+
+      // Assert
+      expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
+        1, 1, 20, undefined, undefined,
+      );
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.total).toBe(1);
+    });
+
+    it('should use default page and limit when not provided', async () => {
+      // Arrange
+      orderRepository.findByUserIdPaginated.mockResolvedValue(
+        mockPaginatedOrders() as any,
+      );
+
+      // Act
+      await service.findMyOrders(1, {} as any);
+
+      // Assert
+      expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
+        1, 1, 20, undefined, undefined,
+      );
+    });
+  });
+
+  // ─── findMyOrderById ───
+
+  describe('findMyOrderById', () => {
+    it('should return order when it belongs to user', async () => {
+      // Arrange
+      const order = mockOrder({ user_id: 1 });
+      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+
+      // Act
+      const result = await service.findMyOrderById(1, 1);
+
+      // Assert
+      expect(result.id).toBe(order.id);
+      expect(result.status).toBe(order.status);
+    });
+
+    it('should throw NotFoundException when order does not exist', async () => {
+      // Arrange
+      orderRepository.findByIdWithItems.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(service.findMyOrderById(1, 999)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw ForbiddenException when order belongs to another user', async () => {
+      // Arrange
+      const order = mockOrder({ user_id: 999 });
+      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+
+      // Act & Assert
+      await expect(service.findMyOrderById(1, 1)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+  });
+
+  // ─── cancelOrder ───
 
   describe('cancelOrder', () => {
     it('should cancel a pending order and emit order.cancelled', async () => {
       // Arrange
-      const order = {
-        id: 1,
-        user_id: 1,
-        status: OrderStatus.Pending,
-        payment_method: 'cod',
-        payment_status: 'unpaid',
-        shipping_fee: 30000,
-        total_amount: 500000,
-        shipping_address: '{}',
-        created_at: new Date(),
-        order_items: [
-          { id: 1, product_variant_id: 10, quantity: 2, product_name: 'Test', sku: 'T-1', price: 235000, thumbnail_url: null },
-        ],
-      };
+      const order = mockOrder({ user_id: 1, status: OrderStatus.Pending });
       orderRepository.findByIdWithItems.mockResolvedValue(order as any);
 
       // Act
@@ -228,63 +313,227 @@ describe('OrderService', () => {
 
       // Assert
       expect(result.status).toBe('cancelled');
-      expect(orderRepository.updateStatus).toHaveBeenCalledWith(1, OrderStatus.Cancelled);
-      expect(eventEmitter.emit).toHaveBeenCalledWith('order.cancelled', expect.any(Object));
+      expect(orderRepository.updateStatus).toHaveBeenCalledWith(
+        1,
+        OrderStatus.Cancelled,
+      );
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'order.cancelled',
+        expect.objectContaining({ orderId: 1 }),
+      );
+    });
+
+    it('should throw NotFoundException when order does not exist', async () => {
+      // Arrange
+      orderRepository.findByIdWithItems.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(service.cancelOrder(1, 999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ForbiddenException when order belongs to another user', async () => {
-      orderRepository.findByIdWithItems.mockResolvedValue({
-        id: 1,
-        user_id: 999,
-        status: OrderStatus.Pending,
-      } as any);
+      // Arrange
+      orderRepository.findByIdWithItems.mockResolvedValue(
+        mockOrder({ user_id: 999 }) as any,
+      );
 
-      await expect(service.cancelOrder(1, 1)).rejects.toThrow(ForbiddenException);
+      // Act & Assert
+      await expect(service.cancelOrder(1, 1)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw BadRequestException when order is not pending', async () => {
-      orderRepository.findByIdWithItems.mockResolvedValue({
-        id: 1,
-        user_id: 1,
-        status: OrderStatus.Delivered,
-      } as any);
+      // Arrange
+      orderRepository.findByIdWithItems.mockResolvedValue(
+        mockOrder({ user_id: 1, status: OrderStatus.Delivered }) as any,
+      );
 
-      await expect(service.cancelOrder(1, 1)).rejects.toThrow(BadRequestException);
+      // Act & Assert
+      await expect(service.cancelOrder(1, 1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
-  describe('updateOrderStatus', () => {
-    it('should reject invalid status transitions', async () => {
-      orderRepository.findByIdWithItemsAndUser.mockResolvedValue({
-        id: 1,
-        status: OrderStatus.Delivered,
-        order_items: [],
-      } as any);
+  // ─── findAllOrders (admin) ───
 
+  describe('findAllOrders', () => {
+    it('should return paginated orders with filters', async () => {
+      // Arrange
+      const orders = mockPaginatedOrders();
+      orderRepository.findAllPaginated.mockResolvedValue(orders as any);
+      const query = { page: 1, limit: 20, status: OrderStatus.Pending };
+
+      // Act
+      const result = await service.findAllOrders(query as any);
+
+      // Assert
+      expect(orderRepository.findAllPaginated).toHaveBeenCalledWith(query);
+      expect(result.data).toHaveLength(1);
+    });
+  });
+
+  // ─── findOrderById (admin) ───
+
+  describe('findOrderById', () => {
+    it('should return order with user info', async () => {
+      // Arrange
+      const order = mockOrderWithUser();
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+
+      // Act
+      const result = await service.findOrderById(1);
+
+      // Assert
+      expect(result.id).toBe(order.id);
+      expect(result.user_id).toBe(order.user_id);
+      expect(result.user_email).toBe('test@test.com');
+    });
+
+    it('should throw NotFoundException when order does not exist', async () => {
+      // Arrange
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(service.findOrderById(999)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  // ─── updateOrderStatus (admin) ───
+
+  describe('updateOrderStatus', () => {
+    it('should allow valid status transition (pending → confirmed)', async () => {
+      // Arrange
+      const order = mockOrderWithUser({ status: OrderStatus.Pending });
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+
+      // Act
+      const result = await service.updateOrderStatus(1, {
+        status: OrderStatus.Confirmed,
+      });
+
+      // Assert
+      expect(orderRepository.updateStatus).toHaveBeenCalledWith(
+        1,
+        OrderStatus.Confirmed,
+      );
+      expect(result.status).toBe(OrderStatus.Confirmed);
+    });
+
+    it('should emit order.cancelled when transitioning to cancelled', async () => {
+      // Arrange
+      const order = mockOrderWithUser({ status: OrderStatus.Pending });
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+
+      // Act
+      await service.updateOrderStatus(1, { status: OrderStatus.Cancelled });
+
+      // Assert
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'order.cancelled',
+        expect.objectContaining({ orderId: 1 }),
+      );
+    });
+
+    it('should not emit event for non-cancel transitions', async () => {
+      // Arrange
+      const order = mockOrderWithUser({ status: OrderStatus.Pending });
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+
+      // Act
+      await service.updateOrderStatus(1, { status: OrderStatus.Confirmed });
+
+      // Assert
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
+    });
+
+    it('should reject invalid status transition (delivered → pending)', async () => {
+      // Arrange
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(
+        mockOrderWithUser({ status: OrderStatus.Delivered }) as any,
+      );
+
+      // Act & Assert
       await expect(
         service.updateOrderStatus(1, { status: OrderStatus.Pending }),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should allow valid status transitions', async () => {
-      const order = {
-        id: 1,
-        user_id: 1,
-        status: OrderStatus.Pending,
-        payment_method: 'cod',
-        payment_status: 'unpaid',
-        shipping_fee: 0,
-        total_amount: 100000,
-        shipping_address: '{}',
-        created_at: new Date(),
-        order_items: [],
-      };
+    it('should throw NotFoundException when order does not exist', async () => {
+      // Arrange
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        service.updateOrderStatus(999, { status: OrderStatus.Confirmed }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ─── updatePaymentStatus (admin) ───
+
+  describe('updatePaymentStatus', () => {
+    it('should update payment status successfully', async () => {
+      // Arrange
+      const order = mockOrderWithUser({ payment_status: PaymentStatus.Unpaid });
       orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
 
-      const result = await service.updateOrderStatus(1, { status: OrderStatus.Confirmed });
+      // Act
+      const result = await service.updatePaymentStatus(1, {
+        payment_status: PaymentStatus.Paid,
+      });
 
-      expect(orderRepository.updateStatus).toHaveBeenCalledWith(1, OrderStatus.Confirmed);
-      expect(result.status).toBe(OrderStatus.Confirmed);
+      // Assert
+      expect(orderRepository.updatePaymentStatus).toHaveBeenCalledWith(
+        1,
+        PaymentStatus.Paid,
+      );
+      expect(result.payment_status).toBe(PaymentStatus.Paid);
+    });
+
+    it('should throw NotFoundException when order does not exist', async () => {
+      // Arrange
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        service.updatePaymentStatus(999, {
+          payment_status: PaymentStatus.Paid,
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ─── findOrderByIdForReview (cross-feature) ───
+
+  describe('findOrderByIdForReview', () => {
+    it('should return order with items', async () => {
+      // Arrange
+      const order = mockOrder();
+      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+
+      // Act
+      const result = await service.findOrderByIdForReview(1);
+
+      // Assert
+      expect(result).toEqual(order);
+      expect(orderRepository.findByIdWithItems).toHaveBeenCalledWith(1);
+    });
+
+    it('should return null when order does not exist', async () => {
+      // Arrange
+      orderRepository.findByIdWithItems.mockResolvedValue(null);
+
+      // Act
+      const result = await service.findOrderByIdForReview(999);
+
+      // Assert
+      expect(result).toBeNull();
     });
   });
 });
