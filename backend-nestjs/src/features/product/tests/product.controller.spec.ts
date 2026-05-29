@@ -1,6 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductController } from '../product.controller';
 import { ProductService } from '../product.service';
+import {
+  mockCategory,
+  mockCategoryWithChildren,
+  mockProduct,
+  mockPaginatedProducts,
+} from './mocks/product.mock';
 
 describe('ProductController', () => {
   let controller: ProductController;
@@ -31,36 +37,57 @@ describe('ProductController', () => {
   });
 
   describe('getCategoryTree', () => {
-    it('should return category tree', async () => {
-      const categories = [{ id: 1, name: 'Electronics', children: [] }] as any;
-      service.getCategoryTree.mockResolvedValue(categories);
+    it('should call service.getCategoryTree and return result', async () => {
+      const tree = [mockCategoryWithChildren()];
+      service.getCategoryTree.mockResolvedValue(tree);
 
       const result = await controller.getCategoryTree();
-      expect(result).toEqual(categories);
-      expect(service.getCategoryTree).toHaveBeenCalled();
+
+      expect(result).toEqual(tree);
+      expect(service.getCategoryTree).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getCategoryBySlug', () => {
+    it('should call service with slug and pagination', async () => {
+      const response = {
+        category: mockCategory(),
+        products: mockPaginatedProducts(),
+      };
+      service.getCategoryBySlug.mockResolvedValue(response);
+
+      const result = await controller.getCategoryBySlug('electronics', {
+        page: 1,
+        limit: 20,
+      } as any);
+
+      expect(result).toEqual(response);
+      expect(service.getCategoryBySlug).toHaveBeenCalledWith('electronics', 1, 20);
     });
   });
 
   describe('findAll', () => {
-    it('should return paginated products', async () => {
-      const response = {
-        data: [{ id: 1, name: 'Product' }],
-        meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
-      } as any;
-      service.findActiveProducts.mockResolvedValue(response);
+    it('should call service.findActiveProducts with query', async () => {
+      const paginated = mockPaginatedProducts();
+      service.findActiveProducts.mockResolvedValue(paginated);
+      const query = { page: 1, limit: 20 } as any;
 
-      const result = await controller.findAll({ page: 1, limit: 20 } as any);
-      expect(result).toEqual(response);
+      const result = await controller.findAll(query);
+
+      expect(result).toEqual(paginated);
+      expect(service.findActiveProducts).toHaveBeenCalledWith(query);
     });
   });
 
   describe('findBySlug', () => {
-    it('should return product by slug', async () => {
-      const product = { id: 1, name: 'Test', slug: 'test' } as any;
+    it('should call service.findProductBySlug with slug', async () => {
+      const product = mockProduct();
       service.findProductBySlug.mockResolvedValue(product);
 
-      const result = await controller.findBySlug('test');
+      const result = await controller.findBySlug('wireless-headphones');
+
       expect(result).toEqual(product);
+      expect(service.findProductBySlug).toHaveBeenCalledWith('wireless-headphones');
     });
   });
 });
