@@ -216,6 +216,23 @@
 
 ---
 
+### 2.7 Wishlist Feature
+
+#### `wishlist_items`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id`, NOT NULL |
+| product_id | INT | FK → `products.id`, NOT NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Constraints:** UNIQUE `(user_id, product_id)` — `uq_wishlist_items_user_product`
+
+> **Design decision:** Wishlist links to `products`, NOT `product_variants`. Follows the Amazon model — user saves a product, selects variant when adding to cart. Consistent with `reviews` (also FK to `product_id`).
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -233,6 +250,9 @@ erDiagram
     products ||--o{ product_variants : "has variants"
     products ||--o{ product_images : "has images"
     products ||--o{ reviews : "has reviews"
+    products ||--o{ wishlist_items : "wishlisted by"
+
+    users ||--o{ wishlist_items : "has wishlist"
 
     product_variants ||--o{ cart_items : "added to cart"
     product_variants ||--o{ order_items : "purchased as"
@@ -330,7 +350,8 @@ export class ProductVariant {
 9. cart_items
 10. orders
 11. order_items
-12. reviews  (last — FKs to users, products, orders)
+12. reviews  (FKs to users, products, orders)
+13. wishlist_items  (FKs to users, products)
 ```
 
 ### Commands
@@ -378,3 +399,6 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | orders | `idx_orders_user_id` | user_id | User's order history |
 | reviews | `idx_reviews_product_id` | product_id | Product review listing |
 | cart_items | `idx_cart_items_cart_id` | cart_id | Load cart contents |
+| wishlist_items | `uq_wishlist_items_user_product` | user_id, product_id | Unique constraint + "is wishlisted?" check |
+| wishlist_items | `idx_wishlist_items_user_id` | user_id | User's wishlist listing |
+| wishlist_items | `idx_wishlist_items_product_id` | product_id | Admin analytics: count per product |

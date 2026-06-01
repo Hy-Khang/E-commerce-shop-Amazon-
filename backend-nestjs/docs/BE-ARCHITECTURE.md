@@ -21,6 +21,7 @@ graph TB
             Cart["cart<br/>carts, cart_items"]
             Order["order<br/>orders, order_items"]
             Review["review<br/>reviews"]
+            Wishlist["wishlist<br/>wishlist_items"]
         end
 
         Features --> INT["Interceptors<br/>TransformInterceptor"]
@@ -85,7 +86,8 @@ src/
     ├── product/                         — owns: categories, products, product_variants, product_images
     ├── cart/                            — owns: carts, cart_items
     ├── order/                           — owns: orders, order_items
-    └── review/                          — owns: reviews
+    ├── review/                          — owns: reviews
+    └── wishlist/                        — owns: wishlist_items
 ```
 
 ---
@@ -206,6 +208,9 @@ graph TD
     Review --> Order
     Review --> Product
 
+    Wishlist["wishlist"] --> Auth
+    Wishlist --> Product
+
     Order -.->|event: order.created| Product
     Order -.->|event: order.cancelled| Product
 
@@ -228,6 +233,7 @@ graph TD
 | cart | AuthModule, ProductModule | — |
 | order | AuthModule, CartModule, ProductModule | — |
 | review | AuthModule, OrderModule, ProductModule | — |
+| wishlist | ProductModule | — |
 
 **Forbidden:** direct import of another feature's repository/entity/dto file, circular module dependencies.
 

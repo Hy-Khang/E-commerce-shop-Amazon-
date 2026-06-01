@@ -56,6 +56,7 @@ src/features/[feature-name]/
 | Cart | `src/features/cart/` | carts, cart_items |
 | Order | `src/features/order/` | orders, order_items |
 | Review | `src/features/review/` | reviews |
+| Wishlist | `src/features/wishlist/` | wishlist_items |
 
 ---
 

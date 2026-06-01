@@ -155,6 +155,9 @@ GET /products?sort=created_at&order=desc
 | REVIEW_002 | 409 | Review already exists for this order + product |
 | CATEGORY_001 | 400 | Cannot delete category with existing products or children |
 | VARIANT_001 | 400 | Cannot delete variant referenced by active cart items |
+| WISHLIST_001 | 409 | Product already in wishlist |
+| WISHLIST_002 | 404 | Product not in wishlist (on remove) |
+| WISHLIST_003 | 404 | Product not found or inactive (on add) |
 
 ### HTTP Status Usage
 
@@ -234,6 +237,16 @@ GET /products?sort=created_at&order=desc
 | GET | `/reviews/me` | List my reviews (paginated) | Customer |
 | DELETE | `/reviews/:id` | Delete own review | Customer |
 
+### Wishlist — `/api/v1/wishlist`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/wishlist` | Add product to wishlist | Customer |
+| DELETE | `/wishlist/:productId` | Remove product from wishlist | Customer |
+| GET | `/wishlist` | List my wishlist (paginated) | Customer |
+| GET | `/wishlist/check/:productId` | Check if single product is in wishlist | Customer |
+| POST | `/wishlist/check` | Bulk check multiple products (body: `product_ids[]`, max 50) | Customer |
+
 ---
 
 ## 7. Admin Endpoints
@@ -294,6 +307,12 @@ All admin endpoints require `@Roles('admin')`. Accessing with a customer token r
 |--------|------|-------------|-------------|
 | GET | `/admin/reviews` | List all reviews (paginated) | `?product_id=10&user_id=5&rating=1&sort=created_at&order=desc` |
 | DELETE | `/admin/reviews/:id` | Delete any review (moderation) | — |
+
+### Admin: Wishlist — `/api/v1/admin/wishlist`
+
+| Method | Path | Description | Filter/Sort |
+|--------|------|-------------|-------------|
+| GET | `/admin/wishlist/popular` | Most wishlisted products (paginated, with counts) | — |
 
 ### Admin: Dashboard — `/api/v1/admin/dashboard`
 
@@ -468,8 +487,8 @@ Read cart → validate stock for each variant → snapshot product_name/sku/pric
 
 - **Library:** `@nestjs/swagger`
 - **URL:** `/api/v1/docs` (development only)
-- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Cart, Order, Review
-- **Tags (Admin):** Admin: Users, Admin: Categories, Admin: Products, Admin: Orders, Admin: Reviews, Admin: Dashboard
+- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Cart, Order, Review, Wishlist
+- **Tags (Admin):** Admin: Users, Admin: Categories, Admin: Products, Admin: Orders, Admin: Reviews, Admin: Wishlist, Admin: Dashboard
 - **Decorators:**
   - DTOs: `@ApiProperty()` on every field
   - Controllers: `@ApiTags('Admin: Products')`, `@ApiBearerAuth()`

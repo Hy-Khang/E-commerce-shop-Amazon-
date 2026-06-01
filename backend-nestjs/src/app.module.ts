@@ -8,6 +8,7 @@ import { ProductModule } from './features/product/product.module';
 import { CartModule } from './features/cart/cart.module';
 import { OrderModule } from './features/order/order.module';
 import { ReviewModule } from './features/review/review.module';
+import { WishlistModule } from './features/wishlist/wishlist.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -22,6 +23,7 @@ import { AppService } from './app.service';
     CartModule,
     OrderModule,
     ReviewModule,
+    WishlistModule,
   ],
   controllers: [AppController],
   providers: [AppService],
