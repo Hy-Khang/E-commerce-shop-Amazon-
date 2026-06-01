@@ -7,6 +7,7 @@ const adminLinks = [
   { to: '/admin/users', label: 'Users' },
   { to: '/admin/roles', label: 'Roles' },
   { to: '/admin/reviews', label: 'Reviews' },
+  { to: '/admin/wishlist', label: 'Wishlist' },
 ];
 
 export function AdminLayout() {

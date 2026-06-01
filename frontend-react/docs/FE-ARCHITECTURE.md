@@ -20,6 +20,7 @@ graph TB
             Cart["cart"]
             Order["order"]
             Review["review"]
+            Wishlist["wishlist"]
         end
     end
 
@@ -77,7 +78,8 @@ src/
 │   ├── product/                       — listing, detail, category tree, admin CRUD
 │   ├── cart/                          — cart view, add/update/remove, guest cart, merge
 │   ├── order/                         — checkout, order history, detail, admin management
-│   └── review/                        — create review, product reviews, my reviews
+│   ├── review/                        — create review, product reviews, my reviews
+│   └── wishlist/                      — add/remove products, wishlist page, admin popular
 │
 ├── assets/                            — static images, fonts
 └── styles/
@@ -196,6 +198,8 @@ graph TD
     Order --> Product
     Review["review"] --> Auth
     Review --> Product
+    Wishlist["wishlist"] --> Auth
+    Wishlist --> Product
 
     Order -.->|cache invalidation| Cart
     Review -.->|cache invalidation| Product
@@ -210,7 +214,7 @@ graph TD
 | **TanStack cache invalidation** | Cross-feature side effects | Checkout success → invalidate `['cart']` + `['orders', 'list']` |
 | **Barrel exports** | Composing UI from multiple features | CheckoutPage imports `CartItemList` from `@/features/cart` |
 | **URL params** | Feature-to-feature navigation | ProductCard links to `/products/:slug`, OrderItemRow links back to product |
-| **Props at page level** | Page composes multiple features | ProductDetailPage renders `AddToCartButton` (cart) + `ReviewList` (review) |
+| **Props at page level** | Page composes multiple features | ProductDetailPage renders `AddToCartButton` (cart) + `ReviewList` (review) + `WishlistButton` (wishlist) |
 
 ---
 
@@ -222,7 +226,7 @@ graph TD
 |------|------|---------|
 | `/` | Home (product listing) | product |
 | `/products` | ProductListPage | product |
-| `/products/:slug` | ProductDetailPage | product + cart + review |
+| `/products/:slug` | ProductDetailPage | product + cart + review + wishlist |
 | `/categories/:slug` | CategoryPage | product |
 | `/login` | LoginPage | auth |
 | `/register` | RegisterPage | auth |
@@ -237,6 +241,7 @@ graph TD
 | `/orders/:id` | OrderDetailPage | order |
 | `/profile` | ProfilePage | user-profile |
 | `/profile/addresses` | AddressListPage | user-profile |
+| `/wishlist` | WishlistPage | wishlist |
 
 ### Admin Routes (AuthGuard + RoleGuard)
 
@@ -247,6 +252,7 @@ graph TD
 | `/admin/products/:id/edit` | AdminProductEditPage | product |
 | `/admin/orders` | AdminOrderListPage | order |
 | `/admin/orders/:id` | AdminOrderDetailPage | order |
+| `/admin/wishlist` | AdminWishlistPopularPage | wishlist |
 
 **Config:** `createBrowserRouter` in `core/router/router.tsx`. Each page lazy-loaded via `React.lazy`. Layouts as route parents. 404 catch-all → NotFoundPage.
 
@@ -299,6 +305,13 @@ export const orderKeys = {
   detail: (id: number) => ['orders', 'detail', id] as const,
   admin:  (filters: AdminOrderFilters) => ['admin', 'orders', filters] as const,
 };
+
+export const wishlistKeys = {
+  all:       ['wishlist'] as const,
+  list:      (params: WishlistListParams) => ['wishlist', 'list', params] as const,
+  check:     (productId: number) => ['wishlist', 'check', productId] as const,
+  bulkCheck: (productIds: number[]) => ['wishlist', 'bulkCheck', productIds] as const,
+};
 ```
 
 ### Cache Invalidation Map
@@ -309,6 +322,7 @@ export const orderKeys = {
 | Cart item add/update/remove | `cartKeys.current()` → update `useCartStore.itemCount` |
 | Review created | `reviewKeys.list(productId)` + `productKeys.detail(slug)` |
 | Login + cart merge | `cartKeys.current()` |
+| Wishlist add/remove | `wishlistKeys.all` + `wishlistKeys.check(productId)` |
 
 ---
 

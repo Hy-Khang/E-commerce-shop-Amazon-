@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { formatPrice } from '@/common/utils/format.util';
 import { AddToCartButton } from '@/features/cart';
 import { ReviewList } from '@/features/review';
+import { WishlistButton } from '@/features/wishlist';
 import { useProduct } from '../hooks/useProduct';
 import { ImageGallery } from '../components/ImageGallery';
 import { VariantSelector } from '../components/VariantSelector';
@@ -34,7 +35,10 @@ export default function ProductDetailPage() {
 
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
+              <WishlistButton productId={product.id} />
+            </div>
             {active && (
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-red-600">

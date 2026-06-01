@@ -16,6 +16,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   ADDRESSES: '/profile/addresses',
   MY_REVIEWS: '/profile/reviews',
+  WISHLIST: '/wishlist',
 
   ADMIN_PRODUCTS: '/admin/products',
   ADMIN_PRODUCT_CREATE: '/admin/products/new',
@@ -29,6 +30,7 @@ export const ROUTES = {
   ADMIN_CATEGORY_CREATE: '/admin/categories/new',
   ADMIN_CATEGORY_EDIT: (id: number) => `/admin/categories/${id}/edit`,
   ADMIN_REVIEWS: '/admin/reviews',
+  ADMIN_WISHLIST: '/admin/wishlist',
 } as const;
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {

@@ -57,6 +57,7 @@ src/features/[feature-name]/
 | Cart | `src/features/cart/` | Cart view, add/update/remove, guest cart, merge on login |
 | Order | `src/features/order/` | Checkout, order history, detail, admin management |
 | Review | `src/features/review/` | Create review (purchase-verified), product reviews, my reviews |
+| Wishlist | `src/features/wishlist/` | Add/remove products, wishlist page, admin popular analytics |
 
 ---
 
@@ -109,6 +110,7 @@ import { productService } from '@/features/product/services/product.service';
 - **cart** is session-scoped — guest via `session_id` (localStorage), merge triggered on login
 - **order** reads cart at checkout — composes cart items display + order form, backend handles cart→order conversion
 - **review** depends on order — receives `order_id` + `product_id` as props, API enforces 3-way link server-side
+- **wishlist** depends on auth + product — WishlistButton rendered on product cards/detail, bulk check for product listings
 
 ---
 
@@ -271,7 +273,7 @@ const queryClient = new QueryClient({
 |------|-----------|--------|
 | Products, categories | 5 min | Rarely changes, cacheable |
 | Cart | 0 | Always fresh, reflects latest state |
-| Orders, reviews | 1 min | Moderate freshness needed |
+| Orders, reviews, wishlist | 1 min | Moderate freshness needed |
 
 **Optimistic updates:** Cart add/remove → `onMutate` updates cache, `onError` rolls back.
 
@@ -284,6 +286,7 @@ const queryClient = new QueryClient({
 | Checkout success | `['cart']` + `['orders', 'list']` |
 | Review created | `['reviews', 'list', productId]` |
 | Cart merge on login | `['cart']` |
+| Wishlist add/remove | `['wishlist']` + `['wishlist', 'check', productId]` |
 
 ---
 

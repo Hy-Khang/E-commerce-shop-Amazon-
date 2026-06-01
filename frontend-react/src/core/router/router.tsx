@@ -29,6 +29,7 @@ const AdminOrderListPage = lazy(() => import('@/features/order/pages/AdminOrderL
 const AdminOrderDetailPage = lazy(() => import('@/features/order/pages/AdminOrderDetailPage'));
 
 const MyReviewsPage = lazy(() => import('@/features/review/pages/MyReviewsPage'));
+const WishlistPage = lazy(() => import('@/features/wishlist/pages/WishlistPage'));
 
 const AdminRoleListPage = lazy(() => import('@/features/auth/pages/AdminRoleListPage'));
 const AdminUserListPage = lazy(() => import('@/features/auth/pages/AdminUserListPage'));
@@ -37,6 +38,7 @@ const AdminCategoryListPage = lazy(() => import('@/features/product/pages/AdminC
 const AdminCategoryCreatePage = lazy(() => import('@/features/product/pages/AdminCategoryCreatePage'));
 const AdminCategoryEditPage = lazy(() => import('@/features/product/pages/AdminCategoryEditPage'));
 const AdminReviewListPage = lazy(() => import('@/features/review/pages/AdminReviewListPage'));
+const AdminWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/AdminWishlistPopularPage'));
 
 const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
 
@@ -67,6 +69,7 @@ export const router = createBrowserRouter([
           { path: 'profile', element: <SuspenseWrapper><ProfilePage /></SuspenseWrapper> },
           { path: 'profile/addresses', element: <SuspenseWrapper><AddressListPage /></SuspenseWrapper> },
           { path: 'profile/reviews', element: <SuspenseWrapper><MyReviewsPage /></SuspenseWrapper> },
+          { path: 'wishlist', element: <SuspenseWrapper><WishlistPage /></SuspenseWrapper> },
         ],
       },
     ],
@@ -99,6 +102,7 @@ export const router = createBrowserRouter([
               { path: 'admin/users/:id', element: <SuspenseWrapper><AdminUserDetailPage /></SuspenseWrapper> },
               { path: 'admin/roles', element: <SuspenseWrapper><AdminRoleListPage /></SuspenseWrapper> },
               { path: 'admin/reviews', element: <SuspenseWrapper><AdminReviewListPage /></SuspenseWrapper> },
+              { path: 'admin/wishlist', element: <SuspenseWrapper><AdminWishlistPopularPage /></SuspenseWrapper> },
             ],
           },
         ],

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
+import { WishlistButton } from '@/features/wishlist';
 import { usePrefetchProduct } from '../hooks/usePrefetchProduct';
 import { getPriceRange, hasAnyStock } from '../utils/product.util';
 import type { ProductListItem } from '../types/product.types';
@@ -20,7 +21,7 @@ export function ProductCard({ product }: Props) {
       onMouseEnter={() => prefetch(product.slug)}
       className="group block overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md"
     >
-      <div className="aspect-square overflow-hidden bg-gray-100">
+      <div className="relative aspect-square overflow-hidden bg-gray-100">
         {product.thumbnail_url ? (
           <img
             src={product.thumbnail_url}
@@ -32,6 +33,9 @@ export function ProductCard({ product }: Props) {
             No image
           </div>
         )}
+        <div className="absolute right-2 top-2">
+          <WishlistButton productId={product.id} size="sm" />
+        </div>
       </div>
       <div className="p-4">
         <h3 className="truncate text-sm font-medium text-gray-900 group-hover:text-blue-600">
