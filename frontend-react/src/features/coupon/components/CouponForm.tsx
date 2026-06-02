@@ -1,5 +1,6 @@
-import type { UseFormReturn } from 'react-hook-form';
-import type { CreateCouponFormData, CouponScope } from '../types/coupon.types';
+import { useWatch, type UseFormReturn } from 'react-hook-form';
+import type { CreateCouponFormData } from '../types/coupon.types';
+import { MultiItemPicker } from './MultiItemPicker';
 
 interface Props {
   form: UseFormReturn<CreateCouponFormData>;
@@ -9,23 +10,18 @@ interface Props {
   isEdit?: boolean;
 }
 
-function toLocalDatetime(iso: string | undefined): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const offset = d.getTimezoneOffset() * 60000;
-  return new Date(d.getTime() - offset).toISOString().slice(0, 16);
-}
-
 export function CouponForm({ form, onSubmit, isPending, submitLabel, isEdit }: Props) {
   const {
     register,
     handleSubmit,
-    watch,
+    setValue,
     formState: { errors },
   } = form;
 
-  const scope = watch('scope');
-  const discountType = watch('discount_type');
+  const scope = useWatch({ control: form.control, name: 'scope' });
+  const discountType = useWatch({ control: form.control, name: 'discount_type' });
+  const categoryIds = useWatch({ control: form.control, name: 'category_ids' });
+  const productIds = useWatch({ control: form.control, name: 'product_ids' });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -37,9 +33,9 @@ export function CouponForm({ form, onSubmit, isPending, submitLabel, isEdit }: P
           <input
             id="code"
             {...register('code')}
-            disabled={isEdit}
+            readOnly={isEdit}
             placeholder="e.g. SUMMER2026"
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm uppercase disabled:bg-gray-100 disabled:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={`mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm uppercase focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 ${isEdit ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''}`}
           />
           {errors.code && <p className="mt-1 text-xs text-red-600">{errors.code.message}</p>}
         </div>
@@ -98,37 +94,29 @@ export function CouponForm({ form, onSubmit, isPending, submitLabel, isEdit }: P
 
       {scope === 'categories' && (
         <div>
-          <label htmlFor="category_ids" className="block text-sm font-medium text-gray-700">
-            Category IDs <span className="text-xs text-gray-400">(comma-separated)</span>
-          </label>
-          <input
-            id="category_ids"
-            placeholder="e.g. 5, 12, 18"
-            defaultValue={watch('category_ids')?.join(', ') || ''}
-            onChange={(e) => {
-              const ids = e.target.value.split(',').map((s) => Number(s.trim())).filter(Boolean);
-              form.setValue('category_ids', ids);
-            }}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+          <label className="block text-sm font-medium text-gray-700">Categories</label>
+          <div className="mt-1">
+            <MultiItemPicker
+              type="categories"
+              selectedIds={categoryIds ?? []}
+              onChange={(ids) => setValue('category_ids', ids)}
+            />
+          </div>
+          {errors.category_ids && <p className="mt-1 text-xs text-red-600">{errors.category_ids.message}</p>}
         </div>
       )}
 
       {scope === 'products' && (
         <div>
-          <label htmlFor="product_ids" className="block text-sm font-medium text-gray-700">
-            Product IDs <span className="text-xs text-gray-400">(comma-separated)</span>
-          </label>
-          <input
-            id="product_ids"
-            placeholder="e.g. 101, 102, 103"
-            defaultValue={watch('product_ids')?.join(', ') || ''}
-            onChange={(e) => {
-              const ids = e.target.value.split(',').map((s) => Number(s.trim())).filter(Boolean);
-              form.setValue('product_ids', ids);
-            }}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+          <label className="block text-sm font-medium text-gray-700">Products</label>
+          <div className="mt-1">
+            <MultiItemPicker
+              type="products"
+              selectedIds={productIds ?? []}
+              onChange={(ids) => setValue('product_ids', ids)}
+            />
+          </div>
+          {errors.product_ids && <p className="mt-1 text-xs text-red-600">{errors.product_ids.message}</p>}
         </div>
       )}
 
@@ -211,6 +199,12 @@ export function CouponForm({ form, onSubmit, isPending, submitLabel, isEdit }: P
           {errors.expires_at && <p className="mt-1 text-xs text-red-600">{errors.expires_at.message}</p>}
         </div>
       </div>
+
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+          Please fix the errors above before submitting.
+        </div>
+      )}
 
       <button
         type="submit"

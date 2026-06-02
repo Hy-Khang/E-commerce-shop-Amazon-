@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -40,8 +41,8 @@ export class UpdateCouponDto {
 
   @ApiPropertyOptional({ example: [5, 12] })
   @ValidateIf((o) => o.scope === CouponScope.Categories)
-  @IsOptional()
   @IsArray()
+  @ArrayMinSize(1, { message: 'At least one category must be selected' })
   @IsInt({ each: true })
   @IsPositive({ each: true })
   @Type(() => Number)
@@ -49,8 +50,8 @@ export class UpdateCouponDto {
 
   @ApiPropertyOptional({ example: [101, 102] })
   @ValidateIf((o) => o.scope === CouponScope.Products)
-  @IsOptional()
   @IsArray()
+  @ArrayMinSize(1, { message: 'At least one product must be selected' })
   @IsInt({ each: true })
   @IsPositive({ each: true })
   @Type(() => Number)

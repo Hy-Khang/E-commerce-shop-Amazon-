@@ -81,6 +81,9 @@ export default function CheckoutPage() {
     return sum + price * item.quantity;
   }, 0);
 
+  const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon.validation, subtotal) : 0;
+  const estimatedTotal = subtotal - discountAmount;
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Checkout</h1>
@@ -223,7 +226,7 @@ export default function CheckoutPage() {
                 {appliedCoupon && (
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Coupon ({appliedCoupon.code})</span>
-                    <span>Discount applied at checkout</span>
+                    <span>-{formatPrice(discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm text-gray-600">
@@ -235,11 +238,11 @@ export default function CheckoutPage() {
               <div className="mt-4 border-t pt-4">
                 <div className="flex justify-between text-base font-semibold text-gray-900">
                   <span>Estimated Total</span>
-                  <span>{formatPrice(subtotal)}</span>
+                  <span>{formatPrice(estimatedTotal)}</span>
                 </div>
                 {appliedCoupon && (
                   <p className="mt-1 text-xs text-green-600">
-                    Final total includes coupon discount
+                    You save {formatPrice(discountAmount)} with this coupon
                   </p>
                 )}
               </div>
@@ -264,4 +267,20 @@ export default function CheckoutPage() {
       </form>
     </div>
   );
+}
+
+function calculateDiscount(coupon: CouponValidationResult, subtotal: number): number {
+  if (coupon.min_order_amount && subtotal < coupon.min_order_amount) return 0;
+
+  let discount: number;
+  if (coupon.discount_type === 'percentage') {
+    discount = subtotal * coupon.discount_value / 100;
+    if (coupon.max_discount_amount) {
+      discount = Math.min(discount, coupon.max_discount_amount);
+    }
+  } else {
+    discount = coupon.discount_value;
+  }
+
+  return Math.min(discount, subtotal);
 }

@@ -34,8 +34,8 @@ export default function AdminCouponEditPage() {
       discount_type: coupon.discount_type,
       discount_value: coupon.discount_value,
       scope: coupon.scope,
-      category_ids: coupon.category_ids,
-      product_ids: coupon.product_ids,
+      category_ids: coupon.category_ids ?? [],
+      product_ids: coupon.product_ids ?? [],
       min_order_amount: coupon.min_order_amount,
       max_discount_amount: coupon.max_discount_amount,
       max_uses: coupon.max_uses,
@@ -109,9 +109,11 @@ export default function AdminCouponEditPage() {
         </div>
       </div>
 
-      {updateCoupon.error instanceof ApiError && (
+      {updateCoupon.isError && (
         <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-          {updateCoupon.error.message}
+          {updateCoupon.error instanceof ApiError
+            ? updateCoupon.error.message
+            : 'Failed to update coupon'}
         </div>
       )}
 

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
+  ArrayMinSize,
   IsArray,
   IsDateString,
   IsEnum,
@@ -47,6 +48,7 @@ export class CreateCouponDto {
   @ApiPropertyOptional({ example: [5, 12], description: 'Required when scope = categories' })
   @ValidateIf((o) => o.scope === CouponScope.Categories)
   @IsArray()
+  @ArrayMinSize(1, { message: 'At least one category must be selected' })
   @IsInt({ each: true })
   @IsPositive({ each: true })
   @Type(() => Number)
@@ -55,6 +57,7 @@ export class CreateCouponDto {
   @ApiPropertyOptional({ example: [101, 102], description: 'Required when scope = products' })
   @ValidateIf((o) => o.scope === CouponScope.Products)
   @IsArray()
+  @ArrayMinSize(1, { message: 'At least one product must be selected' })
   @IsInt({ each: true })
   @IsPositive({ each: true })
   @Type(() => Number)

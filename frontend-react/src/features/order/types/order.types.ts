@@ -103,9 +103,9 @@ export interface UpdatePaymentStatusRequest {
 
 export const checkoutSchema = z.object({
   payment_method: z.enum(['cod', 'banking', 'momo'], {
-    required_error: 'Payment method is required',
+    error: 'Payment method is required',
   }),
-  address_id: z.number({ required_error: 'Please select a shipping address' }).int().positive(),
+  address_id: z.number({ error: 'Please select a shipping address' }).int().positive(),
   coupon_code: z.string().optional(),
 });
 

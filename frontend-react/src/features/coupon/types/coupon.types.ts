@@ -36,8 +36,8 @@ export interface Coupon {
   starts_at: string;
   expires_at: string;
   is_active: boolean;
-  category_ids: number[];
-  product_ids: number[];
+  category_ids: number[] | null;
+  product_ids: number[] | null;
   created_at: string;
 }
 
@@ -110,15 +110,15 @@ export interface UpdateCouponRequest {
 export const createCouponSchema = z.object({
   code: z.string().min(1, 'Code is required').max(50).transform((v) => v.toUpperCase()),
   description: z.string().max(255).optional(),
-  discount_type: z.enum(['fixed', 'percentage'], { required_error: 'Discount type is required' }),
-  discount_value: z.number({ required_error: 'Discount value is required' }).positive('Must be positive'),
-  scope: z.enum(['all', 'categories', 'products'], { required_error: 'Scope is required' }),
+  discount_type: z.enum(['fixed', 'percentage'], { error: 'Discount type is required' }),
+  discount_value: z.number({ error: 'Discount value is required' }).positive('Must be positive'),
+  scope: z.enum(['all', 'categories', 'products'], { error: 'Scope is required' }),
   category_ids: z.array(z.number()).optional(),
   product_ids: z.array(z.number()).optional(),
   min_order_amount: z.number().positive().nullable().optional(),
   max_discount_amount: z.number().positive().nullable().optional(),
   max_uses: z.number().int().positive().nullable().optional(),
-  max_uses_per_user: z.number().int().positive().optional().default(1),
+  max_uses_per_user: z.number().int().positive(),
   starts_at: z.string().min(1, 'Start date is required'),
   expires_at: z.string().min(1, 'End date is required'),
 }).refine(
@@ -127,6 +127,12 @@ export const createCouponSchema = z.object({
 ).refine(
   (data) => data.discount_type !== 'percentage' || data.discount_value <= 100,
   { message: 'Percentage cannot exceed 100', path: ['discount_value'] },
+).refine(
+  (data) => data.scope !== 'categories' || (data.category_ids && data.category_ids.length > 0),
+  { message: 'At least one category must be selected', path: ['category_ids'] },
+).refine(
+  (data) => data.scope !== 'products' || (data.product_ids && data.product_ids.length > 0),
+  { message: 'At least one product must be selected', path: ['product_ids'] },
 );
 
 export type CreateCouponFormData = z.infer<typeof createCouponSchema>;
