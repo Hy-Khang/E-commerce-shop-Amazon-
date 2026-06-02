@@ -6,8 +6,8 @@ import { useAdminPopularWishlist } from '../hooks/useAdminPopularWishlist';
 import type { PopularWishlistItem } from '../types/wishlist.types';
 
 export default function AdminWishlistPopularPage() {
-  const { params, setPage } = usePagination({ limit: 20, sort: 'wishlist_count', order: 'desc' });
-  const { data, isLoading } = useAdminPopularWishlist(params);
+  const { params, setPage } = usePagination({ limit: 20 });
+  const { data, isLoading } = useAdminPopularWishlist({ page: params.page, limit: params.limit });
 
   return (
     <div className="space-y-6">
