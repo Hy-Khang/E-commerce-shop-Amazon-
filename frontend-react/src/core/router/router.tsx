@@ -40,6 +40,10 @@ const AdminCategoryEditPage = lazy(() => import('@/features/product/pages/AdminC
 const AdminReviewListPage = lazy(() => import('@/features/review/pages/AdminReviewListPage'));
 const AdminWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/AdminWishlistPopularPage'));
 
+const AdminCouponListPage = lazy(() => import('@/features/coupon/pages/AdminCouponListPage'));
+const AdminCouponCreatePage = lazy(() => import('@/features/coupon/pages/AdminCouponCreatePage'));
+const AdminCouponEditPage = lazy(() => import('@/features/coupon/pages/AdminCouponEditPage'));
+
 const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
@@ -103,6 +107,9 @@ export const router = createBrowserRouter([
               { path: 'admin/roles', element: <SuspenseWrapper><AdminRoleListPage /></SuspenseWrapper> },
               { path: 'admin/reviews', element: <SuspenseWrapper><AdminReviewListPage /></SuspenseWrapper> },
               { path: 'admin/wishlist', element: <SuspenseWrapper><AdminWishlistPopularPage /></SuspenseWrapper> },
+              { path: 'admin/coupons', element: <SuspenseWrapper><AdminCouponListPage /></SuspenseWrapper> },
+              { path: 'admin/coupons/new', element: <SuspenseWrapper><AdminCouponCreatePage /></SuspenseWrapper> },
+              { path: 'admin/coupons/:id/edit', element: <SuspenseWrapper><AdminCouponEditPage /></SuspenseWrapper> },
             ],
           },
         ],

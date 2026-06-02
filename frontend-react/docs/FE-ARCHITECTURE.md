@@ -21,6 +21,7 @@ graph TB
             Order["order"]
             Review["review"]
             Wishlist["wishlist"]
+            Coupon["coupon"]
         end
     end
 
@@ -79,7 +80,8 @@ src/
 │   ├── cart/                          — cart view, add/update/remove, guest cart, merge
 │   ├── order/                         — checkout, order history, detail, admin management
 │   ├── review/                        — create review, product reviews, my reviews
-│   └── wishlist/                      — add/remove products, wishlist page, admin popular
+│   ├── wishlist/                      — add/remove products, wishlist page, admin popular
+│   └── coupon/                        — coupon validation, admin CRUD, usage tracking
 │
 ├── assets/                            — static images, fonts
 └── styles/
@@ -200,6 +202,8 @@ graph TD
     Review --> Product
     Wishlist["wishlist"] --> Auth
     Wishlist --> Product
+    Coupon["coupon"] --> Auth
+    Order --> Coupon
 
     Order -.->|cache invalidation| Cart
     Review -.->|cache invalidation| Product
@@ -253,6 +257,9 @@ graph TD
 | `/admin/orders` | AdminOrderListPage | order |
 | `/admin/orders/:id` | AdminOrderDetailPage | order |
 | `/admin/wishlist` | AdminWishlistPopularPage | wishlist |
+| `/admin/coupons` | AdminCouponListPage | coupon |
+| `/admin/coupons/new` | AdminCouponCreatePage | coupon |
+| `/admin/coupons/:id/edit` | AdminCouponEditPage | coupon |
 
 **Config:** `createBrowserRouter` in `core/router/router.tsx`. Each page lazy-loaded via `React.lazy`. Layouts as route parents. 404 catch-all → NotFoundPage.
 
@@ -312,6 +319,13 @@ export const wishlistKeys = {
   check:     (productId: number) => ['wishlist', 'check', productId] as const,
   bulkCheck: (productIds: number[]) => ['wishlist', 'bulkCheck', productIds] as const,
 };
+
+export const adminCouponKeys = {
+  all:       ['admin', 'coupons'] as const,
+  list:      (params: CouponListParams) => ['admin', 'coupons', 'list', params] as const,
+  detail:    (id: number) => ['admin', 'coupons', 'detail', id] as const,
+  usages:    (id: number) => ['admin', 'coupons', 'usages', id] as const,
+};
 ```
 
 ### Cache Invalidation Map
@@ -323,6 +337,7 @@ export const wishlistKeys = {
 | Review created | `reviewKeys.list(productId)` + `productKeys.detail(slug)` |
 | Login + cart merge | `cartKeys.current()` |
 | Wishlist add/remove | `wishlistKeys.all` + `wishlistKeys.check(productId)` |
+| Admin coupon create/update/deactivate | `adminCouponKeys.all` |
 
 ---
 

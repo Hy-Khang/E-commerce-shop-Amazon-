@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MapPin, CreditCard, Loader2 } from 'lucide-react';
+import { MapPin, CreditCard, Tag, Loader2 } from 'lucide-react';
 import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
 import { useCart } from '@/features/cart';
+import { CouponInput, type CouponValidationResult } from '@/features/coupon';
 import { useCheckout } from '../hooks/useCheckout';
 import { useAddresses } from '../hooks/useAddresses';
 import { checkoutSchema, type CheckoutFormData, type PaymentMethod } from '../types/order.types';
@@ -17,6 +19,7 @@ export default function CheckoutPage() {
   const { data: cart, isLoading: cartLoading } = useCart();
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
   const checkout = useCheckout();
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; validation: CouponValidationResult } | null>(null);
 
   const defaultAddress = addresses?.find((a) => a.is_default);
 
@@ -36,7 +39,11 @@ export default function CheckoutPage() {
   const selectedAddressId = watch('address_id');
 
   function onSubmit(data: CheckoutFormData) {
-    checkout.mutate(data, {
+    const request = {
+      ...data,
+      coupon_code: appliedCoupon?.code,
+    };
+    checkout.mutate(request, {
       onSuccess: (order) => {
         navigate(ROUTES.ORDER_DETAIL(order.id));
       },
@@ -167,6 +174,19 @@ export default function CheckoutPage() {
               )}
             </div>
 
+            {/* Coupon Code */}
+            <div className="rounded-lg border bg-white p-6">
+              <div className="mb-4 flex items-center gap-2">
+                <Tag className="h-5 w-5 text-gray-600" />
+                <h2 className="text-lg font-semibold text-gray-900">Coupon Code</h2>
+              </div>
+              <CouponInput
+                appliedCode={appliedCoupon?.code ?? null}
+                onApply={(code, validation) => setAppliedCoupon({ code, validation })}
+                onRemove={() => setAppliedCoupon(null)}
+              />
+            </div>
+
             {/* Order Items Preview */}
             <div className="rounded-lg border bg-white p-6">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
@@ -200,6 +220,12 @@ export default function CheckoutPage() {
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Coupon ({appliedCoupon.code})</span>
+                    <span>Discount applied at checkout</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Shipping</span>
                   <span className="text-gray-400">Calculated after order</span>
@@ -211,6 +237,11 @@ export default function CheckoutPage() {
                   <span>Estimated Total</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
+                {appliedCoupon && (
+                  <p className="mt-1 text-xs text-green-600">
+                    Final total includes coupon discount
+                  </p>
+                )}
               </div>
 
               <button

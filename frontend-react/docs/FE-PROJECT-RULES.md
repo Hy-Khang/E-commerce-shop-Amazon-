@@ -58,6 +58,7 @@ src/features/[feature-name]/
 | Order | `src/features/order/` | Checkout, order history, detail, admin management |
 | Review | `src/features/review/` | Create review (purchase-verified), product reviews, my reviews |
 | Wishlist | `src/features/wishlist/` | Add/remove products, wishlist page, admin popular analytics |
+| Coupon | `src/features/coupon/` | Coupon validation at checkout, admin CRUD, usage tracking |
 
 ---
 

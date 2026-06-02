@@ -57,6 +57,7 @@ src/features/[feature-name]/
 | Order | `src/features/order/` | orders, order_items |
 | Review | `src/features/review/` | reviews |
 | Wishlist | `src/features/wishlist/` | wishlist_items |
+| Coupon | `src/features/coupon/` | coupons, coupon_categories, coupon_products, coupon_usages |
 
 ---
 

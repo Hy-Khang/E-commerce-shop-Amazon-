@@ -45,6 +45,8 @@ export interface Order {
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
   shipping_fee: number;
+  coupon_code: string | null;
+  discount_amount: number;
   total_amount: number;
   shipping_address: ShippingAddress;
   order_items: OrderItem[];
@@ -86,6 +88,7 @@ export interface AdminOrderListParams extends PaginationParams {
 export interface CreateOrderRequest {
   payment_method: PaymentMethod;
   address_id: number;
+  coupon_code?: string;
 }
 
 export interface UpdateOrderStatusRequest {
@@ -103,6 +106,7 @@ export const checkoutSchema = z.object({
     required_error: 'Payment method is required',
   }),
   address_id: z.number({ required_error: 'Please select a shipping address' }).int().positive(),
+  coupon_code: z.string().optional(),
 });
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;

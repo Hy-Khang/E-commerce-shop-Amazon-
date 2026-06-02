@@ -36,7 +36,7 @@ export class Order {
   shipping_address: string;
 
   @Column({ type: 'nvarchar', length: 50, nullable: true })
-  coupon_code: string;
+  coupon_code: string | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   discount_amount: number;

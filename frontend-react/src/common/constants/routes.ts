@@ -31,6 +31,9 @@ export const ROUTES = {
   ADMIN_CATEGORY_EDIT: (id: number) => `/admin/categories/${id}/edit`,
   ADMIN_REVIEWS: '/admin/reviews',
   ADMIN_WISHLIST: '/admin/wishlist',
+  ADMIN_COUPONS: '/admin/coupons',
+  ADMIN_COUPON_CREATE: '/admin/coupons/new',
+  ADMIN_COUPON_EDIT: (id: number) => `/admin/coupons/${id}/edit`,
 } as const;
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {

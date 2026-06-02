@@ -169,8 +169,14 @@ export default function AdminOrderDetailPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span>{formatPrice(order.total_amount - order.shipping_fee)}</span>
+                <span>{formatPrice(order.total_amount + order.discount_amount - order.shipping_fee)}</span>
               </div>
+              {order.coupon_code && (
+                <div className="flex justify-between text-green-600">
+                  <span>Coupon ({order.coupon_code})</span>
+                  <span>-{formatPrice(order.discount_amount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-600">
                 <span>Shipping</span>
                 <span>{formatPrice(order.shipping_fee)}</span>
