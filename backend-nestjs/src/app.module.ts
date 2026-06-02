@@ -9,6 +9,7 @@ import { CartModule } from './features/cart/cart.module';
 import { OrderModule } from './features/order/order.module';
 import { ReviewModule } from './features/review/review.module';
 import { WishlistModule } from './features/wishlist/wishlist.module';
+import { CouponModule } from './features/coupon/coupon.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -24,6 +25,7 @@ import { AppService } from './app.service';
     OrderModule,
     ReviewModule,
     WishlistModule,
+    CouponModule,
   ],
   controllers: [AppController],
   providers: [AppService],

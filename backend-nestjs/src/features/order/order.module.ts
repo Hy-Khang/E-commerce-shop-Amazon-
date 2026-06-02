@@ -10,6 +10,7 @@ import { OrderItemRepository } from './repositories/order-item.repository';
 import { CartModule } from '../cart/cart.module';
 import { ProductModule } from '../product/product.module';
 import { UserProfileModule } from '../user-profile/user-profile.module';
+import { CouponModule } from '../coupon/coupon.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UserProfileModule } from '../user-profile/user-profile.module';
     CartModule,
     ProductModule,
     UserProfileModule,
+    CouponModule,
   ],
   controllers: [OrderController, AdminOrderController],
   providers: [

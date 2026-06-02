@@ -40,6 +40,8 @@ export function toOrderResponse(order: Order): OrderResponseDto {
     payment_method: order.payment_method,
     payment_status: order.payment_status,
     shipping_fee: Number(order.shipping_fee),
+    coupon_code: order.coupon_code ?? null,
+    discount_amount: Number(order.discount_amount ?? 0),
     total_amount: Number(order.total_amount),
     shipping_address: parseShippingAddress(order.shipping_address),
     order_items: (order.order_items || []).map(toOrderItemResponse),
@@ -54,6 +56,8 @@ export function toOrderListItemResponse(order: Order): OrderListItemResponseDto 
     payment_method: order.payment_method,
     payment_status: order.payment_status,
     shipping_fee: Number(order.shipping_fee),
+    coupon_code: order.coupon_code ?? null,
+    discount_amount: Number(order.discount_amount ?? 0),
     total_amount: Number(order.total_amount),
     created_at: order.created_at,
   };

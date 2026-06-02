@@ -174,11 +174,15 @@
 | shipping_fee | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
 | total_amount | DECIMAL(10,2) | NOT NULL |
 | shipping_address | NVARCHAR(MAX) | NOT NULL — **JSON snapshot**, NOT FK to addresses |
+| coupon_code | NVARCHAR(50) | NULL — **snapshot** of applied coupon code |
+| discount_amount | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
 > **Key decisions:**
 > - `shipping_address` is a JSON snapshot — preserves the address at order time even if the user edits/deletes their address later.
 > - `payment_status` is independent from `status` — a paid order can still be cancelled (triggers refund flow).
+> - `coupon_code` and `discount_amount` are snapshots — immune to coupon edits/deletions after checkout.
+> - **Formula:** `total_amount = itemsTotal - discount_amount + shipping_fee`
 > - Enums stored as string columns for readability and easy migration.
 
 #### `order_items` — Immutable Snapshots
@@ -233,6 +237,86 @@
 
 ---
 
+### 2.8 Coupon Feature
+
+#### `coupons`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| code | NVARCHAR(50) | NOT NULL, UNIQUE — stored uppercase |
+| description | NVARCHAR(255) | NULL — internal description for admin |
+| discount_type | NVARCHAR(20) | NOT NULL — `'fixed'` / `'percentage'` |
+| discount_value | DECIMAL(10,2) | NOT NULL — VND if fixed, % (0-100) if percentage |
+| scope | NVARCHAR(20) | NOT NULL, DEFAULT `'all'` — `'all'` / `'categories'` / `'products'` |
+| min_order_amount | DECIMAL(10,2) | NULL — minimum applicable items total |
+| max_discount_amount | DECIMAL(10,2) | NULL — cap for percentage discount |
+| max_uses | INT | NULL — global usage limit (NULL = unlimited) |
+| max_uses_per_user | INT | NOT NULL, DEFAULT `1` |
+| current_uses | INT | NOT NULL, DEFAULT `0` |
+| starts_at | DATETIME2 | NOT NULL |
+| expires_at | DATETIME2 | NOT NULL |
+| is_active | BIT | NOT NULL, DEFAULT `1` — soft deactivate |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_coupons_is_active` | is_active | Filter active coupons |
+| `idx_coupons_expires_at` | expires_at | Scheduled cleanup / expiration queries |
+
+> **Scope design:** `scope = 'all'` applies to entire order. `scope = 'categories'` uses `coupon_categories` junction table (includes sub-categories via recursive `parent_id` traversal). `scope = 'products'` uses `coupon_products` junction table. `min_order_amount` checks against applicable items total only, not entire cart.
+
+#### `coupon_categories` — Junction
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| coupon_id | INT | FK → `coupons.id`, NOT NULL, CASCADE delete |
+| category_id | INT | FK → `categories.id`, NOT NULL |
+
+**Constraint:** UNIQUE `(coupon_id, category_id)`
+
+> Only populated when `coupons.scope = 'categories'`. Coupon applies to all products in specified categories and their sub-categories.
+
+#### `coupon_products` — Junction
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| coupon_id | INT | FK → `coupons.id`, NOT NULL, CASCADE delete |
+| product_id | INT | FK → `products.id`, NOT NULL |
+
+**Constraint:** UNIQUE `(coupon_id, product_id)`
+
+> Only populated when `coupons.scope = 'products'`.
+
+#### `coupon_usages` — Audit Trail
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| coupon_id | INT | FK → `coupons.id`, NOT NULL |
+| user_id | INT | FK → `users.id`, NOT NULL |
+| order_id | INT | FK → `orders.id`, NOT NULL |
+| discount_amount | DECIMAL(10,2) | NOT NULL — snapshot of actual discount applied |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'applied'` — `'applied'` / `'reversed'` |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_coupon_usages_coupon_id` | coupon_id | List usages per coupon |
+| `idx_coupon_usages_user_id_coupon_id` | user_id, coupon_id | Per-user usage count check |
+| `idx_coupon_usages_order_id` | order_id | Find usage by order (for reversal) |
+
+> **Soft reversal:** On order cancellation, `status` changes to `'reversed'` and `coupons.current_uses` is decremented. No hard delete — preserves audit trail. Optimistic locking on `current_uses` increment prevents race conditions.
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -243,16 +327,18 @@ erDiagram
     users ||--o{ carts : "has many"
     users ||--o{ orders : "has many"
     users ||--o{ reviews : "has many"
+    users ||--o{ wishlist_items : "has wishlist"
+    users ||--o{ coupon_usages : "used coupons"
 
     categories ||--o{ categories : "parent → children"
     categories ||--o{ products : "contains"
+    categories ||--o{ coupon_categories : "targeted by"
 
     products ||--o{ product_variants : "has variants"
     products ||--o{ product_images : "has images"
     products ||--o{ reviews : "has reviews"
     products ||--o{ wishlist_items : "wishlisted by"
-
-    users ||--o{ wishlist_items : "has wishlist"
+    products ||--o{ coupon_products : "targeted by"
 
     product_variants ||--o{ cart_items : "added to cart"
     product_variants ||--o{ order_items : "purchased as"
@@ -260,12 +346,18 @@ erDiagram
     carts ||--o{ cart_items : "contains"
     orders ||--o{ order_items : "contains"
     orders ||--o{ reviews : "verified by"
+    orders ||--o{ coupon_usages : "applied coupon"
+
+    coupons ||--o{ coupon_categories : "targets categories"
+    coupons ||--o{ coupon_products : "targets products"
+    coupons ||--o{ coupon_usages : "has usages"
 ```
 
 **Key relationships to note:**
 - **`product_variants`** is the transaction hub — both `cart_items` and `order_items` FK here, not to `products`
 - **`reviews`** has a 3-way link: `user_id` + `product_id` + `order_id`
 - **`categories`** self-references via `parent_id` for N-level nesting
+- **`coupons`** uses junction tables (`coupon_categories`, `coupon_products`) for scope targeting, and `coupon_usages` for audit trail
 
 ---
 
@@ -348,10 +440,13 @@ export class ProductVariant {
 7. product_variants + product_images  (parallel — both FK to products)
 8. carts
 9. cart_items
-10. orders
+10. orders  (includes coupon_code, discount_amount columns)
 11. order_items
 12. reviews  (FKs to users, products, orders)
 13. wishlist_items  (FKs to users, products)
+14. coupons
+15. coupon_categories + coupon_products  (parallel — both FK to coupons)
+16. coupon_usages  (FKs to coupons, users, orders)
 ```
 
 ### Commands
@@ -402,3 +497,8 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | wishlist_items | `uq_wishlist_items_user_product` | user_id, product_id | Unique constraint + "is wishlisted?" check |
 | wishlist_items | `idx_wishlist_items_user_id` | user_id | User's wishlist listing |
 | wishlist_items | `idx_wishlist_items_product_id` | product_id | Admin analytics: count per product |
+| coupons | `idx_coupons_is_active` | is_active | Filter active coupons |
+| coupons | `idx_coupons_expires_at` | expires_at | Expiration queries / cleanup |
+| coupon_usages | `idx_coupon_usages_coupon_id` | coupon_id | List usages per coupon |
+| coupon_usages | `idx_coupon_usages_user_id_coupon_id` | user_id, coupon_id | Per-user usage count check |
+| coupon_usages | `idx_coupon_usages_order_id` | order_id | Find usage by order (reversal) |

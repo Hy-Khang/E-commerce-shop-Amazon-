@@ -56,6 +56,12 @@ export class OrderResponseDto {
   @ApiProperty()
   shipping_fee: number;
 
+  @ApiPropertyOptional()
+  coupon_code: string | null;
+
+  @ApiProperty()
+  discount_amount: number;
+
   @ApiProperty()
   total_amount: number;
 
@@ -84,6 +90,12 @@ export class OrderListItemResponseDto {
 
   @ApiProperty()
   shipping_fee: number;
+
+  @ApiPropertyOptional()
+  coupon_code: string | null;
+
+  @ApiProperty()
+  discount_amount: number;
 
   @ApiProperty()
   total_amount: number;

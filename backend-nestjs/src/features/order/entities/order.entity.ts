@@ -35,6 +35,12 @@ export class Order {
   @Column({ type: 'nvarchar', length: 'MAX' })
   shipping_address: string;
 
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  coupon_code: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  discount_amount: number;
+
   @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
   created_at: Date;
 

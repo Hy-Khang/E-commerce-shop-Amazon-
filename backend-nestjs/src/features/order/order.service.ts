@@ -12,6 +12,8 @@ import { OrderItemRepository } from './repositories/order-item.repository';
 import { CartService } from '../cart/cart.service';
 import { ProductService } from '../product/product.service';
 import { UserProfileService } from '../user-profile/user-profile.service';
+import { CouponService } from '../coupon/coupon.service';
+import { IDiscountCalculation } from '../coupon/types/coupon.types';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto';
@@ -47,6 +49,7 @@ export class OrderService {
     private readonly cartService: CartService,
     private readonly productService: ProductService,
     private readonly userProfileService: UserProfileService,
+    private readonly couponService: CouponService,
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
   ) { }
@@ -110,7 +113,19 @@ export class OrderService {
       };
     });
 
-    const totalAmount = itemsTotal + shippingFee;
+    // ── Coupon validation (if provided) ──
+
+    let couponData: IDiscountCalculation | null = null;
+    if (dto.coupon_code) {
+      couponData = await this.couponService.validateAndCalculateDiscount(
+        userId,
+        dto.coupon_code,
+        cart.items,
+      );
+    }
+
+    const discountAmount = couponData?.discount_amount ?? 0;
+    const totalAmount = itemsTotal - discountAmount + shippingFee;
 
     // ── Transaction: create order + items, clear cart ──
 
@@ -126,6 +141,8 @@ export class OrderService {
           payment_method: dto.payment_method,
           payment_status: 'unpaid',
           shipping_fee: shippingFee,
+          coupon_code: couponData?.coupon_code ?? null,
+          discount_amount: discountAmount,
           total_amount: totalAmount,
           shipping_address: JSON.stringify(shippingSnapshot),
         }),
@@ -138,6 +155,16 @@ export class OrderService {
         ),
       );
       order.order_items = orderItems;
+
+      if (couponData) {
+        await this.couponService.recordUsage(
+          couponData.coupon_id,
+          userId,
+          order.id,
+          discountAmount,
+          queryRunner.manager,
+        );
+      }
 
       await this.cartService.clearCart(userId, queryRunner.manager);
 
@@ -154,7 +181,7 @@ export class OrderService {
       });
 
       this.logger.log(
-        `Order #${order.id} created for user ${userId}, payment: ${dto.payment_method}`,
+        `Order #${order.id} created for user ${userId}, payment: ${dto.payment_method}${couponData ? `, coupon: ${couponData.coupon_code}, discount: ${discountAmount}` : ''}`,
       );
 
       return toOrderResponse(order);
@@ -235,6 +262,8 @@ export class OrderService {
     await this.orderRepository.updateStatus(orderId, OrderStatus.Cancelled);
     order.status = OrderStatus.Cancelled;
 
+    await this.couponService.reverseCouponUsage(orderId);
+
     this.eventEmitter.emit('order.cancelled', {
       orderId: order.id,
       items: order.order_items.map((item) => ({
@@ -297,6 +326,8 @@ export class OrderService {
     order.status = dto.status;
 
     if (dto.status === OrderStatus.Cancelled) {
+      await this.couponService.reverseCouponUsage(orderId);
+
       this.eventEmitter.emit('order.cancelled', {
         orderId: order.id,
         items: order.order_items.map((item) => ({

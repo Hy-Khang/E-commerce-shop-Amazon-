@@ -71,6 +71,7 @@ GET /products?sort=created_at&order=desc
 | Orders (admin) | `?status=pending&payment_status=unpaid&user_id=123` |
 | Orders (customer) | Filtered by JWT `user_id` automatically |
 | Reviews | `?product_id=10&rating=5` |
+| Coupons (admin) | `?search=keyword&scope=categories&discount_type=percentage&is_active=true` |
 
 **Validation:** All request bodies validated by `class-validator` DTOs via global `ValidationPipe` (`whitelist: true`, `forbidNonWhitelisted: true`, `transform: true`).
 
@@ -158,6 +159,14 @@ GET /products?sort=created_at&order=desc
 | WISHLIST_001 | 409 | Product already in wishlist |
 | WISHLIST_002 | 404 | Product not in wishlist (on remove) |
 | WISHLIST_003 | 404 | Product not found or inactive (on add) |
+| COUPON_001 | 404 | Coupon not found |
+| COUPON_002 | 400 | Coupon expired or not yet active |
+| COUPON_003 | 400 | Coupon usage limit exceeded |
+| COUPON_004 | 400 | User has used this coupon the maximum number of times |
+| COUPON_005 | 400 | Applicable items total below minimum order amount |
+| COUPON_006 | 400 | Coupon is not currently active |
+| COUPON_007 | 409 | Coupon code already exists (admin create duplicate) |
+| COUPON_008 | 400 | No items in cart are applicable for this coupon |
 
 ### HTTP Status Usage
 
@@ -247,6 +256,12 @@ GET /products?sort=created_at&order=desc
 | GET | `/wishlist/check/:productId` | Check if single product is in wishlist | Customer |
 | POST | `/wishlist/check` | Bulk check multiple products (body: `product_ids[]`, max 50) | Customer |
 
+### Coupon — `/api/v1/coupons`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/coupons/validate` | Validate coupon code, returns discount info + applicable scope | Customer |
+
 ---
 
 ## 7. Admin Endpoints
@@ -314,6 +329,20 @@ All admin endpoints require `@Roles('admin')`. Accessing with a customer token r
 |--------|------|-------------|-------------|
 | GET | `/admin/wishlist/popular` | Most wishlisted products (paginated, with counts) | — |
 
+### Admin: Coupon Management — `/api/v1/admin/coupons`
+
+| Method | Path | Description | Filter/Sort |
+|--------|------|-------------|-------------|
+| GET | `/admin/coupons` | List all coupons (paginated) | `?search=keyword&scope=categories&discount_type=percentage&is_active=true&sort=created_at&order=desc` |
+| GET | `/admin/coupons/usages` | List all coupon usages (paginated) | `?coupon_id=5&user_id=123` |
+| GET | `/admin/coupons/:id` | Get coupon detail (includes applicable categories/products) | — |
+| POST | `/admin/coupons` | Create coupon (code, scope, category_ids/product_ids) | — |
+| PATCH | `/admin/coupons/:id` | Update coupon (code is immutable) | — |
+| DELETE | `/admin/coupons/:id` | Soft-delete (set `is_active = false`) | — |
+| GET | `/admin/coupons/:id/usages` | List usages for a specific coupon (paginated) | — |
+
+> **Scope types:** `all` (entire order), `categories` (specific categories + sub-categories), `products` (specific products). Junction tables `coupon_categories` and `coupon_products` are managed automatically on create/update. Code is stored uppercase and immutable after creation.
+
 ### Admin: Dashboard — `/api/v1/admin/dashboard`
 
 | Method | Path | Description | Auth |
@@ -376,17 +405,22 @@ All admin endpoints require `@Roles('admin')`. Accessing with a customer token r
 ```json
 {
   "payment_method": "cod",
-  "address_id": 5
+  "address_id": 5,
+  "coupon_code": "SUMMER2026"
 }
 ```
+
+> `coupon_code` is optional. If provided, it is validated and applied to the order.
 
 **Flow:**
 
 ```
 Read cart → validate stock for each variant → snapshot product_name/sku/price/thumbnail
 → lookup address by address_id → JSON-serialize as shipping_address snapshot
-→ calculate total_amount + shipping_fee → create order + order_items
-→ clear cart → emit order.created event
+→ if coupon_code: validate coupon → calculate scope-aware discount (all/categories/products)
+→ total_amount = itemsTotal - discount_amount + shipping_fee
+→ Transaction: create order + order_items + record coupon usage + clear cart
+→ emit order.created event
 ```
 
 **Success (201):**
@@ -400,7 +434,9 @@ Read cart → validate stock for each variant → snapshot product_name/sku/pric
     "payment_method": "cod",
     "payment_status": "unpaid",
     "shipping_fee": 30000.00,
-    "total_amount": 1250000.00,
+    "coupon_code": "SUMMER2026",
+    "discount_amount": 100000.00,
+    "total_amount": 1150000.00,
     "shipping_address": {
       "full_name": "Nguyen Van A",
       "phone": "0901234567",
@@ -421,7 +457,7 @@ Read cart → validate stock for each variant → snapshot product_name/sku/pric
 }
 ```
 
-**Errors:** CART_002 (empty cart), ORDER_002 (insufficient stock), AUTH_002 (token expired)
+**Errors:** CART_002 (empty cart), ORDER_002 (insufficient stock), AUTH_002 (token expired), COUPON_001-008 (coupon validation errors)
 
 ---
 
@@ -483,12 +519,111 @@ Read cart → validate stock for each variant → snapshot product_name/sku/pric
 
 ---
 
+### POST `/api/v1/coupons/validate`
+
+**Request:**
+
+```json
+{ "code": "SUMMER2026" }
+```
+
+**Success (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "valid": true,
+    "code": "SUMMER2026",
+    "discount_type": "percentage",
+    "discount_value": 10,
+    "max_discount_amount": 100000,
+    "min_order_amount": 200000,
+    "scope": "categories",
+    "applicable_category_ids": [5, 12],
+    "applicable_product_ids": null
+  }
+}
+```
+
+**Flow:** Find coupon by code (uppercase) → check `is_active` → check date range → check global usage limit → check per-user usage limit → return discount info with scope details.
+
+**Errors:** COUPON_001 (not found), COUPON_002 (expired), COUPON_003 (limit exceeded), COUPON_004 (user limit), COUPON_006 (inactive)
+
+---
+
+### POST `/api/v1/admin/coupons`
+
+**Request (scope = categories):**
+
+```json
+{
+  "code": "FASHION20",
+  "description": "Giảm 20% cho thời trang",
+  "discount_type": "percentage",
+  "discount_value": 20,
+  "scope": "categories",
+  "category_ids": [5, 12],
+  "max_discount_amount": 200000,
+  "min_order_amount": 300000,
+  "max_uses": 500,
+  "max_uses_per_user": 1,
+  "starts_at": "2026-06-01T00:00:00Z",
+  "expires_at": "2026-06-30T23:59:59Z"
+}
+```
+
+**Request (scope = products):**
+
+```json
+{
+  "code": "IPHONE50K",
+  "discount_type": "fixed",
+  "discount_value": 50000,
+  "scope": "products",
+  "product_ids": [101, 102, 103],
+  "starts_at": "2026-06-01T00:00:00Z",
+  "expires_at": "2026-06-15T23:59:59Z"
+}
+```
+
+**Success (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "code": "FASHION20",
+    "description": "Giảm 20% cho thời trang",
+    "discount_type": "percentage",
+    "discount_value": 20,
+    "scope": "categories",
+    "min_order_amount": 300000,
+    "max_discount_amount": 200000,
+    "max_uses": 500,
+    "max_uses_per_user": 1,
+    "current_uses": 0,
+    "starts_at": "2026-06-01T00:00:00.000Z",
+    "expires_at": "2026-06-30T23:59:59.000Z",
+    "is_active": true,
+    "category_ids": [5, 12],
+    "product_ids": [],
+    "created_at": "2026-05-20T10:00:00.000Z"
+  }
+}
+```
+
+**Errors:** COUPON_007 (duplicate code)
+
+---
+
 ## 9. Swagger Integration
 
 - **Library:** `@nestjs/swagger`
 - **URL:** `/api/v1/docs` (development only)
-- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Cart, Order, Review, Wishlist
-- **Tags (Admin):** Admin: Users, Admin: Categories, Admin: Products, Admin: Orders, Admin: Reviews, Admin: Wishlist, Admin: Dashboard
+- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Cart, Order, Review, Wishlist, Coupon
+- **Tags (Admin):** Admin: Users, Admin: Categories, Admin: Products, Admin: Orders, Admin: Reviews, Admin: Wishlist, Admin: Coupons, Admin: Dashboard
 - **Decorators:**
   - DTOs: `@ApiProperty()` on every field
   - Controllers: `@ApiTags('Admin: Products')`, `@ApiBearerAuth()`
