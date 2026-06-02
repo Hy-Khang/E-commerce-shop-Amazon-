@@ -16,6 +16,7 @@ export function useRegister() {
   return useMutation({
     mutationFn: ({ confirmPassword: _, ...data }: RegisterFormData) =>
       authService.register(data),
+    meta: { suppressToast: true },
     onSuccess: async (response) => {
       login(response.data.data);
 

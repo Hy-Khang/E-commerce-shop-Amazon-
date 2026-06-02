@@ -3,6 +3,7 @@ import { cartService } from '../services/cart.service';
 import { cartKeys } from './useCart';
 import type { Cart } from '../types/cart.types';
 import { useCartStore } from '../stores/cart.store';
+import { showErrorToast } from '@/common/components/feedback/toast';
 
 interface UpdateCartItemParams {
   id: number;
@@ -16,7 +17,7 @@ export function useUpdateCartItem() {
   return useMutation({
     mutationFn: ({ id, quantity }: UpdateCartItemParams) =>
       cartService.updateItem(id, { quantity }).then((res) => res.data.data),
-
+    meta: { suppressToast: true },
     onMutate: async ({ id, quantity }) => {
       await queryClient.cancelQueries({ queryKey: cartKeys.current() });
       const previous = queryClient.getQueryData<Cart>(cartKeys.current());
@@ -34,12 +35,13 @@ export function useUpdateCartItem() {
       return { previous };
     },
 
-    onError: (_err, _variables, context) => {
+    onError: (err, _variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(cartKeys.current(), context.previous);
         const count = context.previous.items.reduce((sum, item) => sum + item.quantity, 0);
         setItemCount(count);
       }
+      showErrorToast(err, undefined, 'cart-error');
     },
 
     onSettled: () => {

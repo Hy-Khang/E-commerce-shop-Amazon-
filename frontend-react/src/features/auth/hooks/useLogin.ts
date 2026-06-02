@@ -16,6 +16,7 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: (data: LoginRequest) => authService.login(data),
+    meta: { suppressToast: true },
     onSuccess: async (response) => {
       login(response.data.data);
       
