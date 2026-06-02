@@ -1,7 +1,7 @@
 import { Link, Outlet } from 'react-router-dom';
-import { Heart } from 'lucide-react';
 import { useAuthStore } from '@/features/auth';
 import { CartBadge } from '@/features/cart';
+import { WishlistBadge } from '@/features/wishlist';
 import { ROUTES } from '@/common/constants/routes';
 import { UserDropdown } from './UserDropdown';
 
@@ -17,11 +17,7 @@ export function MainLayout() {
             <Link to={ROUTES.PRODUCTS} className="text-sm text-gray-600 hover:text-gray-900">
               Products
             </Link>
-            {isAuthenticated && (
-              <Link to={ROUTES.WISHLIST} className="text-gray-400 hover:text-red-500" aria-label="Wishlist">
-                <Heart className="h-5 w-5" />
-              </Link>
-            )}
+            {isAuthenticated && <WishlistBadge />}
             <CartBadge />
             {isAuthenticated ? (
               <UserDropdown />
