@@ -1,7 +1,9 @@
 export interface CartVariant {
   sku: string;
-  color: string | null;
-  size: string | null;
+  option1: string | null;
+  option2: string | null;
+  option1_label: string | null;
+  option2_label: string | null;
   price: number;
   sale_price: number | null;
   stock_quantity: number;

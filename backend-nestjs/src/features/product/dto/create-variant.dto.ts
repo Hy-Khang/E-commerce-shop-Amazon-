@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsInt,
   IsNotEmpty,
@@ -9,6 +10,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { normalizeOptionalString } from '../../../common/transforms/normalize-optional-string.transform';
 
 export class CreateVariantDto {
   @ApiProperty({ example: 'TSH-BLK-L' })
@@ -17,17 +19,19 @@ export class CreateVariantDto {
   @MaxLength(50)
   sku: string;
 
-  @ApiPropertyOptional({ example: 'Black' })
+  @ApiPropertyOptional({ example: 'Black', description: 'Value for option 1 (e.g. color, RAM)' })
   @IsOptional()
   @IsString()
   @MaxLength(50)
-  color?: string;
+  @Transform(normalizeOptionalString)
+  option1?: string;
 
-  @ApiPropertyOptional({ example: 'L' })
+  @ApiPropertyOptional({ example: 'L', description: 'Value for option 2 (e.g. size, storage)' })
   @IsOptional()
   @IsString()
   @MaxLength(50)
-  size?: string;
+  @Transform(normalizeOptionalString)
+  option2?: string;
 
   @ApiProperty({ example: 250000 })
   @IsNumber({ maxDecimalPlaces: 2 })

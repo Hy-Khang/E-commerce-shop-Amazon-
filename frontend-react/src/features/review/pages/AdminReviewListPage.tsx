@@ -175,9 +175,9 @@ function ReviewRow({ review, isExpanded, onToggle, onDelete, isDeleting }: Revie
               />
             ))}
           </div>
-          {(review.variant_color || review.variant_size) && (
+          {(review.variant_option1 || review.variant_option2) && (
             <span className="mt-1 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
-              {[review.variant_color, review.variant_size].filter(Boolean).join(', ')}
+              {[review.variant_option1, review.variant_option2].filter(Boolean).join(', ')}
             </span>
           )}
         </td>
@@ -224,11 +224,11 @@ function ReviewRow({ review, isExpanded, onToggle, onDelete, isDeleting }: Revie
                       <dt className="text-gray-500">Name</dt>
                       <dd className="font-medium text-gray-900">{review.product_name || '—'}</dd>
                     </div>
-                    {(review.variant_color || review.variant_size) && (
+                    {(review.variant_option1 || review.variant_option2) && (
                       <div>
                         <dt className="text-gray-500">Variant</dt>
                         <dd className="text-gray-900">
-                          {[review.variant_color, review.variant_size].filter(Boolean).join(', ')}
+                          {[review.variant_option1, review.variant_option2].filter(Boolean).join(', ')}
                         </dd>
                       </div>
                     )}

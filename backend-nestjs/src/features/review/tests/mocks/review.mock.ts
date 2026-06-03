@@ -48,10 +48,10 @@ export const mockDeliveredOrderForReview = (
 });
 
 export const mockVariantInfo = (
-  overrides: Partial<{ color: string | null; size: string | null }> = {},
+  overrides: Partial<{ option1: string | null; option2: string | null }> = {},
 ) => ({
-  color: 'Black' as string | null,
-  size: 'M' as string | null,
+  option1: 'Black' as string | null,
+  option2: 'M' as string | null,
   ...overrides,
 });
 

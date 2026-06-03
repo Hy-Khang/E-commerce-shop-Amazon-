@@ -36,8 +36,12 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
           {item.variant.product_name}
         </h3>
         <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500">
-          {item.variant.color && <span>Color: {item.variant.color}</span>}
-          {item.variant.size && <span>Size: {item.variant.size}</span>}
+          {item.variant.option1 && (
+            <span>{item.variant.option1_label ?? 'Option 1'}: {item.variant.option1}</span>
+          )}
+          {item.variant.option2 && (
+            <span>{item.variant.option2_label ?? 'Option 2'}: {item.variant.option2}</span>
+          )}
           <span>SKU: {item.variant.sku}</span>
         </div>
         <div className="mt-1 flex items-center gap-2">

@@ -487,7 +487,7 @@ describe('ProductService', () => {
   // ─── Admin: Variants ───
 
   describe('addVariant', () => {
-    const dto = { sku: 'NEW-SKU-001', color: 'Red', size: 'L', price: 300000, stock_quantity: 50 } as any;
+    const dto = { sku: 'NEW-SKU-001', option1: 'Red', option2: 'L', price: 300000, stock_quantity: 50 } as any;
 
     it('should add variant to product successfully', async () => {
       const variant = mockProductVariant({ id: 2, sku: 'NEW-SKU-001', product_id: 1 });

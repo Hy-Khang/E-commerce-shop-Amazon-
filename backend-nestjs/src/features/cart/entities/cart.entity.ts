@@ -5,11 +5,14 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 import { CartItem } from './cart-item.entity';
 
 @Entity('carts')
+@Index('idx_carts_user_id', ['user_id'])
+@Index('idx_carts_session_id', ['session_id'])
 export class Cart {
   @PrimaryGeneratedColumn()
   id: number;

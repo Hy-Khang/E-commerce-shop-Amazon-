@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
 import { IsImagePath } from '../../../common/validators/is-image-path.validator';
+import { normalizeOptionalString } from '../../../common/transforms/normalize-optional-string.transform';
 
 export class CreateProductDto {
   @ApiProperty({ example: 'Basic T-Shirt' })
@@ -31,4 +33,18 @@ export class CreateProductDto {
   @IsImagePath()
   @MaxLength(500)
   thumbnail_url?: string;
+
+  @ApiPropertyOptional({ example: 'Color', description: 'Label for variant option 1 (e.g. Color, RAM, Connectivity)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  @Transform(normalizeOptionalString)
+  option1_label?: string;
+
+  @ApiPropertyOptional({ example: 'Size', description: 'Label for variant option 2 (e.g. Size, Storage, DPI)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  @Transform(normalizeOptionalString)
+  option2_label?: string;
 }

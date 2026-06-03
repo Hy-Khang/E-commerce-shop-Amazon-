@@ -4,10 +4,24 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Product } from './product.entity';
 
 @Entity('product_variants')
+@Index('idx_product_variants_product_options', ['product_id', 'option1', 'option2'])
+@Index('uq_pv_both_options', ['product_id', 'option1', 'option2'], {
+  unique: true,
+  where: 'option1 IS NOT NULL AND option2 IS NOT NULL',
+})
+@Index('uq_pv_option1_only', ['product_id', 'option1'], {
+  unique: true,
+  where: 'option1 IS NOT NULL AND option2 IS NULL',
+})
+@Index('uq_pv_no_options', ['product_id'], {
+  unique: true,
+  where: 'option1 IS NULL AND option2 IS NULL',
+})
 export class ProductVariant {
   @PrimaryGeneratedColumn()
   id: number;
@@ -16,10 +30,10 @@ export class ProductVariant {
   sku: string;
 
   @Column({ type: 'nvarchar', length: 50, nullable: true })
-  color: string;
+  option1: string | null;
 
   @Column({ type: 'nvarchar', length: 50, nullable: true })
-  size: string;
+  option2: string | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;

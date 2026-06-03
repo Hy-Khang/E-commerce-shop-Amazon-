@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -10,6 +11,7 @@ import { User } from '../../auth/entities/user.entity';
 import { OrderItem } from './order-item.entity';
 
 @Entity('orders')
+@Index('idx_orders_user_id', ['user_id'])
 export class Order {
   @PrimaryGeneratedColumn()
   id: number;

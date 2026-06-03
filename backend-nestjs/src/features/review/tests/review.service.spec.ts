@@ -18,6 +18,7 @@ import {
   mockPaginatedReviews,
 } from './mocks/review.mock';
 import { mockProductVariant } from '../../product/tests/mocks/product.mock';
+import { ReviewQueryDto } from '../dto/review-query.dto';
 
 describe('ReviewService', () => {
   let service: ReviewService;
@@ -247,7 +248,7 @@ describe('ReviewService', () => {
       });
       const paginatedResult = mockPaginatedReviews([review]);
       const variantMap = new Map([
-        ['42-10', { color: 'Black', size: 'M' }],
+        ['42-10', { option1: 'Black', option2: 'M' }],
       ]);
       const stats = mockReviewStats();
 
@@ -268,8 +269,8 @@ describe('ReviewService', () => {
       // Assert
       expect(result.data).toHaveLength(1);
       expect(result.data[0].user_full_name).toBe('Nguyen Van A');
-      expect(result.data[0].variant_color).toBe('Black');
-      expect(result.data[0].variant_size).toBe('M');
+      expect(result.data[0].variant_option1).toBe('Black');
+      expect(result.data[0].variant_option2).toBe('M');
       expect(result.stats.average_rating).toBe(4.5);
       expect(result.stats.total_reviews).toBe(10);
     });
@@ -284,7 +285,7 @@ describe('ReviewService', () => {
       reviewRepository.getReviewStats.mockResolvedValue(mockReviewStats());
 
       // Act
-      await service.findProductReviews(10, {});
+      await service.findProductReviews(10, {} as ReviewQueryDto);
 
       // Assert
       expect(reviewRepository.findByProductIdPaginated).toHaveBeenCalledWith(
@@ -315,8 +316,8 @@ describe('ReviewService', () => {
       const result = await service.findProductReviews(10, { page: 1, limit: 20 });
 
       // Assert
-      expect(result.data[0].variant_color).toBeNull();
-      expect(result.data[0].variant_size).toBeNull();
+      expect(result.data[0].variant_option1).toBeNull();
+      expect(result.data[0].variant_option2).toBeNull();
     });
   });
 
@@ -338,7 +339,7 @@ describe('ReviewService', () => {
       } as any;
       const paginatedResult = mockPaginatedReviews([review]);
       const variantMap = new Map([
-        ['42-10', { color: 'Red', size: 'L' }],
+        ['42-10', { option1: 'Red', option2: 'L' }],
       ]);
 
       reviewRepository.findByUserIdPaginated.mockResolvedValue(
@@ -354,8 +355,8 @@ describe('ReviewService', () => {
       // Assert
       expect(result.data).toHaveLength(1);
       expect(result.data[0].product_name).toBe('Wireless Headphones');
-      expect(result.data[0].variant_color).toBe('Red');
-      expect(result.data[0].variant_size).toBe('L');
+      expect(result.data[0].variant_option1).toBe('Red');
+      expect(result.data[0].variant_option2).toBe('L');
     });
 
     it('should use default pagination when not provided', async () => {
@@ -366,7 +367,7 @@ describe('ReviewService', () => {
       reviewRepository.findVariantInfoForReviews.mockResolvedValue(new Map());
 
       // Act
-      await service.findMyReviews(1, {});
+      await service.findMyReviews(1, {} as ReviewQueryDto);
 
       // Assert
       expect(reviewRepository.findByUserIdPaginated).toHaveBeenCalledWith(
@@ -441,7 +442,7 @@ describe('ReviewService', () => {
       } as any;
       const paginatedResult = mockPaginatedReviews([review]);
       const variantMap = new Map([
-        ['42-10', { color: 'Black', size: 'M' }],
+        ['42-10', { option1: 'Black', option2: 'M' }],
       ]);
 
       reviewRepository.findAllPaginated.mockResolvedValue(
@@ -459,7 +460,7 @@ describe('ReviewService', () => {
       expect(result.data[0].user_email).toBe('user@test.com');
       expect(result.data[0].user_full_name).toBe('Nguyen Van A');
       expect(result.data[0].product_name).toBe('Wireless Headphones');
-      expect(result.data[0].variant_color).toBe('Black');
+      expect(result.data[0].variant_option1).toBe('Black');
     });
 
     it('should pass query filters through to repository', async () => {

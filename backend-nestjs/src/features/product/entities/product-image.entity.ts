@@ -4,10 +4,12 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Product } from './product.entity';
 
 @Entity('product_images')
+@Index('idx_product_images_product_id', ['product_id'])
 export class ProductImage {
   @PrimaryGeneratedColumn()
   id: number;

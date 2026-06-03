@@ -20,6 +20,10 @@ function toOrderItemResponse(item: {
   thumbnail_url: string | null;
   product_variant_id: number | null;
   product_variant?: { product_id: number } | null;
+  option1_label?: string | null;
+  option1_value?: string | null;
+  option2_label?: string | null;
+  option2_value?: string | null;
 }): OrderItemResponseDto {
   return {
     id: item.id,
@@ -30,6 +34,10 @@ function toOrderItemResponse(item: {
     thumbnail_url: item.thumbnail_url,
     product_variant_id: item.product_variant_id,
     product_id: item.product_variant?.product_id ?? null,
+    option1_label: item.option1_label ?? null,
+    option1_value: item.option1_value ?? null,
+    option2_label: item.option2_label ?? null,
+    option2_value: item.option2_value ?? null,
   };
 }
 

@@ -6,6 +6,11 @@ import {
   AdminReviewResponseDto,
 } from '../dto/review-response.dto';
 
+interface VariantInfo {
+  option1: string | null;
+  option2: string | null;
+}
+
 export function toReviewResponse(review: Review): ReviewResponseDto {
   return {
     id: review.id,
@@ -19,32 +24,32 @@ export function toReviewResponse(review: Review): ReviewResponseDto {
 
 export function toReviewWithUserResponse(
   review: Review,
-  variantInfo?: { color: string | null; size: string | null },
+  variantInfo?: VariantInfo,
 ): ReviewWithUserResponseDto {
   return {
     ...toReviewResponse(review),
     user_full_name: review.user?.full_name ?? '',
-    variant_color: variantInfo?.color ?? null,
-    variant_size: variantInfo?.size ?? null,
+    variant_option1: variantInfo?.option1 ?? null,
+    variant_option2: variantInfo?.option2 ?? null,
   };
 }
 
 export function toMyReviewResponse(
   review: Review,
-  variantInfo?: { color: string | null; size: string | null },
+  variantInfo?: VariantInfo,
 ): MyReviewResponseDto {
   return {
     ...toReviewResponse(review),
     product_name: review.product?.name,
     product_thumbnail_url: review.product?.thumbnail_url ?? null,
-    variant_color: variantInfo?.color ?? null,
-    variant_size: variantInfo?.size ?? null,
+    variant_option1: variantInfo?.option1 ?? null,
+    variant_option2: variantInfo?.option2 ?? null,
   };
 }
 
 export function toAdminReviewResponse(
   review: Review,
-  variantInfo?: { color: string | null; size: string | null },
+  variantInfo?: VariantInfo,
 ): AdminReviewResponseDto {
   return {
     ...toReviewResponse(review),
@@ -53,7 +58,7 @@ export function toAdminReviewResponse(
     user_full_name: review.user?.full_name,
     product_name: review.product?.name,
     product_thumbnail_url: review.product?.thumbnail_url ?? null,
-    variant_color: variantInfo?.color ?? null,
-    variant_size: variantInfo?.size ?? null,
+    variant_option1: variantInfo?.option1 ?? null,
+    variant_option2: variantInfo?.option2 ?? null,
   };
 }

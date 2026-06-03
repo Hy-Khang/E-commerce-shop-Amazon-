@@ -4,10 +4,12 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 
 @Entity('addresses')
+@Index('idx_addresses_user_id', ['user_id'])
 export class Address {
   @PrimaryGeneratedColumn()
   id: number;

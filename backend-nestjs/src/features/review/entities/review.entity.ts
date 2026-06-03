@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -10,6 +11,7 @@ import { Product } from '../../product/entities/product.entity';
 import { Order } from '../../order/entities/order.entity';
 
 @Entity('reviews')
+@Index('idx_reviews_product_id', ['product_id'])
 export class Review {
   @PrimaryGeneratedColumn()
   id: number;

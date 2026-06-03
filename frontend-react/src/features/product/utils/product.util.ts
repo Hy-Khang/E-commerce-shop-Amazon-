@@ -18,12 +18,11 @@ export function hasAnyStock(variants: ProductVariant[]): boolean {
   return variants.some(isInStock);
 }
 
-export function getUniqueColors(variants: ProductVariant[]): string[] {
-  return [...new Set(variants.map((v) => v.color).filter(Boolean))] as string[];
-}
-
-export function getUniqueSizes(variants: ProductVariant[]): string[] {
-  return [...new Set(variants.map((v) => v.size).filter(Boolean))] as string[];
+export function getUniqueOptionValues(
+  variants: ProductVariant[],
+  optionKey: 'option1' | 'option2',
+): string[] {
+  return [...new Set(variants.map((v) => v[optionKey]).filter(Boolean))] as string[];
 }
 
 export function generateSlug(name: string): string {

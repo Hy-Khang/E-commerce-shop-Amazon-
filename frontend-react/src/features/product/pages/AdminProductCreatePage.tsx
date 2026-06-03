@@ -35,6 +35,8 @@ export default function AdminProductCreatePage() {
     createProduct.mutate({
       ...data,
       thumbnail_url: data.thumbnail_url || undefined,
+      option1_label: data.option1_label || undefined,
+      option2_label: data.option2_label || undefined,
     });
   }
 
@@ -98,6 +100,27 @@ export default function AdminProductCreatePage() {
             {...register('description')}
             className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="option1_label" className="block text-sm font-medium text-gray-700">Option 1 Label</label>
+            <input
+              id="option1_label"
+              {...register('option1_label')}
+              placeholder="e.g. Color, RAM, Connectivity"
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label htmlFor="option2_label" className="block text-sm font-medium text-gray-700">Option 2 Label</label>
+            <input
+              id="option2_label"
+              {...register('option2_label')}
+              placeholder="e.g. Size, Storage, DPI"
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
         <div>

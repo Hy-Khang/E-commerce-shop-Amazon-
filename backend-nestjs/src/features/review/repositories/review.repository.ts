@@ -170,14 +170,14 @@ export class ReviewRepository {
 
   async findVariantInfoForReviews(
     pairs: { order_id: number; product_id: number }[],
-  ): Promise<Map<string, { color: string | null; size: string | null }>> {
+  ): Promise<Map<string, { option1: string | null; option2: string | null }>> {
     if (pairs.length === 0) return new Map();
 
     const orderIds = [...new Set(pairs.map((p) => p.order_id))];
 
     const results = await this.repo.manager
       .createQueryBuilder()
-      .select(['oi.order_id', 'pv.product_id', 'pv.color', 'pv.size'])
+      .select(['oi.order_id', 'pv.product_id', 'pv.option1', 'pv.option2'])
       .from('order_items', 'oi')
       .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
       .where('oi.order_id IN (:...orderIds)', { orderIds })
@@ -185,14 +185,14 @@ export class ReviewRepository {
 
     const map = new Map<
       string,
-      { color: string | null; size: string | null }
+      { option1: string | null; option2: string | null }
     >();
     for (const row of results) {
       const key = `${row.oi_order_id}-${row.pv_product_id}`;
       if (!map.has(key)) {
         map.set(key, {
-          color: row.pv_color ?? null,
-          size: row.pv_size ?? null,
+          option1: row.pv_option1 ?? null,
+          option2: row.pv_option2 ?? null,
         });
       }
     }

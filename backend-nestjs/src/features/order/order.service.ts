@@ -100,16 +100,21 @@ export class OrderService {
 
     const orderItemsData = cart.items.map((item) => {
       const variant = item.product_variant;
+      const product = variant.product;
       const price = Number(variant.sale_price ?? variant.price);
       itemsTotal += price * item.quantity;
 
       return {
         product_variant_id: variant.id,
-        product_name: variant.product?.name ?? '',
+        product_name: product?.name ?? '',
         sku: variant.sku,
         price,
         quantity: item.quantity,
-        thumbnail_url: variant.product?.thumbnail_url ?? null,
+        thumbnail_url: product?.thumbnail_url ?? null,
+        option1_label: product?.option1_label ?? null,
+        option1_value: variant.option1 ?? null,
+        option2_label: product?.option2_label ?? null,
+        option2_value: variant.option2 ?? null,
       };
     });
 

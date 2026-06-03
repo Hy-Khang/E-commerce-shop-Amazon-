@@ -199,7 +199,7 @@ export class ProductService {
     return this.productRepository.findAllPaginated(query);
   }
 
-  async findProductById(id: number): Promise<Product> {
+  async findProductById(id: number): Promise<Product & { reviewCount: number; avgRating: number }> {
     const product = await this.productRepository.findByIdWithReviewStats(id);
     if (!product) {
       throw new NotFoundException({
@@ -293,6 +293,8 @@ export class ProductService {
       });
     }
 
+    this.validateOptionConsistency(product, dto.option1, dto.option2);
+
     const skuExists = await this.productVariantRepository.existsBySku(dto.sku);
     if (skuExists) {
       throw new ConflictException({
@@ -325,6 +327,17 @@ export class ProductService {
           code: 'PRODUCT_003',
           message: 'Duplicate SKU',
         });
+      }
+    }
+
+    if (dto.option1 !== undefined || dto.option2 !== undefined) {
+      const product = await this.productRepository.findById(variant.product_id);
+      if (product) {
+        this.validateOptionConsistency(
+          product,
+          dto.option1 ?? variant.option1,
+          dto.option2 ?? variant.option2,
+        );
       }
     }
 
@@ -413,6 +426,25 @@ export class ProductService {
       this.logger.log(`File deleted: ${filePath}`);
     } catch {
       this.logger.warn(`Could not delete file: ${filePath}`);
+    }
+  }
+
+  private validateOptionConsistency(
+    product: Product,
+    option1?: string | null,
+    option2?: string | null,
+  ): void {
+    if (option1 && !product.option1_label) {
+      throw new BadRequestException({
+        code: 'PRODUCT_006',
+        message: 'Cannot set option1 value: product has no option1_label defined',
+      });
+    }
+    if (option2 && !product.option2_label) {
+      throw new BadRequestException({
+        code: 'PRODUCT_006',
+        message: 'Cannot set option2 value: product has no option2_label defined',
+      });
     }
   }
 

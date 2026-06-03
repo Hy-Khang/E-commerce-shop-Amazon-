@@ -13,8 +13,8 @@ export interface Review {
   // Product reviews + admin reviews
   user_full_name?: string;
   // Product reviews — variant classification
-  variant_color?: string | null;
-  variant_size?: string | null;
+  variant_option1?: string | null;
+  variant_option2?: string | null;
   // My reviews + admin reviews
   product_name?: string;
   product_thumbnail_url?: string | null;

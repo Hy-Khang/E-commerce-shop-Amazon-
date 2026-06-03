@@ -13,7 +13,7 @@ import { createProductSchema, createVariantSchema, type CreateProductFormData, t
 import { ImageUpload } from '../components/ImageUpload';
 import { ApiError } from '@/core/api/api.types';
 
-function VariantForm({ productId }: { productId: number }) {
+function VariantForm({ productId, option1Label, option2Label }: { productId: number; option1Label: string | null; option2Label: string | null }) {
   const addVariant = useAddVariant(productId);
   const {
     register,
@@ -28,8 +28,8 @@ function VariantForm({ productId }: { productId: number }) {
     addVariant.mutate(
       {
         ...data,
-        color: data.color || undefined,
-        size: data.size || undefined,
+        option1: data.option1 || undefined,
+        option2: data.option2 || undefined,
         sale_price: data.sale_price ?? undefined,
       },
       { onSuccess: () => reset() },
@@ -47,8 +47,12 @@ function VariantForm({ productId }: { productId: number }) {
           <input {...register('sku')} placeholder="SKU" className="w-full rounded-md border px-2 py-1.5 text-sm" />
           {errors.sku && <p className="mt-0.5 text-xs text-red-600">{errors.sku.message}</p>}
         </div>
-        <input {...register('color')} placeholder="Color" className="rounded-md border px-2 py-1.5 text-sm" />
-        <input {...register('size')} placeholder="Size" className="rounded-md border px-2 py-1.5 text-sm" />
+        {option1Label && (
+          <input {...register('option1')} placeholder={option1Label} className="rounded-md border px-2 py-1.5 text-sm" />
+        )}
+        {option2Label && (
+          <input {...register('option2')} placeholder={option2Label} className="rounded-md border px-2 py-1.5 text-sm" />
+        )}
         <div>
           <input {...register('price', { valueAsNumber: true })} type="number" step="0.01" placeholder="Price" className="w-full rounded-md border px-2 py-1.5 text-sm" />
           {errors.price && <p className="mt-0.5 text-xs text-red-600">{errors.price.message}</p>}
@@ -125,6 +129,8 @@ export default function AdminProductEditPage() {
       category_id: product.category_id,
       description: product.description ?? '',
       thumbnail_url: product.thumbnail_url ?? '',
+      option1_label: product.option1_label ?? '',
+      option2_label: product.option2_label ?? '',
     } : undefined,
   });
 
@@ -132,6 +138,8 @@ export default function AdminProductEditPage() {
     updateProduct.mutate({
       ...data,
       thumbnail_url: data.thumbnail_url || undefined,
+      option1_label: data.option1_label || undefined,
+      option2_label: data.option2_label || undefined,
     });
   }
 
@@ -198,6 +206,16 @@ export default function AdminProductEditPage() {
           <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
           <textarea id="description" rows={4} {...register('description')} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
         </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="option1_label" className="block text-sm font-medium text-gray-700">Option 1 Label</label>
+            <input id="option1_label" {...register('option1_label')} placeholder="e.g. Color, RAM, Connectivity" className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label htmlFor="option2_label" className="block text-sm font-medium text-gray-700">Option 2 Label</label>
+            <input id="option2_label" {...register('option2_label')} placeholder="e.g. Size, Storage, DPI" className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+        </div>
         <div>
           <ImageUpload
             label="Thumbnail"
@@ -220,8 +238,8 @@ export default function AdminProductEditPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">SKU</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Color</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Size</th>
+                  {product.option1_label && <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">{product.option1_label}</th>}
+                  {product.option2_label && <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">{product.option2_label}</th>}
                   <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Price</th>
                   <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Sale</th>
                   <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Stock</th>
@@ -232,8 +250,8 @@ export default function AdminProductEditPage() {
                 {product.variants.map((v) => (
                   <tr key={v.id}>
                     <td className="px-3 py-2 text-sm font-mono">{v.sku}</td>
-                    <td className="px-3 py-2 text-sm">{v.color || '—'}</td>
-                    <td className="px-3 py-2 text-sm">{v.size || '—'}</td>
+                    {product.option1_label && <td className="px-3 py-2 text-sm">{v.option1 || '—'}</td>}
+                    {product.option2_label && <td className="px-3 py-2 text-sm">{v.option2 || '—'}</td>}
                     <td className="px-3 py-2 text-sm">{formatPrice(v.price)}</td>
                     <td className="px-3 py-2 text-sm">{v.sale_price ? formatPrice(v.sale_price) : '—'}</td>
                     <td className="px-3 py-2 text-sm">{v.stock_quantity}</td>
@@ -252,7 +270,7 @@ export default function AdminProductEditPage() {
             </table>
           </div>
         )}
-        <VariantForm productId={productId} />
+        <VariantForm productId={productId} option1Label={product.option1_label} option2Label={product.option2_label} />
       </section>
 
       <section className="space-y-4">

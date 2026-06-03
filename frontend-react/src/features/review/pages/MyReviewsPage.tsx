@@ -123,9 +123,9 @@ function MyReviewCard({ review, onDelete, isDeleting }: MyReviewCardProps) {
                   ))}
                 </div>
                 <span className="text-xs text-gray-500">{formatDate(review.created_at)}</span>
-                {(review.variant_color || review.variant_size) && (
+                {(review.variant_option1 || review.variant_option2) && (
                   <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
-                    {[review.variant_color, review.variant_size].filter(Boolean).join(', ')}
+                    {[review.variant_option1, review.variant_option2].filter(Boolean).join(', ')}
                   </span>
                 )}
               </div>

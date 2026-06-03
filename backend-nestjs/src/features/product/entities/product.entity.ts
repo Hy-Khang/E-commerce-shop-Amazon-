@@ -5,12 +5,14 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Category } from './category.entity';
 import { ProductVariant } from './product-variant.entity';
 import { ProductImage } from './product-image.entity';
 
 @Entity('products')
+@Index('idx_products_category_id', ['category_id'])
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;
@@ -26,6 +28,12 @@ export class Product {
 
   @Column({ type: 'nvarchar', length: 500, nullable: true })
   thumbnail_url: string;
+
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  option1_label: string | null;
+
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  option2_label: string | null;
 
   @Column({ type: 'bit', default: true })
   is_active: boolean;

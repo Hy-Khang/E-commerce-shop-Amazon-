@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -9,6 +10,7 @@ import { ProductVariant } from '../../product/entities/product-variant.entity';
 import { Order } from './order.entity';
 
 @Entity('order_items')
+@Index('idx_order_items_order_id', ['order_id'])
 export class OrderItem {
   @PrimaryGeneratedColumn()
   id: number;
@@ -33,6 +35,18 @@ export class OrderItem {
 
   @Column({ type: 'nvarchar', length: 500, nullable: true })
   thumbnail_url: string;
+
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  option1_label: string | null;
+
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  option1_value: string | null;
+
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  option2_label: string | null;
+
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  option2_value: string | null;
 
   @ManyToOne(() => Order, (order) => order.order_items)
   @JoinColumn({ name: 'order_id' })

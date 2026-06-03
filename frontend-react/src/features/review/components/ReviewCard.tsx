@@ -11,8 +11,8 @@ interface Props {
 
 function formatVariant(review: Review): string | null {
   const parts: string[] = [];
-  if (review.variant_color) parts.push(review.variant_color);
-  if (review.variant_size) parts.push(review.variant_size);
+  if (review.variant_option1) parts.push(review.variant_option1);
+  if (review.variant_option2) parts.push(review.variant_option2);
   return parts.length > 0 ? parts.join(', ') : null;
 }
 

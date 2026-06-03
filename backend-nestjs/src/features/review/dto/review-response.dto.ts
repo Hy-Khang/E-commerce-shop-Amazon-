@@ -25,10 +25,10 @@ export class ReviewWithUserResponseDto extends ReviewResponseDto {
   user_full_name: string;
 
   @ApiPropertyOptional()
-  variant_color?: string | null;
+  variant_option1?: string | null;
 
   @ApiPropertyOptional()
-  variant_size?: string | null;
+  variant_option2?: string | null;
 }
 
 export class ReviewStatsDto {
@@ -50,10 +50,10 @@ export class MyReviewResponseDto extends ReviewResponseDto {
   product_thumbnail_url?: string | null;
 
   @ApiPropertyOptional()
-  variant_color?: string | null;
+  variant_option1?: string | null;
 
   @ApiPropertyOptional()
-  variant_size?: string | null;
+  variant_option2?: string | null;
 }
 
 export class AdminReviewResponseDto extends ReviewResponseDto {
@@ -73,8 +73,8 @@ export class AdminReviewResponseDto extends ReviewResponseDto {
   product_thumbnail_url?: string | null;
 
   @ApiPropertyOptional()
-  variant_color?: string | null;
+  variant_option1?: string | null;
 
   @ApiPropertyOptional()
-  variant_size?: string | null;
+  variant_option2?: string | null;
 }

@@ -64,11 +64,13 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {product.variants.length > 0 && (
+          {product.variants.length > 0 && (product.option1_label || product.option2_label) && (
             <VariantSelector
               variants={product.variants}
               selectedVariantId={active?.id ?? null}
               onSelect={setSelectedVariant}
+              option1Label={product.option1_label}
+              option2Label={product.option2_label}
             />
           )}
 

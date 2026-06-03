@@ -8,10 +8,10 @@ export class VariantResponseDto {
   sku: string;
 
   @ApiPropertyOptional()
-  color: string | null;
+  option1: string | null;
 
   @ApiPropertyOptional()
-  size: string | null;
+  option2: string | null;
 
   @ApiProperty()
   price: number;
@@ -52,6 +52,12 @@ export class ProductResponseDto {
 
   @ApiProperty()
   is_active: boolean;
+
+  @ApiPropertyOptional()
+  option1_label: string | null;
+
+  @ApiPropertyOptional()
+  option2_label: string | null;
 
   @ApiProperty()
   category_id: number;

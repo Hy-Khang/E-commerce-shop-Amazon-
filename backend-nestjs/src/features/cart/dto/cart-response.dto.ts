@@ -11,10 +11,16 @@ export class CartItemVariantResponseDto {
   sale_price: number | null;
 
   @ApiPropertyOptional()
-  color: string | null;
+  option1: string | null;
 
   @ApiPropertyOptional()
-  size: string | null;
+  option2: string | null;
+
+  @ApiPropertyOptional()
+  option1_label: string | null;
+
+  @ApiPropertyOptional()
+  option2_label: string | null;
 
   @ApiProperty()
   stock_quantity: number;

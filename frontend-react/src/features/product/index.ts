@@ -36,8 +36,7 @@ export {
   getPriceRange,
   isInStock,
   hasAnyStock,
-  getUniqueColors,
-  getUniqueSizes,
+  getUniqueOptionValues,
   generateSlug,
   getLowestPriceVariant,
 } from './utils/product.util';

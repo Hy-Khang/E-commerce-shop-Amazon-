@@ -1,59 +1,61 @@
 import { useMemo } from 'react';
-import { getUniqueColors, getUniqueSizes, isInStock } from '../utils/product.util';
+import { getUniqueOptionValues, isInStock } from '../utils/product.util';
 import type { ProductVariant } from '../types/product.types';
 
 interface Props {
   variants: ProductVariant[];
   selectedVariantId: number | null;
   onSelect: (variant: ProductVariant) => void;
+  option1Label: string | null;
+  option2Label: string | null;
 }
 
-export function VariantSelector({ variants, selectedVariantId, onSelect }: Props) {
-  const colors = useMemo(() => getUniqueColors(variants), [variants]);
-  const sizes = useMemo(() => getUniqueSizes(variants), [variants]);
+export function VariantSelector({ variants, selectedVariantId, onSelect, option1Label, option2Label }: Props) {
+  const option1Values = useMemo(() => getUniqueOptionValues(variants, 'option1'), [variants]);
+  const option2Values = useMemo(() => getUniqueOptionValues(variants, 'option2'), [variants]);
   const selected = variants.find((v) => v.id === selectedVariantId);
 
-  function findVariant(color: string | null, size: string | null): ProductVariant | undefined {
+  function findVariant(opt1: string | null, opt2: string | null): ProductVariant | undefined {
     return variants.find(
-      (v) => (color === null || v.color === color) && (size === null || v.size === size),
+      (v) => (opt1 === null || v.option1 === opt1) && (opt2 === null || v.option2 === opt2),
     );
   }
 
-  function handleColorSelect(color: string) {
-    const match = findVariant(color, selected?.size ?? null) ?? variants.find((v) => v.color === color);
+  function handleOption1Select(value: string) {
+    const match = findVariant(value, selected?.option2 ?? null) ?? variants.find((v) => v.option1 === value);
     if (match) onSelect(match);
   }
 
-  function handleSizeSelect(size: string) {
-    const match = findVariant(selected?.color ?? null, size) ?? variants.find((v) => v.size === size);
+  function handleOption2Select(value: string) {
+    const match = findVariant(selected?.option1 ?? null, value) ?? variants.find((v) => v.option2 === value);
     if (match) onSelect(match);
   }
 
   return (
     <div className="space-y-4">
-      {colors.length > 0 && (
+      {option1Label && option1Values.length > 0 && (
         <div>
           <span className="text-sm font-medium text-gray-700">
-            Color: {selected?.color ?? '—'}
+            {option1Label}: {selected?.option1 ?? '—'}
           </span>
           <div className="mt-2 flex flex-wrap gap-2">
-            {colors.map((color) => {
-              const variant = variants.find((v) => v.color === color);
+            {option1Values.map((value) => {
+              const variant = variants.find((v) => v.option1 === value);
               const outOfStock = variant ? !isInStock(variant) : true;
               return (
                 <button
-                  key={color}
-                  onClick={() => handleColorSelect(color)}
+                  key={value}
+                  onClick={() => handleOption1Select(value)}
                   disabled={outOfStock}
                   className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                    selected?.color === color
+                    selected?.option1 === value
                       ? 'border-blue-600 bg-blue-50 text-blue-700'
                       : outOfStock
                         ? 'border-gray-200 text-gray-300 line-through'
                         : 'border-gray-300 text-gray-700 hover:border-blue-400'
                   }`}
                 >
-                  {color}
+                  {value}
                 </button>
               );
             })}
@@ -61,29 +63,29 @@ export function VariantSelector({ variants, selectedVariantId, onSelect }: Props
         </div>
       )}
 
-      {sizes.length > 0 && (
+      {option2Label && option2Values.length > 0 && (
         <div>
           <span className="text-sm font-medium text-gray-700">
-            Size: {selected?.size ?? '—'}
+            {option2Label}: {selected?.option2 ?? '—'}
           </span>
           <div className="mt-2 flex flex-wrap gap-2">
-            {sizes.map((size) => {
-              const variant = variants.find((v) => v.size === size && (selected?.color === null || v.color === selected?.color));
+            {option2Values.map((value) => {
+              const variant = variants.find((v) => v.option2 === value && (selected?.option1 === null || v.option1 === selected?.option1));
               const outOfStock = variant ? !isInStock(variant) : true;
               return (
                 <button
-                  key={size}
-                  onClick={() => handleSizeSelect(size)}
+                  key={value}
+                  onClick={() => handleOption2Select(value)}
                   disabled={outOfStock}
                   className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                    selected?.size === size
+                    selected?.option2 === value
                       ? 'border-blue-600 bg-blue-50 text-blue-700'
                       : outOfStock
                         ? 'border-gray-200 text-gray-300 line-through'
                         : 'border-gray-300 text-gray-700 hover:border-blue-400'
                   }`}
                 >
-                  {size}
+                  {value}
                 </button>
               );
             })}

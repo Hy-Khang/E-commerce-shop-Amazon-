@@ -27,8 +27,8 @@ export interface ProductVariant {
   id: number;
   product_id: number;
   sku: string;
-  color: string | null;
-  size: string | null;
+  option1: string | null;
+  option2: string | null;
   price: number;
   sale_price: number | null;
   stock_quantity: number;
@@ -41,6 +41,8 @@ export interface Product {
   slug: string;
   description: string | null;
   thumbnail_url: string | null;
+  option1_label: string | null;
+  option2_label: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -53,6 +55,8 @@ export interface ProductListItem {
   name: string;
   slug: string;
   thumbnail_url: string | null;
+  option1_label: string | null;
+  option2_label: string | null;
   is_active: boolean;
   created_at: string;
   category_id: number;
@@ -106,6 +110,8 @@ export interface CreateProductRequest {
   category_id: number;
   description?: string;
   thumbnail_url?: string;
+  option1_label?: string;
+  option2_label?: string;
 }
 
 export interface UpdateProductRequest {
@@ -114,20 +120,22 @@ export interface UpdateProductRequest {
   category_id?: number;
   description?: string;
   thumbnail_url?: string;
+  option1_label?: string;
+  option2_label?: string;
 }
 
 export interface CreateVariantRequest {
   sku: string;
-  color?: string;
-  size?: string;
+  option1?: string;
+  option2?: string;
   price: number;
   sale_price?: number;
   stock_quantity: number;
 }
 
 export interface UpdateVariantRequest {
-  color?: string;
-  size?: string;
+  option1?: string;
+  option2?: string;
   price?: number;
   sale_price?: number | null;
   stock_quantity?: number;
@@ -173,14 +181,16 @@ export const createProductSchema = z.object({
     )
     .optional()
     .or(z.literal('')),
+  option1_label: z.string().max(50).optional().or(z.literal('')),
+  option2_label: z.string().max(50).optional().or(z.literal('')),
 });
 
 export type CreateProductFormData = z.infer<typeof createProductSchema>;
 
 export const createVariantSchema = z.object({
   sku: z.string().min(1, 'SKU is required').max(50),
-  color: z.string().max(50).optional().or(z.literal('')),
-  size: z.string().max(50).optional().or(z.literal('')),
+  option1: z.string().max(50).optional().or(z.literal('')),
+  option2: z.string().max(50).optional().or(z.literal('')),
   price: z.number({ error: 'Price is required' }).positive('Price must be positive'),
   sale_price: z.number().positive('Sale price must be positive').optional().nullable(),
   stock_quantity: z.number({ error: 'Stock is required' }).int().min(0, 'Stock cannot be negative'),
