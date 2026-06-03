@@ -150,8 +150,8 @@ export class ProductRepository {
     await this.repo.update(id, { is_active: isActive, updated_at: new Date() });
   }
 
-  async findProductsByCategoryId(
-    categoryId: number,
+  async findProductsByCategoryIds(
+    categoryIds: number[],
     page: number,
     limit: number,
   ): Promise<IPaginatedResult<Product>> {
@@ -159,7 +159,7 @@ export class ProductRepository {
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
-      .where('product.category_id = :categoryId', { categoryId })
+      .where('product.category_id IN (:...categoryIds)', { categoryIds })
       .andWhere('product.is_active = :isActive', { isActive: true })
       .orderBy('product.created_at', 'DESC');
 

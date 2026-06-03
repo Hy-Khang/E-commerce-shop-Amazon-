@@ -41,6 +41,7 @@ describe('ProductService', () => {
             findByIdWithDetails: jest.fn(),
             existsBySlug: jest.fn(),
             existsBySlugExcludingId: jest.fn(),
+            findDescendantIds: jest.fn(),
             hasProductsOrChildren: jest.fn(),
             create: jest.fn(),
             update: jest.fn(),
@@ -55,7 +56,7 @@ describe('ProductService', () => {
             findActivePaginated: jest.fn(),
             findAllPaginated: jest.fn(),
             findByIdWithReviewStats: jest.fn(),
-            findProductsByCategoryId: jest.fn(),
+            findProductsByCategoryIds: jest.fn(),
             existsBySlug: jest.fn(),
             existsBySlugExcludingId: jest.fn(),
             create: jest.fn(),
@@ -115,17 +116,19 @@ describe('ProductService', () => {
   });
 
   describe('getCategoryBySlug', () => {
-    it('should return category with paginated products', async () => {
+    it('should return category with paginated products including descendants', async () => {
       const category = mockCategory();
       const products = mockPaginatedProducts();
       categoryRepository.findBySlug.mockResolvedValue(category);
-      productRepository.findProductsByCategoryId.mockResolvedValue(products);
+      categoryRepository.findDescendantIds.mockResolvedValue([1, 2, 3]);
+      productRepository.findProductsByCategoryIds.mockResolvedValue(products);
 
       const result = await service.getCategoryBySlug('electronics', 1, 20);
 
       expect(result.category).toEqual(category);
       expect(result.products).toEqual(products);
-      expect(productRepository.findProductsByCategoryId).toHaveBeenCalledWith(1, 1, 20);
+      expect(categoryRepository.findDescendantIds).toHaveBeenCalledWith(1);
+      expect(productRepository.findProductsByCategoryIds).toHaveBeenCalledWith([1, 2, 3], 1, 20);
     });
 
     it('should throw NotFoundException when category not found', async () => {

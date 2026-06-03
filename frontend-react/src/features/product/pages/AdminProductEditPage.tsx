@@ -11,6 +11,7 @@ import { useAddImage, useDeleteImage } from '../hooks/useAdminImages';
 import { useToggleProductActive } from '../hooks/useToggleProductActive';
 import { createProductSchema, createVariantSchema, type CreateProductFormData, type CreateVariantFormData } from '../types/product.types';
 import { ImageUpload } from '../components/ImageUpload';
+import { CategoryCascader } from '../components/CategoryCascader';
 import { ApiError } from '@/core/api/api.types';
 
 function VariantForm({ productId, option1Label, option2Label }: { productId: number; option1Label: string | null; option2Label: string | null }) {
@@ -193,26 +194,23 @@ export default function AdminProductEditPage() {
             {errors.slug && <p className="mt-1 text-xs text-red-600">{errors.slug.message}</p>}
           </div>
         </div>
-        <div>
-          <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">Category</label>
-          <select id="category_id" {...register('category_id', { valueAsNumber: true })} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-            <option value="">Select category</option>
-            {categories?.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
-        </div>
+        <CategoryCascader
+          categories={categories ?? []}
+          value={watch('category_id')}
+          onChange={(id) => setValue('category_id', id as number, { shouldValidate: true })}
+          error={errors.category_id?.message}
+        />
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
           <textarea id="description" rows={4} {...register('description')} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="option1_label" className="block text-sm font-medium text-gray-700">Option 1 Label</label>
+            <label htmlFor="option1_label" className="block text-sm font-medium text-gray-700">Variant Option 1</label>
             <input id="option1_label" {...register('option1_label')} placeholder="e.g. Color, RAM, Connectivity" className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
           </div>
           <div>
-            <label htmlFor="option2_label" className="block text-sm font-medium text-gray-700">Option 2 Label</label>
+            <label htmlFor="option2_label" className="block text-sm font-medium text-gray-700">Variant Option 2</label>
             <input id="option2_label" {...register('option2_label')} placeholder="e.g. Size, Storage, DPI" className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
           </div>
         </div>

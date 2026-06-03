@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Category } from '../entities/category.entity';
 import { IPaginatedResult } from '../../../common/interfaces/paginated-result.interface';
 
@@ -22,7 +22,7 @@ export class CategoryRepository {
 
   async findTree(): Promise<Category[]> {
     return this.repo.find({
-      where: { parent_id: undefined },
+      where: { parent_id: IsNull() },
       relations: ['children', 'children.children'],
       order: { name: 'ASC' },
     });
@@ -88,6 +88,20 @@ export class CategoryRepository {
       .getOne();
 
     return category;
+  }
+
+  async findDescendantIds(id: number): Promise<number[]> {
+    const result = await this.repo.query(
+      `WITH category_tree AS (
+        SELECT id FROM categories WHERE id = @0
+        UNION ALL
+        SELECT c.id FROM categories c
+        INNER JOIN category_tree ct ON c.parent_id = ct.id
+      )
+      SELECT id FROM category_tree`,
+      [id],
+    );
+    return result.map((row: { id: number }) => row.id);
   }
 
   async existsBySlug(slug: string): Promise<boolean> {

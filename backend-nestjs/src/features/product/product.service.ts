@@ -65,8 +65,10 @@ export class ProductService {
       });
     }
 
-    const products = await this.productRepository.findProductsByCategoryId(
-      category.id,
+    const categoryIds = await this.categoryRepository.findDescendantIds(category.id);
+
+    const products = await this.productRepository.findProductsByCategoryIds(
+      categoryIds,
       page,
       limit,
     );
