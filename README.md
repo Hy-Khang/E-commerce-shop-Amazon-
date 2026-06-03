@@ -53,3 +53,7 @@ npm run build
 # Test
 npm test
 ```
+# Test credentials:
+
+admin@example.com / Admin@123 (admin)
+customer1@example.com / Customer@123 (customer)

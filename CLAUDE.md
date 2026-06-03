@@ -24,6 +24,9 @@ A full-featured e-commerce platform. Includes product catalog, user authenticati
 ### Project Setup
 - `/init-base [backend|frontend]` - Setup project architecture & environment
 
+### Database
+- `/seed [feature|all]` - Create/run seed data for database (per-feature or all)
+
 ### Feature Development
 - `/be-crud [feature]` - Generate backend CRUD (entity, controller, service, dto)
 - `/fe-crud [feature]` - Generate frontend CRUD (pages, components, hooks)
