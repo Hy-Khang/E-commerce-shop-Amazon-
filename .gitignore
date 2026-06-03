@@ -22,3 +22,10 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+
+# Claude Code
+.claude/
+.mcp.json
+
+# Playwright MCP
+.playwright-mcp/
