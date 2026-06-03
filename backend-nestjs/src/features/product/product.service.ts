@@ -26,17 +26,25 @@ import { ProductVariant } from './entities/product-variant.entity';
 import { ProductImage } from './entities/product-image.entity';
 import { OrderCreatedEvent, OrderCancelledEvent } from './types/product.types';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
+import { ConfigService } from '@nestjs/config';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 
 @Injectable()
 export class ProductService {
   private readonly logger = new Logger(ProductService.name);
+
+  private readonly uploadDir: string;
 
   constructor(
     private readonly categoryRepository: CategoryRepository,
     private readonly productRepository: ProductRepository,
     private readonly productVariantRepository: ProductVariantRepository,
     private readonly productImageRepository: ProductImageRepository,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.uploadDir = this.configService.get<string>('app.uploadDir')!;
+  }
 
   // ─── Public: Categories ───
 
@@ -390,6 +398,22 @@ export class ProductService {
 
     await this.productImageRepository.delete(id);
     this.logger.log(`Image deleted: ${id}`);
+
+    await this.tryDeleteFile(image.image_url);
+  }
+
+  private async tryDeleteFile(imageUrl: string): Promise<void> {
+    if (!imageUrl.startsWith('/uploads/')) return;
+
+    const relativePath = imageUrl.replace(/^\/uploads\//, '');
+    const filePath = join(this.uploadDir, relativePath);
+
+    try {
+      await unlink(filePath);
+      this.logger.log(`File deleted: ${filePath}`);
+    } catch {
+      this.logger.warn(`Could not delete file: ${filePath}`);
+    }
   }
 
   // ─── Cross-feature: consumed by cart/order/review ───

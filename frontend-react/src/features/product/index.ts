@@ -10,6 +10,7 @@ export { useUpdateProduct } from './hooks/useUpdateProduct';
 export { useToggleProductActive } from './hooks/useToggleProductActive';
 export { useAddVariant, useUpdateVariant, useDeleteVariant } from './hooks/useAdminVariants';
 export { useAddImage, useUpdateImage, useDeleteImage } from './hooks/useAdminImages';
+export { useUploadImage } from './hooks/useUploadImage';
 export {
   adminCategoryKeys,
   useAdminCategories,
@@ -24,6 +25,7 @@ export { CategoryForm } from './components/CategoryForm';
 export { ProductCard } from './components/ProductCard';
 export { VariantSelector } from './components/VariantSelector';
 export { ImageGallery } from './components/ImageGallery';
+export { ImageUpload } from './components/ImageUpload';
 export { CategorySidebar } from './components/CategorySidebar';
 export { ProductCardSkeleton } from './components/ProductCardSkeleton';
 export { ProductDetailSkeleton } from './components/ProductDetailSkeleton';

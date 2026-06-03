@@ -5,6 +5,11 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 
+const backendOrigin = (() => {
+  try { return new URL(process.env.VITE_API_BASE_URL || '').origin; }
+  catch { return 'http://localhost:3000'; }
+})();
+
 export default defineConfig({
   plugins: [
     react(),
@@ -20,6 +25,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': process.env.VITE_API_BASE_URL,
+      '/uploads': backendOrigin,
     },
   },
   test: {

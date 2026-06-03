@@ -10,6 +10,7 @@ import { OrderModule } from './features/order/order.module';
 import { ReviewModule } from './features/review/review.module';
 import { WishlistModule } from './features/wishlist/wishlist.module';
 import { CouponModule } from './features/coupon/coupon.module';
+import { UploadModule } from './features/upload/upload.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -26,6 +27,7 @@ import { AppService } from './app.service';
     ReviewModule,
     WishlistModule,
     CouponModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -10,6 +10,7 @@ import { useAddVariant, useUpdateVariant, useDeleteVariant } from '../hooks/useA
 import { useAddImage, useDeleteImage } from '../hooks/useAdminImages';
 import { useToggleProductActive } from '../hooks/useToggleProductActive';
 import { createProductSchema, createVariantSchema, type CreateProductFormData, type CreateVariantFormData } from '../types/product.types';
+import { ImageUpload } from '../components/ImageUpload';
 import { ApiError } from '@/core/api/api.types';
 
 function VariantForm({ productId }: { productId: number }) {
@@ -67,21 +68,34 @@ function VariantForm({ productId }: { productId: number }) {
 
 function ImageForm({ productId }: { productId: number }) {
   const addImage = useAddImage(productId);
-  const { register, handleSubmit, reset } = useForm<{ image_url: string; sort_order: number }>();
+  const { register, handleSubmit, reset, setValue, watch } = useForm<{ image_url: string; sort_order: number }>({
+    defaultValues: { image_url: '', sort_order: 0 },
+  });
+
+  const imageUrl = watch('image_url');
 
   function onSubmit(data: { image_url: string; sort_order: number }) {
+    if (!data.image_url) return;
     addImage.mutate(data, { onSuccess: () => reset() });
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex items-end gap-2">
-      <div className="flex-1">
-        <input {...register('image_url', { required: true })} placeholder="Image URL" className="w-full rounded-md border px-2 py-1.5 text-sm" />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 rounded-md border bg-gray-50 p-4">
+      <ImageUpload
+        label="Gallery Image"
+        value={imageUrl || undefined}
+        onUploaded={(url) => setValue('image_url', url)}
+        onClear={() => setValue('image_url', '')}
+      />
+      <div className="flex items-end gap-2">
+        <div>
+          <label className="block text-xs text-gray-500">Sort order</label>
+          <input {...register('sort_order', { valueAsNumber: true })} type="number" className="w-20 rounded-md border px-2 py-1.5 text-sm" />
+        </div>
+        <button type="submit" disabled={addImage.isPending || !imageUrl} className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
+          {addImage.isPending ? 'Adding...' : 'Add Image'}
+        </button>
       </div>
-      <input {...register('sort_order', { valueAsNumber: true })} type="number" defaultValue={0} placeholder="Order" className="w-20 rounded-md border px-2 py-1.5 text-sm" />
-      <button type="submit" disabled={addImage.isPending} className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
-        Add
-      </button>
     </form>
   );
 }
@@ -100,6 +114,8 @@ export default function AdminProductEditPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateProductFormData>({
     resolver: zodResolver(createProductSchema),
@@ -183,8 +199,13 @@ export default function AdminProductEditPage() {
           <textarea id="description" rows={4} {...register('description')} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
         </div>
         <div>
-          <label htmlFor="thumbnail_url" className="block text-sm font-medium text-gray-700">Thumbnail URL</label>
-          <input id="thumbnail_url" {...register('thumbnail_url')} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <ImageUpload
+            label="Thumbnail"
+            value={watch('thumbnail_url') || undefined}
+            onUploaded={(url) => setValue('thumbnail_url', url, { shouldValidate: true })}
+            onClear={() => setValue('thumbnail_url', '', { shouldValidate: true })}
+          />
+          {errors.thumbnail_url && <p className="mt-1 text-xs text-red-600">{errors.thumbnail_url.message}</p>}
         </div>
         <button type="submit" disabled={updateProduct.isPending} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
           {updateProduct.isPending ? 'Saving...' : 'Save Changes'}

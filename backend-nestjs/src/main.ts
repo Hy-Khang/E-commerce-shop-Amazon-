@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import {
   HttpStatus,
   Logger,
@@ -7,13 +8,15 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { mkdir } from 'fs/promises';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
   const port = config.get<number>('app.port', 3000);
   const prefix = config.get<string>('app.prefix', 'api/v1');
@@ -22,6 +25,10 @@ async function bootstrap() {
 
   app.setGlobalPrefix(prefix);
   app.enableCors({ origin: corsOrigin, credentials: true });
+
+  const uploadDir = config.get<string>('app.uploadDir')!;
+  await mkdir(join(uploadDir, 'products'), { recursive: true });
+  app.useStaticAssets(uploadDir, { prefix: '/uploads/' });
 
   app.useGlobalPipes(
     new ValidationPipe({

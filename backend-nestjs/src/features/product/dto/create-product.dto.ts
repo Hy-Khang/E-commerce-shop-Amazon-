@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, IsUrl, MaxLength } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
+import { IsImagePath } from '../../../common/validators/is-image-path.validator';
 
 export class CreateProductDto {
   @ApiProperty({ example: 'Basic T-Shirt' })
@@ -27,7 +28,7 @@ export class CreateProductDto {
   @ApiPropertyOptional({ example: 'https://cdn.example.com/img/tshirt.jpg' })
   @IsOptional()
   @IsString()
-  @IsUrl()
+  @IsImagePath()
   @MaxLength(500)
   thumbnail_url?: string;
 }

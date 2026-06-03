@@ -161,7 +161,18 @@ export const createProductSchema = z.object({
   slug: z.string().min(1, 'Slug is required').max(255),
   category_id: z.number({ error: 'Category is required' }).int().positive(),
   description: z.string().optional(),
-  thumbnail_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  thumbnail_url: z
+    .string()
+    .refine(
+      (val) => {
+        if (!val) return true;
+        if (/^\/uploads\/products\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp)$/.test(val)) return true;
+        try { const u = new URL(val); return u.protocol === 'http:' || u.protocol === 'https:'; } catch { return false; }
+      },
+      'Must be a valid image URL or uploaded image',
+    )
+    .optional()
+    .or(z.literal('')),
 });
 
 export type CreateProductFormData = z.infer<typeof createProductSchema>;

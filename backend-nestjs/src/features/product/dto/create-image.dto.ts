@@ -1,11 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsImagePath } from '../../../common/validators/is-image-path.validator';
 
 export class CreateImageDto {
   @ApiProperty({ example: 'https://cdn.example.com/img/product-1.jpg' })
   @IsString()
   @IsNotEmpty()
-  @IsUrl()
+  @IsImagePath()
   @MaxLength(500)
   image_url: string;
 

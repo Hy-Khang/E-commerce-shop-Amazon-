@@ -57,6 +57,12 @@ export const vi = {
       added: 'Đã thêm vào giỏ hàng',
       removed: 'Đã xóa khỏi giỏ hàng',
     },
+    upload: {
+      success: 'Tải ảnh lên thành công',
+      error: 'Tải ảnh lên thất bại',
+      tooLarge: 'File quá lớn (tối đa 5MB)',
+      invalidType: 'Chỉ chấp nhận file JPEG, PNG và WebP',
+    },
     error: {
       generic: 'Đã xảy ra lỗi',
     },

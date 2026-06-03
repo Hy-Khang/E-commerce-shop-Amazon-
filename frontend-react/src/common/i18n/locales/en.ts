@@ -59,6 +59,12 @@ export const en: TranslationSchema = {
       added: 'Added to cart',
       removed: 'Removed from cart',
     },
+    upload: {
+      success: 'Image uploaded successfully',
+      error: 'Failed to upload image',
+      tooLarge: 'File is too large (max 5MB)',
+      invalidType: 'Only JPEG, PNG, and WebP files are allowed',
+    },
     error: {
       generic: 'An unexpected error occurred',
     },

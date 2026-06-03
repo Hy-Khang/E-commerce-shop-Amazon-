@@ -6,6 +6,7 @@ import { useCategories } from '../hooks/useCategories';
 import { useCreateProduct } from '../hooks/useCreateProduct';
 import { generateSlug } from '../utils/product.util';
 import { createProductSchema, type CreateProductFormData } from '../types/product.types';
+import { ImageUpload } from '../components/ImageUpload';
 import { ApiError } from '@/core/api/api.types';
 
 export default function AdminProductCreatePage() {
@@ -100,13 +101,11 @@ export default function AdminProductCreatePage() {
         </div>
 
         <div>
-          <label htmlFor="thumbnail_url" className="block text-sm font-medium text-gray-700">Thumbnail URL</label>
-          <input
-            id="thumbnail_url"
-            type="url"
-            {...register('thumbnail_url')}
-            placeholder="https://..."
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          <ImageUpload
+            label="Thumbnail"
+            value={watch('thumbnail_url') || undefined}
+            onUploaded={(url) => setValue('thumbnail_url', url, { shouldValidate: true })}
+            onClear={() => setValue('thumbnail_url', '', { shouldValidate: true })}
           />
           {errors.thumbnail_url && <p className="mt-1 text-xs text-red-600">{errors.thumbnail_url.message}</p>}
         </div>
