@@ -24,26 +24,24 @@ describe('JwtStrategy', () => {
 
   describe('validate', () => {
     it('should map JWT payload to ICurrentUser', () => {
-      const payload: IJwtPayload = { sub: 1, email: 'user@example.com', role: 'customer' };
+      const payload: IJwtPayload = { sub: 1, roleId: 1 };
 
       const result = strategy.validate(payload);
 
       expect(result).toEqual({
         id: 1,
-        email: 'user@example.com',
-        role: 'customer',
+        roleId: 1,
       });
     });
 
     it('should map admin role correctly', () => {
-      const payload: IJwtPayload = { sub: 10, email: 'admin@example.com', role: 'admin' };
+      const payload: IJwtPayload = { sub: 10, roleId: 2 };
 
       const result = strategy.validate(payload);
 
       expect(result).toEqual({
         id: 10,
-        email: 'admin@example.com',
-        role: 'admin',
+        roleId: 2,
       });
     });
   });

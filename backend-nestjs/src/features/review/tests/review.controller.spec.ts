@@ -10,8 +10,7 @@ describe('ReviewController', () => {
 
   const mockUser: ICurrentUser = {
     id: 1,
-    email: 'test@test.com',
-    role: 'customer',
+    roleId: 1,
   };
 
   beforeEach(async () => {

@@ -31,11 +31,11 @@ import {
   VariantResponseDto,
   ImageResponseDto,
 } from './dto/product-response.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { PERMISSIONS } from '../../common/constants/permissions.constant';
 
 @ApiTags('Admin: Products')
 @ApiBearerAuth()
-@Roles('admin')
 @Controller('admin')
 export class AdminProductController {
   constructor(private readonly productService: ProductService) {}
@@ -43,6 +43,7 @@ export class AdminProductController {
   // ─── Products ───
 
   @Get('products')
+  @Permissions(PERMISSIONS.PRODUCTS_READ)
   @ApiOperation({ summary: 'List all products including inactive (paginated)' })
   @ApiResponse({ status: 200, description: 'Returns paginated product list', type: [ProductResponseDto] })
   async findAll(@Query() query: ProductQueryDto) {
@@ -50,6 +51,7 @@ export class AdminProductController {
   }
 
   @Get('products/:id')
+  @Permissions(PERMISSIONS.PRODUCTS_READ)
   @ApiOperation({ summary: 'Get product detail (variants + images + review stats)' })
   @ApiResponse({ status: 200, description: 'Returns product detail', type: AdminProductDetailResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
@@ -58,6 +60,7 @@ export class AdminProductController {
   }
 
   @Post('products')
+  @Permissions(PERMISSIONS.PRODUCTS_CREATE)
   @ApiOperation({ summary: 'Create product' })
   @ApiResponse({ status: 201, description: 'Product created', type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_004: Category not found' })
@@ -67,6 +70,7 @@ export class AdminProductController {
   }
 
   @Patch('products/:id')
+  @Permissions(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Update product' })
   @ApiResponse({ status: 200, description: 'Product updated', type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
@@ -79,6 +83,7 @@ export class AdminProductController {
   }
 
   @Patch('products/:id/activate')
+  @Permissions(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Toggle product is_active (show/hide from storefront)' })
   @ApiResponse({ status: 200, description: 'Product activation toggled', type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
@@ -89,6 +94,7 @@ export class AdminProductController {
   // ─── Variants ───
 
   @Post('products/:id/variants')
+  @Permissions(PERMISSIONS.PRODUCTS_CREATE)
   @ApiOperation({ summary: 'Add variant to product' })
   @ApiResponse({ status: 201, description: 'Variant created', type: VariantResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
@@ -101,6 +107,7 @@ export class AdminProductController {
   }
 
   @Patch('variants/:id')
+  @Permissions(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Update variant' })
   @ApiResponse({ status: 200, description: 'Variant updated', type: VariantResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_002: Variant not found' })
@@ -114,6 +121,7 @@ export class AdminProductController {
 
   @Delete('variants/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Permissions(PERMISSIONS.PRODUCTS_DELETE)
   @ApiOperation({ summary: 'Delete variant (fails if referenced by active cart items)' })
   @ApiResponse({ status: 204, description: 'Variant deleted' })
   @ApiResponse({ status: 400, description: 'VARIANT_001: Cannot delete variant referenced by active cart items' })
@@ -125,6 +133,7 @@ export class AdminProductController {
   // ─── Images ───
 
   @Post('products/:id/images')
+  @Permissions(PERMISSIONS.PRODUCTS_CREATE)
   @ApiOperation({ summary: 'Add image to product' })
   @ApiResponse({ status: 201, description: 'Image created', type: ImageResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_001: Product not found' })
@@ -136,6 +145,7 @@ export class AdminProductController {
   }
 
   @Patch('images/:id')
+  @Permissions(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Update image sort order' })
   @ApiResponse({ status: 200, description: 'Image updated', type: ImageResponseDto })
   @ApiResponse({ status: 404, description: 'COMMON_001: Image not found' })
@@ -148,6 +158,7 @@ export class AdminProductController {
 
   @Delete('images/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Permissions(PERMISSIONS.PRODUCTS_DELETE)
   @ApiOperation({ summary: 'Delete image' })
   @ApiResponse({ status: 204, description: 'Image deleted' })
   @ApiResponse({ status: 404, description: 'COMMON_001: Image not found' })

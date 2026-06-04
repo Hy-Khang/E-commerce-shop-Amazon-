@@ -21,16 +21,17 @@ import {
   AdminOrderResponseDto,
   OrderListItemResponseDto,
 } from './dto/order-response.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { PERMISSIONS } from '../../common/constants/permissions.constant';
 
 @ApiTags('Admin: Orders')
 @ApiBearerAuth()
-@Roles('admin')
 @Controller('admin/orders')
 export class AdminOrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
+  @Permissions(PERMISSIONS.ORDERS_READ)
   @ApiOperation({ summary: 'List all orders (paginated)' })
   @ApiResponse({ status: 200, description: 'Returns paginated order list', type: [OrderListItemResponseDto] })
   async findAll(@Query() query: OrderQueryDto) {
@@ -38,6 +39,7 @@ export class AdminOrderController {
   }
 
   @Get(':id')
+  @Permissions(PERMISSIONS.ORDERS_READ)
   @ApiOperation({ summary: 'Get order detail + order_items + user info' })
   @ApiResponse({ status: 200, description: 'Returns order detail with user info', type: AdminOrderResponseDto })
   @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
@@ -46,6 +48,7 @@ export class AdminOrderController {
   }
 
   @Patch(':id/status')
+  @Permissions(PERMISSIONS.ORDERS_UPDATE)
   @ApiOperation({ summary: 'Update order status (valid transitions only)' })
   @ApiResponse({ status: 200, description: 'Order status updated', type: AdminOrderResponseDto })
   @ApiResponse({ status: 400, description: 'ORDER_003: Invalid status transition' })
@@ -58,6 +61,7 @@ export class AdminOrderController {
   }
 
   @Patch(':id/payment-status')
+  @Permissions(PERMISSIONS.ORDERS_UPDATE)
   @ApiOperation({ summary: 'Update payment status' })
   @ApiResponse({ status: 200, description: 'Payment status updated', type: AdminOrderResponseDto })
   @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })

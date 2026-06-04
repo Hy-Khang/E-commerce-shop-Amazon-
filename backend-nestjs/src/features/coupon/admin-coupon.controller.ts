@@ -22,29 +22,32 @@ import { CreateCouponDto } from './dto/create-coupon.dto';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
 import { CouponQueryDto, CouponUsageQueryDto } from './dto/coupon-query.dto';
 import { CouponResponseDto } from './dto/coupon-response.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { PERMISSIONS } from '../../common/constants/permissions.constant';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @ApiTags('Admin: Coupons')
 @ApiBearerAuth()
-@Roles('admin')
 @Controller('admin/coupons')
 export class AdminCouponController {
   constructor(private readonly couponService: CouponService) {}
 
   @Get()
+  @Permissions(PERMISSIONS.COUPONS_READ)
   @ApiOperation({ summary: 'List all coupons (paginated)' })
   async findAll(@Query() query: CouponQueryDto) {
     return this.couponService.findAllCoupons(query);
   }
 
   @Get('usages')
+  @Permissions(PERMISSIONS.COUPONS_READ)
   @ApiOperation({ summary: 'List all coupon usages' })
   async findAllUsages(@Query() query: CouponUsageQueryDto) {
     return this.couponService.findAllUsages(query);
   }
 
   @Get(':id')
+  @Permissions(PERMISSIONS.COUPONS_READ)
   @ApiOperation({ summary: 'Get coupon detail' })
   @ApiResponse({ status: 200, type: CouponResponseDto })
   async findOne(@Param('id', ParseIntPipe) id: number) {
@@ -52,6 +55,7 @@ export class AdminCouponController {
   }
 
   @Post()
+  @Permissions(PERMISSIONS.COUPONS_CREATE)
   @ApiOperation({ summary: 'Create coupon' })
   @ApiResponse({ status: 201, type: CouponResponseDto })
   async create(@Body() dto: CreateCouponDto) {
@@ -59,6 +63,7 @@ export class AdminCouponController {
   }
 
   @Patch(':id')
+  @Permissions(PERMISSIONS.COUPONS_UPDATE)
   @ApiOperation({ summary: 'Update coupon' })
   @ApiResponse({ status: 200, type: CouponResponseDto })
   async update(
@@ -70,12 +75,14 @@ export class AdminCouponController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Permissions(PERMISSIONS.COUPONS_DELETE)
   @ApiOperation({ summary: 'Deactivate coupon (soft delete)' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.couponService.deactivateCoupon(id);
   }
 
   @Get(':id/usages')
+  @Permissions(PERMISSIONS.COUPONS_READ)
   @ApiOperation({ summary: 'List usages for a specific coupon' })
   async findUsagesByCoupon(
     @Param('id', ParseIntPipe) id: number,

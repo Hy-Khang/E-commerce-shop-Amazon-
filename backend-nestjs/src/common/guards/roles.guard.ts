@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { ICurrentUser } from '../interfaces/current-user.interface';
 
+/** @deprecated Use PermissionsGuard instead. This guard is no longer registered as APP_GUARD. */
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
@@ -14,7 +14,7 @@ export class RolesGuard implements CanActivate {
     );
     if (!requiredRoles) return true;
     const request = context.switchToHttp().getRequest();
-    const user = request.user as ICurrentUser;
+    const user = request.user as Record<string, any>;
     return requiredRoles.includes(user?.role);
   }
 }

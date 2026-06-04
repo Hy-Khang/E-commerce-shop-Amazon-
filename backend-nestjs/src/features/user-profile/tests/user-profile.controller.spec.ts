@@ -8,7 +8,7 @@ describe('UserProfileController', () => {
   let controller: UserProfileController;
   let service: jest.Mocked<UserProfileService>;
 
-  const mockUser: ICurrentUser = { id: 1, email: 'test@example.com', role: 'customer' };
+  const mockUser: ICurrentUser = { id: 1, roleId: 1 };
 
   beforeEach(async () => {
     const mockService = {

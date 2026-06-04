@@ -39,7 +39,7 @@ describe('AuthController', () => {
       const expected = {
         accessToken: 'token',
         refreshToken: 'refresh',
-        user: { id: 1, email: dto.email, full_name: dto.full_name, role: 'customer' },
+        user: { id: 1, email: dto.email, full_name: dto.full_name, role: 'customer', role_id: 1 },
       };
       service.register.mockResolvedValue(expected);
 
@@ -59,7 +59,7 @@ describe('AuthController', () => {
       const expected = {
         accessToken: 'token',
         refreshToken: 'refresh',
-        user: { id: 1, email: dto.email, full_name: 'Test User', role: 'customer' },
+        user: { id: 1, email: dto.email, full_name: 'Test User', role: 'customer', role_id: 1 },
       };
       service.login.mockResolvedValue(expected);
 
@@ -105,7 +105,7 @@ describe('AuthController', () => {
   describe('logoutAll', () => {
     it('should call authService.logoutAll with user id', async () => {
       // Arrange
-      const user = { id: 1, email: 'test@example.com', role: 'customer' };
+      const user = { id: 1, roleId: 1 };
       service.logoutAll.mockResolvedValue(undefined);
 
       // Act

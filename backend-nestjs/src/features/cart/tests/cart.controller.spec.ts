@@ -8,7 +8,7 @@ describe('CartController', () => {
   let controller: CartController;
   let cartService: jest.Mocked<CartService>;
 
-  const mockUser = { id: 1, email: 'test@test.com', role: 'customer' };
+  const mockUser = { id: 1, roleId: 1 };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

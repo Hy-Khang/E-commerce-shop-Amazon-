@@ -32,3 +32,6 @@ A full-featured e-commerce platform. Includes product catalog, user authenticati
 - `/fe-crud [feature]` - Generate frontend CRUD (pages, components, hooks)
 - `/be-test [feature]` - Write backend tests (unit + integration)
 - `/fe-test [feature]` - Write frontend tests (component + hook)
+
+### Frontend Design
+- `/frontend-design` - Create distinctive, production-grade frontend interfaces with high design quality. Avoids generic AI aesthetics. Guides bold aesthetic choices (typography, color, motion, layout) before writing code.

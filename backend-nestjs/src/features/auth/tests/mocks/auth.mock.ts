@@ -5,14 +5,18 @@ import { RefreshToken } from '../../entities/refresh-token.entity';
 export const mockRole = (overrides: Partial<Role> = {}): Role => ({
   id: 1,
   name: 'customer',
+  is_system: false,
   users: [],
+  role_permissions: [],
   ...overrides,
 });
 
 export const mockAdminRole = (overrides: Partial<Role> = {}): Role => ({
   id: 2,
   name: 'admin',
+  is_system: false,
   users: [],
+  role_permissions: [],
   ...overrides,
 });
 

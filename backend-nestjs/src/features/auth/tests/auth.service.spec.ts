@@ -13,6 +13,9 @@ import { AuthService } from '../auth.service';
 import { UserRepository } from '../repositories/user.repository';
 import { RoleRepository } from '../repositories/role.repository';
 import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
+import { PermissionRepository } from '../repositories/permission.repository';
+import { RolePermissionRepository } from '../repositories/role-permission.repository';
+import { PERMISSION_CACHE_PROVIDER } from '../interfaces/permission-cache.interface';
 import {
   mockRole,
   mockAdminRole,
@@ -72,6 +75,39 @@ describe('AuthService', () => {
             create: jest.fn(),
             revokeByTokenHash: jest.fn(),
             revokeAllByUserId: jest.fn(),
+          },
+        },
+        {
+          provide: PermissionRepository,
+          useValue: {
+            findAll: jest.fn(),
+            findByResource: jest.fn(),
+            findById: jest.fn(),
+            findByIds: jest.fn(),
+            findByResourceAndAction: jest.fn(),
+            create: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+            isAssignedToRoles: jest.fn(),
+          },
+        },
+        {
+          provide: RolePermissionRepository,
+          useValue: {
+            findByRoleId: jest.fn(),
+            findPermissionStringsByRoleId: jest.fn(),
+            syncPermissions: jest.fn(),
+            addPermissions: jest.fn(),
+            removePermissions: jest.fn(),
+          },
+        },
+        {
+          provide: PERMISSION_CACHE_PROVIDER,
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            invalidate: jest.fn(),
+            invalidateAll: jest.fn(),
           },
         },
         {
@@ -141,6 +177,7 @@ describe('AuthService', () => {
         email: dto.email,
         full_name: dto.full_name,
         role: 'customer',
+        role_id: 1,
       });
     });
 
@@ -251,8 +288,7 @@ describe('AuthService', () => {
       // Assert
       expect(jwtService.sign).toHaveBeenCalledWith({
         sub: 7,
-        email: dto.email,
-        role: 'customer',
+        roleId: 1,
       });
     });
   });
@@ -282,6 +318,7 @@ describe('AuthService', () => {
         email: dto.email,
         full_name: 'Nguyen Van A',
         role: 'customer',
+        role_id: 1,
       });
     });
 
@@ -305,9 +342,9 @@ describe('AuthService', () => {
       );
     });
 
-    it('should generate JWT with user id, email, and role', async () => {
+    it('should generate JWT with user id and roleId', async () => {
       // Arrange
-      const user = mockUser({ id: 3, email: dto.email, role: mockAdminRole() });
+      const user = mockUser({ id: 3, email: dto.email, role_id: 2, role: mockAdminRole() });
       userRepository.findByEmail.mockResolvedValue(user);
       (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
       refreshTokenRepository.create.mockResolvedValue({} as any);
@@ -318,8 +355,7 @@ describe('AuthService', () => {
       // Assert
       expect(jwtService.sign).toHaveBeenCalledWith({
         sub: 3,
-        email: dto.email,
-        role: 'admin',
+        roleId: 2,
       });
     });
 
@@ -549,7 +585,7 @@ describe('AuthService', () => {
         user_id: 3,
         expires_at: new Date(Date.now() + 86400000),
       });
-      const user = mockUser({ id: 3, email: 'refresh@example.com', role: mockAdminRole() });
+      const user = mockUser({ id: 3, email: 'refresh@example.com', role_id: 2, role: mockAdminRole() });
       refreshTokenRepository.findByTokenHash.mockResolvedValue(storedToken);
       userRepository.findById.mockResolvedValue(user);
       refreshTokenRepository.revokeByTokenHash.mockResolvedValue(undefined);
@@ -561,8 +597,7 @@ describe('AuthService', () => {
       // Assert
       expect(jwtService.sign).toHaveBeenCalledWith({
         sub: 3,
-        email: 'refresh@example.com',
-        role: 'admin',
+        roleId: 2,
       });
     });
   });

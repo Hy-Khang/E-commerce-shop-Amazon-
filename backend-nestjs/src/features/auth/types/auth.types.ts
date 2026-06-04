@@ -1,7 +1,6 @@
 export interface IJwtPayload {
   sub: number;
-  email: string;
-  role: string;
+  roleId: number;
 }
 
 export interface ITokenPair {
@@ -15,5 +14,6 @@ export interface ILoginResponse extends ITokenPair {
     email: string;
     full_name: string;
     role: string;
+    role_id: number;
   };
 }

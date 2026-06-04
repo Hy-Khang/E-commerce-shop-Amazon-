@@ -8,16 +8,17 @@ import {
 import { WishlistService } from './wishlist.service';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PopularWishlistItemDto } from './dto/wishlist-response.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { PERMISSIONS } from '../../common/constants/permissions.constant';
 
 @ApiTags('Admin: Wishlist')
 @ApiBearerAuth()
-@Roles('admin')
 @Controller('admin/wishlist')
 export class AdminWishlistController {
   constructor(private readonly wishlistService: WishlistService) {}
 
   @Get('popular')
+  @Permissions(PERMISSIONS.WISHLIST_READ)
   @ApiOperation({ summary: 'Most wishlisted products (paginated)' })
   @ApiResponse({ status: 200, description: 'Returns paginated popular wishlist items', type: [PopularWishlistItemDto] })
   async getMostWishlisted(@Query() query: PaginationDto) {

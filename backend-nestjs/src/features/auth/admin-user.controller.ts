@@ -20,16 +20,17 @@ import {
   AdminUserResponseDto,
   AdminUserDetailResponseDto,
 } from './dto/admin-user-response.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { PERMISSIONS } from '../../common/constants/permissions.constant';
 
 @ApiTags('Admin: Users')
 @ApiBearerAuth()
-@Roles('admin')
 @Controller('admin/users')
 export class AdminUserController {
   constructor(private readonly authService: AuthService) {}
 
   @Get()
+  @Permissions(PERMISSIONS.USERS_READ)
   @ApiOperation({ summary: 'List all users (paginated, filtered, sorted)' })
   @ApiResponse({ status: 200, description: 'Returns paginated user list', type: [AdminUserResponseDto] })
   async findAll(@Query() query: AdminUserQueryDto) {
@@ -37,6 +38,7 @@ export class AdminUserController {
   }
 
   @Get(':id')
+  @Permissions(PERMISSIONS.USERS_READ)
   @ApiOperation({ summary: 'Get user detail with order and review counts' })
   @ApiResponse({ status: 200, description: 'Returns user detail', type: AdminUserDetailResponseDto })
   @ApiResponse({ status: 404, description: 'USER_002: User not found' })
@@ -45,6 +47,7 @@ export class AdminUserController {
   }
 
   @Patch(':id/activate')
+  @Permissions(PERMISSIONS.USERS_UPDATE)
   @ApiOperation({ summary: 'Toggle user is_active (ban/unban)' })
   @ApiResponse({ status: 200, description: 'User activation toggled' })
   @ApiResponse({ status: 404, description: 'USER_002: User not found' })
@@ -53,6 +56,7 @@ export class AdminUserController {
   }
 
   @Patch(':id/role')
+  @Permissions(PERMISSIONS.USERS_UPDATE)
   @ApiOperation({ summary: 'Change user role' })
   @ApiResponse({ status: 200, description: 'User role updated' })
   @ApiResponse({ status: 404, description: 'USER_002: User not found / COMMON_001: Role not found' })

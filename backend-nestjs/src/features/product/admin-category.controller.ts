@@ -25,16 +25,17 @@ import {
   CategoryResponseDto,
   AdminCategoryDetailResponseDto,
 } from './dto/category-response.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { PERMISSIONS } from '../../common/constants/permissions.constant';
 
 @ApiTags('Admin: Categories')
 @ApiBearerAuth()
-@Roles('admin')
 @Controller('admin/categories')
 export class AdminCategoryController {
   constructor(private readonly productService: ProductService) {}
 
   @Get()
+  @Permissions(PERMISSIONS.CATEGORIES_READ)
   @ApiOperation({ summary: 'List all categories flat (paginated, includes product count)' })
   @ApiResponse({ status: 200, description: 'Returns paginated category list', type: [CategoryResponseDto] })
   async findAll(@Query() query: CategoryQueryDto) {
@@ -42,6 +43,7 @@ export class AdminCategoryController {
   }
 
   @Get(':id')
+  @Permissions(PERMISSIONS.CATEGORIES_READ)
   @ApiOperation({ summary: 'Get category detail (parent info + direct children + product count)' })
   @ApiResponse({ status: 200, description: 'Returns category detail', type: AdminCategoryDetailResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_004: Category not found' })
@@ -50,6 +52,7 @@ export class AdminCategoryController {
   }
 
   @Post()
+  @Permissions(PERMISSIONS.CATEGORIES_CREATE)
   @ApiOperation({ summary: 'Create category' })
   @ApiResponse({ status: 201, description: 'Category created', type: CategoryResponseDto })
   @ApiResponse({ status: 409, description: 'PRODUCT_005: Duplicate slug' })
@@ -58,6 +61,7 @@ export class AdminCategoryController {
   }
 
   @Patch(':id')
+  @Permissions(PERMISSIONS.CATEGORIES_UPDATE)
   @ApiOperation({ summary: 'Update category' })
   @ApiResponse({ status: 200, description: 'Category updated', type: CategoryResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_004: Category not found' })
@@ -71,6 +75,7 @@ export class AdminCategoryController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Permissions(PERMISSIONS.CATEGORIES_DELETE)
   @ApiOperation({ summary: 'Delete category (fails if has products or children)' })
   @ApiResponse({ status: 204, description: 'Category deleted' })
   @ApiResponse({ status: 400, description: 'CATEGORY_001: Cannot delete category with existing products or children' })

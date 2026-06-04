@@ -35,6 +35,8 @@ const DELETE_ORDER = [
   'addresses',
   'refresh_tokens',
   'users',
+  'role_permissions',
+  'permissions',
   'roles',
 ];
 
