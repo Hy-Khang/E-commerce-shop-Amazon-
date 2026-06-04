@@ -47,6 +47,20 @@ export default function AdminCategoryEditPage() {
         </Link>
       </div>
 
+      {category.parent && (
+        <div className="rounded-md border bg-gray-50 p-4">
+          <h3 className="text-sm font-medium text-gray-700">Parent</h3>
+          <div className="mt-2">
+            <Link
+              to={ROUTES.ADMIN_CATEGORY_EDIT(category.parent.id)}
+              className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 border hover:bg-gray-100"
+            >
+              {category.parent.name}
+            </Link>
+          </div>
+        </div>
+      )}
+
       {category.children && category.children.length > 0 && (
         <div className="rounded-md border bg-gray-50 p-4">
           <h3 className="text-sm font-medium text-gray-700">
@@ -71,6 +85,7 @@ export default function AdminCategoryEditPage() {
       </div>
 
       <CategoryForm
+        key={categoryId}
         defaultValues={{
           name: category.name,
           slug: category.slug,
