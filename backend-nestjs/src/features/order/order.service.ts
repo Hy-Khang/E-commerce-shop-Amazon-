@@ -35,7 +35,7 @@ import {
   toOrderListItemResponse,
   toAdminOrderResponse,
 } from './utils/order.util';
-import { OrderStatus } from '../../common/constants';
+import { OrderStatus, PaymentMethod } from '../../common/constants';
 import { InsufficientStockException } from '../../common/exceptions/insufficient-stock.exception';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 
@@ -111,10 +111,10 @@ export class OrderService {
         price,
         quantity: item.quantity,
         thumbnail_url: product?.thumbnail_url ?? null,
-        option1_label: product?.option1_label ?? null,
-        option1_value: variant.option1 ?? null,
-        option2_label: product?.option2_label ?? null,
-        option2_value: variant.option2 ?? null,
+        variant_option1_label: product?.option1_label ?? null,
+        variant_option1_value: variant.option1 ?? null,
+        variant_option2_label: product?.option2_label ?? null,
+        variant_option2_value: variant.option2 ?? null,
       };
     });
 
@@ -327,6 +327,17 @@ export class OrderService {
       });
     }
 
+    if (
+      dto.status === OrderStatus.Delivered &&
+      order.payment_method !== PaymentMethod.Cod &&
+      order.payment_status === 'unpaid'
+    ) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message: 'Order must be paid before marking as delivered',
+      });
+    }
+
     await this.orderRepository.updateStatus(orderId, dto.status);
     order.status = dto.status;
 
@@ -356,6 +367,23 @@ export class OrderService {
       throw new NotFoundException({
         code: 'ORDER_001',
         message: 'Order not found',
+      });
+    }
+
+    if (order.status === OrderStatus.Cancelled) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message: 'Cannot update payment status of a cancelled order',
+      });
+    }
+
+    if (
+      order.payment_method === PaymentMethod.Cod &&
+      (order.status === OrderStatus.Pending || order.status === OrderStatus.Confirmed)
+    ) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message: 'COD orders can only be marked as paid during shipping or after delivery',
       });
     }
 

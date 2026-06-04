@@ -197,8 +197,12 @@
 | price | DECIMAL(10,2) | NOT NULL — **snapshot** |
 | quantity | INT | NOT NULL, CHECK (`quantity > 0`) |
 | thumbnail_url | NVARCHAR(500) | NULL — **snapshot** |
+| variant_option1_label | NVARCHAR(50) | NULL — **snapshot** of `products.option1_label` (e.g. "Màu sắc") |
+| variant_option1_value | NVARCHAR(50) | NULL — **snapshot** of `product_variants.option1` (e.g. "Đen") |
+| variant_option2_label | NVARCHAR(50) | NULL — **snapshot** of `products.option2_label` (e.g. "Kích thước") |
+| variant_option2_value | NVARCHAR(50) | NULL — **snapshot** of `product_variants.option2` (e.g. "L") |
 
-> All snapshot fields are copied at purchase time — immune to future product edits/deletions.
+> All snapshot fields are copied at purchase time — immune to future product edits/deletions. The `variant_option*` fields preserve the variant attributes (label from product, value from variant) so order history displays correctly even if the product is later modified.
 
 ---
 

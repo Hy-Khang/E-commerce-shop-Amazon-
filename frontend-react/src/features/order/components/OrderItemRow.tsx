@@ -25,7 +25,15 @@ export function OrderItemRow({ item }: Props) {
 
       <div className="flex-1 min-w-0">
         <h4 className="truncate text-sm font-medium text-gray-900">{item.product_name}</h4>
-        <p className="mt-0.5 text-xs text-gray-500">SKU: {item.sku}</p>
+        <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-gray-500">
+          <span>SKU: {item.sku}</span>
+          {item.variant_option1_label && item.variant_option1_value && (
+            <span>{item.variant_option1_label}: {item.variant_option1_value}</span>
+          )}
+          {item.variant_option2_label && item.variant_option2_value && (
+            <span>{item.variant_option2_label}: {item.variant_option2_value}</span>
+          )}
+        </div>
       </div>
 
       <div className="text-sm text-gray-600">

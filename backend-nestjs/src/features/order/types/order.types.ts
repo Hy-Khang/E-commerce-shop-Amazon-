@@ -3,7 +3,7 @@ import { OrderStatus } from '../../../common/constants';
 export const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   [OrderStatus.Pending]: [OrderStatus.Confirmed, OrderStatus.Cancelled],
   [OrderStatus.Confirmed]: [OrderStatus.Shipping, OrderStatus.Cancelled],
-  [OrderStatus.Shipping]: [OrderStatus.Delivered],
+  [OrderStatus.Shipping]: [OrderStatus.Delivered, OrderStatus.Cancelled],
   [OrderStatus.Delivered]: [],
   [OrderStatus.Cancelled]: [],
 };

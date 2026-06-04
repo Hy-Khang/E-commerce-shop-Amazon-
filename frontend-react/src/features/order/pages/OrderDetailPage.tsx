@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, Star } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { ReviewForm } from '@/features/review';
 import { useOrder } from '../hooks/useOrder';
 import { useCancelOrder } from '../hooks/useCancelOrder';
@@ -16,6 +17,7 @@ export default function OrderDetailPage() {
   const { data: order, isLoading, isError } = useOrder(orderId);
   const cancelOrder = useCancelOrder();
   const [reviewingItemId, setReviewingItemId] = useState<number | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   if (isLoading) {
     return (
@@ -37,9 +39,7 @@ export default function OrderDetailPage() {
   }
 
   function handleCancel() {
-    if (window.confirm('Are you sure you want to cancel this order?')) {
-      cancelOrder.mutate(orderId);
-    }
+    setShowCancelConfirm(true);
   }
 
   const isDelivered = order.status === 'delivered';
@@ -176,6 +176,20 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={showCancelConfirm}
+        title="Cancel Order"
+        message="Are you sure you want to cancel this order? This action cannot be undone."
+        variant="danger"
+        confirmLabel="Cancel Order"
+        loading={cancelOrder.isPending}
+        onConfirm={() => {
+          setShowCancelConfirm(false);
+          cancelOrder.mutate(orderId);
+        }}
+        onCancel={() => setShowCancelConfirm(false)}
+      />
     </div>
   );
 }

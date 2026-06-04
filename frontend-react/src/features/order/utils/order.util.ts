@@ -1,4 +1,4 @@
-import type { OrderStatus, OrderItem } from '../types/order.types';
+import type { OrderStatus, PaymentStatus, PaymentMethod, OrderItem } from '../types/order.types';
 
 export function isOrderCancellable(status: OrderStatus): boolean {
   return status === 'pending';
@@ -33,11 +33,36 @@ export function calculateOrderItemsTotal(items: OrderItem[]): number {
 const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending: ['confirmed', 'cancelled'],
   confirmed: ['shipping', 'cancelled'],
-  shipping: ['delivered'],
+  shipping: ['delivered', 'cancelled'],
   delivered: [],
   cancelled: [],
 };
 
-export function getValidNextStatuses(current: OrderStatus): OrderStatus[] {
-  return VALID_TRANSITIONS[current] ?? [];
+export function getValidNextStatuses(
+  current: OrderStatus,
+  paymentStatus?: PaymentStatus,
+  paymentMethod?: PaymentMethod,
+): OrderStatus[] {
+  const transitions = VALID_TRANSITIONS[current] ?? [];
+
+  if (paymentMethod && paymentMethod !== 'cod' && paymentStatus === 'unpaid') {
+    return transitions.filter((s) => s !== 'delivered');
+  }
+
+  return transitions;
+}
+
+export function canMarkAsPaid(
+  status: OrderStatus,
+  paymentStatus: PaymentStatus,
+  paymentMethod: PaymentMethod,
+): boolean {
+  if (paymentStatus === 'paid') return false;
+  if (status === 'cancelled') return false;
+
+  if (paymentMethod === 'cod') {
+    return status === 'shipping' || status === 'delivered';
+  }
+
+  return true;
 }

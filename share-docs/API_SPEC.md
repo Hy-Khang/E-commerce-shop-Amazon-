@@ -314,7 +314,7 @@ All admin endpoints require `@Roles('admin')`. Accessing with a customer token r
 | PATCH | `/admin/orders/:id/status` | Update order status (valid transitions only) | — |
 | PATCH | `/admin/orders/:id/payment-status` | Update payment status (unpaid → paid) | — |
 
-> **Valid status transitions:** `pending → confirmed → shipping → delivered`, `pending → cancelled`, `confirmed → cancelled`. Invalid transitions (e.g. `delivered → pending`) return `ORDER_003 (400)`.
+> **Valid status transitions:** `pending → confirmed → shipping → delivered`, `pending → cancelled`, `confirmed → cancelled`, `shipping → cancelled`. Invalid transitions (e.g. `delivered → pending`) return `ORDER_003 (400)`.
 
 ### Admin: Review Management — `/api/v1/admin/reviews`
 

@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { MessageSquare, Star, Trash2, Package } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatDate } from '@/common/utils/format.util';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useMyReviews } from '../hooks/useMyReviews';
 import { useDeleteReview } from '../hooks/useDeleteReview';
 import type { Review } from '../types/review.types';
@@ -9,10 +11,16 @@ export default function MyReviewsPage() {
   const { params, setPage } = usePagination({ limit: 10, sort: 'created_at', order: 'desc' });
   const { data, isLoading } = useMyReviews(params);
   const deleteReview = useDeleteReview();
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   function handleDelete(id: number) {
-    if (window.confirm('Are you sure you want to delete this review?')) {
-      deleteReview.mutate(id);
+    setDeleteTarget(id);
+  }
+
+  function confirmDelete() {
+    if (deleteTarget !== null) {
+      deleteReview.mutate(deleteTarget);
+      setDeleteTarget(null);
     }
   }
 
@@ -79,6 +87,17 @@ export default function MyReviewsPage() {
           )}
         </>
       )}
+
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="Delete Review"
+        message="Are you sure you want to delete this review? This action cannot be undone."
+        variant="danger"
+        confirmLabel="Delete"
+        loading={deleteReview.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

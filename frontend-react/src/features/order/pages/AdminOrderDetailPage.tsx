@@ -1,13 +1,15 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES, ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminOrder } from '../hooks/useAdminOrder';
 import { useUpdateOrderStatus } from '../hooks/useUpdateOrderStatus';
 import { useUpdatePaymentStatus } from '../hooks/useUpdatePaymentStatus';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderItemRow } from '../components/OrderItemRow';
-import { getValidNextStatuses, getPaymentStatusColor } from '../utils/order.util';
+import { getValidNextStatuses, getPaymentStatusColor, canMarkAsPaid } from '../utils/order.util';
 import type { OrderStatus, PaymentStatus } from '../types/order.types';
 
 export default function AdminOrderDetailPage() {
@@ -16,6 +18,14 @@ export default function AdminOrderDetailPage() {
   const { data: order, isLoading, isError } = useAdminOrder(orderId);
   const updateStatus = useUpdateOrderStatus();
   const updatePayment = useUpdatePaymentStatus();
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    variant: 'danger' | 'warning' | 'info';
+    confirmLabel: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', message: '', variant: 'warning', confirmLabel: 'Confirm', onConfirm: () => {} });
 
   if (isLoading) {
     return (
@@ -36,16 +46,38 @@ export default function AdminOrderDetailPage() {
     );
   }
 
-  const nextStatuses = getValidNextStatuses(order.status);
+  const nextStatuses = getValidNextStatuses(order.status, order.payment_status, order.payment_method);
+  const showMarkAsPaid = canMarkAsPaid(order.status, order.payment_status, order.payment_method);
 
   function handleStatusChange(status: OrderStatus) {
-    if (window.confirm(`Change order status to "${ORDER_STATUS_LABELS[status]}"?`)) {
-      updateStatus.mutate({ id: orderId, data: { status } });
-    }
+    const isCancelling = status === 'cancelled';
+    setConfirmModal({
+      open: true,
+      title: isCancelling ? 'Cancel Order' : 'Update Order Status',
+      message: isCancelling
+        ? `Are you sure you want to cancel order #${order.id}? This action cannot be undone.`
+        : `Change order status to "${ORDER_STATUS_LABELS[status]}"?`,
+      variant: isCancelling ? 'danger' : 'info',
+      confirmLabel: isCancelling ? 'Cancel Order' : `Mark as ${ORDER_STATUS_LABELS[status]}`,
+      onConfirm: () => {
+        setConfirmModal((s) => ({ ...s, open: false }));
+        updateStatus.mutate({ id: orderId, data: { status } });
+      },
+    });
   }
 
   function handlePaymentChange(payment_status: PaymentStatus) {
-    updatePayment.mutate({ id: orderId, data: { payment_status } });
+    setConfirmModal({
+      open: true,
+      title: 'Update Payment Status',
+      message: `Mark this order as "${PAYMENT_STATUS_LABELS[payment_status]}"?`,
+      variant: 'info',
+      confirmLabel: `Mark as ${PAYMENT_STATUS_LABELS[payment_status]}`,
+      onConfirm: () => {
+        setConfirmModal((s) => ({ ...s, open: false }));
+        updatePayment.mutate({ id: orderId, data: { payment_status } });
+      },
+    });
   }
 
   return (
@@ -141,7 +173,7 @@ export default function AdminOrderDetailPage() {
               </span>
             </div>
 
-            {order.payment_status === 'unpaid' && (
+            {showMarkAsPaid && (
               <button
                 onClick={() => handlePaymentChange('paid')}
                 disabled={updatePayment.isPending}
@@ -189,6 +221,16 @@ export default function AdminOrderDetailPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmLabel={confirmModal.confirmLabel}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal((s) => ({ ...s, open: false }))}
+      />
     </div>
   );
 }

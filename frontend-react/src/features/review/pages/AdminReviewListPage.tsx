@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Star, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatDate } from '@/common/utils/format.util';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminReviews } from '../hooks/useAdminReviews';
 import { useAdminDeleteReview } from '../hooks/useAdminDeleteReview';
 import type { Review, AdminReviewListParams } from '../types/review.types';
@@ -23,6 +24,7 @@ export default function AdminReviewListPage() {
 
   const { data, isLoading } = useAdminReviews(filters);
   const deleteReview = useAdminDeleteReview();
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   function handleFilterChange(key: string, value: string) {
     setSearchParams((prev) => {
@@ -34,8 +36,13 @@ export default function AdminReviewListPage() {
   }
 
   function handleDelete(id: number) {
-    if (window.confirm('Are you sure you want to delete this review?')) {
-      deleteReview.mutate(id);
+    setDeleteTarget(id);
+  }
+
+  function confirmDelete() {
+    if (deleteTarget !== null) {
+      deleteReview.mutate(deleteTarget);
+      setDeleteTarget(null);
     }
   }
 
@@ -128,6 +135,17 @@ export default function AdminReviewListPage() {
           </button>
         </div>
       )}
+
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="Delete Review"
+        message="Are you sure you want to delete this review? This action cannot be undone."
+        variant="danger"
+        confirmLabel="Delete"
+        loading={deleteReview.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

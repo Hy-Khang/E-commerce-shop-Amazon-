@@ -37,16 +37,16 @@ export class OrderItem {
   thumbnail_url: string;
 
   @Column({ type: 'nvarchar', length: 50, nullable: true })
-  option1_label: string | null;
+  variant_option1_label: string | null;
 
   @Column({ type: 'nvarchar', length: 50, nullable: true })
-  option1_value: string | null;
+  variant_option1_value: string | null;
 
   @Column({ type: 'nvarchar', length: 50, nullable: true })
-  option2_label: string | null;
+  variant_option2_label: string | null;
 
   @Column({ type: 'nvarchar', length: 50, nullable: true })
-  option2_value: string | null;
+  variant_option2_value: string | null;
 
   @ManyToOne(() => Order, (order) => order.order_items)
   @JoinColumn({ name: 'order_id' })

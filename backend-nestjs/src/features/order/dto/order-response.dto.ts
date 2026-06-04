@@ -26,16 +26,16 @@ export class OrderItemResponseDto {
   product_id: number | null;
 
   @ApiPropertyOptional()
-  option1_label: string | null;
+  variant_option1_label: string | null;
 
   @ApiPropertyOptional()
-  option1_value: string | null;
+  variant_option1_value: string | null;
 
   @ApiPropertyOptional()
-  option2_label: string | null;
+  variant_option2_label: string | null;
 
   @ApiPropertyOptional()
-  option2_value: string | null;
+  variant_option2_value: string | null;
 }
 
 export class ShippingAddressResponseDto {

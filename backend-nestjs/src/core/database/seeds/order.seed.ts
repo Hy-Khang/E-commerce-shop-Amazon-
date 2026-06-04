@@ -33,7 +33,7 @@ export const OrderSeed: ISeed = {
 
     await qr.query(`
       SET IDENTITY_INSERT order_items ON;
-      INSERT INTO order_items (id, order_id, product_variant_id, product_name, sku, price, quantity, thumbnail_url, option1_label, option1_value, option2_label, option2_value) VALUES
+      INSERT INTO order_items (id, order_id, product_variant_id, product_name, sku, price, quantity, thumbnail_url, variant_option1_label, variant_option1_value, variant_option2_label, variant_option2_value) VALUES
         (1, 1, 1,  N'Áo thun nam basic cotton', N'ATB-DEN-M', 199000, 2,
           N'https://picsum.photos/seed/ao-thun-basic/400/400', N'Màu sắc', N'Đen', N'Kích thước', N'M'),
         (2, 1, 26, N'Dép quai ngang nam', N'DQN-41', 250000, 1,

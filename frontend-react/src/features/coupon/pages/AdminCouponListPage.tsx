@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminCoupons } from '../hooks/useAdminCoupons';
 import { useDeactivateCoupon } from '../hooks/useDeactivateCoupon';
 import type { CouponListParams, CouponScope, DiscountType } from '../types/coupon.types';
@@ -31,6 +33,7 @@ export default function AdminCouponListPage() {
 
   const { data, isLoading } = useAdminCoupons(filters);
   const deactivate = useDeactivateCoupon();
+  const [deactivateTarget, setDeactivateTarget] = useState<number | null>(null);
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,8 +48,13 @@ export default function AdminCouponListPage() {
   }
 
   function handleDeactivate(id: number) {
-    if (window.confirm('Deactivate this coupon?')) {
-      deactivate.mutate(id);
+    setDeactivateTarget(id);
+  }
+
+  function confirmDeactivate() {
+    if (deactivateTarget !== null) {
+      deactivate.mutate(deactivateTarget);
+      setDeactivateTarget(null);
     }
   }
 
@@ -219,6 +227,17 @@ export default function AdminCouponListPage() {
           </button>
         </div>
       )}
+
+      <ConfirmModal
+        open={deactivateTarget !== null}
+        title="Deactivate Coupon"
+        message="Are you sure you want to deactivate this coupon? Customers will no longer be able to use it."
+        variant="warning"
+        confirmLabel="Deactivate"
+        loading={deactivate.isPending}
+        onConfirm={confirmDeactivate}
+        onCancel={() => setDeactivateTarget(null)}
+      />
     </div>
   );
 }

@@ -36,6 +36,10 @@ export interface OrderItem {
   price: number;
   quantity: number;
   thumbnail_url: string | null;
+  variant_option1_label: string | null;
+  variant_option1_value: string | null;
+  variant_option2_label: string | null;
+  variant_option2_value: string | null;
 }
 
 export interface Order {
