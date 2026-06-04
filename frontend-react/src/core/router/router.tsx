@@ -32,6 +32,7 @@ const MyReviewsPage = lazy(() => import('@/features/review/pages/MyReviewsPage')
 const WishlistPage = lazy(() => import('@/features/wishlist/pages/WishlistPage'));
 
 const AdminRoleListPage = lazy(() => import('@/features/auth/pages/AdminRoleListPage'));
+const AdminPermissionPage = lazy(() => import('@/features/auth/pages/AdminPermissionPage'));
 const AdminUserListPage = lazy(() => import('@/features/auth/pages/AdminUserListPage'));
 const AdminUserDetailPage = lazy(() => import('@/features/auth/pages/AdminUserDetailPage'));
 const AdminCategoryListPage = lazy(() => import('@/features/product/pages/AdminCategoryListPage'));
@@ -105,6 +106,7 @@ export const router = createBrowserRouter([
               { path: 'admin/users', element: <SuspenseWrapper><AdminUserListPage /></SuspenseWrapper> },
               { path: 'admin/users/:id', element: <SuspenseWrapper><AdminUserDetailPage /></SuspenseWrapper> },
               { path: 'admin/roles', element: <SuspenseWrapper><AdminRoleListPage /></SuspenseWrapper> },
+              { path: 'admin/permissions', element: <SuspenseWrapper><AdminPermissionPage /></SuspenseWrapper> },
               { path: 'admin/reviews', element: <SuspenseWrapper><AdminReviewListPage /></SuspenseWrapper> },
               { path: 'admin/wishlist', element: <SuspenseWrapper><AdminWishlistPopularPage /></SuspenseWrapper> },
               { path: 'admin/coupons', element: <SuspenseWrapper><AdminCouponListPage /></SuspenseWrapper> },

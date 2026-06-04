@@ -6,6 +6,14 @@ export type { AuthUser, LoginRequest, RegisterRequest, LoginResponse } from './t
 export { loginSchema, registerSchema } from './types/auth.types';
 
 export { useAdminRoles, useCreateRole, useUpdateRole, useDeleteRole } from './hooks/useAdminRoles';
+export {
+  useAdminPermissions,
+  useRolePermissions,
+  useSyncRolePermissions,
+  useCreatePermission,
+  useUpdatePermission,
+  useDeletePermission,
+} from './hooks/useAdminPermissions';
 export { useAdminUsers } from './hooks/useAdminUsers';
 export { useAdminUser } from './hooks/useAdminUser';
 export { useToggleActivate } from './hooks/useToggleActivate';
@@ -19,5 +27,10 @@ export type {
   CreateRoleRequest,
   UpdateRoleRequest,
   UpdateUserRoleRequest,
+  Permission,
+  PermissionsByResource,
+  CreatePermissionRequest,
+  UpdatePermissionRequest,
+  AssignPermissionsRequest,
 } from './types/admin.types';
 export { createRoleSchema } from './types/admin.types';

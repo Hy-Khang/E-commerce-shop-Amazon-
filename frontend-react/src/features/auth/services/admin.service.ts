@@ -9,6 +9,10 @@ import type {
   AdminUserDetail,
   AdminUserQueryParams,
   UpdateUserRoleRequest,
+  Permission,
+  CreatePermissionRequest,
+  UpdatePermissionRequest,
+  AssignPermissionsRequest,
 } from '../types/admin.types';
 
 export const adminRoleService = {
@@ -26,6 +30,31 @@ export const adminRoleService = {
 
   delete: (id: number) =>
     api.delete(`/admin/roles/${id}`),
+};
+
+export const adminPermissionService = {
+  getAll: (resource?: string) =>
+    api.get<SuccessResponse<Permission[]>>('/admin/permissions', {
+      params: resource ? { resource } : undefined,
+    }),
+
+  getById: (id: number) =>
+    api.get<SuccessResponse<Permission>>(`/admin/permissions/${id}`),
+
+  create: (data: CreatePermissionRequest) =>
+    api.post<SuccessResponse<Permission>>('/admin/permissions', data),
+
+  update: (id: number, data: UpdatePermissionRequest) =>
+    api.patch<SuccessResponse<Permission>>(`/admin/permissions/${id}`, data),
+
+  delete: (id: number) =>
+    api.delete(`/admin/permissions/${id}`),
+
+  getRolePermissions: (roleId: number) =>
+    api.get<SuccessResponse<Permission[]>>(`/admin/roles/${roleId}/permissions`),
+
+  syncRolePermissions: (roleId: number, data: AssignPermissionsRequest) =>
+    api.put<SuccessResponse<Permission[]>>(`/admin/roles/${roleId}/permissions`, data),
 };
 
 export const adminUserService = {

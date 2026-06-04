@@ -6,6 +6,7 @@ const adminLinks = [
   { to: '/admin/orders', label: 'Orders' },
   { to: '/admin/users', label: 'Users' },
   { to: '/admin/roles', label: 'Roles' },
+  { to: '/admin/permissions', label: 'Permissions' },
   { to: '/admin/reviews', label: 'Reviews' },
   { to: '/admin/wishlist', label: 'Wishlist' },
   { to: '/admin/coupons', label: 'Coupons' },

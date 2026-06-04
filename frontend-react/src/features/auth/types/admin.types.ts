@@ -3,10 +3,41 @@ import { z } from 'zod';
 export interface Role {
   id: number;
   name: string;
+  is_system?: boolean;
 }
 
 export interface RoleWithUserCount extends Role {
   userCount: number;
+}
+
+export interface Permission {
+  id: number;
+  name: string;
+  resource: string;
+  action: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PermissionsByResource {
+  [resource: string]: Permission[];
+}
+
+export interface CreatePermissionRequest {
+  name: string;
+  resource: string;
+  action: string;
+  description?: string;
+}
+
+export interface UpdatePermissionRequest {
+  name?: string;
+  description?: string;
+}
+
+export interface AssignPermissionsRequest {
+  permission_ids: number[];
 }
 
 export interface AdminUser {
