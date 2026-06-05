@@ -42,6 +42,9 @@ export const ROUTES = {
   SELLER_PRODUCT_CREATE: '/seller/products/new',
   SELLER_PRODUCT_EDIT: (id: number) => `/seller/products/${id}/edit`,
   SELLER_ORDERS: '/seller/orders',
+
+  SHIPPER_DASHBOARD: '/shipper/dashboard',
+  SHIPPER_DELIVERIES: '/shipper/deliveries',
 } as const;
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {

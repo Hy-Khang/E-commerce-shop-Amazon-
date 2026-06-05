@@ -43,7 +43,7 @@ export function useLogin() {
       } else if (role === 'seller') {
         navigate(ROUTES.SELLER_DASHBOARD, { replace: true });
       } else if (role === 'shipper') {
-        navigate('/shipper/dashboard', { replace: true });
+        navigate(ROUTES.SHIPPER_DASHBOARD, { replace: true });
       } else {
         navigate(ROUTES.HOME, { replace: true });
       }

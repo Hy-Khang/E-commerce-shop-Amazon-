@@ -4,6 +4,7 @@ import { MainLayout } from '@/core/layouts/MainLayout';
 import { AuthLayout } from '@/core/layouts/AuthLayout';
 import { AdminLayout } from '@/core/layouts/AdminLayout';
 import { SellerLayout } from '@/core/layouts/SellerLayout';
+import { ShipperLayout } from '@/core/layouts/ShipperLayout';
 import { AuthGuard } from './AuthGuard';
 import { PortalGuard } from './PortalGuard';
 
@@ -52,6 +53,9 @@ const SellerProductListPage = lazy(() => import('@/features/product/pages/Seller
 const SellerProductCreatePage = lazy(() => import('@/features/product/pages/SellerProductCreatePage'));
 const SellerProductEditPage = lazy(() => import('@/features/product/pages/SellerProductEditPage'));
 const SellerOrderListPage = lazy(() => import('@/features/order/pages/SellerOrderListPage'));
+
+const ShipperDashboardPage = lazy(() => import('@/features/dashboard/pages/ShipperDashboardPage'));
+const ShipperDeliveryListPage = lazy(() => import('@/features/order/pages/ShipperDeliveryListPage'));
 
 const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
 
@@ -141,6 +145,23 @@ export const router = createBrowserRouter([
               { path: 'seller/products/new', element: <SuspenseWrapper><SellerProductCreatePage /></SuspenseWrapper> },
               { path: 'seller/products/:id/edit', element: <SuspenseWrapper><SellerProductEditPage /></SuspenseWrapper> },
               { path: 'seller/orders', element: <SuspenseWrapper><SellerOrderListPage /></SuspenseWrapper> },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    element: <AuthGuard />,
+    children: [
+      {
+        element: <PortalGuard allowedRoles={['shipper']} />,
+        children: [
+          {
+            element: <ShipperLayout />,
+            children: [
+              { path: 'shipper/dashboard', element: <SuspenseWrapper><ShipperDashboardPage /></SuspenseWrapper> },
+              { path: 'shipper/deliveries', element: <SuspenseWrapper><ShipperDeliveryListPage /></SuspenseWrapper> },
             ],
           },
         ],
