@@ -22,6 +22,7 @@ const OrderDetailPage = lazy(() => import('@/features/order/pages/OrderDetailPag
 const ProfilePage = lazy(() => import('@/features/user-profile/pages/ProfilePage'));
 const AddressListPage = lazy(() => import('@/features/user-profile/pages/AddressListPage'));
 
+const AdminDashboardPage = lazy(() => import('@/features/dashboard/pages/AdminDashboardPage'));
 const AdminProductListPage = lazy(() => import('@/features/product/pages/AdminProductListPage'));
 const AdminProductCreatePage = lazy(() => import('@/features/product/pages/AdminProductCreatePage'));
 const AdminProductEditPage = lazy(() => import('@/features/product/pages/AdminProductEditPage'));
@@ -95,6 +96,7 @@ export const router = createBrowserRouter([
           {
             element: <AdminLayout />,
             children: [
+              { path: 'admin/dashboard', element: <SuspenseWrapper><AdminDashboardPage /></SuspenseWrapper> },
               { path: 'admin/products', element: <SuspenseWrapper><AdminProductListPage /></SuspenseWrapper> },
               { path: 'admin/products/new', element: <SuspenseWrapper><AdminProductCreatePage /></SuspenseWrapper> },
               { path: 'admin/products/:id/edit', element: <SuspenseWrapper><AdminProductEditPage /></SuspenseWrapper> },

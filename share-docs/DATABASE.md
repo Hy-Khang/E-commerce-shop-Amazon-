@@ -23,7 +23,49 @@
 | Field | Type | Constraints |
 |-------|------|-------------|
 | id | INT | PK, auto-increment |
-| name | NVARCHAR(50) | NOT NULL, UNIQUE — `customer`, `admin` (extensible: `seller`, `moderator`) |
+| name | NVARCHAR(50) | NOT NULL, UNIQUE — `customer`, `admin`, `seller`, `shipper` |
+| is_system | BIT | NOT NULL, DEFAULT `0` — system roles cannot be deleted |
+
+#### `permissions`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| name | NVARCHAR(100) | NOT NULL — human-readable label (e.g. "Create Product") |
+| resource | NVARCHAR(50) | NOT NULL — resource key (e.g. `products`, `orders`, `dashboard`) |
+| action | NVARCHAR(50) | NOT NULL — action key (e.g. `create`, `read`, `update`, `delete`) |
+| description | NVARCHAR(255) | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Constraints:** UNIQUE `(resource, action)` — `uq_permissions_resource_action`
+
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_permissions_resource` | resource | Filter permissions by resource |
+
+> **Dynamic RBAC:** Permissions are stored as `resource:action` strings (e.g. `products:create`). Admin endpoints use `@Permissions(PERMISSIONS.PRODUCTS_CREATE)` decorator instead of role-based `@Roles()`. Permission strings are defined in `common/constants/permissions.constant.ts`.
+
+#### `role_permissions` — Junction
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| role_id | INT | FK → `roles.id`, NOT NULL, CASCADE delete |
+| permission_id | INT | FK → `permissions.id`, NOT NULL, CASCADE delete |
+
+**Constraints:** UNIQUE `(role_id, permission_id)` — `uq_role_permissions_role_permission`
+
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_role_permissions_role_id` | role_id | List permissions for a role |
+| `idx_role_permissions_permission_id` | permission_id | Find roles with a specific permission |
+
+> **Role-permission mapping:** Admin role gets all permissions. Seller gets products CRUD + categories read + orders read + uploads + dashboard. Shipper gets orders read/update + dashboard. Customer has no admin permissions (all customer actions are handled by JWT auth, not permission checks).
 
 #### `users`
 
@@ -106,9 +148,19 @@
 | slug | NVARCHAR(255) | NOT NULL, UNIQUE — SEO-friendly URL |
 | description | NVARCHAR(MAX) | NULL |
 | thumbnail_url | NVARCHAR(500) | NULL — main display image |
+| option1_label | NVARCHAR(50) | NULL — label for variant axis 1 (e.g. "Màu sắc", "Color") |
+| option2_label | NVARCHAR(50) | NULL — label for variant axis 2 (e.g. "Kích thước", "Size") |
 | is_active | BIT | NOT NULL, DEFAULT `1` — hide instead of hard delete |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 | updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_products_category_id` | category_id | Filter products by category |
+
+> **Flexible variant axes:** Products define their own option labels. A clothing product might use "Color" + "Size", while a phone uses "Storage" + "Color". Labels are snapshotted into `order_items.variant_option*_label` at checkout.
 
 #### `product_variants` ⚠️ Transaction Hub
 
@@ -117,13 +169,22 @@
 | id | INT | PK, auto-increment |
 | product_id | INT | FK → `products.id`, NOT NULL |
 | sku | NVARCHAR(50) | NOT NULL, UNIQUE — unique identifier per variant |
-| color | NVARCHAR(50) | NULL |
-| size | NVARCHAR(50) | NULL |
+| option1 | NVARCHAR(50) | NULL — value for axis 1 (e.g. "Đen", "Black") |
+| option2 | NVARCHAR(50) | NULL — value for axis 2 (e.g. "L", "128GB") |
 | price | DECIMAL(10,2) | NOT NULL — original price |
 | sale_price | DECIMAL(10,2) | NULL — promotional price |
 | stock_quantity | INT | NOT NULL, DEFAULT `0` |
 
-> **Critical design decision:** `cart_items` and `order_items` FK to `product_variants`, **NOT** to `products`. Each combination of color + size = 1 separate variant row.
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_product_variants_product_options` | product_id, option1, option2 | Lookup variants by product + options |
+| `uq_pv_both_options` | product_id, option1, option2 | UNIQUE (filtered: both NOT NULL) |
+| `uq_pv_option1_only` | product_id, option1 | UNIQUE (filtered: option1 NOT NULL, option2 NULL) |
+| `uq_pv_no_options` | product_id | UNIQUE (filtered: both NULL) — single-variant product |
+
+> **Critical design decision:** `cart_items` and `order_items` FK to `product_variants`, **NOT** to `products`. Each combination of option1 + option2 = 1 separate variant row. Columns are generic (`option1`/`option2`) instead of domain-specific (`color`/`size`) to support any product type.
 
 #### `product_images`
 
@@ -326,6 +387,8 @@
 ```mermaid
 erDiagram
     roles ||--o{ users : "has many"
+    roles ||--o{ role_permissions : "has permissions"
+    permissions ||--o{ role_permissions : "assigned to roles"
     users ||--o{ refresh_tokens : "has many"
     users ||--o{ addresses : "has many"
     users ||--o{ carts : "has many"
@@ -358,7 +421,9 @@ erDiagram
 ```
 
 **Key relationships to note:**
+- **`roles` ↔ `permissions`** linked via `role_permissions` junction — dynamic RBAC, not hardcoded role checks
 - **`product_variants`** is the transaction hub — both `cart_items` and `order_items` FK here, not to `products`
+- **`products`** defines `option1_label`/`option2_label`, **`product_variants`** stores `option1`/`option2` values — generic axes, not `color`/`size`
 - **`reviews`** has a 3-way link: `user_id` + `product_id` + `order_id`
 - **`categories`** self-references via `parent_id` for N-level nesting
 - **`coupons`** uses junction tables (`coupon_categories`, `coupon_products`) for scope targeting, and `coupon_usages` for audit trail
@@ -387,7 +452,7 @@ erDiagram
 ### Entity Decorator Example
 
 ```typescript
-// src/features/product-catalog/entities/product-variant.entity.ts
+// src/features/product/entities/product-variant.entity.ts
 @Entity('product_variants')
 export class ProductVariant {
   @PrimaryGeneratedColumn()
@@ -395,6 +460,12 @@ export class ProductVariant {
 
   @Column({ type: 'nvarchar', length: 50, unique: true })
   sku: string;
+
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  option1: string | null;
+
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  option2: string | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
@@ -405,15 +476,12 @@ export class ProductVariant {
   @Column({ type: 'int', default: 0 })
   stock_quantity: number;
 
+  @Column()
+  product_id: number;
+
   @ManyToOne(() => Product, (product) => product.variants)
   @JoinColumn({ name: 'product_id' })
   product: Product;
-
-  @OneToMany(() => CartItem, (cartItem) => cartItem.product_variant)
-  cart_items: CartItem[];
-
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.product_variant)
-  order_items: OrderItem[];
 }
 ```
 
@@ -436,21 +504,23 @@ export class ProductVariant {
 
 ```
 1. roles
-2. users
-3. refresh_tokens
-4. addresses
-5. categories
-6. products
-7. product_variants + product_images  (parallel — both FK to products)
-8. carts
-9. cart_items
-10. orders  (includes coupon_code, discount_amount columns)
-11. order_items
-12. reviews  (FKs to users, products, orders)
-13. wishlist_items  (FKs to users, products)
-14. coupons
-15. coupon_categories + coupon_products  (parallel — both FK to coupons)
-16. coupon_usages  (FKs to coupons, users, orders)
+2. permissions
+3. role_permissions  (FKs to roles, permissions)
+4. users
+5. refresh_tokens
+6. addresses
+7. categories
+8. products
+9. product_variants + product_images  (parallel — both FK to products)
+10. carts
+11. cart_items
+12. orders  (includes coupon_code, discount_amount columns)
+13. order_items
+14. reviews  (FKs to users, products, orders)
+15. wishlist_items  (FKs to users, products)
+16. coupons
+17. coupon_categories + coupon_products  (parallel — both FK to coupons)
+18. coupon_usages  (FKs to coupons, users, orders)
 ```
 
 ### Commands
@@ -490,11 +560,16 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 
 | Table | Index | Column(s) | Use Case |
 |-------|-------|-----------|----------|
+| permissions | `idx_permissions_resource` | resource | Filter permissions by resource |
+| role_permissions | `idx_role_permissions_role_id` | role_id | List permissions for a role |
+| role_permissions | `idx_role_permissions_permission_id` | permission_id | Find roles with a permission |
 | refresh_tokens | `idx_refresh_tokens_token_hash` | token_hash | Token lookup on every request |
 | refresh_tokens | `idx_refresh_tokens_user_id` | user_id | Logout all devices |
 | refresh_tokens | `idx_refresh_tokens_expires_at` | expires_at | Scheduled cleanup job |
-| product_variants | `idx_product_variants_product_id` | product_id | Load variants for a product |
+| products | `idx_products_category_id` | category_id | Filter products by category |
+| product_variants | `idx_product_variants_product_options` | product_id, option1, option2 | Lookup variants by product + options |
 | product_variants | `idx_product_variants_sku` | sku | Already covered by UNIQUE |
+| order_items | `idx_order_items_order_id` | order_id | Load items for an order |
 | orders | `idx_orders_user_id` | user_id | User's order history |
 | reviews | `idx_reviews_product_id` | product_id | Product review listing |
 | cart_items | `idx_cart_items_cart_id` | cart_id | Load cart contents |

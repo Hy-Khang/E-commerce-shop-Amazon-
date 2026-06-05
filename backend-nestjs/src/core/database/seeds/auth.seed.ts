@@ -4,6 +4,20 @@ import { ISeed } from './seed.interface';
 
 const SALT_ROUNDS = 10;
 
+// Permissions assigned per role (admin gets ALL, others get subset)
+const SELLER_PERMISSIONS = [
+  'products:create', 'products:read', 'products:update', 'products:delete',
+  'categories:read',
+  'orders:read',
+  'uploads:create',
+  'dashboard:read',
+];
+
+const SHIPPER_PERMISSIONS = [
+  'orders:read', 'orders:update',
+  'dashboard:read',
+];
+
 const SEED_PERMISSIONS = [
   { resource: 'products', action: 'create', name: 'Create Product' },
   { resource: 'products', action: 'read', name: 'Read Products' },
@@ -48,13 +62,17 @@ export const AuthSeed: ISeed = {
       SET IDENTITY_INSERT roles ON;
       INSERT INTO roles (id, name, is_system) VALUES
         (1, N'customer', 1),
-        (2, N'admin', 1);
+        (2, N'admin', 1),
+        (3, N'seller', 1),
+        (4, N'shipper', 1);
       SET IDENTITY_INSERT roles OFF;
     `);
-    console.log('  + roles: 2 rows');
+    console.log('  + roles: 4 rows');
 
-    const adminHash = bcrypt.hashSync('Admin@123', SALT_ROUNDS);
-    const customerHash = bcrypt.hashSync('Customer@123', SALT_ROUNDS);
+    const adminHash = bcrypt.hashSync('123456789', SALT_ROUNDS);
+    const customerHash = bcrypt.hashSync('123456789', SALT_ROUNDS);
+    const sellerHash = bcrypt.hashSync('123456789', SALT_ROUNDS);
+    const shipperHash = bcrypt.hashSync('123456789', SALT_ROUNDS);
 
     await qr.query(`
       SET IDENTITY_INSERT users ON;
@@ -63,10 +81,12 @@ export const AuthSeed: ISeed = {
         (2, 1, N'customer1@example.com',  N'${customerHash}', N'Nguyễn Văn An',      N'0901000001', 1),
         (3, 1, N'customer2@example.com',  N'${customerHash}', N'Trần Thị Bình',      N'0901000002', 1),
         (4, 1, N'customer3@example.com',  N'${customerHash}', N'Lê Hoàng Cường',     N'0901000003', 1),
-        (5, 1, N'customer4@example.com',  N'${customerHash}', N'Phạm Minh Đức',      N'0901000004', 1);
+        (5, 1, N'customer4@example.com',  N'${customerHash}', N'Phạm Minh Đức',      N'0901000004', 1),
+        (6, 3, N'seller@example.com',     N'${sellerHash}',   N'Nguyễn Thị Hằng',    N'0901000005', 1),
+        (7, 4, N'shipper@example.com',    N'${shipperHash}',  N'Trần Văn Giang',     N'0901000006', 1);
       SET IDENTITY_INSERT users OFF;
     `);
-    console.log('  + users: 5 rows');
+    console.log('  + users: 7 rows');
 
     // Seed permissions
     const permissionValues = SEED_PERMISSIONS.map(
@@ -84,8 +104,34 @@ export const AuthSeed: ISeed = {
       INSERT INTO role_permissions (role_id, permission_id)
       SELECT 2, id FROM permissions;
     `);
-    const adminPermCount = SEED_PERMISSIONS.length;
-    console.log(`  + role_permissions: ${adminPermCount} rows (admin gets all)`);
+    console.log(`  + role_permissions: ${SEED_PERMISSIONS.length} rows (admin gets all)`);
+
+    // Assign seller permissions (role_id=3)
+    // NOTE: Seller CRUD products = all products. No ownership model yet — dev/testing only.
+    const sellerWhere = SELLER_PERMISSIONS.map(
+      (p) => {
+        const [resource, action] = p.split(':');
+        return `(resource = N'${resource}' AND action = N'${action}')`;
+      },
+    ).join(' OR ');
+    await qr.query(`
+      INSERT INTO role_permissions (role_id, permission_id)
+      SELECT 3, id FROM permissions WHERE ${sellerWhere};
+    `);
+    console.log(`  + role_permissions: ${SELLER_PERMISSIONS.length} rows (seller)`);
+
+    // Assign shipper permissions (role_id=4)
+    const shipperWhere = SHIPPER_PERMISSIONS.map(
+      (p) => {
+        const [resource, action] = p.split(':');
+        return `(resource = N'${resource}' AND action = N'${action}')`;
+      },
+    ).join(' OR ');
+    await qr.query(`
+      INSERT INTO role_permissions (role_id, permission_id)
+      SELECT 4, id FROM permissions WHERE ${shipperWhere};
+    `);
+    console.log(`  + role_permissions: ${SHIPPER_PERMISSIONS.length} rows (shipper)`);
 
     await qr.release();
   },

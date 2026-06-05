@@ -32,8 +32,21 @@ Login → { accessToken (15min), refreshToken (7d) }
 |-------|-------------|
 | Public | No token needed — `@Public()` decorator |
 | Customer | Valid access token with role = `customer` |
-| Admin | Valid access token with role = `admin` |
+| Admin | Valid access token with role = `admin` + required permissions |
+| Seller | Valid access token with role = `seller` + required permissions |
+| Shipper | Valid access token with role = `shipper` + required permissions |
 | Customer or Guest | Token or `session_id` header for guest cart |
+
+**Authorization model:**
+
+Admin endpoints use **permission-based access control** via `@Permissions()` decorator (not `@Roles()`). Each role has a set of permissions assigned via the `role_permissions` junction table. Permissions follow the `resource:action` format (e.g. `products:create`, `orders:read`, `dashboard:read`).
+
+- **Admin** — all permissions
+- **Seller** — `products:*`, `categories:read`, `orders:read`, `uploads:create`, `dashboard:read`
+- **Shipper** — `orders:read`, `orders:update`, `dashboard:read`
+- **Customer** — no admin permissions (customer actions use JWT auth only)
+
+The `PermissionsGuard` resolves the user's role → looks up permissions via `role_permissions` → caches per role ID → checks against required permissions.
 
 **Auth errors:**
 
@@ -42,7 +55,7 @@ Login → { accessToken (15min), refreshToken (7d) }
 | AUTH_001 | 401 | Invalid credentials (wrong email/password) |
 | AUTH_002 | 401 | Access token expired or malformed |
 | AUTH_003 | 401 | Refresh token expired or revoked |
-| AUTH_004 | 403 | Insufficient role (customer accessing admin route) |
+| AUTH_004 | 403 | Insufficient permissions (missing required `resource:action`) |
 | AUTH_005 | 403 | Account deactivated (`is_active = false`) |
 
 ---
@@ -167,6 +180,14 @@ GET /products?sort=created_at&order=desc
 | COUPON_006 | 400 | Coupon is not currently active |
 | COUPON_007 | 409 | Coupon code already exists (admin create duplicate) |
 | COUPON_008 | 400 | No items in cart are applicable for this coupon |
+| ROLE_001 | 409 | Role name already exists |
+| ROLE_002 | 400 | Cannot delete system role or role with assigned users |
+| PERMISSION_001 | 409 | Permission `resource:action` already exists |
+| PERMISSION_002 | 400 | Cannot delete permission assigned to roles |
+| PERMISSION_003 | 404 | Permission not found |
+| PERMISSION_004 | 403 | Cannot assign permissions you don't have (escalation prevention) |
+| PERMISSION_005 | 403 | Cannot modify your own role's permissions |
+| PERMISSION_006 | 400 | Cannot delete system role |
 
 ### HTTP Status Usage
 
@@ -266,7 +287,33 @@ GET /products?sort=created_at&order=desc
 
 ## 7. Admin Endpoints
 
-All admin endpoints require `@Roles('admin')`. Accessing with a customer token returns `AUTH_004 (403)`.
+All admin endpoints use **permission-based access control** via `@Permissions()` decorator. Each endpoint requires a specific `resource:action` permission (e.g. `@Permissions(PERMISSIONS.PRODUCTS_CREATE)`). Accessing without the required permission returns `AUTH_004 (403)`.
+
+### Admin: Role Management — `/api/v1/admin/roles`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/roles` | List all roles with user count | `roles:read` |
+| GET | `/admin/roles/:id` | Get role detail with user count | `roles:read` |
+| POST | `/admin/roles` | Create a new role | `roles:create` |
+| PATCH | `/admin/roles/:id` | Update role name | `roles:update` |
+| DELETE | `/admin/roles/:id` | Delete role (fails if users assigned or system role) | `roles:delete` |
+| GET | `/admin/roles/:id/permissions` | List role's permissions | `roles:read` |
+| PUT | `/admin/roles/:id/permissions` | Sync (replace all) permissions for a role | `roles:update` |
+| POST | `/admin/roles/:id/permissions` | Add permissions to role | `roles:update` |
+| DELETE | `/admin/roles/:id/permissions` | Remove permissions from role | `roles:update` |
+
+> **Escalation prevention:** Cannot assign permissions you don't have (`PERMISSION_004`). Cannot modify your own role's permissions (`PERMISSION_005`). System roles (`is_system = true`) cannot be deleted (`PERMISSION_006`).
+
+### Admin: Permission Management — `/api/v1/admin/permissions`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/permissions` | List all permissions (filter by `?resource=`) | `permissions:read` |
+| GET | `/admin/permissions/:id` | Get permission by ID | `permissions:read` |
+| POST | `/admin/permissions` | Create permission | `permissions:create` |
+| PATCH | `/admin/permissions/:id` | Update permission (name, description) | `permissions:update` |
+| DELETE | `/admin/permissions/:id` | Delete permission (fails if assigned to roles) | `permissions:delete` |
 
 ### Admin: User Management — `/api/v1/admin/users`
 
@@ -343,11 +390,21 @@ All admin endpoints require `@Roles('admin')`. Accessing with a customer token r
 
 > **Scope types:** `all` (entire order), `categories` (specific categories + sub-categories), `products` (specific products). Junction tables `coupon_categories` and `coupon_products` are managed automatically on create/update. Code is stored uppercase and immutable after creation.
 
+### Admin: Upload — `/api/v1/upload`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| POST | `/upload/image` | Upload image file (JPEG/PNG/WebP, max 5MB) | `uploads:create` |
+
+> **Content-Type:** `multipart/form-data` (exception to the global `application/json` default). Returns `{ url: "..." }` with the saved image path.
+
 ### Admin: Dashboard — `/api/v1/admin/dashboard`
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | `/admin/dashboard/stats` | Summary: total users, orders, revenue, products | Admin |
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/dashboard` | Dashboard analytics: summary stats, revenue trend, order status, recent orders, users by role, top products, low stock alerts | `dashboard:read` |
+
+> **Partial failure tolerance:** Uses `Promise.allSettled()` — if one query fails, other sections still return. Failed sections return `null` or `[]`. Response includes 7 data sections: `summary`, `revenueOverTime`, `ordersByStatus`, `recentOrders`, `usersByRole`, `topProducts`, `lowStockAlerts`.
 
 ---
 
@@ -623,7 +680,7 @@ Read cart → validate stock for each variant → snapshot product_name/sku/pric
 - **Library:** `@nestjs/swagger`
 - **URL:** `/api/v1/docs` (development only)
 - **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Cart, Order, Review, Wishlist, Coupon
-- **Tags (Admin):** Admin: Users, Admin: Categories, Admin: Products, Admin: Orders, Admin: Reviews, Admin: Wishlist, Admin: Coupons, Admin: Dashboard
+- **Tags (Admin):** Admin: Roles, Admin: Permissions, Admin: Users, Admin: Categories, Admin: Products, Admin: Orders, Admin: Reviews, Admin: Wishlist, Admin: Coupons, Admin: Dashboard, Upload
 - **Decorators:**
   - DTOs: `@ApiProperty()` on every field
   - Controllers: `@ApiTags('Admin: Products')`, `@ApiBearerAuth()`

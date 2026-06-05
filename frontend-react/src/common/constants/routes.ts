@@ -18,6 +18,7 @@ export const ROUTES = {
   MY_REVIEWS: '/profile/reviews',
   WISHLIST: '/wishlist',
 
+  ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_PRODUCTS: '/admin/products',
   ADMIN_PRODUCT_CREATE: '/admin/products/new',
   ADMIN_PRODUCT_EDIT: (id: number) => `/admin/products/${id}/edit`,

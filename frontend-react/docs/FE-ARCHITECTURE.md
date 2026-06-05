@@ -22,6 +22,7 @@ graph TB
             Review["review"]
             Wishlist["wishlist"]
             Coupon["coupon"]
+            Dashboard["dashboard"]
         end
     end
 
@@ -74,14 +75,15 @@ src/
 │   └── constants/                     — ROUTES, ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS
 │
 ├── features/
-│   ├── auth/                          — login, register, token refresh, logout
+│   ├── auth/                          — login, register, token refresh, logout, admin roles/permissions/users
 │   ├── user-profile/                  — profile view/edit, address CRUD, default address
 │   ├── product/                       — listing, detail, category tree, admin CRUD
 │   ├── cart/                          — cart view, add/update/remove, guest cart, merge
 │   ├── order/                         — checkout, order history, detail, admin management
-│   ├── review/                        — create review, product reviews, my reviews
+│   ├── review/                        — create review, product reviews, my reviews, admin reviews
 │   ├── wishlist/                      — add/remove products, wishlist page, admin popular
-│   └── coupon/                        — coupon validation, admin CRUD, usage tracking
+│   ├── coupon/                        — coupon validation, admin CRUD, usage tracking
+│   └── dashboard/                     — admin analytics dashboard (charts, stats, alerts)
 │
 ├── assets/                            — static images, fonts
 └── styles/
@@ -96,8 +98,9 @@ Example: `src/features/cart/`
 
 ```
 cart/
+├── pages/
+│   └── CartPage.tsx                   — route-level page (default export for React.lazy)
 ├── components/
-│   ├── CartPage.tsx                   — page: composes CartItemList + CartSummary
 │   ├── CartItemList.tsx               — renders items, quantity change + remove
 │   ├── CartItemRow.tsx                — single item: variant info, quantity, remove
 │   ├── CartSummary.tsx                — subtotal, shipping, checkout button
@@ -205,6 +208,8 @@ graph TD
     Coupon["coupon"] --> Auth
     Order --> Coupon
 
+    Dashboard["dashboard"] --> Auth
+
     Order -.->|cache invalidation| Cart
     Review -.->|cache invalidation| Product
 ```
@@ -245,17 +250,27 @@ graph TD
 | `/orders/:id` | OrderDetailPage | order |
 | `/profile` | ProfilePage | user-profile |
 | `/profile/addresses` | AddressListPage | user-profile |
+| `/profile/reviews` | MyReviewsPage | review |
 | `/wishlist` | WishlistPage | wishlist |
 
 ### Admin Routes (AuthGuard + RoleGuard)
 
 | Path | Page | Feature |
 |------|------|---------|
+| `/admin/dashboard` | AdminDashboardPage | dashboard |
 | `/admin/products` | AdminProductListPage | product |
 | `/admin/products/new` | AdminProductCreatePage | product |
 | `/admin/products/:id/edit` | AdminProductEditPage | product |
+| `/admin/categories` | AdminCategoryListPage | product |
+| `/admin/categories/new` | AdminCategoryCreatePage | product |
+| `/admin/categories/:id/edit` | AdminCategoryEditPage | product |
 | `/admin/orders` | AdminOrderListPage | order |
 | `/admin/orders/:id` | AdminOrderDetailPage | order |
+| `/admin/users` | AdminUserListPage | auth |
+| `/admin/users/:id` | AdminUserDetailPage | auth |
+| `/admin/roles` | AdminRoleListPage | auth |
+| `/admin/permissions` | AdminPermissionPage | auth |
+| `/admin/reviews` | AdminReviewListPage | review |
 | `/admin/wishlist` | AdminWishlistPopularPage | wishlist |
 | `/admin/coupons` | AdminCouponListPage | coupon |
 | `/admin/coupons/new` | AdminCouponCreatePage | coupon |
@@ -318,6 +333,10 @@ export const wishlistKeys = {
   list:      (params: WishlistListParams) => ['wishlist', 'list', params] as const,
   check:     (productId: number) => ['wishlist', 'check', productId] as const,
   bulkCheck: (productIds: number[]) => ['wishlist', 'bulkCheck', productIds] as const,
+};
+
+export const dashboardKeys = {
+  stats: () => ['dashboard', 'stats'] as const,
 };
 
 export const adminCouponKeys = {

@@ -30,6 +30,8 @@ src/
 
 ```
 src/features/[feature-name]/
+├── pages/
+│   └── [PageName]Page.tsx           — route-level pages (default export for React.lazy)
 ├── components/
 │   ├── [ComponentName].tsx
 │   └── [ComponentName].test.tsx    — co-located test
@@ -51,14 +53,15 @@ src/features/[feature-name]/
 
 | Feature | Folder | Scope |
 |---------|--------|-------|
-| Auth | `src/features/auth/` | Login, register, token refresh, logout, logout all |
+| Auth | `src/features/auth/` | Login, register, token refresh, logout, admin roles/permissions/users management |
 | User Profile | `src/features/user-profile/` | Profile view/edit, address CRUD, default address |
 | Product | `src/features/product/` | Listing, detail (variants + images), category tree, admin CRUD |
 | Cart | `src/features/cart/` | Cart view, add/update/remove, guest cart, merge on login |
 | Order | `src/features/order/` | Checkout, order history, detail, admin management |
-| Review | `src/features/review/` | Create review (purchase-verified), product reviews, my reviews |
+| Review | `src/features/review/` | Create review (purchase-verified), product reviews, my reviews, admin reviews |
 | Wishlist | `src/features/wishlist/` | Add/remove products, wishlist page, admin popular analytics |
 | Coupon | `src/features/coupon/` | Coupon validation at checkout, admin CRUD, usage tracking |
+| Dashboard | `src/features/dashboard/` | Admin analytics dashboard (charts, stats, top products, low stock alerts) |
 
 ---
 

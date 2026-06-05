@@ -10,18 +10,21 @@ graph TB
     subgraph API["NestJS Monolith — api/v1"]
         direction TB
         MW["Middleware<br/>CORS → RateLimit → RequestId"]
-        MW --> Guards["Guards<br/>JwtAuthGuard → RolesGuard"]
+        MW --> Guards["Guards<br/>JwtAuthGuard → PermissionsGuard"]
         Guards --> Pipes["Pipes<br/>ValidationPipe → ParseSlugPipe"]
         Pipes --> Features
 
         subgraph Features["Feature Modules"]
-            Auth["auth<br/>roles, users, refresh_tokens"]
+            Auth["auth<br/>roles, permissions, role_permissions,<br/>users, refresh_tokens"]
             UP["user-profile<br/>addresses"]
             Prod["product<br/>categories, products,<br/>variants, images"]
             Cart["cart<br/>carts, cart_items"]
             Order["order<br/>orders, order_items"]
             Review["review<br/>reviews"]
             Wishlist["wishlist<br/>wishlist_items"]
+            Coupon["coupon<br/>coupons, coupon_categories,<br/>coupon_products, coupon_usages"]
+            Upload["upload<br/>file storage"]
+            Dashboard["dashboard<br/>analytics (read-only)"]
         end
 
         Features --> INT["Interceptors<br/>TransformInterceptor"]
@@ -49,10 +52,12 @@ src/
 │   ├── decorators/
 │   │   ├── current-user.decorator.ts    — @CurrentUser() extracts user from JWT payload
 │   │   ├── public.decorator.ts          — @Public() skips JwtAuthGuard
-│   │   └── roles.decorator.ts           — @Roles('admin', 'customer')
+│   │   ├── roles.decorator.ts           — @Roles('admin', 'customer') (legacy)
+│   │   └── permissions.decorator.ts     — @Permissions(PERMISSIONS.PRODUCTS_CREATE)
 │   ├── guards/
 │   │   ├── jwt-auth.guard.ts            — global, validates access token
-│   │   └── roles.guard.ts              — per-route, checks role against @Roles()
+│   │   ├── roles.guard.ts              — per-route, checks role against @Roles() (legacy)
+│   │   └── permissions.guard.ts         — per-route, checks permissions via @Permissions()
 │   ├── interceptors/
 │   │   ├── transform.interceptor.ts     — wraps: { success, data, meta? }
 │   │   └── logging.interceptor.ts       — logs method, URL, duration
@@ -68,7 +73,8 @@ src/
 │   │   ├── insufficient-stock.exception.ts
 │   │   └── cart-empty.exception.ts
 │   ├── constants/
-│   │   └── index.ts                     — ORDER_STATUS, PAYMENT_METHOD, PAYMENT_STATUS enums
+│   │   ├── index.ts                     — ORDER_STATUS, PAYMENT_METHOD, PAYMENT_STATUS enums
+│   │   └── permissions.constant.ts      — PERMISSIONS object + PermissionString type
 │   └── interfaces/
 │       └── paginated-result.interface.ts
 │
@@ -76,18 +82,21 @@ src/
 │   ├── database/
 │   │   ├── database.module.ts           — TypeOrmModule.forRootAsync with SQL Server config
 │   │   ├── migrations/                  — timestamp-based migration files
-│   │   └── seeds/                       — roles (customer, admin), test categories
+│   │   └── seeds/                       — roles (customer, admin, seller, shipper), permissions, role_permissions, test data
 │   └── logger/
 │       └── logger.module.ts
 │
 └── features/
-    ├── auth/                            — owns: roles, users, refresh_tokens
+    ├── auth/                            — owns: roles, permissions, role_permissions, users, refresh_tokens
     ├── user-profile/                    — owns: addresses
     ├── product/                         — owns: categories, products, product_variants, product_images
     ├── cart/                            — owns: carts, cart_items
     ├── order/                           — owns: orders, order_items
     ├── review/                          — owns: reviews
-    └── wishlist/                        — owns: wishlist_items
+    ├── wishlist/                        — owns: wishlist_items
+    ├── coupon/                          — owns: coupons, coupon_categories, coupon_products, coupon_usages
+    ├── upload/                          — file upload (images)
+    └── dashboard/                       — admin analytics (read-only, no owned entities)
 ```
 
 ---
@@ -135,7 +144,7 @@ product/
 ```mermaid
 graph LR
     R[Request] --> MW[Middleware<br/>RequestId, RateLimit]
-    MW --> G[Guard<br/>JwtAuth, Roles]
+    MW --> G[Guard<br/>JwtAuth, Permissions]
     G --> P[Pipe<br/>Validation, ParseSlug]
     P --> C[Controller<br/>routing only]
     C --> S[Service<br/>business logic]
@@ -210,6 +219,11 @@ graph TD
 
     Wishlist["wishlist"] --> Auth
     Wishlist --> Product
+    Coupon["coupon"]
+    Upload["upload"]
+    Dashboard["dashboard"] --> Order
+    Dashboard --> Product
+    Dashboard --> Auth
 
     Order -.->|event: order.created| Product
     Order -.->|event: order.cancelled| Product
@@ -234,6 +248,9 @@ graph TD
 | order | AuthModule, CartModule, ProductModule | — |
 | review | AuthModule, OrderModule, ProductModule | — |
 | wishlist | ProductModule | — |
+| coupon | — | — |
+| upload | — | — |
+| dashboard | TypeOrmModule (Order entity) | — |
 
 **Forbidden:** direct import of another feature's repository/entity/dto file, circular module dependencies.
 
@@ -277,7 +294,7 @@ graph TD
 
 ```typescript
 // Registered in main.ts bootstrap
-app.useGlobalGuards(new JwtAuthGuard(), new RolesGuard());
+app.useGlobalGuards(new JwtAuthGuard(), new PermissionsGuard());
 app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
 app.useGlobalInterceptors(new TransformInterceptor());
 app.useGlobalFilters(new HttpExceptionFilter());
@@ -286,7 +303,7 @@ app.useGlobalFilters(new HttpExceptionFilter());
 | Provider | Type | Scope |
 |----------|------|-------|
 | `JwtAuthGuard` | APP_GUARD | Global — `@Public()` to opt out |
-| `RolesGuard` | APP_GUARD | Global — activates only when `@Roles()` present |
+| `PermissionsGuard` | APP_GUARD | Global — activates only when `@Permissions()` present, caches per role |
 | `ValidationPipe` | APP_PIPE | Global — all DTOs validated automatically |
 | `TransformInterceptor` | APP_INTERCEPTOR | Global — wraps all success responses |
 | `HttpExceptionFilter` | APP_FILTER | Global — formats all error responses |

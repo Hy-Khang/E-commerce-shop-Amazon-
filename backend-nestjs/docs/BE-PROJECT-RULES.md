@@ -50,7 +50,7 @@ src/features/[feature-name]/
 
 | Feature | Folder | Owns Entities |
 |---------|--------|---------------|
-| Auth | `src/features/auth/` | roles, users, refresh_tokens |
+| Auth | `src/features/auth/` | roles, permissions, role_permissions, users, refresh_tokens |
 | User Profile | `src/features/user-profile/` | addresses |
 | Product | `src/features/product/` | categories, products, product_variants, product_images |
 | Cart | `src/features/cart/` | carts, cart_items |
@@ -58,6 +58,8 @@ src/features/[feature-name]/
 | Review | `src/features/review/` | reviews |
 | Wishlist | `src/features/wishlist/` | wishlist_items |
 | Coupon | `src/features/coupon/` | coupons, coupon_categories, coupon_products, coupon_usages |
+| Upload | `src/features/upload/` | — (file storage, no DB entities) |
+| Dashboard | `src/features/dashboard/` | — (read-only analytics, no owned entities) |
 
 ---
 
@@ -185,15 +187,16 @@ All responses wrapped by `common/interceptors/transform.interceptor.ts`:
 @Get('products')
 findAll() { ... }
 
-// ✅ Authenticated + role-based
-@Roles('admin')
+// ✅ Permission-based access control (admin endpoints)
+@Permissions(PERMISSIONS.PRODUCTS_CREATE)
 @Post('products')
 create(@CurrentUser() user: ICurrentUser, @Body() dto: CreateProductDto) { ... }
 ```
 
 - `@CurrentUser()` extracts user from JWT — never parse `req.user` manually
 - `JwtAuthGuard` applied globally, `@Public()` to opt out
-- `RolesGuard` per-route via `@Roles()` decorator
+- `PermissionsGuard` per-route via `@Permissions()` decorator — checks `role_permissions` table with caching
+- Permission strings follow `resource:action` format — defined in `common/constants/permissions.constant.ts`
 
 ### Repository Pattern
 
