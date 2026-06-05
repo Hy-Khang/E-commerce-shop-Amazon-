@@ -3,11 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from '../order/entities/order.entity';
 import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
+import { SellerDashboardController } from './seller-dashboard.controller';
+import { SellerDashboardService } from './seller-dashboard.service';
 import { DashboardRepository } from './repositories/dashboard.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order])],
-  controllers: [DashboardController],
-  providers: [DashboardService, DashboardRepository],
+  controllers: [DashboardController, SellerDashboardController],
+  providers: [DashboardService, SellerDashboardService, DashboardRepository],
 })
 export class DashboardModule {}

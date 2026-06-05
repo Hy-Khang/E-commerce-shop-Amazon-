@@ -55,3 +55,27 @@ export interface IDashboardStats {
   topProducts: ITopProduct[];
   lowStockAlerts: ILowStockAlert[];
 }
+
+export interface ISellerSummaryStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  lowStockCount: number;
+}
+
+export interface ISellerRecentOrder {
+  id: number;
+  customerName: string;
+  status: string;
+  paymentStatus: string;
+  sellerSubtotal: number;
+  createdAt: Date;
+}
+
+export interface ISellerDashboardStats {
+  summary: ISellerSummaryStats | null;
+  revenueOverTime: IRevenueDataPoint[];
+  topProducts: ITopProduct[];
+  recentOrders: ISellerRecentOrder[];
+  lowStockAlerts: ILowStockAlert[];
+}

@@ -10,6 +10,8 @@ import type {
   IUserRoleCount,
   ITopProduct,
   ILowStockAlert,
+  ISellerSummaryStats,
+  ISellerRecentOrder,
 } from '../types/dashboard.types';
 
 @Injectable()
@@ -189,6 +191,198 @@ export class DashboardRepository {
       .innerJoin('products', 'p', 'pv.product_id = p.id')
       .where('pv.stock_quantity < :threshold', { threshold })
       .andWhere('p.is_active = 1')
+      .orderBy('pv.stock_quantity', 'ASC')
+      .limit(20)
+      .getRawMany();
+
+    return rows.map((row) => ({
+      id: row.id,
+      productName: row.productName,
+      sku: row.sku,
+      option1: row.option1,
+      option2: row.option2,
+      stockQuantity: parseInt(row.stockQuantity, 10),
+    }));
+  }
+
+  async getSellerSummaryStats(sellerId: number): Promise<ISellerSummaryStats> {
+    const mgr = this.repo.manager;
+
+    const [revenueResult, orderResult, productResult, lowStockResult] =
+      await Promise.all([
+        mgr
+          .createQueryBuilder()
+          .select('COALESCE(SUM(oi.price * oi.quantity), 0)', 'totalRevenue')
+          .from('order_items', 'oi')
+          .innerJoin('orders', 'o', 'oi.order_id = o.id')
+          .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
+          .innerJoin('products', 'p', 'pv.product_id = p.id')
+          .where('p.seller_id = :sellerId', { sellerId })
+          .andWhere("o.payment_status = 'paid'")
+          .andWhere("o.status != 'cancelled'")
+          .getRawOne(),
+        mgr
+          .createQueryBuilder()
+          .select('COUNT(DISTINCT oi.order_id)', 'totalOrders')
+          .from('order_items', 'oi')
+          .innerJoin('orders', 'o', 'oi.order_id = o.id')
+          .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
+          .innerJoin('products', 'p', 'pv.product_id = p.id')
+          .where('p.seller_id = :sellerId', { sellerId })
+          .andWhere("o.payment_status = 'paid'")
+          .andWhere("o.status != 'cancelled'")
+          .getRawOne(),
+        mgr
+          .createQueryBuilder()
+          .select('COUNT(*)', 'totalProducts')
+          .from('products', 'p')
+          .where('p.seller_id = :sellerId', { sellerId })
+          .andWhere('p.is_active = 1')
+          .getRawOne(),
+        mgr
+          .createQueryBuilder()
+          .select('COUNT(*)', 'lowStockCount')
+          .from('product_variants', 'pv')
+          .innerJoin('products', 'p', 'pv.product_id = p.id')
+          .where('p.seller_id = :sellerId', { sellerId })
+          .andWhere('p.is_active = 1')
+          .andWhere('pv.stock_quantity < :threshold', { threshold: 10 })
+          .getRawOne(),
+      ]);
+
+    return {
+      totalRevenue: parseFloat(revenueResult.totalRevenue) || 0,
+      totalOrders: parseInt(orderResult.totalOrders, 10),
+      totalProducts: parseInt(productResult.totalProducts, 10),
+      lowStockCount: parseInt(lowStockResult.lowStockCount, 10),
+    };
+  }
+
+  async getSellerRevenueOverTime(
+    sellerId: number,
+    days: number,
+  ): Promise<IRevenueDataPoint[]> {
+    const rows = await this.repo.manager
+      .createQueryBuilder()
+      .select('CAST(o.created_at AS DATE)', 'date')
+      .addSelect('COALESCE(SUM(oi.price * oi.quantity), 0)', 'revenue')
+      .from('order_items', 'oi')
+      .innerJoin('orders', 'o', 'oi.order_id = o.id')
+      .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
+      .innerJoin('products', 'p', 'pv.product_id = p.id')
+      .where('p.seller_id = :sellerId', { sellerId })
+      .andWhere("o.payment_status = 'paid'")
+      .andWhere("o.status != 'cancelled'")
+      .andWhere('o.created_at >= DATEADD(DAY, :days, GETUTCDATE())', {
+        days: -days,
+      })
+      .groupBy('CAST(o.created_at AS DATE)')
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    return rows.map((row) => ({
+      date:
+        row.date instanceof Date
+          ? row.date.toISOString().split('T')[0]
+          : String(row.date),
+      revenue: parseFloat(row.revenue) || 0,
+    }));
+  }
+
+  async getSellerTopProducts(
+    sellerId: number,
+    limit: number,
+  ): Promise<ITopProduct[]> {
+    const rows = await this.repo.manager
+      .createQueryBuilder()
+      .select([
+        'p.id AS id',
+        'p.name AS name',
+        'p.thumbnail_url AS thumbnailUrl',
+        'SUM(oi.quantity) AS totalOrdered',
+        'SUM(oi.price * oi.quantity) AS totalRevenue',
+      ])
+      .from('order_items', 'oi')
+      .innerJoin('orders', 'o', 'oi.order_id = o.id')
+      .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
+      .innerJoin('products', 'p', 'pv.product_id = p.id')
+      .where('p.seller_id = :sellerId', { sellerId })
+      .andWhere("o.payment_status = 'paid'")
+      .andWhere("o.status != 'cancelled'")
+      .groupBy('p.id')
+      .addGroupBy('p.name')
+      .addGroupBy('p.thumbnail_url')
+      .orderBy('totalOrdered', 'DESC')
+      .limit(limit)
+      .getRawMany();
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      thumbnailUrl: row.thumbnailUrl,
+      totalOrdered: parseInt(row.totalOrdered, 10),
+      totalRevenue: parseFloat(row.totalRevenue) || 0,
+    }));
+  }
+
+  async getSellerRecentOrders(
+    sellerId: number,
+    limit: number,
+  ): Promise<ISellerRecentOrder[]> {
+    const rows = await this.repo.manager
+      .createQueryBuilder()
+      .select([
+        'o.id AS id',
+        'u.full_name AS customerName',
+        'o.status AS status',
+        'o.payment_status AS paymentStatus',
+        'SUM(oi.price * oi.quantity) AS sellerSubtotal',
+        'o.created_at AS createdAt',
+      ])
+      .from('order_items', 'oi')
+      .innerJoin('orders', 'o', 'oi.order_id = o.id')
+      .innerJoin('users', 'u', 'o.user_id = u.id')
+      .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
+      .innerJoin('products', 'p', 'pv.product_id = p.id')
+      .where('p.seller_id = :sellerId', { sellerId })
+      .groupBy('o.id')
+      .addGroupBy('u.full_name')
+      .addGroupBy('o.status')
+      .addGroupBy('o.payment_status')
+      .addGroupBy('o.created_at')
+      .orderBy('o.created_at', 'DESC')
+      .limit(limit)
+      .getRawMany();
+
+    return rows.map((row) => ({
+      id: row.id,
+      customerName: row.customerName,
+      status: row.status,
+      paymentStatus: row.paymentStatus,
+      sellerSubtotal: parseFloat(row.sellerSubtotal) || 0,
+      createdAt: row.createdAt,
+    }));
+  }
+
+  async getSellerLowStockAlerts(
+    sellerId: number,
+    threshold: number,
+  ): Promise<ILowStockAlert[]> {
+    const rows = await this.repo.manager
+      .createQueryBuilder()
+      .select([
+        'pv.id AS id',
+        'p.name AS productName',
+        'pv.sku AS sku',
+        'pv.option1 AS option1',
+        'pv.option2 AS option2',
+        'pv.stock_quantity AS stockQuantity',
+      ])
+      .from('product_variants', 'pv')
+      .innerJoin('products', 'p', 'pv.product_id = p.id')
+      .where('p.seller_id = :sellerId', { sellerId })
+      .andWhere('p.is_active = 1')
+      .andWhere('pv.stock_quantity < :threshold', { threshold })
       .orderBy('pv.stock_quantity', 'ASC')
       .limit(20)
       .getRawMany();

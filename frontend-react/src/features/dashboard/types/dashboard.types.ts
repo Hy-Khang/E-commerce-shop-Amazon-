@@ -55,3 +55,27 @@ export interface LowStockAlert {
   option2: string | null;
   stockQuantity: number;
 }
+
+export interface SellerSummaryStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  lowStockCount: number;
+}
+
+export interface SellerRecentOrder {
+  id: number;
+  customerName: string;
+  status: string;
+  paymentStatus: string;
+  sellerSubtotal: number;
+  createdAt: string;
+}
+
+export interface SellerDashboardStats {
+  summary: SellerSummaryStats | null;
+  revenueOverTime: RevenueDataPoint[];
+  topProducts: TopProduct[];
+  recentOrders: SellerRecentOrder[];
+  lowStockAlerts: LowStockAlert[];
+}
