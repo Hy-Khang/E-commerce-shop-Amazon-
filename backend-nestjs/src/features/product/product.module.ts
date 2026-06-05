@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductController } from './product.controller';
 import { AdminProductController } from './admin-product.controller';
 import { AdminCategoryController } from './admin-category.controller';
+import { SellerProductController } from './seller-product.controller';
 import { ProductService } from './product.service';
 import { Category } from './entities/category.entity';
 import { Product } from './entities/product.entity';
@@ -17,7 +18,7 @@ import { ProductImageRepository } from './repositories/product-image.repository'
   imports: [
     TypeOrmModule.forFeature([Category, Product, ProductVariant, ProductImage]),
   ],
-  controllers: [ProductController, AdminProductController, AdminCategoryController],
+  controllers: [ProductController, AdminProductController, AdminCategoryController, SellerProductController],
   providers: [
     ProductService,
     CategoryRepository,

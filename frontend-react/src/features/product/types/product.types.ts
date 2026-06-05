@@ -37,6 +37,7 @@ export interface ProductVariant {
 export interface Product {
   id: number;
   category_id: number;
+  seller_id: number | null;
   name: string;
   slug: string;
   description: string | null;

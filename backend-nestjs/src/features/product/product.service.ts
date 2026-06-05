@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -448,6 +449,131 @@ export class ProductService {
         message: 'Cannot set option2 value: product has no option2_label defined',
       });
     }
+  }
+
+  // ─── Seller: Products ───
+
+  async verifyProductOwnership(productId: number, sellerId: number): Promise<Product> {
+    const product = await this.productRepository.findByIdAndSeller(productId, sellerId);
+    if (!product) {
+      throw new ForbiddenException({
+        code: 'AUTH_004',
+        message: 'Product not found or not owned by you',
+      });
+    }
+    return product;
+  }
+
+  async findSellerProducts(sellerId: number, query: ProductQueryDto): Promise<IPaginatedResult<Product>> {
+    return this.productRepository.findAllBySellerPaginated(sellerId, query);
+  }
+
+  async findSellerProductById(sellerId: number, id: number): Promise<Product & { reviewCount: number; avgRating: number }> {
+    await this.verifyProductOwnership(id, sellerId);
+    const product = await this.productRepository.findByIdWithReviewStats(id);
+    if (!product) {
+      throw new NotFoundException({
+        code: 'PRODUCT_001',
+        message: 'Product not found or inactive',
+      });
+    }
+    return product;
+  }
+
+  async createProductForSeller(sellerId: number, dto: CreateProductDto): Promise<Product> {
+    const slugExists = await this.productRepository.existsBySlug(dto.slug);
+    if (slugExists) {
+      throw new ConflictException({
+        code: 'PRODUCT_005',
+        message: 'Duplicate slug',
+      });
+    }
+
+    const category = await this.categoryRepository.findById(dto.category_id);
+    if (!category) {
+      throw new NotFoundException({
+        code: 'PRODUCT_004',
+        message: 'Category not found',
+      });
+    }
+
+    const product = await this.productRepository.create({ ...dto, seller_id: sellerId });
+    this.logger.log(`Seller ${sellerId} created product: ${product.name} (${product.slug})`);
+    return product;
+  }
+
+  async updateProductForSeller(sellerId: number, id: number, dto: UpdateProductDto): Promise<Product> {
+    await this.verifyProductOwnership(id, sellerId);
+    return this.updateProduct(id, dto);
+  }
+
+  async toggleProductActiveForSeller(sellerId: number, id: number): Promise<Product> {
+    await this.verifyProductOwnership(id, sellerId);
+    return this.toggleProductActive(id);
+  }
+
+  async addVariantForSeller(sellerId: number, productId: number, dto: CreateVariantDto): Promise<ProductVariant> {
+    await this.verifyProductOwnership(productId, sellerId);
+    return this.addVariant(productId, dto);
+  }
+
+  async updateVariantForSeller(sellerId: number, variantId: number, dto: UpdateVariantDto): Promise<ProductVariant> {
+    const variant = await this.productVariantRepository.findById(variantId);
+    if (!variant) {
+      throw new NotFoundException({
+        code: 'PRODUCT_002',
+        message: 'Variant not found',
+      });
+    }
+    await this.verifyProductOwnership(variant.product_id, sellerId);
+    return this.updateVariant(variantId, dto);
+  }
+
+  async deleteVariantForSeller(sellerId: number, variantId: number): Promise<void> {
+    const variant = await this.productVariantRepository.findById(variantId);
+    if (!variant) {
+      throw new NotFoundException({
+        code: 'PRODUCT_002',
+        message: 'Variant not found',
+      });
+    }
+    await this.verifyProductOwnership(variant.product_id, sellerId);
+    return this.deleteVariant(variantId);
+  }
+
+  async addImageForSeller(sellerId: number, productId: number, dto: CreateImageDto): Promise<ProductImage> {
+    await this.verifyProductOwnership(productId, sellerId);
+    return this.addImage(productId, dto);
+  }
+
+  async updateImageForSeller(sellerId: number, imageId: number, dto: UpdateImageDto): Promise<ProductImage> {
+    const image = await this.productImageRepository.findById(imageId);
+    if (!image) {
+      throw new NotFoundException({
+        code: 'COMMON_001',
+        message: 'Image not found',
+      });
+    }
+    const variant = await this.productRepository.findById(image.product_id);
+    if (variant) {
+      await this.verifyProductOwnership(variant.id, sellerId);
+    }
+    return this.updateImageSortOrder(imageId, dto);
+  }
+
+  async deleteImageForSeller(sellerId: number, imageId: number): Promise<void> {
+    const image = await this.productImageRepository.findById(imageId);
+    if (!image) {
+      throw new NotFoundException({
+        code: 'COMMON_001',
+        message: 'Image not found',
+      });
+    }
+    const product = await this.productRepository.findById(image.product_id);
+    if (product) {
+      await this.verifyProductOwnership(product.id, sellerId);
+    }
+    return this.deleteImage(imageId);
   }
 
   // ─── Cross-feature: consumed by cart/order/review ───

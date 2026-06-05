@@ -173,6 +173,47 @@ export class ProductRepository {
     };
   }
 
+  async findAllBySellerPaginated(sellerId: number, filter: IProductFilter): Promise<IPaginatedResult<Product>> {
+    const qb = this.repo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.variants', 'variant')
+      .leftJoinAndSelect('product.images', 'image')
+      .leftJoinAndSelect('product.category', 'category')
+      .where('product.seller_id = :sellerId', { sellerId });
+
+    if (filter.is_active !== undefined) {
+      const isActive = filter.is_active === 'true';
+      qb.andWhere('product.is_active = :isActive', { isActive });
+    }
+
+    this.applyFilters(qb, filter);
+
+    const sortColumn = filter.sort || 'created_at';
+    const sortOrder = (filter.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
+    qb.orderBy(`product.${sortColumn}`, sortOrder);
+
+    const total = await qb.getCount();
+    const skip = (filter.page - 1) * filter.limit;
+    const data = await qb.skip(skip).take(filter.limit).getMany();
+
+    return {
+      data,
+      meta: {
+        page: filter.page,
+        limit: filter.limit,
+        total,
+        totalPages: Math.ceil(total / filter.limit),
+      },
+    };
+  }
+
+  async findByIdAndSeller(id: number, sellerId: number): Promise<Product | null> {
+    return this.repo.findOne({
+      where: { id, seller_id: sellerId },
+      relations: ['category', 'variants', 'images'],
+    });
+  }
+
   private applyFilters(qb: any, filter: IProductFilter): void {
     if (filter.search) {
       qb.andWhere('product.name LIKE :search', {

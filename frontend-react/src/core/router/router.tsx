@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react';
 import { MainLayout } from '@/core/layouts/MainLayout';
 import { AuthLayout } from '@/core/layouts/AuthLayout';
 import { AdminLayout } from '@/core/layouts/AdminLayout';
+import { SellerLayout } from '@/core/layouts/SellerLayout';
 import { AuthGuard } from './AuthGuard';
 import { PortalGuard } from './PortalGuard';
 
@@ -45,6 +46,12 @@ const AdminWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/Ad
 const AdminCouponListPage = lazy(() => import('@/features/coupon/pages/AdminCouponListPage'));
 const AdminCouponCreatePage = lazy(() => import('@/features/coupon/pages/AdminCouponCreatePage'));
 const AdminCouponEditPage = lazy(() => import('@/features/coupon/pages/AdminCouponEditPage'));
+
+const SellerDashboardPage = lazy(() => import('@/features/dashboard/pages/SellerDashboardPage'));
+const SellerProductListPage = lazy(() => import('@/features/product/pages/SellerProductListPage'));
+const SellerProductCreatePage = lazy(() => import('@/features/product/pages/SellerProductCreatePage'));
+const SellerProductEditPage = lazy(() => import('@/features/product/pages/SellerProductEditPage'));
+const SellerOrderListPage = lazy(() => import('@/features/order/pages/SellerOrderListPage'));
 
 const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
 
@@ -114,6 +121,26 @@ export const router = createBrowserRouter([
               { path: 'admin/coupons', element: <SuspenseWrapper><AdminCouponListPage /></SuspenseWrapper> },
               { path: 'admin/coupons/new', element: <SuspenseWrapper><AdminCouponCreatePage /></SuspenseWrapper> },
               { path: 'admin/coupons/:id/edit', element: <SuspenseWrapper><AdminCouponEditPage /></SuspenseWrapper> },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    element: <AuthGuard />,
+    children: [
+      {
+        element: <PortalGuard allowedRoles={['seller']} />,
+        children: [
+          {
+            element: <SellerLayout />,
+            children: [
+              { path: 'seller/dashboard', element: <SuspenseWrapper><SellerDashboardPage /></SuspenseWrapper> },
+              { path: 'seller/products', element: <SuspenseWrapper><SellerProductListPage /></SuspenseWrapper> },
+              { path: 'seller/products/new', element: <SuspenseWrapper><SellerProductCreatePage /></SuspenseWrapper> },
+              { path: 'seller/products/:id/edit', element: <SuspenseWrapper><SellerProductEditPage /></SuspenseWrapper> },
+              { path: 'seller/orders', element: <SuspenseWrapper><SellerOrderListPage /></SuspenseWrapper> },
             ],
           },
         ],

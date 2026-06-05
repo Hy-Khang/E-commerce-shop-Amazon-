@@ -41,7 +41,7 @@ export function useLogin() {
       if (role === 'admin') {
         navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
       } else if (role === 'seller') {
-        navigate('/seller/dashboard', { replace: true });
+        navigate(ROUTES.SELLER_DASHBOARD, { replace: true });
       } else if (role === 'shipper') {
         navigate('/shipper/dashboard', { replace: true });
       } else {
