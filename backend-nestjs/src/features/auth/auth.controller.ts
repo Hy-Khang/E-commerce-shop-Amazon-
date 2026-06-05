@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -54,6 +55,14 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'AUTH_003: Refresh token expired or revoked' })
   async refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto.refreshToken);
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user state (role, permissions, is_active)' })
+  @ApiResponse({ status: 200, description: 'Returns full user state for frontend sync' })
+  async getMe(@CurrentUser() user: ICurrentUser) {
+    return this.authService.getMe(user.id);
   }
 
   @Post('logout')

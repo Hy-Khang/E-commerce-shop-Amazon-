@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { ApiErrorResponse } from './api.types';
 import { ApiError } from './api.types';
+import { useAuthStore } from '@/features/auth/stores/auth.store';
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
@@ -27,6 +28,8 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+let lastStateRefetch = 0;
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -94,6 +97,28 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
+      }
+    }
+
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.error?.code === 'AUTH_004' &&
+      !originalRequest.url?.includes('/auth/me')
+    ) {
+      const now = Date.now();
+      if (now - lastStateRefetch > 30_000) {
+        lastStateRefetch = now;
+        api.get('/auth/me').then((res) => {
+          const meData = res.data.data;
+          if (!meData.is_active) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+            return;
+          }
+          useAuthStore.getState().updateUserState(meData);
+        }).catch(() => {});
       }
     }
 

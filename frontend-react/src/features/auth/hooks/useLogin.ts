@@ -18,21 +18,35 @@ export function useLogin() {
     mutationFn: (data: LoginRequest) => authService.login(data),
     meta: { suppressToast: true },
     onSuccess: async (response) => {
-      login(response.data.data);
-      
+      const userData = response.data.data;
+      login(userData);
+
       const sessionId = localStorage.getItem('session_id');
       if (sessionId) {
         try {
           await mergeCart(sessionId);
-          // Invalidate cart queries after merge
           queryClient.invalidateQueries({ queryKey: cartKeys.current() });
         } catch (error) {
           console.error('Failed to merge cart:', error);
         }
       }
 
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || ROUTES.HOME;
-      navigate(from, { replace: true });
+      const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
+      if (from) {
+        navigate(from, { replace: true });
+        return;
+      }
+
+      const role = userData.user.role;
+      if (role === 'admin') {
+        navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
+      } else if (role === 'seller') {
+        navigate('/seller/dashboard', { replace: true });
+      } else if (role === 'shipper') {
+        navigate('/shipper/dashboard', { replace: true });
+      } else {
+        navigate(ROUTES.HOME, { replace: true });
+      }
     },
   });
 }

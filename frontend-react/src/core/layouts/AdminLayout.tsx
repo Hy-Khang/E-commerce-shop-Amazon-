@@ -12,27 +12,33 @@ import {
   Tag,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { PERMISSIONS } from '@/common/constants/permissions';
+import { usePermissions } from '@/features/auth/hooks/usePermissions';
 
-const adminLinks: Array<{ to: string; label: string; icon: LucideIcon }> = [
-  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/admin/products', label: 'Products', icon: Package },
-  { to: '/admin/categories', label: 'Categories', icon: FolderTree },
-  { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { to: '/admin/users', label: 'Users', icon: Users },
-  { to: '/admin/roles', label: 'Roles', icon: Shield },
-  { to: '/admin/permissions', label: 'Permissions', icon: KeyRound },
-  { to: '/admin/reviews', label: 'Reviews', icon: MessageSquare },
-  { to: '/admin/wishlist', label: 'Wishlist', icon: Heart },
-  { to: '/admin/coupons', label: 'Coupons', icon: Tag },
+const adminLinks: Array<{ to: string; label: string; icon: LucideIcon; permission: string }> = [
+  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.DASHBOARD_READ },
+  { to: '/admin/products', label: 'Products', icon: Package, permission: PERMISSIONS.PRODUCTS_READ },
+  { to: '/admin/categories', label: 'Categories', icon: FolderTree, permission: PERMISSIONS.CATEGORIES_READ },
+  { to: '/admin/orders', label: 'Orders', icon: ShoppingCart, permission: PERMISSIONS.ORDERS_READ },
+  { to: '/admin/users', label: 'Users', icon: Users, permission: PERMISSIONS.USERS_READ },
+  { to: '/admin/roles', label: 'Roles', icon: Shield, permission: PERMISSIONS.ROLES_READ },
+  { to: '/admin/permissions', label: 'Permissions', icon: KeyRound, permission: PERMISSIONS.PERMISSIONS_READ },
+  { to: '/admin/reviews', label: 'Reviews', icon: MessageSquare, permission: PERMISSIONS.REVIEWS_READ },
+  { to: '/admin/wishlist', label: 'Wishlist', icon: Heart, permission: PERMISSIONS.WISHLIST_READ },
+  { to: '/admin/coupons', label: 'Coupons', icon: Tag, permission: PERMISSIONS.COUPONS_READ },
 ];
 
 export function AdminLayout() {
+  const { hasPermission } = usePermissions();
+
+  const visibleLinks = adminLinks.filter((link) => hasPermission(link.permission));
+
   return (
     <div className="flex min-h-screen">
       <aside className="w-64 border-r bg-gray-900 text-white">
         <div className="p-6 text-lg font-bold">Admin Panel</div>
         <nav className="flex flex-col gap-1 px-3">
-          {adminLinks.map((link) => {
+          {visibleLinks.map((link) => {
             const Icon = link.icon;
             return (
               <NavLink

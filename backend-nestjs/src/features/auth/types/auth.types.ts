@@ -15,5 +15,16 @@ export interface ILoginResponse extends ITokenPair {
     full_name: string;
     role: string;
     role_id: number;
+    permissions: string[];
   };
+}
+
+export interface IAuthMeResponse {
+  id: number;
+  email: string;
+  full_name: string;
+  role: string;
+  role_id: number;
+  permissions: string[];
+  is_active: boolean;
 }

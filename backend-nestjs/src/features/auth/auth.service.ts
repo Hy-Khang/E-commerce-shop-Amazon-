@@ -26,7 +26,7 @@ import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { AssignPermissionsDto } from './dto/assign-permissions.dto';
-import { IJwtPayload, ILoginResponse, ITokenPair } from './types/auth.types';
+import { IAuthMeResponse, IJwtPayload, ILoginResponse, ITokenPair } from './types/auth.types';
 import { hashToken } from './utils/auth.util';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
@@ -76,6 +76,8 @@ export class AuthService {
     const tokens = await this.generateTokenPair(user.id, customerRole.id);
     await this.storeRefreshToken(user.id, tokens.refreshToken);
 
+    const permissions = await this.rolePermissionRepository.findPermissionStringsByRoleId(customerRole.id);
+
     this.logger.log(`User registered: ${user.email}`);
 
     return {
@@ -86,6 +88,7 @@ export class AuthService {
         full_name: user.full_name,
         role: customerRole.name,
         role_id: customerRole.id,
+        permissions,
       },
     };
   }
@@ -117,6 +120,8 @@ export class AuthService {
     const tokens = await this.generateTokenPair(user.id, user.role_id);
     await this.storeRefreshToken(user.id, tokens.refreshToken);
 
+    const permissions = await this.rolePermissionRepository.findPermissionStringsByRoleId(user.role_id);
+
     this.logger.log(`User logged in: ${user.email}`);
 
     return {
@@ -127,6 +132,7 @@ export class AuthService {
         full_name: user.full_name,
         role: user.role.name,
         role_id: user.role_id,
+        permissions,
       },
     };
   }
@@ -167,6 +173,28 @@ export class AuthService {
   async logoutAll(userId: number): Promise<void> {
     await this.refreshTokenRepository.revokeAllByUserId(userId);
     this.logger.log(`All tokens revoked for user ${userId}`);
+  }
+
+  async getMe(userId: number): Promise<IAuthMeResponse> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException({
+        code: 'AUTH_002',
+        message: 'Authentication required',
+      });
+    }
+
+    const permissions = await this.rolePermissionRepository.findPermissionStringsByRoleId(user.role_id);
+
+    return {
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role: user.role.name,
+      role_id: user.role_id,
+      permissions,
+      is_active: user.is_active,
+    };
   }
 
   // ─── Admin: User Management ───

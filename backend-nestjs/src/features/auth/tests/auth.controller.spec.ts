@@ -13,6 +13,7 @@ describe('AuthController', () => {
       refresh: jest.fn(),
       logout: jest.fn(),
       logoutAll: jest.fn(),
+      getMe: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -39,7 +40,7 @@ describe('AuthController', () => {
       const expected = {
         accessToken: 'token',
         refreshToken: 'refresh',
-        user: { id: 1, email: dto.email, full_name: dto.full_name, role: 'customer', role_id: 1 },
+        user: { id: 1, email: dto.email, full_name: dto.full_name, role: 'customer', role_id: 1, permissions: [] },
       };
       service.register.mockResolvedValue(expected);
 
@@ -59,7 +60,7 @@ describe('AuthController', () => {
       const expected = {
         accessToken: 'token',
         refreshToken: 'refresh',
-        user: { id: 1, email: dto.email, full_name: 'Test User', role: 'customer', role_id: 1 },
+        user: { id: 1, email: dto.email, full_name: 'Test User', role: 'customer', role_id: 1, permissions: [] },
       };
       service.login.mockResolvedValue(expected);
 

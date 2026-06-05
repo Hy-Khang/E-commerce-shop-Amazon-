@@ -5,6 +5,18 @@ export interface AuthUser {
   email: string;
   full_name: string;
   role: string;
+  role_id: number;
+  permissions: string[];
+}
+
+export interface AuthMeResponse {
+  id: number;
+  email: string;
+  full_name: string;
+  role: string;
+  role_id: number;
+  permissions: string[];
+  is_active: boolean;
 }
 
 export interface LoginResponse {

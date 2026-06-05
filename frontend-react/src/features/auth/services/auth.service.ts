@@ -1,6 +1,6 @@
 import { api } from '@/core/api/axios-instance';
 import type { SuccessResponse } from '@/core/api/api.types';
-import type { LoginRequest, LoginResponse, RegisterRequest, RefreshResponse } from '../types/auth.types';
+import type { AuthMeResponse, LoginRequest, LoginResponse, RegisterRequest, RefreshResponse } from '../types/auth.types';
 
 export const authService = {
   login: (data: LoginRequest) =>
@@ -17,4 +17,7 @@ export const authService = {
 
   logoutAll: () =>
     api.post('/auth/logout-all'),
+
+  getMe: () =>
+    api.get<SuccessResponse<AuthMeResponse>>('/auth/me'),
 };

@@ -12,7 +12,7 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
   const mockLoginResponse: ILoginResponse = {
     accessToken: 'access-token-1',
     refreshToken: 'refresh-token-1',
-    user: { id: 1, email: 'user@example.com', full_name: 'Nguyen Van A', role: 'customer', role_id: 1 },
+    user: { id: 1, email: 'user@example.com', full_name: 'Nguyen Van A', role: 'customer', role_id: 1, permissions: [] },
   };
 
   const mockNewTokenPair: ITokenPair = {
@@ -32,6 +32,7 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
             refresh: jest.fn(),
             logout: jest.fn(),
             logoutAll: jest.fn(),
+            getMe: jest.fn(),
           },
         },
       ],
@@ -142,7 +143,7 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
       const registerResponse: ILoginResponse = {
         accessToken: 'new-access',
         refreshToken: 'new-refresh',
-        user: { id: 2, email: 'new@example.com', full_name: 'New User', role: 'customer', role_id: 1 },
+        user: { id: 2, email: 'new@example.com', full_name: 'New User', role: 'customer', role_id: 1, permissions: [] },
       };
       authService.register.mockResolvedValue(registerResponse);
 
@@ -210,7 +211,7 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
       const registerResponse: ILoginResponse = {
         accessToken: 'token',
         refreshToken: 'refresh',
-        user: { id: 1, email: 'valid@example.com', full_name: 'Test User', role: 'customer', role_id: 1 },
+        user: { id: 1, email: 'valid@example.com', full_name: 'Test User', role: 'customer', role_id: 1, permissions: [] },
       };
       authService.register.mockResolvedValue(registerResponse);
 

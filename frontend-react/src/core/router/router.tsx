@@ -4,7 +4,7 @@ import { MainLayout } from '@/core/layouts/MainLayout';
 import { AuthLayout } from '@/core/layouts/AuthLayout';
 import { AdminLayout } from '@/core/layouts/AdminLayout';
 import { AuthGuard } from './AuthGuard';
-import { RoleGuard } from './RoleGuard';
+import { PortalGuard } from './PortalGuard';
 
 const HomePage = lazy(() => import('@/features/product/pages/HomePage'));
 const ProductListPage = lazy(() => import('@/features/product/pages/ProductListPage'));
@@ -91,7 +91,7 @@ export const router = createBrowserRouter([
     element: <AuthGuard />,
     children: [
       {
-        element: <RoleGuard role="admin" />,
+        element: <PortalGuard allowedRoles={['admin']} />,
         children: [
           {
             element: <AdminLayout />,
