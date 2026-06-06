@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Pencil, Power, Plus, Search, Tag } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
+import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
+import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminCoupons } from '../hooks/useAdminCoupons';
 import { useDeactivateCoupon } from '../hooks/useDeactivateCoupon';
-import type { CouponListParams, CouponScope, DiscountType } from '../types/coupon.types';
+import type { CouponListParams, CouponScope, DiscountType, CouponListItem } from '../types/coupon.types';
 
 const SCOPE_LABELS: Record<CouponScope, string> = {
   all: 'All',
@@ -47,10 +50,6 @@ export default function AdminCouponListPage() {
     });
   }
 
-  function handleDeactivate(id: number) {
-    setDeactivateTarget(id);
-  }
-
   function confirmDeactivate() {
     if (deactivateTarget !== null) {
       deactivate.mutate(deactivateTarget);
@@ -58,175 +57,171 @@ export default function AdminCouponListPage() {
     }
   }
 
+  const columns: Column<CouponListItem>[] = [
+    {
+      key: 'code',
+      header: 'Code',
+      render: (coupon) => (
+        <div>
+          <span className="font-mono text-sm font-medium text-slate-900">{coupon.code}</span>
+          {coupon.description && (
+            <p className="mt-0.5 text-xs text-slate-500">{coupon.description}</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'discount',
+      header: 'Discount',
+      render: (coupon) => (
+        <span className="text-slate-700">
+          <DiscountDisplay type={coupon.discount_type} value={coupon.discount_value} />
+        </span>
+      ),
+    },
+    {
+      key: 'scope',
+      header: 'Scope',
+      render: (coupon) => (
+        <span className="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+          {SCOPE_LABELS[coupon.scope]}
+        </span>
+      ),
+    },
+    {
+      key: 'usage',
+      header: 'Usage',
+      render: (coupon) => (
+        <span className="text-slate-600">
+          {coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` : ' / ∞'}
+        </span>
+      ),
+    },
+    {
+      key: 'period',
+      header: 'Period',
+      render: (coupon) => (
+        <div className="text-xs text-slate-500">
+          <div>{formatDate(coupon.starts_at)}</div>
+          <div>{formatDate(coupon.expires_at)}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (coupon) => (
+        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+          coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
+        }`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+          {coupon.is_active ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      className: 'text-right',
+      render: (coupon) => (
+        <div className="flex items-center justify-end gap-1">
+          <Link
+            to={ROUTES.ADMIN_COUPON_EDIT(coupon.id)}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            aria-label="Edit coupon"
+          >
+            <Pencil className="h-4 w-4" />
+          </Link>
+          {coupon.is_active && (
+            <Button
+              variant="ghost"
+              iconOnly
+              icon={Power}
+              aria-label="Deactivate coupon"
+              onClick={() => setDeactivateTarget(coupon.id)}
+              disabled={deactivate.isPending}
+              className="hover:!text-rose-600"
+            />
+          )}
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Coupons</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Coupons</h1>
+          <p className="mt-1 text-sm text-slate-500">Manage discount codes and promotions</p>
+        </div>
         <Link
           to={ROUTES.ADMIN_COUPON_CREATE}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 transition-colors"
         >
+          <Plus className="h-4 w-4" />
           Create Coupon
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <input
-            name="search"
-            type="text"
-            placeholder="Search by code..."
-            defaultValue={searchParams.get('search') || ''}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="rounded-md bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
-          >
-            Search
-          </button>
-        </form>
-        <select
-          value={searchParams.get('scope') || ''}
-          onChange={(e) => setSearchParams((prev) => {
-            if (e.target.value) prev.set('scope', e.target.value);
-            else prev.delete('scope');
-            prev.set('page', '1');
-            return prev;
-          })}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-        >
-          <option value="">All scopes</option>
-          <option value="all">All (order-wide)</option>
-          <option value="categories">Categories</option>
-          <option value="products">Products</option>
-        </select>
-        <select
-          value={searchParams.get('is_active') ?? ''}
-          onChange={(e) => setSearchParams((prev) => {
-            if (e.target.value !== '') prev.set('is_active', e.target.value);
-            else prev.delete('is_active');
-            prev.set('page', '1');
-            return prev;
-          })}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-        >
-          <option value="">All status</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
-        </select>
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Code</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Discount</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Scope</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Usage</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Period</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 7 }).map((__, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-4 animate-pulse rounded bg-gray-200" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : data && data.data.length > 0 ? (
-              data.data.map((coupon) => (
-                <tr key={coupon.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <span className="font-mono text-sm font-medium text-gray-900">{coupon.code}</span>
-                    {coupon.description && (
-                      <p className="mt-0.5 text-xs text-gray-500">{coupon.description}</p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    <DiscountDisplay type={coupon.discount_type} value={coupon.discount_value} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
-                      {SCOPE_LABELS[coupon.scope]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` : ' / -'}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
-                    <div>{formatDate(coupon.starts_at)}</div>
-                    <div>{formatDate(coupon.expires_at)}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                      coupon.is_active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {coupon.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        to={ROUTES.ADMIN_COUPON_EDIT(coupon.id)}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        Edit
-                      </Link>
-                      {coupon.is_active && (
-                        <button
-                          onClick={() => handleDeactivate(coupon.id)}
-                          disabled={deactivate.isPending}
-                          className="text-sm font-medium text-red-600 hover:text-red-800"
-                        >
-                          Deactivate
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-500">
-                  No coupons found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {data && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => setPage(data.meta.page - 1)}
-            disabled={data.meta.page <= 1}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-600">
-            Page {data.meta.page} of {data.meta.totalPages}
-          </span>
-          <button
-            onClick={() => setPage(data.meta.page + 1)}
-            disabled={data.meta.page >= data.meta.totalPages}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <AdminDataTable
+        columns={columns}
+        data={data?.data}
+        isLoading={isLoading}
+        meta={data?.meta}
+        onPageChange={setPage}
+        emptyIcon={Tag}
+        emptyTitle="No coupons found"
+        emptyDescription="Create a coupon to start offering discounts."
+        toolbar={
+          <div className="admin-card p-4">
+            <div className="flex flex-wrap gap-3">
+              <form onSubmit={handleSearch} className="flex flex-1 gap-2">
+                <div className="relative min-w-[200px] flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    name="search"
+                    type="text"
+                    placeholder="Search by code..."
+                    defaultValue={searchParams.get('search') || ''}
+                    className="admin-input pl-9"
+                  />
+                </div>
+                <Button type="submit" variant="secondary">Search</Button>
+              </form>
+              <select
+                value={searchParams.get('scope') || ''}
+                onChange={(e) => setSearchParams((prev) => {
+                  if (e.target.value) prev.set('scope', e.target.value);
+                  else prev.delete('scope');
+                  prev.set('page', '1');
+                  return prev;
+                })}
+                className="admin-input w-auto"
+              >
+                <option value="">All scopes</option>
+                <option value="all">All (order-wide)</option>
+                <option value="categories">Categories</option>
+                <option value="products">Products</option>
+              </select>
+              <select
+                value={searchParams.get('is_active') ?? ''}
+                onChange={(e) => setSearchParams((prev) => {
+                  if (e.target.value !== '') prev.set('is_active', e.target.value);
+                  else prev.delete('is_active');
+                  prev.set('page', '1');
+                  return prev;
+                })}
+                className="admin-input w-auto"
+              >
+                <option value="">All status</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
+          </div>
+        }
+      />
 
       <ConfirmModal
         open={deactivateTarget !== null}

@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import { ApiError } from '@/core/api/api.types';
@@ -61,56 +61,60 @@ export default function AdminCouponEditPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     );
   }
 
   if (!coupon) {
-    return <div className="py-12 text-center text-gray-500">Coupon not found.</div>;
+    return <div className="py-12 text-center text-slate-500">Coupon not found.</div>;
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-2xl space-y-6">
+      <Link
+        to={ROUTES.ADMIN_COUPONS}
+        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Coupons
+      </Link>
+
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Edit: {coupon.code}</h1>
-        <div className="flex items-center gap-3">
-          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-            coupon.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
-            {coupon.is_active ? 'Active' : 'Inactive'}
-          </span>
-          <Link to={ROUTES.ADMIN_COUPONS} className="text-sm text-gray-600 hover:text-gray-900">
-            Back to list
-          </Link>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Edit: {coupon.code}</h1>
+        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+          coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
+        }`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+          {coupon.is_active ? 'Active' : 'Inactive'}
+        </span>
       </div>
 
-      <div className="rounded-md bg-gray-50 p-4 text-sm text-gray-600">
+      <div className="admin-card p-4">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div>
-            <span className="text-xs text-gray-400">Current Uses</span>
-            <p className="font-medium text-gray-900">
+            <span className="text-xs text-slate-400">Current Uses</span>
+            <p className="font-medium text-slate-900">
               {coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` : ''}
             </p>
           </div>
           <div>
-            <span className="text-xs text-gray-400">Per User</span>
-            <p className="font-medium text-gray-900">{coupon.max_uses_per_user}</p>
+            <span className="text-xs text-slate-400">Per User</span>
+            <p className="font-medium text-slate-900">{coupon.max_uses_per_user}</p>
           </div>
           <div>
-            <span className="text-xs text-gray-400">Created</span>
-            <p className="font-medium text-gray-900">{formatDate(coupon.created_at)}</p>
+            <span className="text-xs text-slate-400">Created</span>
+            <p className="font-medium text-slate-900">{formatDate(coupon.created_at)}</p>
           </div>
           <div>
-            <span className="text-xs text-gray-400">Scope</span>
-            <p className="font-medium text-gray-900 capitalize">{coupon.scope}</p>
+            <span className="text-xs text-slate-400">Scope</span>
+            <p className="font-medium capitalize text-slate-900">{coupon.scope}</p>
           </div>
         </div>
       </div>
 
       {updateCoupon.isError && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
           {updateCoupon.error instanceof ApiError
             ? updateCoupon.error.message
             : 'Failed to update coupon'}
@@ -118,66 +122,73 @@ export default function AdminCouponEditPage() {
       )}
 
       {updateCoupon.isSuccess && (
-        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">
           Coupon updated successfully.
         </div>
       )}
 
-      <CouponForm
-        form={form}
-        onSubmit={onSubmit}
-        isPending={updateCoupon.isPending}
-        submitLabel="Save Changes"
-        isEdit
-      />
+      <div className="admin-card p-6">
+        <CouponForm
+          form={form}
+          onSubmit={onSubmit}
+          isPending={updateCoupon.isPending}
+          submitLabel="Save Changes"
+          isEdit
+        />
+      </div>
 
       {usages && usages.data.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-slate-900">
             Recent Usages ({usages.meta.total})
           </h2>
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Order</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">User</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Discount</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {usages.data.map((usage) => (
-                  <tr key={usage.id}>
-                    <td className="px-3 py-2 text-sm">
-                      <Link
-                        to={ROUTES.ADMIN_ORDER_DETAIL(usage.order_id)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        #{usage.order_id}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2 text-sm text-gray-600">
-                      {usage.user_email || `User #${usage.user_id}`}
-                    </td>
-                    <td className="px-3 py-2 text-sm text-gray-600">
-                      {formatPrice(usage.discount_amount)}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                        usage.status === 'applied'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {usage.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-500">{formatDate(usage.created_at)}</td>
+          <div className="admin-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="admin-table-header">
+                    <th className="px-6 py-3.5 text-left">Order</th>
+                    <th className="px-6 py-3.5 text-left">User</th>
+                    <th className="px-6 py-3.5 text-left">Discount</th>
+                    <th className="px-6 py-3.5 text-left">Status</th>
+                    <th className="px-6 py-3.5 text-left">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {usages.data.map((usage) => (
+                    <tr key={usage.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm">
+                        <Link
+                          to={ROUTES.ADMIN_ORDER_DETAIL(usage.order_id)}
+                          className="font-mono text-teal-600 hover:text-teal-700"
+                        >
+                          #{usage.order_id}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {usage.user_email || `User #${usage.user_id}`}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {formatPrice(usage.discount_amount)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                          usage.status === 'applied'
+                            ? 'text-emerald-700'
+                            : 'text-amber-700'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${
+                            usage.status === 'applied' ? 'bg-emerald-500' : 'bg-amber-500'
+                          }`} />
+                          {usage.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-xs text-slate-500">{formatDate(usage.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       )}

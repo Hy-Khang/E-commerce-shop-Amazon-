@@ -7,8 +7,12 @@ interface Props {
 }
 
 export function OrderStatusBadge({ status }: Props) {
+  const colors = getStatusColor(status);
+  const [dotColor, textColor] = colors.split(' ');
+
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(status)}`}>
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${textColor}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
       {ORDER_STATUS_LABELS[status] ?? status}
     </span>
   );

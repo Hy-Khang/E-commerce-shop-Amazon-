@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, Search, Pencil, Trash2, FolderTree } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
+import { Button } from '@/common/components/ui/Button';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useCategories } from '../hooks/useCategories';
 import { useAdminCategories, useDeleteCategory } from '../hooks/useAdminCategories';
 import type { Category } from '../types/product.types';
@@ -88,7 +90,7 @@ function flattenAll(
 export default function AdminCategoryListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TreeRow | null>(null);
   const search = searchParams.get('search') || '';
 
   const { data: treeCategories, isLoading: treeLoading } = useCategories();
@@ -181,158 +183,173 @@ export default function AdminCategoryListPage() {
     });
   }
 
-  function handleDelete(id: number) {
-    setDeletingId(id);
-    deleteCategory.mutate(id, { onSettled: () => setDeletingId(null) });
+  function confirmDelete() {
+    if (deleteTarget) {
+      deleteCategory.mutate(deleteTarget.id, {
+        onSettled: () => setDeleteTarget(null),
+      });
+    }
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Categories</h1>
+          <p className="mt-1 text-sm text-slate-500">Organize your product catalog</p>
+        </div>
         <Link
           to={ROUTES.ADMIN_CATEGORY_CREATE}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 transition-colors"
         >
+          <Plus className="h-4 w-4" />
           Add Category
         </Link>
       </div>
 
-      <div className="flex items-center justify-between">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <input
-            name="search"
-            type="text"
-            placeholder="Search categories..."
-            defaultValue={search}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="rounded-md bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
-          >
-            Search
-          </button>
-        </form>
-        {!search && (
-          <div className="flex gap-2">
-            <button
-              onClick={expandAll}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-            >
-              Expand All
-            </button>
-            <button
-              onClick={collapseAll}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-            >
-              Collapse All
-            </button>
-          </div>
-        )}
+      <div className="admin-card p-4">
+        <div className="flex items-center justify-between gap-3">
+          <form onSubmit={handleSearch} className="flex flex-1 gap-2">
+            <div className="relative min-w-[200px] flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                name="search"
+                type="text"
+                placeholder="Search categories..."
+                defaultValue={search}
+                className="admin-input pl-9"
+              />
+            </div>
+            <Button type="submit" variant="secondary">Search</Button>
+          </form>
+          {!search && (
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={expandAll}>Expand All</Button>
+              <Button variant="secondary" size="sm" onClick={collapseAll}>Collapse All</Button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Slug</th>
-              <th className="w-32 px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">Products</th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 4 }).map((__, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-4 animate-pulse rounded bg-gray-200" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : displayRows.length > 0 ? (
-              displayRows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`hover:bg-gray-50 ${row.depth === 0 ? 'bg-gray-50/50' : ''}`}
-                >
-                  <td className="py-3 text-sm text-gray-900">
-                    <div
-                      className="flex items-center"
-                      style={{ paddingLeft: `${row.depth * 24 + 16}px` }}
-                    >
-                      {row.hasChildren && !search ? (
-                        <button
-                          onClick={() => toggleExpand(row.id)}
-                          className="mr-1.5 rounded p-0.5 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
-                        >
-                          {collapsedIds.has(row.id) ? (
-                            <ChevronRight className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </button>
-                      ) : (
-                        <span className="mr-1.5 inline-block w-5" />
-                      )}
-                      <span className={row.depth === 0 ? 'font-semibold' : ''}>
-                        {row.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-sm text-gray-500">{row.slug}</td>
-                  <td className="w-32 px-4 py-3 text-center text-sm">
-                    {row.totalCount > 0 ? (
-                      <span className="inline-flex items-center justify-center gap-1">
-                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                          {row.totalCount}
-                        </span>
-                        {row.hasChildren && row.directCount !== row.totalCount && (
-                          <span className="text-xs text-gray-400" title="Direct products in this category">
-                            ({row.directCount})
-                          </span>
-                        )}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">0</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <Link
-                        to={ROUTES.ADMIN_CATEGORY_EDIT(row.id)}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(row.id)}
-                        disabled={deletingId === row.id}
-                        className="text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
-                      >
-                        {deletingId === row.id ? 'Deleting...' : 'Delete'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">
-                  No categories found.
-                </td>
+      <div className="admin-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="admin-table-header">
+                <th className="px-6 py-3.5 text-left">Name</th>
+                <th className="px-6 py-3.5 text-left">Slug</th>
+                <th className="w-32 px-6 py-3.5 text-center">Products</th>
+                <th className="px-6 py-3.5 text-right">Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 4 }).map((__, j) => (
+                      <td key={j} className="px-6 py-4">
+                        <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : displayRows.length > 0 ? (
+                displayRows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className={`hover:bg-slate-50/50 transition-colors ${row.depth === 0 ? 'bg-slate-50/30' : ''}`}
+                  >
+                    <td className="py-4 text-sm text-slate-900">
+                      <div
+                        className="flex items-center"
+                        style={{ paddingLeft: `${row.depth * 24 + 24}px` }}
+                      >
+                        {row.hasChildren && !search ? (
+                          <button
+                            onClick={() => toggleExpand(row.id)}
+                            className="mr-1.5 rounded-lg p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
+                          >
+                            {collapsedIds.has(row.id) ? (
+                              <ChevronRight className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </button>
+                        ) : (
+                          <span className="mr-1.5 inline-block w-5" />
+                        )}
+                        <span className={row.depth === 0 ? 'font-semibold' : ''}>
+                          {row.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 font-mono text-sm text-slate-500">{row.slug}</td>
+                    <td className="w-32 px-6 py-4 text-center text-sm">
+                      {row.totalCount > 0 ? (
+                        <span className="inline-flex items-center justify-center gap-1">
+                          <span className="inline-flex items-center rounded-md bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
+                            {row.totalCount}
+                          </span>
+                          {row.hasChildren && row.directCount !== row.totalCount && (
+                            <span className="text-xs text-slate-400" title="Direct products in this category">
+                              ({row.directCount})
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">0</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          to={ROUTES.ADMIN_CATEGORY_EDIT(row.id)}
+                          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                          aria-label="Edit category"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          iconOnly
+                          icon={Trash2}
+                          aria-label="Delete category"
+                          onClick={() => setDeleteTarget(row)}
+                          disabled={deleteCategory.isPending}
+                          className="hover:!text-rose-600"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="py-16 text-center">
+                    <FolderTree className="mx-auto h-12 w-12 text-slate-300" />
+                    <p className="mt-4 text-sm font-semibold text-slate-900">No categories found</p>
+                    <p className="mt-1 text-sm text-slate-500">Add a category to organize your products.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {!search && !isLoading && (
-        <p className="text-sm text-gray-500">{allRows.length} categories total</p>
+        <p className="text-sm text-slate-500">{allRows.length} categories total</p>
       )}
+
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="Delete Category"
+        message={`Delete category "${deleteTarget?.name}"? This cannot be undone.`}
+        variant="danger"
+        confirmLabel="Delete"
+        loading={deleteCategory.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

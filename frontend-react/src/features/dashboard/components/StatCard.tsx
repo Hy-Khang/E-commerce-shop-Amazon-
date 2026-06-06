@@ -45,8 +45,8 @@ export function StatCard({ title, value, icon: Icon, color, index }: Props) {
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="mt-1 font-jakarta text-3xl font-bold tracking-tight text-gray-900 tabular-nums">
+          <p className="text-sm font-medium text-slate-500">{title}</p>
+          <p className="mt-1 font-jakarta text-3xl font-bold tracking-tight text-slate-900 tabular-nums">
             {value}
           </p>
         </div>

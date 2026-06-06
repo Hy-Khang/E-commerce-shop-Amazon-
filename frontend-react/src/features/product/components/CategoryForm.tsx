@@ -4,6 +4,7 @@ import { createCategorySchema, type CreateCategoryFormData } from '../types/prod
 import { useCategories } from '../hooks/useCategories';
 import { generateSlug } from '../utils/product.util';
 import { ApiError } from '@/core/api/api.types';
+import { Button } from '@/common/components/ui/Button';
 
 interface Props {
   defaultValues?: CreateCategoryFormData;
@@ -41,39 +42,39 @@ export function CategoryForm({ defaultValues, onSubmit, isPending, error, submit
   return (
     <>
       {error instanceof ApiError && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error.message}</div>
+        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error.message}</div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+          <label htmlFor="name" className="block text-sm font-medium text-slate-700">Name</label>
           <input
             id="name"
             {...register('name')}
             onBlur={handleNameBlur}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="admin-input mt-1"
           />
-          {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+          {errors.name && <p className="mt-1 text-xs text-rose-600">{errors.name.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="slug" className="block text-sm font-medium text-gray-700">Slug</label>
+          <label htmlFor="slug" className="block text-sm font-medium text-slate-700">Slug</label>
           <input
             id="slug"
             {...register('slug')}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="admin-input mt-1"
           />
-          {errors.slug && <p className="mt-1 text-xs text-red-600">{errors.slug.message}</p>}
+          {errors.slug && <p className="mt-1 text-xs text-rose-600">{errors.slug.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="parent_id" className="block text-sm font-medium text-gray-700">Parent Category</label>
+          <label htmlFor="parent_id" className="block text-sm font-medium text-slate-700">Parent Category</label>
           <select
             id="parent_id"
             {...register('parent_id', {
               setValueAs: (v: string) => (v === '' ? null : Number(v)),
             })}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="admin-input mt-1"
           >
             <option value="">None (root category)</option>
             {parentOptions.map((cat) => (
@@ -82,13 +83,9 @@ export function CategoryForm({ defaultValues, onSubmit, isPending, error, submit
           </select>
         </div>
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isPending ? 'Saving...' : submitLabel}
-        </button>
+        <Button type="submit" loading={isPending} className="w-full">
+          {submitLabel}
+        </Button>
       </form>
     </>
   );

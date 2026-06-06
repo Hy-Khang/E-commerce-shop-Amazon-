@@ -1,11 +1,14 @@
 import { Link, useSearchParams } from 'react-router-dom';
+import { Pencil, Search, Plus, Package } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
+import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
+import { Button } from '@/common/components/ui/Button';
 import { useAdminProducts } from '../hooks/useAdminProducts';
 import { useToggleProductActive } from '../hooks/useToggleProductActive';
 import { getPriceRange } from '../utils/product.util';
-import type { AdminProductListParams } from '../types/product.types';
+import type { AdminProductListParams, AdminProduct } from '../types/product.types';
 
 export default function AdminProductListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -33,133 +36,120 @@ export default function AdminProductListPage() {
     });
   }
 
+  const columns: Column<AdminProduct>[] = [
+    {
+      key: 'product',
+      header: 'Product',
+      render: (product) => (
+        <div className="flex items-center gap-3">
+          {product.thumbnail_url ? (
+            <img src={product.thumbnail_url} alt="" className="h-10 w-10 rounded-lg object-cover ring-1 ring-slate-900/5" />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 ring-1 ring-slate-900/5">
+              <Package className="h-4 w-4 text-slate-400" />
+            </div>
+          )}
+          <span className="font-medium text-slate-900">{product.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'price',
+      header: 'Price Range',
+      render: (product) => {
+        const range = getPriceRange(product.variants);
+        return range ? (
+          <span className="text-slate-600">{formatPrice(range.min)} — {formatPrice(range.max)}</span>
+        ) : (
+          <span className="text-slate-400">—</span>
+        );
+      },
+    },
+    {
+      key: 'variants',
+      header: 'Variants',
+      render: (product) => <span className="text-slate-600">{product.variants.length}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (product) => (
+        <button
+          onClick={() => toggleActive.mutate(product.id)}
+          disabled={toggleActive.isPending}
+          className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+            product.is_active ? 'text-emerald-700' : 'text-rose-700'
+          }`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${product.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+          {product.is_active ? 'Active' : 'Inactive'}
+        </button>
+      ),
+    },
+    {
+      key: 'created',
+      header: 'Created',
+      render: (product) => <span className="text-slate-500">{formatDate(product.created_at)}</span>,
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      className: 'text-right',
+      render: (product) => (
+        <Link
+          to={ROUTES.ADMIN_PRODUCT_EDIT(product.id)}
+          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
+          aria-label="Edit product"
+        >
+          <Pencil className="h-4 w-4" />
+        </Link>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Products</h1>
+          <p className="mt-1 text-sm text-slate-500">Manage your product catalog</p>
+        </div>
         <Link
           to={ROUTES.ADMIN_PRODUCT_CREATE}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 transition-colors"
         >
+          <Plus className="h-4 w-4" />
           Add Product
         </Link>
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <input
-          name="search"
-          type="text"
-          placeholder="Search products..."
-          defaultValue={searchParams.get('search') || ''}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-        <button
-          type="submit"
-          className="rounded-md bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
-        >
-          Search
-        </button>
-      </form>
-
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Product</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Price Range</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Variants</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Created</th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 6 }).map((__, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-4 animate-pulse rounded bg-gray-200" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : data && data.data.length > 0 ? (
-              data.data.map((product) => {
-                const range = getPriceRange(product.variants);
-                return (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {product.thumbnail_url ? (
-                          <img src={product.thumbnail_url} alt="" className="h-10 w-10 rounded object-cover" />
-                        ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100 text-xs text-gray-400">N/A</div>
-                        )}
-                        <span className="text-sm font-medium text-gray-900">{product.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {range ? `${formatPrice(range.min)} — ${formatPrice(range.max)}` : '—'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{product.variants.length}</td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => toggleActive.mutate(product.id)}
-                        disabled={toggleActive.isPending}
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          product.is_active
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
-                        }`}
-                      >
-                        {product.is_active ? 'Active' : 'Inactive'}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{formatDate(product.created_at)}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        to={ROUTES.ADMIN_PRODUCT_EDIT(product.id)}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
-                  No products found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {data && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => setPage(data.meta.page - 1)}
-            disabled={data.meta.page <= 1}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-600">
-            Page {data.meta.page} of {data.meta.totalPages}
-          </span>
-          <button
-            onClick={() => setPage(data.meta.page + 1)}
-            disabled={data.meta.page >= data.meta.totalPages}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <AdminDataTable
+        columns={columns}
+        data={data?.data}
+        isLoading={isLoading}
+        meta={data?.meta}
+        onPageChange={setPage}
+        emptyIcon={Package}
+        emptyTitle="No products found"
+        emptyDescription="Add a product to get started or adjust your search."
+        toolbar={
+          <div className="admin-card p-4">
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  name="search"
+                  type="text"
+                  placeholder="Search products..."
+                  defaultValue={searchParams.get('search') || ''}
+                  className="admin-input pl-9"
+                />
+              </div>
+              <Button type="submit" variant="secondary">Search</Button>
+            </form>
+          </div>
+        }
+      />
     </div>
   );
 }

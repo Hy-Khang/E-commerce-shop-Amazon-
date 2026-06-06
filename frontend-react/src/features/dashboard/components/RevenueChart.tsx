@@ -35,8 +35,8 @@ function CustomTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg bg-gray-900 px-3 py-2 text-sm shadow-lg">
-      <p className="text-gray-400">{label ? formatDateLabel(label) : ''}</p>
+    <div className="rounded-lg bg-slate-900 px-3 py-2 text-sm shadow-lg">
+      <p className="text-slate-400">{label ? formatDateLabel(label) : ''}</p>
       <p className="font-semibold text-white">
         {new Intl.NumberFormat('vi-VN', {
           style: 'currency',
@@ -50,8 +50,8 @@ function CustomTooltip({
 
 export default function RevenueChart({ data }: Props) {
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm">
-      <h2 className="mb-4 font-jakarta text-lg font-bold text-gray-900">
+    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
+      <h2 className="mb-4 font-jakarta text-lg font-bold text-slate-900">
         Revenue Trend
       </h2>
       <div className="h-72">

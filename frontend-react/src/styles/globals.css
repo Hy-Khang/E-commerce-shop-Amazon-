@@ -18,3 +18,39 @@
 @utility animate-slide-up {
   animation: dashboard-slide-up 0.5s ease-out both;
 }
+
+@keyframes admin-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-in {
+  animation: admin-fade-in 0.4s ease-out both;
+}
+
+@layer components {
+  .admin-card {
+    @apply rounded-xl bg-white shadow-sm ring-1 ring-slate-900/5;
+  }
+
+  .admin-input {
+    @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-colors;
+  }
+
+  .admin-table-header {
+    @apply bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-400;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in,
+  .animate-slide-up {
+    animation: none !important;
+  }
+}

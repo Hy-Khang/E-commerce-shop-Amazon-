@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { Pencil, Trash2, Plus, Shield } from 'lucide-react';
+import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
+import { Button } from '@/common/components/ui/Button';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminRoles, useCreateRole, useUpdateRole, useDeleteRole } from '../hooks/useAdminRoles';
 import { RoleFormModal } from '../components/RoleFormModal';
 import type { RoleWithUserCount, CreateRoleRequest } from '../types/admin.types';
@@ -11,6 +15,7 @@ export default function AdminRoleListPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<RoleWithUserCount | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<RoleWithUserCount | null>(null);
 
   function handleCreate() {
     setEditingRole(null);
@@ -35,84 +40,77 @@ export default function AdminRoleListPage() {
     }
   }
 
-  function handleDelete(role: RoleWithUserCount) {
-    if (!confirm(`Delete role "${role.name}"? This cannot be undone.`)) return;
-    deleteMutation.mutate(role.id);
+  function confirmDelete() {
+    if (deleteTarget) {
+      deleteMutation.mutate(deleteTarget.id, {
+        onSuccess: () => setDeleteTarget(null),
+      });
+    }
   }
 
-  if (isLoading) {
-    return <div className="text-gray-500">Loading roles...</div>;
-  }
+  const columns: Column<RoleWithUserCount>[] = [
+    {
+      key: 'id',
+      header: 'ID',
+      render: (role) => <span className="font-mono text-slate-500">{role.id}</span>,
+    },
+    {
+      key: 'name',
+      header: 'Name',
+      render: (role) => <span className="font-medium text-slate-900">{role.name}</span>,
+    },
+    {
+      key: 'users',
+      header: 'Users',
+      render: (role) => <span className="text-slate-500">{role.userCount}</span>,
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      className: 'text-right',
+      render: (role) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            iconOnly
+            icon={Pencil}
+            aria-label="Edit role"
+            onClick={() => handleEdit(role)}
+          />
+          <Button
+            variant="ghost"
+            iconOnly
+            icon={Trash2}
+            aria-label="Delete role"
+            onClick={() => setDeleteTarget(role)}
+            disabled={deleteMutation.isPending}
+            className="hover:!text-rose-600"
+          />
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Roles</h1>
-        <button
-          onClick={handleCreate}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Roles</h1>
+          <p className="mt-1 text-sm text-slate-500">Manage user roles and access levels</p>
+        </div>
+        <Button icon={Plus} onClick={handleCreate}>
           Create Role
-        </button>
+        </Button>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Users
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {roles?.map((role) => (
-              <tr key={role.id}>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {role.id}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                  {role.name}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {role.userCount}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                  <button
-                    onClick={() => handleEdit(role)}
-                    className="mr-3 text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(role)}
-                    disabled={deleteMutation.isPending}
-                    className="text-red-600 hover:underline disabled:opacity-50"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {roles?.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
-                  No roles found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <AdminDataTable
+        columns={columns}
+        data={roles}
+        isLoading={isLoading}
+        emptyIcon={Shield}
+        emptyTitle="No roles found"
+        emptyDescription="Create a role to get started."
+      />
 
       <RoleFormModal
         role={editingRole}
@@ -121,6 +119,17 @@ export default function AdminRoleListPage() {
         error={editingRole ? updateMutation.error : createMutation.error}
         onSubmit={handleSubmit}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="Delete Role"
+        message={`Delete role "${deleteTarget?.name}"? This cannot be undone.`}
+        variant="danger"
+        confirmLabel="Delete"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );

@@ -2,6 +2,7 @@ import { Package, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePagination } from '@/common/hooks/usePagination';
 import { ROUTES } from '@/common/constants/routes';
+import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
 import { useAdminPopularWishlist } from '../hooks/useAdminPopularWishlist';
 import type { PopularWishlistItem } from '../types/wishlist.types';
 
@@ -9,117 +10,78 @@ export default function AdminWishlistPopularPage() {
   const { params, setPage } = usePagination({ limit: 20 });
   const { data, isLoading } = useAdminPopularWishlist({ page: params.page, limit: params.limit });
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Popular Wishlisted Products</h1>
-
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Rank</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Product</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Wishlist Count</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 4 }).map((__, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-4 animate-pulse rounded bg-gray-200" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : data && data.data.length > 0 ? (
-              data.data.map((item, index) => (
-                <PopularRow
-                  key={item.product_id}
-                  item={item}
-                  rank={(data.meta.page - 1) * data.meta.limit + index + 1}
-                />
-              ))
-            ) : (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">
-                  No wishlisted products found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {data && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => setPage(data.meta.page - 1)}
-            disabled={data.meta.page <= 1}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-600">
-            Page {data.meta.page} of {data.meta.totalPages}
-          </span>
-          <button
-            onClick={() => setPage(data.meta.page + 1)}
-            disabled={data.meta.page >= data.meta.totalPages}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface PopularRowProps {
-  item: PopularWishlistItem;
-  rank: number;
-}
-
-function PopularRow({ item, rank }: PopularRowProps) {
-  return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-4 py-3 text-sm font-medium text-gray-500">#{rank}</td>
-      <td className="px-4 py-3">
-        <Link to={ROUTES.PRODUCT_DETAIL(item.product_slug)} className="flex items-center gap-3 hover:text-blue-600">
-          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded border bg-gray-100">
+  const columns: Column<PopularWishlistItem>[] = [
+    {
+      key: 'rank',
+      header: 'Rank',
+      render: (_, i) => (
+        <span className="font-mono font-medium text-slate-500">
+          #{data ? (data.meta.page - 1) * data.meta.limit + i + 1 : i + 1}
+        </span>
+      ),
+    },
+    {
+      key: 'product',
+      header: 'Product',
+      render: (item) => (
+        <Link to={ROUTES.PRODUCT_DETAIL(item.product_slug)} className="flex items-center gap-3 group">
+          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg ring-1 ring-slate-900/5">
             {item.product_thumbnail_url ? (
               <img src={item.product_thumbnail_url} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <Package className="h-4 w-4 text-gray-400" />
+              <div className="flex h-full w-full items-center justify-center bg-slate-100">
+                <Package className="h-4 w-4 text-slate-400" />
               </div>
             )}
           </div>
-          <span className="max-w-xs truncate text-sm font-medium text-gray-900">
+          <span className="max-w-xs truncate font-medium text-slate-900 group-hover:text-teal-600 transition-colors">
             {item.product_name}
           </span>
         </Link>
-      </td>
-      <td className="px-4 py-3">
-        <span
-          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-            item.product_is_active
-              ? 'bg-green-100 text-green-700'
-              : 'bg-gray-100 text-gray-500'
-          }`}
-        >
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (item) => (
+        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+          item.product_is_active ? 'text-emerald-700' : 'text-slate-500'
+        }`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${item.product_is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
           {item.product_is_active ? 'Active' : 'Inactive'}
         </span>
-      </td>
-      <td className="px-4 py-3 text-right">
-        <div className="flex items-center justify-end gap-1 text-sm font-semibold text-gray-900">
-          <Heart className="h-3.5 w-3.5 fill-red-400 text-red-400" />
+      ),
+    },
+    {
+      key: 'count',
+      header: 'Wishlist Count',
+      className: 'text-right',
+      render: (item) => (
+        <div className="flex items-center justify-end gap-1.5 font-semibold text-slate-900">
+          <Heart className="h-3.5 w-3.5 fill-rose-400 text-rose-400" />
           {item.wishlist_count}
         </div>
-      </td>
-    </tr>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Popular Wishlisted Products</h1>
+        <p className="mt-1 text-sm text-slate-500">Products most frequently added to wishlists</p>
+      </div>
+
+      <AdminDataTable
+        columns={columns}
+        data={data?.data}
+        isLoading={isLoading}
+        meta={data?.meta}
+        onPageChange={setPage}
+        emptyIcon={Heart}
+        emptyTitle="No wishlisted products"
+        emptyDescription="Products will appear here once customers start adding them to wishlists."
+      />
+    </div>
   );
 }

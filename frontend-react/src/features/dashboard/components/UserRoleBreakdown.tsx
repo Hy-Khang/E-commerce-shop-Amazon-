@@ -14,8 +14,8 @@ const roleConfig: Record<string, { icon: typeof Shield; bg: string; text: string
 
 export function UserRoleBreakdown({ roles }: Props) {
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm">
-      <h2 className="mb-3 font-jakarta text-lg font-bold text-gray-900">
+    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
+      <h2 className="mb-3 font-jakarta text-lg font-bold text-slate-900">
         Users by Role
       </h2>
       <div className="grid grid-cols-2 gap-3">
@@ -30,8 +30,8 @@ export function UserRoleBreakdown({ roles }: Props) {
             >
               <Icon className={`h-4 w-4 ${config.text}`} />
               <div className="min-w-0">
-                <p className="text-xs text-gray-500">{config.label}</p>
-                <p className="text-lg font-bold tabular-nums text-gray-900">
+                <p className="text-xs text-slate-500">{config.label}</p>
+                <p className="text-lg font-bold tabular-nums text-slate-900">
                   {role.count}
                 </p>
               </div>

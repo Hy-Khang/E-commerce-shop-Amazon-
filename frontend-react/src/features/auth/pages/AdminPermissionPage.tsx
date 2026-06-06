@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Shield, Plus, Trash2, Pencil, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/common/components/ui/Button';
 import { PermissionMatrix } from '../components/PermissionMatrix';
 import {
   useAdminPermissions,
@@ -28,15 +29,15 @@ export default function AdminPermissionPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Permissions</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Permissions</h1>
+          <p className="mt-1 text-sm text-slate-500">
             Manage role-based access control across the platform
           </p>
         </div>
       </div>
 
       <div className="mt-6">
-        <div className="flex gap-1 border-b border-gray-200">
+        <div className="flex gap-1 border-b border-slate-200">
           <TabButton
             active={activeTab === 'matrix'}
             onClick={() => setActiveTab('matrix')}
@@ -66,8 +67,8 @@ function TabButton({ active, onClick, label }: { active: boolean; onClick: () =>
       className={`
         border-b-2 px-4 py-2.5 text-sm font-medium transition-colors
         ${active
-          ? 'border-gray-900 text-gray-900'
-          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+          ? 'border-teal-600 text-teal-600'
+          : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
         }
       `}
     >
@@ -158,15 +159,15 @@ function MatrixTab() {
 
   if (!permissionData || !roles || roles.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 px-6 py-12 text-center">
-        <Shield className="mx-auto h-10 w-10 text-gray-300" />
-        <p className="mt-3 text-sm text-gray-500">No permissions or roles found. Run database seeds first.</p>
+      <div className="admin-card px-6 py-12 text-center">
+        <Shield className="mx-auto h-10 w-10 text-slate-300" />
+        <p className="mt-3 text-sm text-slate-500">No permissions or roles found. Run database seeds first.</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
+    <div className="admin-card overflow-hidden">
       <PermissionMatrix
         grouped={permissionData.grouped}
         roles={roles}
@@ -233,16 +234,12 @@ function ManageTab() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-slate-500">
           {permissionData?.flat.length ?? 0} permissions across {resources.length} resources
         </p>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="inline-flex items-center gap-1.5 rounded-md bg-gray-900 px-3.5 py-2 text-sm font-medium text-white hover:bg-gray-800"
-        >
-          <Plus className="h-4 w-4" />
+        <Button icon={Plus} onClick={() => setShowCreateForm(true)}>
           Add Permission
-        </button>
+        </Button>
       </div>
 
       {showCreateForm && (
@@ -255,27 +252,27 @@ function ManageTab() {
 
       <div className="space-y-4">
         {resources.map((resource) => (
-          <div key={resource} className="overflow-hidden rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2 bg-gray-50 px-4 py-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded bg-gray-900 text-[10px] font-bold text-white">
+          <div key={resource} className="admin-card overflow-hidden">
+            <div className="flex items-center gap-2 bg-slate-50 px-4 py-2.5">
+              <span className="flex h-6 w-6 items-center justify-center rounded bg-slate-900 text-[10px] font-bold text-white">
                 {resource[0].toUpperCase()}
               </span>
-              <span className="text-sm font-semibold capitalize text-gray-900">{resource}</span>
-              <span className="text-xs text-gray-400">({grouped[resource].length})</span>
+              <span className="text-sm font-semibold capitalize text-slate-900">{resource}</span>
+              <span className="text-xs text-slate-400">({grouped[resource].length})</span>
             </div>
             <table className="w-full">
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {grouped[resource]
                   .sort((a, b) => a.action.localeCompare(b.action))
                   .map((permission) => (
-                    <tr key={permission.id} className="hover:bg-gray-50/50">
+                    <tr key={permission.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-4 py-2.5">
                         <ActionBadge action={permission.action} />
                       </td>
-                      <td className="px-4 py-2.5 text-sm font-medium text-gray-900">
+                      <td className="px-4 py-2.5 text-sm font-medium text-slate-900">
                         {permission.name}
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-gray-400">
+                      <td className="px-4 py-2.5 text-xs text-slate-400">
                         {permission.description ?? '—'}
                       </td>
                       <td className="px-4 py-2.5 text-right">
@@ -291,14 +288,16 @@ function ManageTab() {
                             <>
                               <button
                                 onClick={() => setEditingPermission(permission)}
-                                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                                aria-label="Edit permission"
                               >
                                 <Pencil className="h-3.5 w-3.5" />
                               </button>
                               <button
                                 onClick={() => handleDelete(permission)}
                                 disabled={deleteMutation.isPending}
-                                className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                                className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition-colors"
+                                aria-label="Delete permission"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
@@ -326,7 +325,7 @@ function ActionBadge({ action }: { action: string }) {
   };
   return (
     <span
-      className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${colors[action] ?? 'bg-gray-100 text-gray-600'}`}
+      className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${colors[action] ?? 'bg-slate-100 text-slate-600'}`}
     >
       {action}
     </span>
@@ -361,7 +360,7 @@ function PermissionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4"
+      className="mb-4 rounded-xl bg-slate-50 p-4 ring-1 ring-slate-900/5"
     >
       <div className="grid grid-cols-4 gap-3">
         <input
@@ -369,7 +368,7 @@ function PermissionForm({
           placeholder="Name (e.g. Create Product)"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+          className="admin-input"
           required
         />
         <input
@@ -377,7 +376,7 @@ function PermissionForm({
           placeholder="Resource (e.g. products)"
           value={resource}
           onChange={(e) => setResource(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+          className="admin-input"
           required
         />
         <input
@@ -385,7 +384,7 @@ function PermissionForm({
           placeholder="Action (e.g. create)"
           value={action}
           onChange={(e) => setAction(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+          className="admin-input"
           required
         />
         <input
@@ -393,24 +392,16 @@ function PermissionForm({
           placeholder="Description (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+          className="admin-input"
         />
       </div>
       <div className="mt-3 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-white"
-        >
+        <Button variant="secondary" size="sm" type="button" onClick={onCancel}>
           Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-        >
-          {isPending ? 'Creating...' : 'Create'}
-        </button>
+        </Button>
+        <Button type="submit" loading={isPending} size="sm">
+          Create
+        </Button>
       </div>
     </form>
   );
@@ -442,7 +433,7 @@ function InlineEditForm({
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="w-36 rounded border border-gray-300 px-2 py-1 text-xs focus:border-gray-500 focus:outline-none"
+        className="w-36 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
         required
       />
       <input
@@ -450,19 +441,19 @@ function InlineEditForm({
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="description"
-        className="w-36 rounded border border-gray-300 px-2 py-1 text-xs focus:border-gray-500 focus:outline-none"
+        className="w-36 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
       />
       <button
         type="submit"
         disabled={isPending}
-        className="rounded bg-gray-900 px-2 py-1 text-xs text-white hover:bg-gray-800 disabled:opacity-50"
+        className="rounded-lg bg-teal-600 px-2 py-1 text-xs text-white hover:bg-teal-700 disabled:opacity-50"
       >
         Save
       </button>
       <button
         type="button"
         onClick={onCancel}
-        className="rounded p-1 text-gray-400 hover:text-gray-600"
+        className="rounded p-1 text-slate-400 hover:text-slate-600"
       >
         <X className="h-3.5 w-3.5" />
       </button>
@@ -472,25 +463,25 @@ function InlineEditForm({
 
 function MatrixSkeleton() {
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
+    <div className="admin-card overflow-hidden">
       <div className="animate-pulse">
-        <div className="flex border-b border-gray-200 bg-gray-50 px-4 py-3">
-          <div className="h-4 w-40 rounded bg-gray-200" />
+        <div className="flex border-b border-slate-200 bg-slate-50 px-4 py-3">
+          <div className="h-4 w-40 rounded bg-slate-200" />
           <div className="ml-auto flex gap-8">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-4 w-20 rounded bg-gray-200" />
+              <div key={i} className="h-4 w-20 rounded bg-slate-200" />
             ))}
           </div>
         </div>
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex border-t border-gray-100 px-4 py-3">
+          <div key={i} className="flex border-t border-slate-100 px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-md bg-gray-200" />
-              <div className="h-4 w-24 rounded bg-gray-200" />
+              <div className="h-8 w-8 rounded-md bg-slate-200" />
+              <div className="h-4 w-24 rounded bg-slate-200" />
             </div>
             <div className="ml-auto flex gap-8">
               {[1, 2, 3].map((j) => (
-                <div key={j} className="h-5 w-14 rounded-full bg-gray-200" />
+                <div key={j} className="h-5 w-14 rounded-full bg-slate-200" />
               ))}
             </div>
           </div>
@@ -504,17 +495,17 @@ function ManageSkeleton() {
   return (
     <div className="animate-pulse space-y-4">
       <div className="flex items-center justify-between">
-        <div className="h-4 w-48 rounded bg-gray-200" />
-        <div className="h-9 w-32 rounded-md bg-gray-200" />
+        <div className="h-4 w-48 rounded bg-slate-200" />
+        <div className="h-9 w-32 rounded-md bg-slate-200" />
       </div>
       {[1, 2, 3].map((i) => (
-        <div key={i} className="rounded-lg border border-gray-200">
-          <div className="bg-gray-50 px-4 py-2.5">
-            <div className="h-4 w-24 rounded bg-gray-200" />
+        <div key={i} className="admin-card overflow-hidden">
+          <div className="bg-slate-50 px-4 py-2.5">
+            <div className="h-4 w-24 rounded bg-slate-200" />
           </div>
           <div className="space-y-2 p-4">
             {[1, 2, 3].map((j) => (
-              <div key={j} className="h-4 w-full rounded bg-gray-100" />
+              <div key={j} className="h-4 w-full rounded bg-slate-100" />
             ))}
           </div>
         </div>

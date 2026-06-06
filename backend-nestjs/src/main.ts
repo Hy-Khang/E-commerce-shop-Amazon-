@@ -24,7 +24,8 @@ async function bootstrap() {
   const nodeEnv = config.get<string>('app.nodeEnv', 'development');
 
   app.setGlobalPrefix(prefix);
-  app.enableCors({ origin: corsOrigin, credentials: true });
+  const origins = corsOrigin.split(',').map((o) => o.trim());
+  app.enableCors({ origin: origins, credentials: true });
 
   const uploadDir = config.get<string>('app.uploadDir')!;
   await mkdir(join(uploadDir, 'products'), { recursive: true });

@@ -4,21 +4,23 @@ export function isOrderCancellable(status: OrderStatus): boolean {
   return status === 'pending';
 }
 
+const STATUS_STYLES: Record<OrderStatus, string> = {
+  pending: 'bg-amber-500 text-amber-700',
+  confirmed: 'bg-sky-500 text-sky-700',
+  shipping: 'bg-violet-500 text-violet-700',
+  delivered: 'bg-emerald-500 text-emerald-700',
+  cancelled: 'bg-rose-500 text-rose-700',
+};
+
 export function getStatusColor(status: OrderStatus): string {
-  switch (status) {
-    case 'pending': return 'bg-yellow-100 text-yellow-800';
-    case 'confirmed': return 'bg-blue-100 text-blue-800';
-    case 'shipping': return 'bg-purple-100 text-purple-800';
-    case 'delivered': return 'bg-green-100 text-green-800';
-    case 'cancelled': return 'bg-red-100 text-red-800';
-  }
+  return STATUS_STYLES[status] ?? 'bg-slate-500 text-slate-700';
 }
 
 export function getPaymentStatusColor(status: string): string {
   switch (status) {
-    case 'paid': return 'bg-green-100 text-green-800';
-    case 'unpaid': return 'bg-orange-100 text-orange-800';
-    default: return 'bg-gray-100 text-gray-800';
+    case 'paid': return 'bg-emerald-500 text-emerald-700';
+    case 'unpaid': return 'bg-amber-500 text-amber-700';
+    default: return 'bg-slate-500 text-slate-700';
   }
 }
 

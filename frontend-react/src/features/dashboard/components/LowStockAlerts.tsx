@@ -23,10 +23,10 @@ export function LowStockAlerts({ alerts }: Props) {
   if (alerts.length === 0) return null;
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm">
+    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
       <div className="mb-4 flex items-center gap-2">
         <AlertTriangle className="h-5 w-5 text-amber-500" />
-        <h2 className="font-jakarta text-lg font-bold text-gray-900">
+        <h2 className="font-jakarta text-lg font-bold text-slate-900">
           Low Stock Alerts
         </h2>
         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">

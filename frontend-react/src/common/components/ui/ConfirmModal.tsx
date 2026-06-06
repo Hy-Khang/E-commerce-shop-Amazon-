@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Info, Trash2, X } from 'lucide-react';
+import { Button } from './Button';
 
 type ConfirmVariant = 'danger' | 'warning' | 'info';
 
@@ -20,25 +21,25 @@ const VARIANT_CONFIG: Record<ConfirmVariant, {
   icon: typeof AlertTriangle;
   iconBg: string;
   iconColor: string;
-  buttonBg: string;
+  buttonVariant: 'danger' | 'primary';
 }> = {
   danger: {
     icon: Trash2,
-    iconBg: 'bg-red-100',
-    iconColor: 'text-red-600',
-    buttonBg: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
+    iconBg: 'bg-rose-100',
+    iconColor: 'text-rose-600',
+    buttonVariant: 'danger',
   },
   warning: {
     icon: AlertTriangle,
-    iconBg: 'bg-yellow-100',
-    iconColor: 'text-yellow-600',
-    buttonBg: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500',
+    iconBg: 'bg-amber-100',
+    iconColor: 'text-amber-600',
+    buttonVariant: 'danger',
   },
   info: {
     icon: Info,
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600',
-    buttonBg: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+    iconBg: 'bg-teal-100',
+    iconColor: 'text-teal-600',
+    buttonVariant: 'primary',
   },
 };
 
@@ -84,11 +85,12 @@ export function ConfirmModal({
         className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={loading ? undefined : onCancel}
       />
-      <div className="relative w-full max-w-md rounded-lg bg-white shadow-xl">
+      <div className="admin-card relative w-full max-w-md">
         <button
           onClick={onCancel}
           disabled={loading}
-          className="absolute right-3 top-3 rounded p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+          className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50 transition-colors"
+          aria-label="Close"
         >
           <X className="h-5 w-5" />
         </button>
@@ -99,28 +101,28 @@ export function ConfirmModal({
               <Icon className={`h-5 w-5 ${config.iconColor}`} />
             </div>
             <div className="min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-              <p className="mt-2 text-sm text-gray-600">{message}</p>
+              <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+              <p className="mt-2 text-sm text-slate-600">{message}</p>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4">
-          <button
+        <div className="flex justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4 rounded-b-xl">
+          <Button
             ref={cancelRef}
+            variant="secondary"
             onClick={onCancel}
             disabled={loading}
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
           >
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={config.buttonVariant}
             onClick={onConfirm}
-            disabled={loading}
-            className={`rounded-md px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${config.buttonBg}`}
+            loading={loading}
           >
-            {loading ? 'Processing...' : confirmLabel}
-          </button>
+            {confirmLabel}
+          </Button>
         </div>
       </div>
     </div>,

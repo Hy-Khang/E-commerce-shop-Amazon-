@@ -5,12 +5,15 @@ interface Props {
 export function UserStatusBadge({ isActive }: Props) {
   return (
     <span
-      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-        isActive
-          ? 'bg-green-100 text-green-700'
-          : 'bg-red-100 text-red-700'
+      className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+        isActive ? 'text-emerald-700' : 'text-rose-700'
       }`}
     >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${
+          isActive ? 'bg-emerald-500' : 'bg-rose-500'
+        }`}
+      />
       {isActive ? 'Active' : 'Inactive'}
     </span>
   );
