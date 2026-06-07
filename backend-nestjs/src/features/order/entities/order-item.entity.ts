@@ -11,6 +11,7 @@ import { Order } from './order.entity';
 
 @Entity('order_items')
 @Index('idx_order_items_order_id', ['order_id'])
+@Index('idx_order_items_shop_id', ['shop_id'])
 export class OrderItem {
   @PrimaryGeneratedColumn()
   id: number;

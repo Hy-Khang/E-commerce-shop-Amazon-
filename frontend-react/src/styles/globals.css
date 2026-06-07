@@ -2,7 +2,72 @@
 
 @theme {
   --font-jakarta: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  /* ── Layer 1: Primitive Color Ramps ── */
+
+  /* Coral (Shopee-inspired) */
+  --color-primary-50: #fff5f2;
+  --color-primary-100: #ffe8e0;
+  --color-primary-200: #ffc9b8;
+  --color-primary-300: #ffa38a;
+  --color-primary-400: #f97352;
+  --color-primary-500: #ee4d2d;
+  --color-primary-600: #d73a1c;
+  --color-primary-700: #b42f16;
+  --color-primary-800: #8f2612;
+  --color-primary-900: #6e1f10;
+
+  /* Warm Neutrals */
+  --color-neutral-50: #fafaf9;
+  --color-neutral-100: #f5f5f4;
+  --color-neutral-200: #e7e5e4;
+  --color-neutral-300: #d6d3d1;
+  --color-neutral-400: #a8a29e;
+  --color-neutral-500: #78716c;
+  --color-neutral-600: #57534e;
+  --color-neutral-700: #44403c;
+  --color-neutral-800: #292524;
+  --color-neutral-900: #1c1917;
+
+  /* Status Colors */
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+
+  /* ── Layer 2: Semantic Tokens (as Tailwind theme values) ── */
+
+  /* Text */
+  --color-text-primary: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-500);
+  --color-text-muted: var(--color-neutral-400);
+  --color-text-inverse: #ffffff;
+  --color-text-brand: var(--color-primary-600);
+  --color-text-price: var(--color-primary-500);
+
+  /* Backgrounds */
+  --color-page: var(--color-neutral-50);
+  --color-surface: #ffffff;
+  --color-surface-hover: var(--color-neutral-50);
+  --color-elevated: #ffffff;
+  --color-brand: var(--color-primary-500);
+  --color-brand-hover: var(--color-primary-600);
+  --color-brand-light: var(--color-primary-50);
+
+  /* Borders */
+  --color-border-default: var(--color-neutral-200);
+  --color-border-strong: var(--color-neutral-300);
+  --color-border-brand: var(--color-primary-500);
+
+  /* Interactive */
+  --color-ring-focus: var(--color-primary-500);
 }
+
+/* ── Admin Dashboard Animations ── */
 
 @keyframes dashboard-slide-up {
   from {
@@ -34,7 +99,19 @@
   animation: admin-fade-in 0.4s ease-out both;
 }
 
+/* ── Skeleton Shimmer ── */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 @layer components {
+  /* Admin components (existing) */
   .admin-card {
     @apply rounded-xl bg-white shadow-sm ring-1 ring-slate-900/5;
   }
@@ -45,6 +122,19 @@
 
   .admin-table-header {
     @apply bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-400;
+  }
+
+  /* Shop / Customer components */
+  .shop-container {
+    @apply mx-auto max-w-[1200px] px-4;
+  }
+
+  .shop-card {
+    @apply rounded-xl bg-elevated border border-border-default shadow-sm;
+  }
+
+  .shop-input {
+    @apply w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-border-brand focus:ring-2 focus:ring-ring-focus/20 focus:outline-none transition-colors;
   }
 }
 

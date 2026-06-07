@@ -4,6 +4,8 @@ import type { LucideIcon } from 'lucide-react';
 
 const variants = {
   primary: 'bg-teal-600 hover:bg-teal-700 text-white shadow-sm',
+  brand: 'bg-brand hover:bg-brand-hover text-white shadow-sm',
+  'brand-outline': 'border border-border-brand text-text-brand hover:bg-brand-light shadow-sm',
   secondary: 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm',
   danger: 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm',
   ghost: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
@@ -37,12 +39,16 @@ export function Button({
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const isBrand = variant === 'brand' || variant === 'brand-outline';
+  const ringClass = isBrand
+    ? 'focus-visible:ring-2 focus-visible:ring-ring-focus focus-visible:ring-offset-2'
+    : 'focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2';
 
   if (iconOnly && Icon) {
     return (
       <button
         ref={ref}
-        className={`inline-flex items-center justify-center rounded-lg p-2 transition-colors focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${className}`}
+        className={`inline-flex items-center justify-center rounded-lg p-2 transition-colors ${ringClass} disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${className}`}
         disabled={isDisabled}
         {...props}
       >
@@ -58,7 +64,7 @@ export function Button({
   return (
     <button
       ref={ref}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors ${ringClass} disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={isDisabled}
       {...props}
     >
