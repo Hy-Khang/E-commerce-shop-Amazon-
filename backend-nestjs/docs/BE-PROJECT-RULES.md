@@ -53,6 +53,7 @@ src/features/[feature-name]/
 | Auth | `src/features/auth/` | roles, permissions, role_permissions, users, refresh_tokens |
 | User Profile | `src/features/user-profile/` | addresses |
 | Product | `src/features/product/` | categories, products, product_variants, product_images |
+| Shop | `src/features/shop/` | shops |
 | Cart | `src/features/cart/` | carts, cart_items |
 | Order | `src/features/order/` | orders, order_items |
 | Review | `src/features/review/` | reviews |

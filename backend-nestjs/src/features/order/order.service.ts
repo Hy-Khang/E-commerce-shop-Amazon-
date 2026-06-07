@@ -115,6 +115,8 @@ export class OrderService {
         variant_option1_value: variant.option1 ?? null,
         variant_option2_label: product?.option2_label ?? null,
         variant_option2_value: variant.option2 ?? null,
+        shop_id: product?.shop_id ?? null,
+        shop_name: product?.shop?.name ?? null,
       };
     });
 

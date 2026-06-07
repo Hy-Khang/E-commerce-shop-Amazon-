@@ -34,10 +34,17 @@ export interface ProductVariant {
   stock_quantity: number;
 }
 
+export interface ShopSummary {
+  id: number;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+}
+
 export interface Product {
   id: number;
   category_id: number;
-  seller_id: number | null;
+  shop_id: number | null;
   name: string;
   slug: string;
   description: string | null;
@@ -49,6 +56,7 @@ export interface Product {
   updated_at: string;
   variants: ProductVariant[];
   images: ProductImage[];
+  shop?: ShopSummary;
 }
 
 export interface ProductListItem {

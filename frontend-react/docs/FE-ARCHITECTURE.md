@@ -17,6 +17,7 @@ graph TB
             Auth["auth"]
             UP["user-profile"]
             Prod["product"]
+            Shop["shop"]
             Cart["cart"]
             Order["order"]
             Review["review"]
@@ -78,6 +79,7 @@ src/
 │   ├── auth/                          — login, register, token refresh, logout, admin roles/permissions/users
 │   ├── user-profile/                  — profile view/edit, address CRUD, default address
 │   ├── product/                       — listing, detail, category tree, admin CRUD
+│   ├── shop/                          — public shop profile, seller shop settings
 │   ├── cart/                          — cart view, add/update/remove, guest cart, merge
 │   ├── order/                         — checkout, order history, detail, admin management
 │   ├── review/                        — create review, product reviews, my reviews, admin reviews
@@ -195,6 +197,7 @@ graph TD
     Auth["auth — identity + tokens"]
     UP["user-profile"] --> Auth
     Product["product"]
+    Shop["shop"] --> Product
     Cart["cart"] --> Auth
     Cart --> Product
     Order["order"] --> Auth
@@ -210,6 +213,7 @@ graph TD
 
     Dashboard["dashboard"] --> Auth
 
+    Product -.->|ShopInfoCard| Shop
     Order -.->|cache invalidation| Cart
     Review -.->|cache invalidation| Product
 ```
@@ -235,8 +239,9 @@ graph TD
 |------|------|---------|
 | `/` | Home (product listing) | product |
 | `/products` | ProductListPage | product |
-| `/products/:slug` | ProductDetailPage | product + cart + review + wishlist |
+| `/products/:slug` | ProductDetailPage | product + cart + review + wishlist + shop |
 | `/categories/:slug` | CategoryPage | product |
+| `/shops/:slug` | ShopProfilePage | shop + product |
 | `/login` | LoginPage | auth |
 | `/register` | RegisterPage | auth |
 
@@ -275,6 +280,24 @@ graph TD
 | `/admin/coupons` | AdminCouponListPage | coupon |
 | `/admin/coupons/new` | AdminCouponCreatePage | coupon |
 | `/admin/coupons/:id/edit` | AdminCouponEditPage | coupon |
+
+### Seller Routes (AuthGuard + PortalGuard)
+
+| Path | Page | Feature |
+|------|------|---------|
+| `/seller/dashboard` | SellerDashboardPage | dashboard |
+| `/seller/shop` | SellerShopSettingsPage | shop |
+| `/seller/products` | SellerProductListPage | product |
+| `/seller/products/new` | SellerProductCreatePage | product |
+| `/seller/products/:id/edit` | SellerProductEditPage | product |
+| `/seller/orders` | SellerOrderListPage | order |
+
+### Shipper Routes (AuthGuard + PortalGuard)
+
+| Path | Page | Feature |
+|------|------|---------|
+| `/shipper/dashboard` | ShipperDashboardPage | dashboard |
+| `/shipper/deliveries` | ShipperDeliveryListPage | order |
 
 **Config:** `createBrowserRouter` in `core/router/router.tsx`. Each page lazy-loaded via `React.lazy`. Layouts as route parents. 404 catch-all → NotFoundPage.
 
@@ -335,6 +358,12 @@ export const wishlistKeys = {
   bulkCheck: (productIds: number[]) => ['wishlist', 'bulkCheck', productIds] as const,
 };
 
+export const shopKeys = {
+  all:      ['shops'] as const,
+  detail:   (slug: string) => ['shops', 'detail', slug] as const,
+  products: (slug: string, params: Record<string, unknown>) => ['shops', 'products', slug, params] as const,
+};
+
 export const dashboardKeys = {
   stats: () => ['dashboard', 'stats'] as const,
 };
@@ -357,6 +386,7 @@ export const adminCouponKeys = {
 | Login + cart merge | `cartKeys.current()` |
 | Wishlist add/remove | `wishlistKeys.all` + `wishlistKeys.check(productId)` |
 | Admin coupon create/update/deactivate | `adminCouponKeys.all` |
+| Seller shop create/update | `['seller', 'shop']` |
 
 ---
 

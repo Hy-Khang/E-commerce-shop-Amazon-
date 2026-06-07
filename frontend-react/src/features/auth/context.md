@@ -27,10 +27,17 @@ Handles user authentication: login, register, token refresh, logout, and logout 
 - `AdminRoleListPage` — CRUD table for roles with create/edit modal
 - `AdminUserListPage` — paginated user table with search, filter by role/status, sort
 - `AdminUserDetailPage` — user profile + order/review counts + ban/unban + change role
+- `AdminPermissionPage` — two-tab layout: Permission Matrix (role×permission toggle grid) + Manage Permissions (resource-grouped CRUD)
 
 ## Admin API Dependencies
 - `GET/POST/PATCH/DELETE /admin/roles` — role management
+- `GET /admin/roles/:id/permissions` — list role's permissions
+- `PUT /admin/roles/:id/permissions` — sync (replace all) permissions for a role
 - `GET /admin/users` — paginated user list with filters
 - `GET /admin/users/:id` — user detail with stats
 - `PATCH /admin/users/:id/activate` — toggle ban/unban
 - `PATCH /admin/users/:id/role` — change user role
+- `GET /admin/permissions` — list all permissions
+- `POST /admin/permissions` — create permission
+- `PATCH /admin/permissions/:id` — update permission
+- `DELETE /admin/permissions/:id` — delete permission

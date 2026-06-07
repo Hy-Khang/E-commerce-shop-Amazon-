@@ -6,9 +6,10 @@ Checkout from cart, order history, order detail, cancel pending orders, admin or
 ## Pages
 - `CheckoutPage` — address selection, payment method, place order
 - `OrderHistoryPage` — paginated list of user's orders
-- `OrderDetailPage` — order info + order items + cancel action
+- `OrderDetailPage` — order info + order items (with shop name snapshots) + cancel action
 - `AdminOrderListPage` — all orders with status/payment filters
 - `AdminOrderDetailPage` — admin view with status transition + payment controls
+- `SellerOrderListPage` — seller's orders filtered by their shop
 
 ## API Dependencies
 - `POST /orders` — checkout (creates order from cart)

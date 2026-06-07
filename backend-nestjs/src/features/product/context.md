@@ -5,22 +5,25 @@ Manages the product catalog: categories, products, variants, and images. Serves 
 
 ## Owned Entities
 - `categories` — self-referencing hierarchy (parent_id)
-- `products` — main product records with soft-delete via is_active
+- `products` — main product records with soft-delete via is_active, FK to shops via shop_id
 - `product_variants` — SKU/color/size/price/stock per variant (transaction hub)
 - `product_images` — multiple images per product with sort ordering
 
 ## Controllers
 - `ProductController` — public endpoints (GET /products, /categories)
+- `SellerProductController` — seller CRUD for own products/variants/images
 - `AdminProductController` — admin CRUD for products, variants, images
 - `AdminCategoryController` — admin CRUD for categories
 
 ## Cross-Feature Dependencies
+- **Imports:** `ShopModule` — resolves seller's shop for product ownership and active status checks
 - **Exports:** `ProductService` (consumed by cart, order, review modules)
 - **Listens to:** `order.created` (deduct stock), `order.cancelled` (restore stock)
-- **No imports** from other feature modules
 
 ## Key Decisions
 - Variants are the transaction hub — cart_items and order_items FK to product_variants, not products
+- Products belong to shops (shop_id), not directly to users — public queries join shops and filter `status = 'active'`
+- `assertSellerCanModifyProduct(userId, productId)` centralizes ownership + active status checks for all seller write operations
 - Stock deduction uses optimistic locking (atomic UPDATE with WHERE stock_quantity >= qty)
 - Products use eager loading for variants and images (always needed for display)
 - Categories support N-level nesting via self-referencing parent_id

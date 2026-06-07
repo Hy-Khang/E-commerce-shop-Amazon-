@@ -1,7 +1,7 @@
 # Product Feature
 
 ## Purpose
-Product catalog browsing (public) and product management (admin). Covers product listing, detail with variants + images, category navigation, and full admin CRUD for products, variants, images, and categories.
+Product catalog browsing (public) and product management (admin + seller). Covers product listing, detail with variants + images, category navigation, full admin CRUD, and seller product management.
 
 ## Pages
 
@@ -14,10 +14,15 @@ Product catalog browsing (public) and product management (admin). Covers product
 | AdminProductListPage | `/admin/products` | Admin |
 | AdminProductCreatePage | `/admin/products/new` | Admin |
 | AdminProductEditPage | `/admin/products/:id/edit` | Admin |
+| SellerProductListPage | `/seller/products` | Seller |
+| SellerProductCreatePage | `/seller/products/new` | Seller |
+| SellerProductEditPage | `/seller/products/:id/edit` | Seller |
 
 ## API Endpoints
 
 **Public:** `GET /products`, `GET /products/:slug`, `GET /categories`, `GET /categories/:slug`
+
+**Seller:** `GET /seller/products`, `POST /seller/products`, `GET /seller/products/:id`, `PATCH /seller/products/:id`, `PATCH /seller/products/:id/activate`, `POST/PATCH/DELETE /seller/variants`, `POST/PATCH/DELETE /seller/images`
 
 **Admin:** `GET/POST/PATCH /admin/products`, `PATCH /admin/products/:id/activate`, `POST /admin/products/:id/variants`, `PATCH/DELETE /admin/variants/:id`, `POST /admin/products/:id/images`, `PATCH/DELETE /admin/images/:id`, `GET/POST/PATCH/DELETE /admin/categories`
 
@@ -27,6 +32,8 @@ Product catalog browsing (public) and product management (admin). Covers product
 - Prefetch product detail on card hover
 
 ## Cross-Feature Dependencies
-- **auth** — admin guards handled by router (AuthGuard + RoleGuard)
-- **cart** — ProductDetailPage has inline add-to-cart button (will import AddToCartButton from cart feature when available)
-- **review** — ProductDetailPage can render review list when review feature is built
+- **auth** — admin/seller guards handled by router (AuthGuard + PortalGuard)
+- **shop** — ProductDetailPage shows ShopInfoCard linking to shop profile page
+- **cart** — ProductDetailPage has inline AddToCartButton
+- **review** — ProductDetailPage renders ReviewList
+- **wishlist** — ProductDetailPage and ProductCard render WishlistButton

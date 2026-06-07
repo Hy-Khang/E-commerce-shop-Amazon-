@@ -61,6 +61,7 @@ src/features/[feature-name]/
 | Review | `src/features/review/` | Create review (purchase-verified), product reviews, my reviews, admin reviews |
 | Wishlist | `src/features/wishlist/` | Add/remove products, wishlist page, admin popular analytics |
 | Coupon | `src/features/coupon/` | Coupon validation at checkout, admin CRUD, usage tracking |
+| Shop | `src/features/shop/` | Public shop profile, seller shop settings, shop info on product detail |
 | Dashboard | `src/features/dashboard/` | Admin analytics dashboard (charts, stats, top products, low stock alerts) |
 
 ---

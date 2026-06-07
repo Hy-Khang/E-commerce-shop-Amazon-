@@ -125,7 +125,41 @@
 
 ---
 
-### 2.3 Product Catalog Feature
+### 2.3 Shop Feature
+
+#### `shops`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id`, NOT NULL, UNIQUE — 1:1 relationship |
+| name | NVARCHAR(100) | NOT NULL |
+| slug | NVARCHAR(100) | NOT NULL, UNIQUE — SEO-friendly URL, immutable after creation |
+| description | NVARCHAR(MAX) | NULL |
+| logo_url | NVARCHAR(500) | NULL |
+| banner_url | NVARCHAR(500) | NULL |
+| status | NVARCHAR(30) | NOT NULL, DEFAULT `'pending_verification'`, CHECK IN (`pending_verification`, `active`, `suspended`, `banned`) |
+| verified_at | DATETIME2 | NULL — set when admin approves (preserved permanently) |
+| verified_by | INT | FK → `users.id` ON DELETE SET NULL, NULL — admin who approved |
+| suspended_at | DATETIME2 | NULL — set on latest suspension |
+| banned_at | DATETIME2 | NULL — set on ban |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_shops_user_id` | user_id | Lookup shop by user (also covered by UNIQUE) |
+| `idx_shops_status` | status | Filter shops by status |
+
+> **1:1 with users:** Each seller has exactly one shop. UNIQUE constraint on `user_id` enforces this. Race condition on concurrent POST handled by catching SQL Server error 2627/2601 → mapped to SHOP_002.
+> **Status lifecycle:** `pending_verification` → `active` → `suspended`/`banned`. `verified_at`/`verified_by` are set once on first approval and preserved permanently. `suspended_at`/`banned_at` are overwritten on each state change.
+> **Public visibility:** Products from shops with `status != 'active'` are hidden from the public storefront. All public product queries join shops and filter `shops.status = 'active'`.
+
+---
+
+### 2.4 Product Catalog Feature
 
 #### `categories`
 
@@ -144,6 +178,7 @@
 |-------|------|-------------|
 | id | INT | PK, auto-increment |
 | category_id | INT | FK → `categories.id`, NOT NULL |
+| shop_id | INT | FK → `shops.id`, NULL — links product to seller's shop |
 | name | NVARCHAR(255) | NOT NULL |
 | slug | NVARCHAR(255) | NOT NULL, UNIQUE — SEO-friendly URL |
 | description | NVARCHAR(MAX) | NULL |
@@ -159,6 +194,7 @@
 | Index | Column(s) | Purpose |
 |-------|-----------|---------|
 | `idx_products_category_id` | category_id | Filter products by category |
+| `idx_products_shop_id` | shop_id | Filter products by shop |
 
 > **Flexible variant axes:** Products define their own option labels. A clothing product might use "Color" + "Size", while a phone uses "Storage" + "Color". Labels are snapshotted into `order_items.variant_option*_label` at checkout.
 
@@ -197,7 +233,7 @@
 
 ---
 
-### 2.4 Cart Feature
+### 2.5 Cart Feature
 
 #### `carts`
 
@@ -221,7 +257,7 @@
 
 ---
 
-### 2.5 Order Feature
+### 2.6 Order Feature
 
 #### `orders`
 
@@ -253,6 +289,8 @@
 | id | INT | PK, auto-increment |
 | order_id | INT | FK → `orders.id`, NOT NULL |
 | product_variant_id | INT | FK → `product_variants.id`, NULL — kept for navigation; NULL if variant deleted |
+| shop_id | INT | NULL — **snapshot** of shop at purchase time |
+| shop_name | NVARCHAR(100) | NULL — **snapshot** of shop name at purchase time |
 | product_name | NVARCHAR(255) | NOT NULL — **snapshot** |
 | sku | NVARCHAR(50) | NOT NULL — **snapshot** |
 | price | DECIMAL(10,2) | NOT NULL — **snapshot** |
@@ -263,11 +301,17 @@
 | variant_option2_label | NVARCHAR(50) | NULL — **snapshot** of `products.option2_label` (e.g. "Kích thước") |
 | variant_option2_value | NVARCHAR(50) | NULL — **snapshot** of `product_variants.option2` (e.g. "L") |
 
-> All snapshot fields are copied at purchase time — immune to future product edits/deletions. The `variant_option*` fields preserve the variant attributes (label from product, value from variant) so order history displays correctly even if the product is later modified.
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_order_items_shop_id` | shop_id | Filter order items by shop |
+
+> All snapshot fields are copied at purchase time — immune to future product edits/deletions. The `variant_option*` fields preserve the variant attributes (label from product, value from variant) so order history displays correctly even if the product is later modified. `shop_id` and `shop_name` are nullable — historical order_items from before the shop feature may have NULL values.
 
 ---
 
-### 2.6 Review Feature
+### 2.7 Review Feature
 
 #### `reviews` — 3-Way Link
 
@@ -285,7 +329,7 @@
 
 ---
 
-### 2.7 Wishlist Feature
+### 2.8 Wishlist Feature
 
 #### `wishlist_items`
 
@@ -302,7 +346,7 @@
 
 ---
 
-### 2.8 Coupon Feature
+### 2.9 Coupon Feature
 
 #### `coupons`
 
@@ -391,11 +435,14 @@ erDiagram
     permissions ||--o{ role_permissions : "assigned to roles"
     users ||--o{ refresh_tokens : "has many"
     users ||--o{ addresses : "has many"
+    users ||--o{ shops : "owns (1:1)"
     users ||--o{ carts : "has many"
     users ||--o{ orders : "has many"
     users ||--o{ reviews : "has many"
     users ||--o{ wishlist_items : "has wishlist"
     users ||--o{ coupon_usages : "used coupons"
+
+    shops ||--o{ products : "sells"
 
     categories ||--o{ categories : "parent → children"
     categories ||--o{ products : "contains"
@@ -422,6 +469,8 @@ erDiagram
 
 **Key relationships to note:**
 - **`roles` ↔ `permissions`** linked via `role_permissions` junction — dynamic RBAC, not hardcoded role checks
+- **`users` → `shops`** is 1:1 (UNIQUE on `user_id`) — each seller has exactly one shop
+- **`shops` → `products`** — products belong to shops, not directly to users. Public product queries join shops and filter `status = 'active'`
 - **`product_variants`** is the transaction hub — both `cart_items` and `order_items` FK here, not to `products`
 - **`products`** defines `option1_label`/`option2_label`, **`product_variants`** stores `option1`/`option2` values — generic axes, not `color`/`size`
 - **`reviews`** has a 3-way link: `user_id` + `product_id` + `order_id`
@@ -438,8 +487,8 @@ erDiagram
 | Soft delete | `is_active` (BIT) on `users`, `products` |
 | Soft revoke | `is_revoked` (BIT) on `refresh_tokens` |
 | Timestamps | `created_at`, `updated_at` — `DATETIME2` |
-| Enums | String columns: `orders.status`, `payment_method`, `payment_status` |
-| SEO slugs | `slug` (UNIQUE) on `categories`, `products` |
+| Enums | String columns: `orders.status`, `payment_method`, `payment_status`, `shops.status` |
+| SEO slugs | `slug` (UNIQUE) on `categories`, `products`, `shops` |
 | Unicode | `NVARCHAR` everywhere — Vietnamese names, addresses |
 | Money | `DECIMAL(10,2)` — never `FLOAT` or `MONEY` |
 | JSON columns | `NVARCHAR(MAX)` — `orders.shipping_address` |
@@ -491,6 +540,7 @@ export class ProductVariant {
 |---------|----------|----------|--------|
 | Product Catalog | `product.variants` | Eager | Always needed when displaying products |
 | Product Catalog | `product.images` | Eager | Always shown in product detail |
+| Product Catalog | `product.shop` | Lazy | Loaded via join in public queries for active shop filter |
 | Cart | `cartItem.product_variant` | Eager | Need variant info for cart display |
 | Order | `order.order_items` | Lazy | Only load when viewing order detail |
 | Review | `review.user` | Lazy | Load only when rendering review list |
@@ -509,18 +559,19 @@ export class ProductVariant {
 4. users
 5. refresh_tokens
 6. addresses
-7. categories
-8. products
-9. product_variants + product_images  (parallel — both FK to products)
-10. carts
-11. cart_items
-12. orders  (includes coupon_code, discount_amount columns)
-13. order_items
-14. reviews  (FKs to users, products, orders)
-15. wishlist_items  (FKs to users, products)
-16. coupons
-17. coupon_categories + coupon_products  (parallel — both FK to coupons)
-18. coupon_usages  (FKs to coupons, users, orders)
+7. shops  (FK to users)
+8. categories
+9. products  (FKs to categories, shops)
+10. product_variants + product_images  (parallel — both FK to products)
+11. carts
+12. cart_items
+13. orders  (includes coupon_code, discount_amount columns)
+14. order_items  (includes shop_id, shop_name snapshots)
+15. reviews  (FKs to users, products, orders)
+16. wishlist_items  (FKs to users, products)
+17. coupons
+18. coupon_categories + coupon_products  (parallel — both FK to coupons)
+19. coupon_usages  (FKs to coupons, users, orders)
 ```
 
 ### Commands
@@ -566,10 +617,14 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | refresh_tokens | `idx_refresh_tokens_token_hash` | token_hash | Token lookup on every request |
 | refresh_tokens | `idx_refresh_tokens_user_id` | user_id | Logout all devices |
 | refresh_tokens | `idx_refresh_tokens_expires_at` | expires_at | Scheduled cleanup job |
+| shops | `idx_shops_user_id` | user_id | Lookup shop by user |
+| shops | `idx_shops_status` | status | Filter shops by status |
 | products | `idx_products_category_id` | category_id | Filter products by category |
+| products | `idx_products_shop_id` | shop_id | Filter products by shop |
 | product_variants | `idx_product_variants_product_options` | product_id, option1, option2 | Lookup variants by product + options |
 | product_variants | `idx_product_variants_sku` | sku | Already covered by UNIQUE |
 | order_items | `idx_order_items_order_id` | order_id | Load items for an order |
+| order_items | `idx_order_items_shop_id` | shop_id | Filter order items by shop |
 | orders | `idx_orders_user_id` | user_id | User's order history |
 | reviews | `idx_reviews_product_id` | product_id | Product review listing |
 | cart_items | `idx_cart_items_cart_id` | cart_id | Load cart contents |

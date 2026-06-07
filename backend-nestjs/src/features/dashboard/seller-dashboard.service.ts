@@ -1,26 +1,33 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DashboardRepository } from './repositories/dashboard.repository';
+import { ShopService } from '../shop/shop.service';
 import type { ISellerDashboardStats } from './types/dashboard.types';
 
 @Injectable()
 export class SellerDashboardService {
   private readonly logger = new Logger(SellerDashboardService.name);
 
-  constructor(private readonly dashboardRepository: DashboardRepository) {}
+  constructor(
+    private readonly dashboardRepository: DashboardRepository,
+    private readonly shopService: ShopService,
+  ) {}
 
-  async getSellerDashboard(sellerId: number): Promise<ISellerDashboardStats> {
+  async getSellerDashboard(userId: number): Promise<ISellerDashboardStats> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    const shopId = shop.id;
+
     const results = await Promise.allSettled([
-      this.dashboardRepository.getSellerSummaryStats(sellerId),
-      this.dashboardRepository.getSellerRevenueOverTime(sellerId, 30),
-      this.dashboardRepository.getSellerTopProducts(sellerId, 5),
-      this.dashboardRepository.getSellerRecentOrders(sellerId, 10),
-      this.dashboardRepository.getSellerLowStockAlerts(sellerId, 10),
+      this.dashboardRepository.getSellerSummaryStats(shopId),
+      this.dashboardRepository.getSellerRevenueOverTime(shopId, 30),
+      this.dashboardRepository.getSellerTopProducts(shopId, 5),
+      this.dashboardRepository.getSellerRecentOrders(shopId, 10),
+      this.dashboardRepository.getSellerLowStockAlerts(shopId, 10),
     ]);
 
     for (const [i, result] of results.entries()) {
       if (result.status === 'rejected') {
         this.logger.error(
-          `Seller dashboard query ${i} failed for seller ${sellerId}: ${result.reason}`,
+          `Seller dashboard query ${i} failed for shop ${shopId} (user ${userId}): ${result.reason}`,
         );
       }
     }

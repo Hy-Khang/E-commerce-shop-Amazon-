@@ -63,7 +63,7 @@ export class SellerProductController {
 
   @Post('products')
   @Permissions(PERMISSIONS.PRODUCTS_CREATE)
-  @ApiOperation({ summary: 'Create product (auto-assigns seller_id)' })
+  @ApiOperation({ summary: 'Create product (auto-assigns shop_id)' })
   @ApiResponse({ status: 201, description: 'Product created', type: ProductResponseDto })
   @ApiResponse({ status: 404, description: 'PRODUCT_004: Category not found' })
   @ApiResponse({ status: 409, description: 'PRODUCT_005: Duplicate slug' })

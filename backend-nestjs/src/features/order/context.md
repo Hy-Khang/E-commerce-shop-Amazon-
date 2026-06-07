@@ -4,13 +4,13 @@
 Checkout, order creation with immutable snapshots, status management.
 
 ## Owned Entities
-- `orders` — status, payment, shipping address (JSON snapshot)
-- `order_items` — immutable snapshots of product data at purchase time
+- `orders` — status, payment, shipping address (JSON snapshot), coupon snapshots
+- `order_items` — immutable snapshots of product data at purchase time, including shop_id + shop_name snapshots
 
 ## Dependencies
 - AuthModule — user identity
 - CartModule — read cart at checkout
-- ProductModule — validate stock, snapshot product data
+- ProductModule — validate stock, snapshot product data (including shop info)
 
 ## Events Emitted
 - `order.created` — triggers stock deduction in ProductModule

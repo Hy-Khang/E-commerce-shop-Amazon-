@@ -6,10 +6,12 @@ import { ProductSeed } from './seeds/product.seed';
 import { OrderSeed } from './seeds/order.seed';
 import { ReviewSeed } from './seeds/review.seed';
 import { CouponSeed } from './seeds/coupon.seed';
+import { ShopSeed } from './seeds/shop.seed';
 
 const ALL_SEEDS: ISeed[] = [
   AuthSeed,
   UserProfileSeed,
+  ShopSeed,
   ProductSeed,
   OrderSeed,
   ReviewSeed,
@@ -32,6 +34,7 @@ const DELETE_ORDER = [
   'product_variants',
   'products',
   'categories',
+  'shops',
   'addresses',
   'refresh_tokens',
   'users',

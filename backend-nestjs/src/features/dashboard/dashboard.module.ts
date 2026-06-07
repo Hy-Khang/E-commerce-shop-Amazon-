@@ -6,9 +6,10 @@ import { DashboardService } from './dashboard.service';
 import { SellerDashboardController } from './seller-dashboard.controller';
 import { SellerDashboardService } from './seller-dashboard.service';
 import { DashboardRepository } from './repositories/dashboard.repository';
+import { ShopModule } from '../shop/shop.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order])],
+  imports: [TypeOrmModule.forFeature([Order]), ShopModule],
   controllers: [DashboardController, SellerDashboardController],
   providers: [DashboardService, SellerDashboardService, DashboardRepository],
 })

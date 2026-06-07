@@ -18,6 +18,7 @@ graph TB
             Auth["auth<br/>roles, permissions, role_permissions,<br/>users, refresh_tokens"]
             UP["user-profile<br/>addresses"]
             Prod["product<br/>categories, products,<br/>variants, images"]
+            Shop["shop<br/>shops"]
             Cart["cart<br/>carts, cart_items"]
             Order["order<br/>orders, order_items"]
             Review["review<br/>reviews"]
@@ -90,6 +91,7 @@ src/
     ├── auth/                            — owns: roles, permissions, role_permissions, users, refresh_tokens
     ├── user-profile/                    — owns: addresses
     ├── product/                         — owns: categories, products, product_variants, product_images
+    ├── shop/                            — owns: shops (1:1 with users, seller storefront identity)
     ├── cart/                            — owns: carts, cart_items
     ├── order/                           — owns: orders, order_items
     ├── review/                          — owns: reviews
@@ -208,8 +210,10 @@ Request
 graph TD
     Auth["auth<br/>(user identity)"]
     UP["user-profile"] --> Auth
+    Shop["shop"] --> Auth
     Cart["cart"] --> Auth
     Cart --> Product["product<br/>(stock owner)"]
+    Product --> Shop
     Order["order"] --> Auth
     Order --> Cart
     Order --> Product
@@ -224,6 +228,7 @@ graph TD
     Dashboard["dashboard"] --> Order
     Dashboard --> Product
     Dashboard --> Auth
+    Dashboard --> Shop
 
     Order -.->|event: order.created| Product
     Order -.->|event: order.cancelled| Product
@@ -243,14 +248,15 @@ graph TD
 |---------|----------------|-------------------|
 | auth | — | — |
 | user-profile | AuthModule | — |
-| product | — | `order.created`, `order.cancelled` |
+| shop | AuthModule | — |
+| product | ShopModule | `order.created`, `order.cancelled` |
 | cart | AuthModule, ProductModule | — |
 | order | AuthModule, CartModule, ProductModule | — |
 | review | AuthModule, OrderModule, ProductModule | — |
 | wishlist | ProductModule | — |
 | coupon | — | — |
 | upload | — | — |
-| dashboard | TypeOrmModule (Order entity) | — |
+| dashboard | TypeOrmModule (Order entity), ShopModule | — |
 
 **Forbidden:** direct import of another feature's repository/entity/dto file, circular module dependencies.
 

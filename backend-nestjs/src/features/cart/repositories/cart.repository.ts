@@ -13,14 +13,14 @@ export class CartRepository {
   async findByUserId(userId: number): Promise<Cart | null> {
     return this.repo.findOne({
       where: { user_id: userId },
-      relations: ['items', 'items.product_variant', 'items.product_variant.product'],
+      relations: ['items', 'items.product_variant', 'items.product_variant.product', 'items.product_variant.product.shop'],
     });
   }
 
   async findBySessionId(sessionId: string): Promise<Cart | null> {
     return this.repo.findOne({
       where: { session_id: sessionId },
-      relations: ['items', 'items.product_variant', 'items.product_variant.product'],
+      relations: ['items', 'items.product_variant', 'items.product_variant.product', 'items.product_variant.product.shop'],
     });
   }
 

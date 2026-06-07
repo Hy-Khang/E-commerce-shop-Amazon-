@@ -12,6 +12,7 @@ import { WishlistModule } from './features/wishlist/wishlist.module';
 import { CouponModule } from './features/coupon/coupon.module';
 import { UploadModule } from './features/upload/upload.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
+import { ShopModule } from './features/shop/shop.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -30,6 +31,7 @@ import { AppService } from './app.service';
     CouponModule,
     UploadModule,
     DashboardModule,
+    ShopModule,
   ],
   controllers: [AppController],
   providers: [AppService],

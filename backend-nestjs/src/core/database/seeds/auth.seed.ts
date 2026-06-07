@@ -11,6 +11,7 @@ const SELLER_PERMISSIONS = [
   'orders:read',
   'uploads:create',
   'dashboard:read',
+  'shops:create', 'shops:read', 'shops:update',
 ];
 
 const SHIPPER_PERMISSIONS = [
@@ -48,6 +49,9 @@ const SEED_PERMISSIONS = [
   { resource: 'wishlist', action: 'read', name: 'Read Wishlist Analytics' },
   { resource: 'uploads', action: 'create', name: 'Upload Files' },
   { resource: 'dashboard', action: 'read', name: 'Read Dashboard' },
+  { resource: 'shops', action: 'create', name: 'Create Shop' },
+  { resource: 'shops', action: 'read', name: 'Read Shops' },
+  { resource: 'shops', action: 'update', name: 'Update Shop' },
 ];
 
 export const AuthSeed: ISeed = {

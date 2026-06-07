@@ -31,7 +31,7 @@ export class DashboardRepository {
           .select('COALESCE(SUM(total_amount), 0)', 'totalRevenue')
           .from('orders', 'o')
           .where("o.payment_status = 'paid'")
-          .andWhere("o.status != 'cancelled'")
+          .andWhere("o.status = 'delivered'")
           .getRawOne(),
         mgr
           .createQueryBuilder()
@@ -68,7 +68,7 @@ export class DashboardRepository {
       .addSelect('COALESCE(SUM(o.total_amount), 0)', 'revenue')
       .from('orders', 'o')
       .where("o.payment_status = 'paid'")
-      .andWhere("o.status != 'cancelled'")
+      .andWhere("o.status = 'delivered'")
       .andWhere('o.created_at >= DATEADD(DAY, :days, GETUTCDATE())', {
         days: -days,
       })
@@ -159,7 +159,7 @@ export class DashboardRepository {
       .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
       .innerJoin('products', 'p', 'pv.product_id = p.id')
       .where("o.payment_status = 'paid'")
-      .andWhere("o.status != 'cancelled'")
+      .andWhere("o.status = 'delivered'")
       .groupBy('p.id')
       .addGroupBy('p.name')
       .addGroupBy('p.thumbnail_url')
@@ -205,7 +205,7 @@ export class DashboardRepository {
     }));
   }
 
-  async getSellerSummaryStats(sellerId: number): Promise<ISellerSummaryStats> {
+  async getSellerSummaryStats(shopId: number): Promise<ISellerSummaryStats> {
     const mgr = this.repo.manager;
 
     const [revenueResult, orderResult, productResult, lowStockResult] =
@@ -217,9 +217,9 @@ export class DashboardRepository {
           .innerJoin('orders', 'o', 'oi.order_id = o.id')
           .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
           .innerJoin('products', 'p', 'pv.product_id = p.id')
-          .where('p.seller_id = :sellerId', { sellerId })
+          .where('p.shop_id = :shopId', { shopId })
           .andWhere("o.payment_status = 'paid'")
-          .andWhere("o.status != 'cancelled'")
+          .andWhere("o.status = 'delivered'")
           .getRawOne(),
         mgr
           .createQueryBuilder()
@@ -228,15 +228,15 @@ export class DashboardRepository {
           .innerJoin('orders', 'o', 'oi.order_id = o.id')
           .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
           .innerJoin('products', 'p', 'pv.product_id = p.id')
-          .where('p.seller_id = :sellerId', { sellerId })
+          .where('p.shop_id = :shopId', { shopId })
           .andWhere("o.payment_status = 'paid'")
-          .andWhere("o.status != 'cancelled'")
+          .andWhere("o.status = 'delivered'")
           .getRawOne(),
         mgr
           .createQueryBuilder()
           .select('COUNT(*)', 'totalProducts')
           .from('products', 'p')
-          .where('p.seller_id = :sellerId', { sellerId })
+          .where('p.shop_id = :shopId', { shopId })
           .andWhere('p.is_active = 1')
           .getRawOne(),
         mgr
@@ -244,7 +244,7 @@ export class DashboardRepository {
           .select('COUNT(*)', 'lowStockCount')
           .from('product_variants', 'pv')
           .innerJoin('products', 'p', 'pv.product_id = p.id')
-          .where('p.seller_id = :sellerId', { sellerId })
+          .where('p.shop_id = :shopId', { shopId })
           .andWhere('p.is_active = 1')
           .andWhere('pv.stock_quantity < :threshold', { threshold: 10 })
           .getRawOne(),
@@ -259,7 +259,7 @@ export class DashboardRepository {
   }
 
   async getSellerRevenueOverTime(
-    sellerId: number,
+    shopId: number,
     days: number,
   ): Promise<IRevenueDataPoint[]> {
     const rows = await this.repo.manager
@@ -270,9 +270,9 @@ export class DashboardRepository {
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
       .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
       .innerJoin('products', 'p', 'pv.product_id = p.id')
-      .where('p.seller_id = :sellerId', { sellerId })
+      .where('p.shop_id = :shopId', { shopId })
       .andWhere("o.payment_status = 'paid'")
-      .andWhere("o.status != 'cancelled'")
+      .andWhere("o.status = 'delivered'")
       .andWhere('o.created_at >= DATEADD(DAY, :days, GETUTCDATE())', {
         days: -days,
       })
@@ -290,7 +290,7 @@ export class DashboardRepository {
   }
 
   async getSellerTopProducts(
-    sellerId: number,
+    shopId: number,
     limit: number,
   ): Promise<ITopProduct[]> {
     const rows = await this.repo.manager
@@ -306,9 +306,9 @@ export class DashboardRepository {
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
       .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
       .innerJoin('products', 'p', 'pv.product_id = p.id')
-      .where('p.seller_id = :sellerId', { sellerId })
+      .where('p.shop_id = :shopId', { shopId })
       .andWhere("o.payment_status = 'paid'")
-      .andWhere("o.status != 'cancelled'")
+      .andWhere("o.status = 'delivered'")
       .groupBy('p.id')
       .addGroupBy('p.name')
       .addGroupBy('p.thumbnail_url')
@@ -326,7 +326,7 @@ export class DashboardRepository {
   }
 
   async getSellerRecentOrders(
-    sellerId: number,
+    shopId: number,
     limit: number,
   ): Promise<ISellerRecentOrder[]> {
     const rows = await this.repo.manager
@@ -344,7 +344,7 @@ export class DashboardRepository {
       .innerJoin('users', 'u', 'o.user_id = u.id')
       .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
       .innerJoin('products', 'p', 'pv.product_id = p.id')
-      .where('p.seller_id = :sellerId', { sellerId })
+      .where('p.shop_id = :shopId', { shopId })
       .groupBy('o.id')
       .addGroupBy('u.full_name')
       .addGroupBy('o.status')
@@ -365,7 +365,7 @@ export class DashboardRepository {
   }
 
   async getSellerLowStockAlerts(
-    sellerId: number,
+    shopId: number,
     threshold: number,
   ): Promise<ILowStockAlert[]> {
     const rows = await this.repo.manager
@@ -380,7 +380,7 @@ export class DashboardRepository {
       ])
       .from('product_variants', 'pv')
       .innerJoin('products', 'p', 'pv.product_id = p.id')
-      .where('p.seller_id = :sellerId', { sellerId })
+      .where('p.shop_id = :shopId', { shopId })
       .andWhere('p.is_active = 1')
       .andWhere('pv.stock_quantity < :threshold', { threshold })
       .orderBy('pv.stock_quantity', 'ASC')

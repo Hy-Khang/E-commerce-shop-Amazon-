@@ -1,11 +1,12 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Store } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 
 const sellerLinks: Array<{ to: string; label: string; icon: LucideIcon; permission: string }> = [
   { to: '/seller/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.DASHBOARD_READ },
+  { to: '/seller/shop', label: 'Shop Settings', icon: Store, permission: PERMISSIONS.SHOPS_READ },
   { to: '/seller/products', label: 'Products', icon: Package, permission: PERMISSIONS.PRODUCTS_READ },
   { to: '/seller/orders', label: 'Orders', icon: ShoppingCart, permission: PERMISSIONS.ORDERS_READ },
 ];

@@ -4,6 +4,7 @@ import { formatPrice } from '@/common/utils/format.util';
 import { AddToCartButton } from '@/features/cart';
 import { ReviewList } from '@/features/review';
 import { WishlistButton } from '@/features/wishlist';
+import { ShopInfoCard } from '@/features/shop/components/ShopInfoCard';
 import { useProduct } from '../hooks/useProduct';
 import { ImageGallery } from '../components/ImageGallery';
 import { VariantSelector } from '../components/VariantSelector';
@@ -96,6 +97,10 @@ export default function ProductDetailPage() {
           )}
         </div>
       </div>
+
+      {product.shop && (
+        <ShopInfoCard shop={product.shop} />
+      )}
 
       <div className="rounded-lg border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold text-gray-900">Customer Reviews</h2>

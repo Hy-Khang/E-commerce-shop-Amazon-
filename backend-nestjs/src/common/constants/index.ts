@@ -16,3 +16,10 @@ export enum PaymentStatus {
   Unpaid = 'unpaid',
   Paid = 'paid',
 }
+
+export enum ShopStatus {
+  PendingVerification = 'pending_verification',
+  Active = 'active',
+  Suspended = 'suspended',
+  Banned = 'banned',
+}

@@ -54,6 +54,11 @@ const SellerProductCreatePage = lazy(() => import('@/features/product/pages/Sell
 const SellerProductEditPage = lazy(() => import('@/features/product/pages/SellerProductEditPage'));
 const SellerOrderListPage = lazy(() => import('@/features/order/pages/SellerOrderListPage'));
 
+const ShopProfilePage = lazy(() => import('@/features/shop/pages/ShopProfilePage'));
+const SellerShopSettingsPage = lazy(() => import('@/features/shop/pages/SellerShopSettingsPage'));
+const AdminShopListPage = lazy(() => import('@/features/shop/pages/AdminShopListPage'));
+const AdminShopDetailPage = lazy(() => import('@/features/shop/pages/AdminShopDetailPage'));
+
 const ShipperDashboardPage = lazy(() => import('@/features/dashboard/pages/ShipperDashboardPage'));
 const ShipperDeliveryListPage = lazy(() => import('@/features/order/pages/ShipperDeliveryListPage'));
 
@@ -75,6 +80,7 @@ export const router = createBrowserRouter([
       { path: 'products', element: <SuspenseWrapper><ProductListPage /></SuspenseWrapper> },
       { path: 'products/:slug', element: <SuspenseWrapper><ProductDetailPage /></SuspenseWrapper> },
       { path: 'categories/:slug', element: <SuspenseWrapper><CategoryPage /></SuspenseWrapper> },
+      { path: 'shops/:slug', element: <SuspenseWrapper><ShopProfilePage /></SuspenseWrapper> },
       { path: 'cart', element: <SuspenseWrapper><CartPage /></SuspenseWrapper> },
 
       {
@@ -116,6 +122,8 @@ export const router = createBrowserRouter([
               { path: 'admin/categories/:id/edit', element: <SuspenseWrapper><AdminCategoryEditPage /></SuspenseWrapper> },
               { path: 'admin/orders', element: <SuspenseWrapper><AdminOrderListPage /></SuspenseWrapper> },
               { path: 'admin/orders/:id', element: <SuspenseWrapper><AdminOrderDetailPage /></SuspenseWrapper> },
+              { path: 'admin/shops', element: <SuspenseWrapper><AdminShopListPage /></SuspenseWrapper> },
+              { path: 'admin/shops/:id', element: <SuspenseWrapper><AdminShopDetailPage /></SuspenseWrapper> },
               { path: 'admin/users', element: <SuspenseWrapper><AdminUserListPage /></SuspenseWrapper> },
               { path: 'admin/users/:id', element: <SuspenseWrapper><AdminUserDetailPage /></SuspenseWrapper> },
               { path: 'admin/roles', element: <SuspenseWrapper><AdminRoleListPage /></SuspenseWrapper> },
@@ -145,6 +153,7 @@ export const router = createBrowserRouter([
               { path: 'seller/products/new', element: <SuspenseWrapper><SellerProductCreatePage /></SuspenseWrapper> },
               { path: 'seller/products/:id/edit', element: <SuspenseWrapper><SellerProductEditPage /></SuspenseWrapper> },
               { path: 'seller/orders', element: <SuspenseWrapper><SellerOrderListPage /></SuspenseWrapper> },
+              { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
             ],
           },
         ],

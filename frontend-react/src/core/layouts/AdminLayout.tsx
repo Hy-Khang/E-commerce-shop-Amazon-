@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Heart,
   Tag,
+  Store,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
@@ -38,6 +39,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
       { to: '/admin/products', label: 'Products', icon: Package, permission: PERMISSIONS.PRODUCTS_READ },
       { to: '/admin/categories', label: 'Categories', icon: FolderTree, permission: PERMISSIONS.CATEGORIES_READ },
       { to: '/admin/orders', label: 'Orders', icon: ShoppingCart, permission: PERMISSIONS.ORDERS_READ },
+      { to: '/admin/shops', label: 'Shops', icon: Store, permission: PERMISSIONS.SHOPS_READ },
       { to: '/admin/coupons', label: 'Coupons', icon: Tag, permission: PERMISSIONS.COUPONS_READ },
     ],
   },

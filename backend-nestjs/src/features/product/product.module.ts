@@ -13,10 +13,12 @@ import { CategoryRepository } from './repositories/category.repository';
 import { ProductRepository } from './repositories/product.repository';
 import { ProductVariantRepository } from './repositories/product-variant.repository';
 import { ProductImageRepository } from './repositories/product-image.repository';
+import { ShopModule } from '../shop/shop.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Category, Product, ProductVariant, ProductImage]),
+    ShopModule,
   ],
   controllers: [ProductController, AdminProductController, AdminCategoryController, SellerProductController],
   providers: [

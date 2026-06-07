@@ -28,6 +28,8 @@ import { ProductImage } from './entities/product-image.entity';
 import { OrderCreatedEvent, OrderCancelledEvent } from './types/product.types';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { ConfigService } from '@nestjs/config';
+import { ShopService } from '../shop/shop.service';
+import { Shop } from '../shop/entities/shop.entity';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 
@@ -43,6 +45,7 @@ export class ProductService {
     private readonly productVariantRepository: ProductVariantRepository,
     private readonly productImageRepository: ProductImageRepository,
     private readonly configService: ConfigService,
+    private readonly shopService: ShopService,
   ) {
     this.uploadDir = this.configService.get<string>('app.uploadDir')!;
   }
@@ -453,34 +456,47 @@ export class ProductService {
 
   // ─── Seller: Products ───
 
-  async verifyProductOwnership(productId: number, sellerId: number): Promise<Product> {
-    const product = await this.productRepository.findByIdAndSeller(productId, sellerId);
+  async assertSellerCanModifyProduct(userId: number, productId: number): Promise<{ shop: Shop; product: Product }> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    this.shopService.assertShopIsActive(shop);
+    const product = await this.productRepository.findById(productId);
+    if (!product || product.shop_id !== shop.id) {
+      throw new ForbiddenException({
+        code: 'AUTH_004',
+        message: 'Product not found or not owned by you',
+      });
+    }
+    return { shop, product };
+  }
+
+  async findSellerProducts(userId: number, query: ProductQueryDto): Promise<IPaginatedResult<Product>> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    return this.productRepository.findAllByShopPaginated(shop.id, query);
+  }
+
+  async findSellerProductById(userId: number, id: number): Promise<Product & { reviewCount: number; avgRating: number }> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    const product = await this.productRepository.findByIdAndShop(id, shop.id);
     if (!product) {
       throw new ForbiddenException({
         code: 'AUTH_004',
         message: 'Product not found or not owned by you',
       });
     }
-    return product;
-  }
-
-  async findSellerProducts(sellerId: number, query: ProductQueryDto): Promise<IPaginatedResult<Product>> {
-    return this.productRepository.findAllBySellerPaginated(sellerId, query);
-  }
-
-  async findSellerProductById(sellerId: number, id: number): Promise<Product & { reviewCount: number; avgRating: number }> {
-    await this.verifyProductOwnership(id, sellerId);
-    const product = await this.productRepository.findByIdWithReviewStats(id);
-    if (!product) {
+    const withStats = await this.productRepository.findByIdWithReviewStats(id);
+    if (!withStats) {
       throw new NotFoundException({
         code: 'PRODUCT_001',
         message: 'Product not found or inactive',
       });
     }
-    return product;
+    return withStats;
   }
 
-  async createProductForSeller(sellerId: number, dto: CreateProductDto): Promise<Product> {
+  async createProductForSeller(userId: number, dto: CreateProductDto): Promise<Product> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    this.shopService.assertShopIsActive(shop);
+
     const slugExists = await this.productRepository.existsBySlug(dto.slug);
     if (slugExists) {
       throw new ConflictException({
@@ -497,27 +513,27 @@ export class ProductService {
       });
     }
 
-    const product = await this.productRepository.create({ ...dto, seller_id: sellerId });
-    this.logger.log(`Seller ${sellerId} created product: ${product.name} (${product.slug})`);
+    const product = await this.productRepository.create({ ...dto, shop_id: shop.id });
+    this.logger.log(`Seller ${userId} (shop ${shop.id}) created product: ${product.name} (${product.slug})`);
     return product;
   }
 
-  async updateProductForSeller(sellerId: number, id: number, dto: UpdateProductDto): Promise<Product> {
-    await this.verifyProductOwnership(id, sellerId);
+  async updateProductForSeller(userId: number, id: number, dto: UpdateProductDto): Promise<Product> {
+    await this.assertSellerCanModifyProduct(userId, id);
     return this.updateProduct(id, dto);
   }
 
-  async toggleProductActiveForSeller(sellerId: number, id: number): Promise<Product> {
-    await this.verifyProductOwnership(id, sellerId);
+  async toggleProductActiveForSeller(userId: number, id: number): Promise<Product> {
+    await this.assertSellerCanModifyProduct(userId, id);
     return this.toggleProductActive(id);
   }
 
-  async addVariantForSeller(sellerId: number, productId: number, dto: CreateVariantDto): Promise<ProductVariant> {
-    await this.verifyProductOwnership(productId, sellerId);
+  async addVariantForSeller(userId: number, productId: number, dto: CreateVariantDto): Promise<ProductVariant> {
+    await this.assertSellerCanModifyProduct(userId, productId);
     return this.addVariant(productId, dto);
   }
 
-  async updateVariantForSeller(sellerId: number, variantId: number, dto: UpdateVariantDto): Promise<ProductVariant> {
+  async updateVariantForSeller(userId: number, variantId: number, dto: UpdateVariantDto): Promise<ProductVariant> {
     const variant = await this.productVariantRepository.findById(variantId);
     if (!variant) {
       throw new NotFoundException({
@@ -525,11 +541,11 @@ export class ProductService {
         message: 'Variant not found',
       });
     }
-    await this.verifyProductOwnership(variant.product_id, sellerId);
+    await this.assertSellerCanModifyProduct(userId, variant.product_id);
     return this.updateVariant(variantId, dto);
   }
 
-  async deleteVariantForSeller(sellerId: number, variantId: number): Promise<void> {
+  async deleteVariantForSeller(userId: number, variantId: number): Promise<void> {
     const variant = await this.productVariantRepository.findById(variantId);
     if (!variant) {
       throw new NotFoundException({
@@ -537,16 +553,16 @@ export class ProductService {
         message: 'Variant not found',
       });
     }
-    await this.verifyProductOwnership(variant.product_id, sellerId);
+    await this.assertSellerCanModifyProduct(userId, variant.product_id);
     return this.deleteVariant(variantId);
   }
 
-  async addImageForSeller(sellerId: number, productId: number, dto: CreateImageDto): Promise<ProductImage> {
-    await this.verifyProductOwnership(productId, sellerId);
+  async addImageForSeller(userId: number, productId: number, dto: CreateImageDto): Promise<ProductImage> {
+    await this.assertSellerCanModifyProduct(userId, productId);
     return this.addImage(productId, dto);
   }
 
-  async updateImageForSeller(sellerId: number, imageId: number, dto: UpdateImageDto): Promise<ProductImage> {
+  async updateImageForSeller(userId: number, imageId: number, dto: UpdateImageDto): Promise<ProductImage> {
     const image = await this.productImageRepository.findById(imageId);
     if (!image) {
       throw new NotFoundException({
@@ -554,14 +570,11 @@ export class ProductService {
         message: 'Image not found',
       });
     }
-    const variant = await this.productRepository.findById(image.product_id);
-    if (variant) {
-      await this.verifyProductOwnership(variant.id, sellerId);
-    }
+    await this.assertSellerCanModifyProduct(userId, image.product_id);
     return this.updateImageSortOrder(imageId, dto);
   }
 
-  async deleteImageForSeller(sellerId: number, imageId: number): Promise<void> {
+  async deleteImageForSeller(userId: number, imageId: number): Promise<void> {
     const image = await this.productImageRepository.findById(imageId);
     if (!image) {
       throw new NotFoundException({
@@ -569,10 +582,7 @@ export class ProductService {
         message: 'Image not found',
       });
     }
-    const product = await this.productRepository.findById(image.product_id);
-    if (product) {
-      await this.verifyProductOwnership(product.id, sellerId);
-    }
+    await this.assertSellerCanModifyProduct(userId, image.product_id);
     return this.deleteImage(imageId);
   }
 

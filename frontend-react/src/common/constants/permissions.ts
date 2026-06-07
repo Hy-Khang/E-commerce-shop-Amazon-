@@ -28,6 +28,9 @@ export const PERMISSIONS = {
   WISHLIST_READ: 'wishlist:read',
   UPLOADS_CREATE: 'uploads:create',
   DASHBOARD_READ: 'dashboard:read',
+  SHOPS_CREATE: 'shops:create',
+  SHOPS_READ: 'shops:read',
+  SHOPS_UPDATE: 'shops:update',
 } as const;
 
 export type PermissionString = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

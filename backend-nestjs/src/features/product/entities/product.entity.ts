@@ -10,11 +10,11 @@ import {
 import { Category } from './category.entity';
 import { ProductVariant } from './product-variant.entity';
 import { ProductImage } from './product-image.entity';
-import { User } from '../../auth/entities/user.entity';
+import { Shop } from '../../shop/entities/shop.entity';
 
 @Entity('products')
 @Index('idx_products_category_id', ['category_id'])
-@Index('idx_products_seller_id', ['seller_id'])
+@Index('idx_products_shop_id', ['shop_id'])
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;
@@ -56,15 +56,15 @@ export class Product {
   category_id: number;
 
   @Column({ type: 'int', nullable: true })
-  seller_id: number | null;
+  shop_id: number | null;
 
   @ManyToOne(() => Category, (category) => category.products)
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
-  @ManyToOne(() => User, { onDelete: 'NO ACTION' })
-  @JoinColumn({ name: 'seller_id' })
-  seller: User;
+  @ManyToOne(() => Shop, { onDelete: 'NO ACTION' })
+  @JoinColumn({ name: 'shop_id' })
+  shop: Shop;
 
   @OneToMany(() => ProductVariant, (variant) => variant.product, {
     eager: true,

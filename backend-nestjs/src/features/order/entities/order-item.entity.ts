@@ -48,6 +48,12 @@ export class OrderItem {
   @Column({ type: 'nvarchar', length: 50, nullable: true })
   variant_option2_value: string | null;
 
+  @Column({ type: 'int', nullable: true })
+  shop_id: number | null;
+
+  @Column({ type: 'nvarchar', length: 100, nullable: true })
+  shop_name: string | null;
+
   @ManyToOne(() => Order, (order) => order.order_items)
   @JoinColumn({ name: 'order_id' })
   order: Order;

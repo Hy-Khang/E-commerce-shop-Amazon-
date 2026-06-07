@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from '../entities/product.entity';
 import { IPaginatedResult } from '../../../common/interfaces/paginated-result.interface';
+import { ShopStatus } from '../../../common/constants';
 
 export interface IProductFilter {
   search?: string;
@@ -24,10 +25,15 @@ export class ProductRepository {
   ) {}
 
   async findBySlug(slug: string): Promise<Product | null> {
-    return this.repo.findOne({
-      where: { slug, is_active: true },
-      relations: ['category', 'variants', 'images'],
-    });
+    return this.repo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.variants', 'variant')
+      .leftJoinAndSelect('product.images', 'image')
+      .leftJoinAndSelect('product.category', 'category')
+      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .where('product.slug = :slug', { slug })
+      .andWhere('product.is_active = :isActive', { isActive: true })
+      .getOne();
   }
 
   async findBySlugAdmin(slug: string): Promise<Product | null> {
@@ -50,6 +56,7 @@ export class ProductRepository {
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
       .leftJoinAndSelect('product.category', 'category')
+      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
       .where('product.is_active = :isActive', { isActive: true });
 
     this.applyFilters(qb, filter);
@@ -159,6 +166,7 @@ export class ProductRepository {
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
+      .innerJoin('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
       .where('product.category_id IN (:...categoryIds)', { categoryIds })
       .andWhere('product.is_active = :isActive', { isActive: true })
       .orderBy('product.created_at', 'DESC');
@@ -173,13 +181,13 @@ export class ProductRepository {
     };
   }
 
-  async findAllBySellerPaginated(sellerId: number, filter: IProductFilter): Promise<IPaginatedResult<Product>> {
+  async findAllByShopPaginated(shopId: number, filter: IProductFilter): Promise<IPaginatedResult<Product>> {
     const qb = this.repo
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
       .leftJoinAndSelect('product.category', 'category')
-      .where('product.seller_id = :sellerId', { sellerId });
+      .where('product.shop_id = :shopId', { shopId });
 
     if (filter.is_active !== undefined) {
       const isActive = filter.is_active === 'true';
@@ -207,9 +215,9 @@ export class ProductRepository {
     };
   }
 
-  async findByIdAndSeller(id: number, sellerId: number): Promise<Product | null> {
+  async findByIdAndShop(id: number, shopId: number): Promise<Product | null> {
     return this.repo.findOne({
-      where: { id, seller_id: sellerId },
+      where: { id, shop_id: shopId },
       relations: ['category', 'variants', 'images'],
     });
   }

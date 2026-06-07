@@ -3,6 +3,7 @@ export const ROUTES = {
   PRODUCTS: '/products',
   PRODUCT_DETAIL: (slug: string) => `/products/${slug}`,
   CATEGORY: (slug: string) => `/categories/${slug}`,
+  SHOP_PROFILE: (slug: string) => `/shops/${slug}`,
 
   LOGIN: '/login',
   REGISTER: '/register',
@@ -33,6 +34,8 @@ export const ROUTES = {
   ADMIN_CATEGORY_EDIT: (id: number) => `/admin/categories/${id}/edit`,
   ADMIN_REVIEWS: '/admin/reviews',
   ADMIN_WISHLIST: '/admin/wishlist',
+  ADMIN_SHOPS: '/admin/shops',
+  ADMIN_SHOP_DETAIL: (id: number) => `/admin/shops/${id}`,
   ADMIN_COUPONS: '/admin/coupons',
   ADMIN_COUPON_CREATE: '/admin/coupons/new',
   ADMIN_COUPON_EDIT: (id: number) => `/admin/coupons/${id}/edit`,
@@ -42,6 +45,7 @@ export const ROUTES = {
   SELLER_PRODUCT_CREATE: '/seller/products/new',
   SELLER_PRODUCT_EDIT: (id: number) => `/seller/products/${id}/edit`,
   SELLER_ORDERS: '/seller/orders',
+  SELLER_SHOP: '/seller/shop',
 
   SHIPPER_DASHBOARD: '/shipper/dashboard',
   SHIPPER_DELIVERIES: '/shipper/deliveries',

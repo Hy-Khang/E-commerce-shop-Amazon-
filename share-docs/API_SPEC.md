@@ -42,7 +42,7 @@ Login → { accessToken (15min), refreshToken (7d) }
 Admin endpoints use **permission-based access control** via `@Permissions()` decorator (not `@Roles()`). Each role has a set of permissions assigned via the `role_permissions` junction table. Permissions follow the `resource:action` format (e.g. `products:create`, `orders:read`, `dashboard:read`).
 
 - **Admin** — all permissions
-- **Seller** — `products:*`, `categories:read`, `orders:read`, `uploads:create`, `dashboard:read`
+- **Seller** — `products:*`, `categories:read`, `orders:read`, `uploads:create`, `dashboard:read`, `shops:create`, `shops:read`, `shops:update`
 - **Shipper** — `orders:read`, `orders:update`, `dashboard:read`
 - **Customer** — no admin permissions (customer actions use JWT auth only)
 
@@ -188,6 +188,11 @@ GET /products?sort=created_at&order=desc
 | PERMISSION_004 | 403 | Cannot assign permissions you don't have (escalation prevention) |
 | PERMISSION_005 | 403 | Cannot modify your own role's permissions |
 | PERMISSION_006 | 400 | Cannot delete system role |
+| SHOP_001 | 404 | Shop not found |
+| SHOP_002 | 409 | Shop already exists for this user (1:1 violation) |
+| SHOP_003 | 409 | Duplicate shop slug |
+| SHOP_004 | 400 | Shop not set up (seller tries product CRUD without a shop) |
+| SHOP_005 | 403 | Shop is not active (status != 'active') |
 
 ### HTTP Status Usage
 
@@ -237,7 +242,23 @@ GET /products?sort=created_at&order=desc
 | GET | `/categories` | List category tree | Public |
 | GET | `/categories/:slug` | Get category with products (paginated) | Public |
 | GET | `/products` | List active products (paginated, filtered, sorted) | Public |
-| GET | `/products/:slug` | Get product detail (variants + images) | Public |
+| GET | `/products/:slug` | Get product detail (variants + images + shop info) | Public |
+
+### Shop — `/api/v1/shops`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/shops` | List active shops (paginated, searchable) | Public |
+| GET | `/shops/:slug` | Get shop profile with stats (product_count, average_rating, total_sales) | Public |
+| GET | `/shops/:slug/products` | List shop's products (paginated, filtered) | Public |
+
+### Seller Shop — `/api/v1/seller/shop`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/seller/shop` | Get current seller's shop | `shops:read` |
+| POST | `/seller/shop` | Create shop (one per seller; slug auto-generated, immutable) | `shops:create` |
+| PATCH | `/seller/shop` | Update shop (name, description, logo_url, banner_url; slug immutable) | `shops:update` |
 
 ### Cart — `/api/v1/cart`
 
@@ -397,6 +418,16 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 | POST | `/upload/image` | Upload image file (JPEG/PNG/WebP, max 5MB) | `uploads:create` |
 
 > **Content-Type:** `multipart/form-data` (exception to the global `application/json` default). Returns `{ url: "..." }` with the saved image path.
+
+### Admin: Shop Management — `/api/v1/admin/shops`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/shops` | List all shops (paginated, filterable by status) | `shops:read` |
+| GET | `/admin/shops/:id` | Get shop detail with product count | `shops:read` |
+| PATCH | `/admin/shops/:id/status` | Change shop status (active/suspended/banned) | `shops:update` |
+
+> **Status transitions:** Admin can set status to `active`, `suspended`, or `banned`. Setting to `active` populates `verified_at`/`verified_by` if not already set. `suspended_at`/`banned_at` are updated on each respective status change.
 
 ### Admin: Dashboard — `/api/v1/admin/dashboard`
 
@@ -679,8 +710,9 @@ Read cart → validate stock for each variant → snapshot product_name/sku/pric
 
 - **Library:** `@nestjs/swagger`
 - **URL:** `/api/v1/docs` (development only)
-- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Cart, Order, Review, Wishlist, Coupon
-- **Tags (Admin):** Admin: Roles, Admin: Permissions, Admin: Users, Admin: Categories, Admin: Products, Admin: Orders, Admin: Reviews, Admin: Wishlist, Admin: Coupons, Admin: Dashboard, Upload
+- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Shop, Cart, Order, Review, Wishlist, Coupon
+- **Tags (Admin):** Admin: Roles, Admin: Permissions, Admin: Users, Admin: Categories, Admin: Products, Admin: Shops, Admin: Orders, Admin: Reviews, Admin: Wishlist, Admin: Coupons, Admin: Dashboard, Upload
+- **Tags (Seller):** Seller: Shop
 - **Decorators:**
   - DTOs: `@ApiProperty()` on every field
   - Controllers: `@ApiTags('Admin: Products')`, `@ApiBearerAuth()`
