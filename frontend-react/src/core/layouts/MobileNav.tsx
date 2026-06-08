@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, User, Package, MapPin, MessageSquare, Heart, LogOut, Store } from 'lucide-react';
+import { Search, User, Package, MapPin, MessageSquare, Heart, LogOut, Shield, Store, Truck } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { useCategories } from '@/features/product';
 import { ROUTES } from '@/common/constants/routes';
@@ -95,13 +95,10 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
                 <MobileNavLink to={ROUTES.ADDRESSES} icon={MapPin} onClick={onClose}>Addresses</MobileNavLink>
                 <MobileNavLink to={ROUTES.MY_REVIEWS} icon={MessageSquare} onClick={onClose}>My Reviews</MobileNavLink>
                 <MobileNavLink to={ROUTES.WISHLIST} icon={Heart} onClick={onClose}>Wishlist</MobileNavLink>
-                {(user?.role === 'seller' || user?.role === 'admin') && (
-                  <MobileNavLink to={ROUTES.SELLER_DASHBOARD} icon={Store} onClick={onClose}>
-                    Seller Centre
-                  </MobileNavLink>
-                )}
               </nav>
             </div>
+
+            <MobilePortalLinks role={user?.role} onClose={onClose} />
 
             <button
               onClick={() => { logout(); onClose(); }}
@@ -137,5 +134,43 @@ function MobileNavLink({
       {Icon && <Icon className="h-4 w-4" />}
       {children}
     </Link>
+  );
+}
+
+const mobilePortalConfig = [
+  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin Portal', icon: Shield, bg: 'bg-slate-50', text: 'text-slate-700' },
+  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller Center', icon: Store, bg: 'bg-amber-50', text: 'text-amber-800' },
+  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper Portal', icon: Truck, bg: 'bg-emerald-50', text: 'text-emerald-800' },
+];
+
+function MobilePortalLinks({ role, onClose }: { role?: string; onClose: () => void }) {
+  if (!role || role === 'customer') return null;
+
+  const visible = role === 'admin'
+    ? mobilePortalConfig.filter((p) => p.role === 'admin' || p.role === 'seller')
+    : mobilePortalConfig.filter((p) => p.role === role);
+
+  if (visible.length === 0) return null;
+
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">Manage</p>
+      <nav className="flex flex-col gap-1">
+        {visible.map((portal) => {
+          const Icon = portal.icon;
+          return (
+            <Link
+              key={portal.role}
+              to={portal.to}
+              onClick={onClose}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${portal.bg} ${portal.text}`}
+            >
+              <Icon className="h-4 w-4" />
+              {portal.label}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }

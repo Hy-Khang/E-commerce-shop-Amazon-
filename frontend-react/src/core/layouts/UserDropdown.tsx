@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, MapPin, MessageSquare, Package, Heart, LogOut, ChevronDown } from 'lucide-react';
+import { User, MapPin, MessageSquare, Package, Heart, LogOut, ChevronDown, Shield, Store, Truck } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { ROUTES } from '@/common/constants/routes';
 
@@ -60,6 +60,8 @@ export function UserDropdown() {
             </DropdownLink>
           </div>
 
+          <PortalSection role={user?.role} onClose={() => setIsOpen(false)} />
+
           <div className="border-t border-neutral-100 py-1">
             <button
               onClick={() => { logout(); setIsOpen(false); }}
@@ -86,5 +88,43 @@ function DropdownLink({ to, icon, onClick, children }: { to: string; icon: React
       {icon}
       {children}
     </Link>
+  );
+}
+
+const portalLinks = [
+  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin Portal', icon: Shield, accent: 'text-slate-600' },
+  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller Center', icon: Store, accent: 'text-amber-700' },
+  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper Portal', icon: Truck, accent: 'text-emerald-700' },
+];
+
+function PortalSection({ role, onClose }: { role?: string; onClose: () => void }) {
+  if (!role || role === 'customer') return null;
+
+  const visible = role === 'admin'
+    ? portalLinks.filter((p) => p.role === 'admin' || p.role === 'seller')
+    : portalLinks.filter((p) => p.role === role);
+
+  if (visible.length === 0) return null;
+
+  return (
+    <div className="border-t border-neutral-100 py-1">
+      <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
+        Manage
+      </p>
+      {visible.map((portal) => {
+        const Icon = portal.icon;
+        return (
+          <Link
+            key={portal.role}
+            to={portal.to}
+            onClick={onClose}
+            className={`flex items-center gap-3 px-4 py-2 text-sm hover:bg-neutral-50 transition-colors ${portal.accent}`}
+          >
+            <Icon className="h-4 w-4" />
+            {portal.label}
+          </Link>
+        );
+      })}
+    </div>
   );
 }

@@ -1,5 +1,5 @@
-import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Store } from 'lucide-react';
+import { Outlet, NavLink, Link } from 'react-router-dom';
+import { LayoutDashboard, Package, ShoppingCart, Store, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
@@ -18,9 +18,9 @@ export function SellerLayout() {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-64 border-r bg-amber-900 text-white">
+      <aside className="flex w-64 flex-col border-r bg-amber-900 text-white">
         <div className="p-6 text-lg font-bold">Seller Center</div>
-        <nav className="flex flex-col gap-1 px-3">
+        <nav className="flex flex-1 flex-col gap-1 px-3">
           {visibleLinks.map((link) => {
             const Icon = link.icon;
             return (
@@ -37,6 +37,17 @@ export function SellerLayout() {
             );
           })}
         </nav>
+        <div className="border-t border-amber-800/60 px-3 py-4">
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 rounded px-3 py-2.5 text-sm text-amber-300/80 transition-colors hover:bg-amber-800/60 hover:text-white"
+          >
+            <ExternalLink className="h-4 w-4" />
+            <span>
+              Back to <span className="font-semibold text-amber-100">Nook</span>
+            </span>
+          </Link>
+        </div>
       </aside>
       <main className="flex-1 bg-gray-50/50 p-6">
         <Outlet />

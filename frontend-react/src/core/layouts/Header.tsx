@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, HelpCircle, Store } from 'lucide-react';
+import { Search, Menu, HelpCircle, Shield, Store, Truck } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '@/features/auth';
 import { useCategories } from '@/features/product';
 import { CartBadge } from '@/features/cart';
@@ -34,15 +35,7 @@ export function Header() {
         <SearchBar />
 
         <div className="flex items-center gap-0.5 md:gap-1">
-          {(user?.role === 'seller' || user?.role === 'admin') && (
-            <Link
-              to={ROUTES.SELLER_DASHBOARD}
-              className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-text-secondary hover:bg-neutral-50 hover:text-text-primary transition-colors lg:flex"
-            >
-              <Store className="h-4 w-4" />
-              <span className="text-xs font-semibold">Seller</span>
-            </Link>
-          )}
+          <PortalLinks role={user?.role} />
           {isAuthenticated && <WishlistBadge />}
           <CartBadge />
           <div className="hidden md:flex md:items-center md:ml-2">
@@ -149,5 +142,39 @@ function NavBar() {
         </div>
       </div>
     </nav>
+  );
+}
+
+const portalConfig: Array<{ role: string; to: string; label: string; icon: LucideIcon; color: string }> = [
+  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin', icon: Shield, color: 'text-slate-600 hover:bg-slate-50' },
+  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller', icon: Store, color: 'text-amber-700 hover:bg-amber-50' },
+  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper', icon: Truck, color: 'text-emerald-700 hover:bg-emerald-50' },
+];
+
+function PortalLinks({ role }: { role?: string }) {
+  if (!role || role === 'customer') return null;
+
+  const visiblePortals = role === 'admin'
+    ? portalConfig.filter((p) => p.role === 'admin' || p.role === 'seller')
+    : portalConfig.filter((p) => p.role === role);
+
+  if (visiblePortals.length === 0) return null;
+
+  return (
+    <div className="hidden items-center gap-0.5 lg:flex">
+      {visiblePortals.map((portal) => {
+        const Icon = portal.icon;
+        return (
+          <Link
+            key={portal.role}
+            to={portal.to}
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition-colors ${portal.color}`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {portal.label}
+          </Link>
+        );
+      })}
+    </div>
   );
 }

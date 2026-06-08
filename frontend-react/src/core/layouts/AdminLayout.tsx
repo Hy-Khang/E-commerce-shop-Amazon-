@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -14,6 +14,7 @@ import {
   Store,
   PanelLeftClose,
   PanelLeftOpen,
+  ExternalLink,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
@@ -140,6 +141,21 @@ export function AdminLayout() {
             </div>
           ))}
         </nav>
+
+        <div className="border-t border-white/10 px-3 py-4">
+          <Link
+            to="/"
+            title={collapsed ? 'Back to Store' : undefined}
+            className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-slate-400 transition-colors hover:bg-white/10 hover:text-white ${collapsed ? 'justify-center px-2' : ''}`}
+          >
+            <ExternalLink className="h-4 w-4 shrink-0" />
+            {!collapsed && (
+              <span>
+                Back to <span className="font-semibold text-slate-200">Nook</span>
+              </span>
+            )}
+          </Link>
+        </div>
       </aside>
 
       <main className="flex-1 bg-slate-50 p-8">
