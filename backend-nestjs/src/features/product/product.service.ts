@@ -384,15 +384,28 @@ export class ProductService {
       });
     }
 
+    if (dto.variant_option1) {
+      const hasMatchingVariant = product.variants?.some(
+        (v) => v.option1 === dto.variant_option1,
+      );
+      if (!hasMatchingVariant) {
+        throw new BadRequestException({
+          code: 'PRODUCT_006',
+          message: `No variant with option1 "${dto.variant_option1}" exists for this product`,
+        });
+      }
+    }
+
     const image = await this.productImageRepository.create({
       ...dto,
+      variant_option1: dto.variant_option1 ?? null,
       product_id: productId,
     });
     this.logger.log(`Image added to product ${productId}`);
     return image;
   }
 
-  async updateImageSortOrder(id: number, dto: UpdateImageDto): Promise<ProductImage> {
+  async updateImage(id: number, dto: UpdateImageDto): Promise<ProductImage> {
     const image = await this.productImageRepository.findById(id);
     if (!image) {
       throw new NotFoundException({
@@ -401,8 +414,28 @@ export class ProductService {
       });
     }
 
-    const updated = await this.productImageRepository.updateSortOrder(id, dto.sort_order);
-    this.logger.log(`Image ${id} sort order updated to ${dto.sort_order}`);
+    const updateData: Partial<ProductImage> = {};
+    if (dto.sort_order !== undefined) {
+      updateData.sort_order = dto.sort_order;
+    }
+    if ('variant_option1' in dto) {
+      if (dto.variant_option1) {
+        const product = await this.productRepository.findById(image.product_id);
+        const hasMatchingVariant = product?.variants?.some(
+          (v) => v.option1 === dto.variant_option1,
+        );
+        if (!hasMatchingVariant) {
+          throw new BadRequestException({
+            code: 'PRODUCT_006',
+            message: `No variant with option1 "${dto.variant_option1}" exists for this product`,
+          });
+        }
+      }
+      updateData.variant_option1 = dto.variant_option1 ?? null;
+    }
+
+    const updated = await this.productImageRepository.update(id, updateData);
+    this.logger.log(`Image ${id} updated`);
     return updated!;
   }
 
@@ -571,7 +604,7 @@ export class ProductService {
       });
     }
     await this.assertSellerCanModifyProduct(userId, image.product_id);
-    return this.updateImageSortOrder(imageId, dto);
+    return this.updateImage(imageId, dto);
   }
 
   async deleteImageForSeller(userId: number, imageId: number): Promise<void> {

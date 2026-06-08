@@ -29,7 +29,7 @@ describe('AdminProductController', () => {
             updateVariant: jest.fn(),
             deleteVariant: jest.fn(),
             addImage: jest.fn(),
-            updateImageSortOrder: jest.fn(),
+            updateImage: jest.fn(),
             deleteImage: jest.fn(),
           },
         },
@@ -163,15 +163,15 @@ describe('AdminProductController', () => {
   });
 
   describe('updateImage', () => {
-    it('should call service.updateImageSortOrder with id and dto', async () => {
+    it('should call service.updateImage with id and dto', async () => {
       const dto = { sort_order: 5 } as any;
       const image = mockProductImage({ sort_order: 5 });
-      service.updateImageSortOrder.mockResolvedValue(image);
+      service.updateImage.mockResolvedValue(image);
 
       const result = await controller.updateImage(1, dto);
 
       expect(result).toEqual(image);
-      expect(service.updateImageSortOrder).toHaveBeenCalledWith(1, dto);
+      expect(service.updateImage).toHaveBeenCalledWith(1, dto);
     });
   });
 

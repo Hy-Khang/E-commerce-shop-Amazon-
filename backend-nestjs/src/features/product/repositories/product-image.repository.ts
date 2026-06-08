@@ -31,6 +31,11 @@ export class ProductImageRepository {
     return this.findById(id);
   }
 
+  async update(id: number, data: Partial<ProductImage>): Promise<ProductImage | null> {
+    await this.repo.update(id, data);
+    return this.findById(id);
+  }
+
   async delete(id: number): Promise<void> {
     await this.repo.delete(id);
   }

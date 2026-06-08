@@ -85,7 +85,7 @@ export default function ProductDetailPage() {
 
       <div className="space-y-10">
         <div className="grid gap-8 md:grid-cols-2">
-          <ImageGallery images={product.images} productName={product.name} />
+          <ImageGallery images={product.images} productName={product.name} selectedOption1={active?.option1 ?? null} thumbnailUrl={product.thumbnail_url} />
 
           <div className="space-y-6">
             <div>

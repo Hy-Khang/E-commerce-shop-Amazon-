@@ -117,48 +117,63 @@ export const ProductSeed: ISeed = {
     `);
     console.log('  + product_variants: 46 rows');
 
-    // ── Product Images (35) ──
+    // ── Product Images (45) — includes variant-specific images for color products ──
     await qr.query(`
       SET IDENTITY_INSERT product_images ON;
-      INSERT INTO product_images (id, product_id, image_url, sort_order) VALUES
-        (1,  1,  N'https://picsum.photos/seed/ao-thun-basic-1/600/600', 0),
-        (2,  1,  N'https://picsum.photos/seed/ao-thun-basic-2/600/600', 1),
-        (3,  2,  N'https://picsum.photos/seed/ao-thun-oversize-1/600/600', 0),
-        (4,  2,  N'https://picsum.photos/seed/ao-thun-oversize-2/600/600', 1),
-        (5,  3,  N'https://picsum.photos/seed/ao-so-mi-oxford-1/600/600', 0),
-        (6,  3,  N'https://picsum.photos/seed/ao-so-mi-oxford-2/600/600', 1),
-        (7,  4,  N'https://picsum.photos/seed/quan-jean-slim-1/600/600', 0),
-        (8,  4,  N'https://picsum.photos/seed/quan-jean-slim-2/600/600', 1),
-        (9,  5,  N'https://picsum.photos/seed/quan-kaki-1/600/600', 0),
-        (10, 5,  N'https://picsum.photos/seed/quan-kaki-2/600/600', 1),
-        (11, 6,  N'https://picsum.photos/seed/sneaker-trang-1/600/600', 0),
-        (12, 6,  N'https://picsum.photos/seed/sneaker-trang-2/600/600', 1),
-        (13, 7,  N'https://picsum.photos/seed/dep-quai-ngang-1/600/600', 0),
-        (14, 7,  N'https://picsum.photos/seed/dep-quai-ngang-2/600/600', 1),
-        (15, 8,  N'https://picsum.photos/seed/iphone-15-promax-1/600/600', 0),
-        (16, 8,  N'https://picsum.photos/seed/iphone-15-promax-2/600/600', 1),
-        (17, 9,  N'https://picsum.photos/seed/samsung-s24-1/600/600', 0),
-        (18, 9,  N'https://picsum.photos/seed/samsung-s24-2/600/600', 1),
-        (19, 10, N'https://picsum.photos/seed/macbook-air-m3-1/600/600', 0),
-        (20, 10, N'https://picsum.photos/seed/macbook-air-m3-2/600/600', 1),
-        (21, 11, N'https://picsum.photos/seed/thinkpad-x1-1/600/600', 0),
-        (22, 11, N'https://picsum.photos/seed/thinkpad-x1-2/600/600', 1),
-        (23, 12, N'https://picsum.photos/seed/airpods-pro-2-1/600/600', 0),
-        (24, 12, N'https://picsum.photos/seed/airpods-pro-2-2/600/600', 1),
-        (25, 13, N'https://picsum.photos/seed/sac-65w-gan-1/600/600', 0),
-        (26, 14, N'https://picsum.photos/seed/ban-lam-viec-1/600/600', 0),
-        (27, 14, N'https://picsum.photos/seed/ban-lam-viec-2/600/600', 1),
-        (28, 15, N'https://picsum.photos/seed/ghe-ergonomic-1/600/600', 0),
-        (29, 15, N'https://picsum.photos/seed/ghe-ergonomic-2/600/600', 1),
-        (30, 16, N'https://picsum.photos/seed/air-fryer-1/600/600', 0),
-        (31, 16, N'https://picsum.photos/seed/air-fryer-2/600/600', 1),
-        (32, 17, N'https://picsum.photos/seed/bo-dao-1/600/600', 0),
-        (33, 18, N'https://picsum.photos/seed/dac-nhan-tam-1/600/600', 0),
-        (34, 19, N'https://picsum.photos/seed/atomic-habits-1/600/600', 0),
-        (35, 20, N'https://picsum.photos/seed/nha-gia-kim-1/600/600', 0);
+      INSERT INTO product_images (id, product_id, image_url, sort_order, variant_option1) VALUES
+        -- Product 1: Áo thun basic — shared + Đen + Trắng
+        (1,  1,  N'https://picsum.photos/seed/ao-thun-basic-1/600/600',       0, NULL),
+        (2,  1,  N'https://picsum.photos/seed/ao-thun-basic-den-1/600/600',   0, N'Đen'),
+        (3,  1,  N'https://picsum.photos/seed/ao-thun-basic-den-2/600/600',   1, N'Đen'),
+        (4,  1,  N'https://picsum.photos/seed/ao-thun-basic-trang-1/600/600', 0, N'Trắng'),
+        (5,  1,  N'https://picsum.photos/seed/ao-thun-basic-trang-2/600/600', 1, N'Trắng'),
+        -- Product 2: Áo thun oversize — Đen + Xám (no shared, tests variant-only)
+        (6,  2,  N'https://picsum.photos/seed/ao-oversize-den-1/600/600',     0, N'Đen'),
+        (7,  2,  N'https://picsum.photos/seed/ao-oversize-den-2/600/600',     1, N'Đen'),
+        (8,  2,  N'https://picsum.photos/seed/ao-oversize-xam-1/600/600',     0, N'Xám'),
+        (9,  2,  N'https://picsum.photos/seed/ao-oversize-xam-2/600/600',     1, N'Xám'),
+        -- Product 3: Áo sơ mi Oxford — shared + Trắng + Xanh
+        (10, 3,  N'https://picsum.photos/seed/ao-so-mi-oxford-1/600/600',       0, NULL),
+        (11, 3,  N'https://picsum.photos/seed/ao-so-mi-trang-1/600/600',        0, N'Trắng'),
+        (12, 3,  N'https://picsum.photos/seed/ao-so-mi-xanh-1/600/600',         0, N'Xanh'),
+        -- Product 4-5: Quần — shared only (tests fallback)
+        (13, 4,  N'https://picsum.photos/seed/quan-jean-slim-1/600/600',  0, NULL),
+        (14, 4,  N'https://picsum.photos/seed/quan-jean-slim-2/600/600',  1, NULL),
+        (15, 5,  N'https://picsum.photos/seed/quan-kaki-1/600/600',       0, NULL),
+        (16, 5,  N'https://picsum.photos/seed/quan-kaki-2/600/600',       1, NULL),
+        -- Product 6-7: Giày dép — no color variants, all shared
+        (17, 6,  N'https://picsum.photos/seed/sneaker-trang-1/600/600',      0, NULL),
+        (18, 6,  N'https://picsum.photos/seed/sneaker-trang-2/600/600',      1, NULL),
+        (19, 7,  N'https://picsum.photos/seed/dep-quai-ngang-1/600/600',     0, NULL),
+        (20, 7,  N'https://picsum.photos/seed/dep-quai-ngang-2/600/600',     1, NULL),
+        -- Product 8-13: Electronics — all shared
+        (21, 8,  N'https://picsum.photos/seed/iphone-15-promax-1/600/600',   0, NULL),
+        (22, 8,  N'https://picsum.photos/seed/iphone-15-promax-2/600/600',   1, NULL),
+        (23, 9,  N'https://picsum.photos/seed/samsung-s24-1/600/600',        0, NULL),
+        (24, 9,  N'https://picsum.photos/seed/samsung-s24-2/600/600',        1, NULL),
+        (25, 10, N'https://picsum.photos/seed/macbook-air-m3-1/600/600',     0, NULL),
+        (26, 10, N'https://picsum.photos/seed/macbook-air-m3-2/600/600',     1, NULL),
+        (27, 11, N'https://picsum.photos/seed/thinkpad-x1-1/600/600',        0, NULL),
+        (28, 11, N'https://picsum.photos/seed/thinkpad-x1-2/600/600',        1, NULL),
+        (29, 12, N'https://picsum.photos/seed/airpods-pro-2-1/600/600',      0, NULL),
+        (30, 12, N'https://picsum.photos/seed/airpods-pro-2-2/600/600',      1, NULL),
+        (31, 13, N'https://picsum.photos/seed/sac-65w-gan-1/600/600',        0, NULL),
+        -- Product 14: Bàn làm việc — Gỗ sồi + Gỗ óc chó
+        (32, 14, N'https://picsum.photos/seed/ban-lam-viec-soi-1/600/600',   0, N'Gỗ sồi'),
+        (33, 14, N'https://picsum.photos/seed/ban-lam-viec-oc-cho-1/600/600',0, N'Gỗ óc chó'),
+        -- Product 15: Ghế — Đen + Xám
+        (34, 15, N'https://picsum.photos/seed/ghe-ergonomic-den-1/600/600',  0, N'Đen'),
+        (35, 15, N'https://picsum.photos/seed/ghe-ergonomic-xam-1/600/600',  0, N'Xám'),
+        -- Product 16-20: No variants, all shared
+        (36, 16, N'https://picsum.photos/seed/air-fryer-1/600/600',          0, NULL),
+        (37, 16, N'https://picsum.photos/seed/air-fryer-2/600/600',          1, NULL),
+        (38, 17, N'https://picsum.photos/seed/bo-dao-1/600/600',             0, NULL),
+        (39, 18, N'https://picsum.photos/seed/dac-nhan-tam-1/600/600',       0, NULL),
+        (40, 19, N'https://picsum.photos/seed/atomic-habits-1/600/600',      0, NULL),
+        (41, 20, N'https://picsum.photos/seed/nha-gia-kim-1/600/600',        0, NULL);
       SET IDENTITY_INSERT product_images OFF;
     `);
-    console.log('  + product_images: 35 rows');
+    console.log('  + product_images: 41 rows');
 
     await qr.release();
   },

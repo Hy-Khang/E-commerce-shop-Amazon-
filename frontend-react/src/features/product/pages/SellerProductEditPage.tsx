@@ -9,10 +9,11 @@ import { useCategories } from '../hooks/useCategories';
 import { useSellerAddVariant, useSellerUpdateVariant, useSellerDeleteVariant } from '../hooks/useSellerVariants';
 import { useSellerAddImage, useSellerDeleteImage } from '../hooks/useSellerImages';
 import { useSellerToggleProductActive } from '../hooks/useSellerToggleProductActive';
-import { createProductSchema, createVariantSchema, type CreateProductFormData, type CreateVariantFormData } from '../types/product.types';
+import { createProductSchema, createVariantSchema, type CreateProductFormData, type CreateVariantFormData, type ProductVariant } from '../types/product.types';
 import { ImageUpload } from '../components/ImageUpload';
 import { CategoryCascader } from '../components/CategoryCascader';
 import { ApiError } from '@/core/api/api.types';
+import { getUniqueOptionValues } from '../utils/product.util';
 
 function SellerVariantForm({ productId, option1Label, option2Label }: { productId: number; option1Label: string | null; option2Label: string | null }) {
   const addVariant = useSellerAddVariant(productId);
@@ -71,17 +72,25 @@ function SellerVariantForm({ productId, option1Label, option2Label }: { productI
   );
 }
 
-function SellerImageForm({ productId }: { productId: number }) {
+function SellerImageForm({ productId, variants, option1Label }: { productId: number; variants: ProductVariant[]; option1Label: string | null }) {
   const addImage = useSellerAddImage(productId);
-  const { register, handleSubmit, reset, setValue, watch } = useForm<{ image_url: string; sort_order: number }>({
-    defaultValues: { image_url: '', sort_order: 0 },
+  const { register, handleSubmit, reset, setValue, watch } = useForm<{ image_url: string; sort_order: number; variant_option1: string }>({
+    defaultValues: { image_url: '', sort_order: 0, variant_option1: '' },
   });
 
   const imageUrl = watch('image_url');
+  const option1Values = option1Label ? getUniqueOptionValues(variants, 'option1') : [];
 
-  function onSubmit(data: { image_url: string; sort_order: number }) {
+  function onSubmit(data: { image_url: string; sort_order: number; variant_option1: string }) {
     if (!data.image_url) return;
-    addImage.mutate(data, { onSuccess: () => reset() });
+    addImage.mutate(
+      {
+        image_url: data.image_url,
+        sort_order: data.sort_order,
+        ...(data.variant_option1 ? { variant_option1: data.variant_option1 } : {}),
+      },
+      { onSuccess: () => reset() },
+    );
   }
 
   return (
@@ -92,11 +101,22 @@ function SellerImageForm({ productId }: { productId: number }) {
         onUploaded={(url) => setValue('image_url', url)}
         onClear={() => setValue('image_url', '')}
       />
-      <div className="flex items-end gap-2">
+      <div className="flex flex-wrap items-end gap-2">
         <div>
           <label className="block text-xs text-gray-500">Sort order</label>
           <input {...register('sort_order', { valueAsNumber: true })} type="number" className="w-20 rounded-md border px-2 py-1.5 text-sm" />
         </div>
+        {option1Values.length > 0 && (
+          <div>
+            <label className="block text-xs text-gray-500">{option1Label}</label>
+            <select {...register('variant_option1')} className="rounded-md border px-2 py-1.5 text-sm">
+              <option value="">Shared (all variants)</option>
+              {option1Values.map((val) => (
+                <option key={val} value={val}>{val}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <button type="submit" disabled={addImage.isPending || !imageUrl} className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
           {addImage.isPending ? 'Adding...' : 'Add Image'}
         </button>
@@ -284,14 +304,17 @@ export default function SellerProductEditPage() {
                 >
                   X
                 </button>
-                <span className="absolute bottom-0 left-0 bg-black/50 px-1.5 text-xs text-white">
-                  #{img.sort_order}
-                </span>
+                <div className="absolute bottom-0 left-0 right-0 flex items-center gap-1 bg-black/50 px-1.5 py-0.5">
+                  <span className="text-xs text-white">#{img.sort_order}</span>
+                  {img.variant_option1 && (
+                    <span className="rounded bg-sky-500/80 px-1 text-[10px] font-medium text-white">{img.variant_option1}</span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
-        <SellerImageForm productId={productId} />
+        <SellerImageForm productId={productId} variants={product.variants} option1Label={product.option1_label} />
       </section>
     </div>
   );

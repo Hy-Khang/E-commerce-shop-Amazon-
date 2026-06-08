@@ -21,6 +21,7 @@ export interface ProductImage {
   product_id: number;
   image_url: string;
   sort_order: number;
+  variant_option1: string | null;
 }
 
 export interface ProductVariant {
@@ -153,10 +154,12 @@ export interface UpdateVariantRequest {
 export interface CreateImageRequest {
   image_url: string;
   sort_order?: number;
+  variant_option1?: string;
 }
 
 export interface UpdateImageRequest {
-  sort_order: number;
+  sort_order?: number;
+  variant_option1?: string | null;
 }
 
 export interface CreateCategoryRequest {

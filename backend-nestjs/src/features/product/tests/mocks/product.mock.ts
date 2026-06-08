@@ -54,6 +54,7 @@ export const mockProductImage = (
   id: 1,
   image_url: 'https://cdn.example.com/img/product-1.jpg',
   sort_order: 0,
+  variant_option1: null,
   product_id: 1,
   product: null as any,
   ...overrides,

@@ -32,6 +32,9 @@ export class ImageResponseDto {
 
   @ApiProperty()
   sort_order: number;
+
+  @ApiPropertyOptional()
+  variant_option1: string | null;
 }
 
 export class ProductResponseDto {

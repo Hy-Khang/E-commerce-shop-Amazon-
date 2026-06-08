@@ -153,7 +153,7 @@ export class AdminProductController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateImageDto,
   ) {
-    return this.productService.updateImageSortOrder(id, dto);
+    return this.productService.updateImage(id, dto);
   }
 
   @Delete('images/:id')

@@ -84,6 +84,7 @@ describe('ProductService', () => {
             findById: jest.fn(),
             create: jest.fn(),
             updateSortOrder: jest.fn(),
+            update: jest.fn(),
             delete: jest.fn(),
           },
         },
@@ -614,25 +615,63 @@ describe('ProductService', () => {
     });
   });
 
-  describe('updateImageSortOrder', () => {
+  describe('updateImage', () => {
     it('should update image sort order successfully', async () => {
       const image = mockProductImage();
       const updated = mockProductImage({ sort_order: 5 });
       productImageRepository.findById.mockResolvedValue(image);
-      productImageRepository.updateSortOrder.mockResolvedValue(updated);
+      productImageRepository.update.mockResolvedValue(updated);
 
-      const result = await service.updateImageSortOrder(1, { sort_order: 5 } as any);
+      const result = await service.updateImage(1, { sort_order: 5 } as any);
 
       expect(result).toEqual(updated);
-      expect(productImageRepository.updateSortOrder).toHaveBeenCalledWith(1, 5);
+      expect(productImageRepository.update).toHaveBeenCalledWith(1, { sort_order: 5 });
+    });
+
+    it('should update variant_option1 when explicitly set', async () => {
+      const image = mockProductImage();
+      const product = mockProduct({ variants: [mockProductVariant({ option1: 'Black' })] });
+      const updated = mockProductImage({ variant_option1: 'Black' });
+      productImageRepository.findById.mockResolvedValue(image);
+      productRepository.findById.mockResolvedValue(product);
+      productImageRepository.update.mockResolvedValue(updated);
+
+      const result = await service.updateImage(1, { variant_option1: 'Black' } as any);
+
+      expect(result).toEqual(updated);
+      expect(productImageRepository.update).toHaveBeenCalledWith(1, { variant_option1: 'Black' });
+    });
+
+    it('should clear variant_option1 when set to null', async () => {
+      const image = mockProductImage({ variant_option1: 'Black' });
+      const updated = mockProductImage({ variant_option1: null });
+      productImageRepository.findById.mockResolvedValue(image);
+      productImageRepository.update.mockResolvedValue(updated);
+
+      const dto = { variant_option1: null } as any;
+      const result = await service.updateImage(1, dto);
+
+      expect(result).toEqual(updated);
+      expect(productImageRepository.update).toHaveBeenCalledWith(1, { variant_option1: null });
     });
 
     it('should throw NotFoundException when image not found', async () => {
       productImageRepository.findById.mockResolvedValue(null);
 
       await expect(
-        service.updateImageSortOrder(999, { sort_order: 5 } as any),
+        service.updateImage(999, { sort_order: 5 } as any),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException when variant_option1 does not match any variant', async () => {
+      const image = mockProductImage();
+      const product = mockProduct({ variants: [mockProductVariant({ option1: 'Black' })] });
+      productImageRepository.findById.mockResolvedValue(image);
+      productRepository.findById.mockResolvedValue(product);
+
+      await expect(
+        service.updateImage(1, { variant_option1: 'NonExistent' } as any),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
