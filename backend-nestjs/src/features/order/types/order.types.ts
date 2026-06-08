@@ -8,6 +8,12 @@ export const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   [OrderStatus.Cancelled]: [],
 };
 
+export const SELLER_STATUS_TRANSITIONS: Record<string, string[]> = {
+  [OrderStatus.Pending]: [OrderStatus.Confirmed],
+  [OrderStatus.Confirmed]: [OrderStatus.Shipping],
+  [OrderStatus.Shipping]: [OrderStatus.Delivered],
+};
+
 export const DEFAULT_SHIPPING_FEE = 30000;
 
 export interface IShippingAddressSnapshot {

@@ -87,6 +87,19 @@ export interface AdminOrderListParams extends PaginationParams {
   user_id?: number;
 }
 
+export interface SellerOrderListParams extends PaginationParams {
+  status?: OrderStatus;
+  payment_status?: PaymentStatus;
+}
+
+export interface SellerOrderDetail extends Order {
+  user_id: number;
+  user_email?: string;
+  user_full_name?: string;
+  seller_items_count: number;
+  seller_items_total: number;
+}
+
 // --- Request types ---
 
 export interface CreateOrderRequest {

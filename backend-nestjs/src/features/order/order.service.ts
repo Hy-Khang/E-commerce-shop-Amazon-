@@ -21,12 +21,14 @@ import { OrderQueryDto } from './dto/order-query.dto';
 import {
   OrderResponseDto,
   AdminOrderResponseDto,
+  SellerOrderResponseDto,
   OrderListItemResponseDto,
 } from './dto/order-response.dto';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import {
   VALID_STATUS_TRANSITIONS,
+  SELLER_STATUS_TRANSITIONS,
   DEFAULT_SHIPPING_FEE,
   IShippingAddressSnapshot,
 } from './types/order.types';
@@ -34,10 +36,12 @@ import {
   toOrderResponse,
   toOrderListItemResponse,
   toAdminOrderResponse,
+  toSellerOrderResponse,
 } from './utils/order.util';
 import { OrderStatus, PaymentMethod } from '../../common/constants';
 import { InsufficientStockException } from '../../common/exceptions/insufficient-stock.exception';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
+import { ShopService } from '../shop/shop.service';
 
 @Injectable()
 export class OrderService {
@@ -50,6 +54,7 @@ export class OrderService {
     private readonly productService: ProductService,
     private readonly userProfileService: UserProfileService,
     private readonly couponService: CouponService,
+    private readonly shopService: ShopService,
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
   ) { }
@@ -397,6 +402,110 @@ export class OrderService {
     );
 
     return toAdminOrderResponse(order);
+  }
+
+  // ─── Seller endpoints ───
+
+  async findSellerOrders(
+    userId: number,
+    query: OrderQueryDto,
+  ): Promise<IPaginatedResult<OrderListItemResponseDto>> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    const result = await this.orderRepository.findByShopIdPaginated(shop.id, query);
+
+    return {
+      data: result.data.map(toOrderListItemResponse),
+      meta: result.meta,
+    };
+  }
+
+  async findSellerOrderById(
+    userId: number,
+    orderId: number,
+  ): Promise<SellerOrderResponseDto> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    const order = await this.orderRepository.findByIdWithItemsForShop(orderId, shop.id);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    return toSellerOrderResponse(order, shop.id);
+  }
+
+  async updateSellerOrderStatus(
+    userId: number,
+    orderId: number,
+    dto: UpdateOrderStatusDto,
+  ): Promise<SellerOrderResponseDto> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    const order = await this.orderRepository.findByIdWithItemsForShop(orderId, shop.id);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    const allowedTransitions = SELLER_STATUS_TRANSITIONS[order.status] || [];
+    if (!allowedTransitions.includes(dto.status)) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message: `Invalid status transition from ${order.status} to ${dto.status}.`,
+      });
+    }
+
+    await this.orderRepository.updateStatus(orderId, dto.status);
+    order.status = dto.status;
+
+    this.logger.log(
+      `Order #${orderId} status updated to ${dto.status} by seller ${userId}`,
+    );
+
+    return toSellerOrderResponse(order, shop.id);
+  }
+
+  async updateSellerPaymentStatus(
+    userId: number,
+    orderId: number,
+    dto: UpdatePaymentStatusDto,
+  ): Promise<SellerOrderResponseDto> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    const order = await this.orderRepository.findByIdWithItemsForShop(orderId, shop.id);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    if (order.status === OrderStatus.Cancelled) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message: 'Cannot update payment status of a cancelled order',
+      });
+    }
+
+    if (
+      order.payment_method === PaymentMethod.Cod &&
+      (order.status === OrderStatus.Pending || order.status === OrderStatus.Confirmed)
+    ) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message: 'COD orders can only be marked as paid during shipping or after delivery',
+      });
+    }
+
+    await this.orderRepository.updatePaymentStatus(orderId, dto.payment_status);
+    order.payment_status = dto.payment_status;
+
+    this.logger.log(
+      `Order #${orderId} payment status updated to ${dto.payment_status} by seller ${userId}`,
+    );
+
+    return toSellerOrderResponse(order, shop.id);
   }
 
   // ─── Cross-feature: consumed by review ───

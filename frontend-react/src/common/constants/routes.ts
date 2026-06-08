@@ -45,6 +45,7 @@ export const ROUTES = {
   SELLER_PRODUCT_CREATE: '/seller/products/new',
   SELLER_PRODUCT_EDIT: (id: number) => `/seller/products/${id}/edit`,
   SELLER_ORDERS: '/seller/orders',
+  SELLER_ORDER_DETAIL: (id: number) => `/seller/orders/${id}`,
   SELLER_SHOP: '/seller/shop',
 
   SHIPPER_DASHBOARD: '/shipper/dashboard',

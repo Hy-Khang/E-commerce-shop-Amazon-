@@ -9,7 +9,8 @@ Checkout from cart, order history, order detail, cancel pending orders, admin or
 - `OrderDetailPage` — order info + order items (with shop name snapshots) + cancel action
 - `AdminOrderListPage` — all orders with status/payment filters
 - `AdminOrderDetailPage` — admin view with status transition + payment controls
-- `SellerOrderListPage` — seller's orders filtered by their shop
+- `SellerOrderListPage` — seller's orders filtered by their shop (status/payment filters)
+- `SellerOrderDetailPage` — seller view with own items only + confirm/ship actions
 
 ## API Dependencies
 - `POST /orders` — checkout (creates order from cart)
@@ -21,6 +22,9 @@ Checkout from cart, order history, order detail, cancel pending orders, admin or
 - `GET /admin/orders/:id` — admin order detail
 - `PATCH /admin/orders/:id/status` — admin update status
 - `PATCH /admin/orders/:id/payment-status` — admin update payment
+- `GET /seller/orders` — seller list orders containing their products
+- `GET /seller/orders/:id` — seller order detail (only their items shown)
+- `PATCH /seller/orders/:id/status` — seller update status (pending→confirmed, confirmed→shipping)
 
 ## State
 - Server state via TanStack Query (staleTime: 1 min)

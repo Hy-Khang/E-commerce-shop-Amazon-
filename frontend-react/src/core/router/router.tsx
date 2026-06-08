@@ -55,6 +55,7 @@ const SellerProductListPage = lazy(() => import('@/features/product/pages/Seller
 const SellerProductCreatePage = lazy(() => import('@/features/product/pages/SellerProductCreatePage'));
 const SellerProductEditPage = lazy(() => import('@/features/product/pages/SellerProductEditPage'));
 const SellerOrderListPage = lazy(() => import('@/features/order/pages/SellerOrderListPage'));
+const SellerOrderDetailPage = lazy(() => import('@/features/order/pages/SellerOrderDetailPage'));
 
 const ShopProfilePage = lazy(() => import('@/features/shop/pages/ShopProfilePage'));
 const SellerShopSettingsPage = lazy(() => import('@/features/shop/pages/SellerShopSettingsPage'));
@@ -162,6 +163,7 @@ export const router = createBrowserRouter([
               { path: 'seller/products/new', element: <SuspenseWrapper><SellerProductCreatePage /></SuspenseWrapper> },
               { path: 'seller/products/:id/edit', element: <SuspenseWrapper><SellerProductEditPage /></SuspenseWrapper> },
               { path: 'seller/orders', element: <SuspenseWrapper><SellerOrderListPage /></SuspenseWrapper> },
+              { path: 'seller/orders/:id', element: <SuspenseWrapper><SellerOrderDetailPage /></SuspenseWrapper> },
               { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
             ],
           },

@@ -3,6 +3,7 @@ import {
   OrderResponseDto,
   OrderListItemResponseDto,
   AdminOrderResponseDto,
+  SellerOrderResponseDto,
   OrderItemResponseDto,
 } from '../dto/order-response.dto';
 import type { IShippingAddressSnapshot } from '../types/order.types';
@@ -77,5 +78,29 @@ export function toAdminOrderResponse(order: Order): AdminOrderResponseDto {
     user_id: order.user_id,
     user_email: order.user?.email,
     user_full_name: order.user?.full_name,
+  };
+}
+
+export function toSellerOrderResponse(
+  order: Order,
+  shopId: number,
+): SellerOrderResponseDto {
+  const sellerItems = (order.order_items || []).filter(
+    (item) => item.shop_id === shopId,
+  );
+  const sellerItemsTotal = sellerItems.reduce(
+    (sum, item) => sum + Number(item.price) * item.quantity,
+    0,
+  );
+
+  const base = toOrderResponse(order);
+  return {
+    ...base,
+    order_items: sellerItems.map(toOrderItemResponse),
+    user_id: order.user_id,
+    user_email: order.user?.email,
+    user_full_name: order.user?.full_name,
+    seller_items_count: sellerItems.length,
+    seller_items_total: sellerItemsTotal,
   };
 }

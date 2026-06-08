@@ -126,3 +126,20 @@ export class AdminOrderResponseDto extends OrderResponseDto {
   @ApiPropertyOptional()
   user_full_name?: string;
 }
+
+export class SellerOrderResponseDto extends OrderResponseDto {
+  @ApiProperty()
+  user_id: number;
+
+  @ApiPropertyOptional()
+  user_email?: string;
+
+  @ApiPropertyOptional()
+  user_full_name?: string;
+
+  @ApiProperty({ description: 'Number of items in this order belonging to the seller' })
+  seller_items_count: number;
+
+  @ApiProperty({ description: 'Total revenue from seller items only' })
+  seller_items_total: number;
+}

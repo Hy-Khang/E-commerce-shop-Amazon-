@@ -40,6 +40,16 @@ const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   cancelled: [],
 };
 
+const SELLER_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus[]>> = {
+  pending: ['confirmed'],
+  confirmed: ['shipping'],
+  shipping: ['delivered'],
+};
+
+export function getSellerNextStatuses(current: OrderStatus): OrderStatus[] {
+  return SELLER_TRANSITIONS[current] ?? [];
+}
+
 export function getValidNextStatuses(
   current: OrderStatus,
   paymentStatus?: PaymentStatus,

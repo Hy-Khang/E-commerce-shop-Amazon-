@@ -11,6 +11,7 @@ Checkout, order creation with immutable snapshots, status management.
 - AuthModule — user identity
 - CartModule — read cart at checkout
 - ProductModule — validate stock, snapshot product data (including shop info)
+- ShopModule — resolve seller's shop for seller order endpoints
 
 ## Events Emitted
 - `order.created` — triggers stock deduction in ProductModule
