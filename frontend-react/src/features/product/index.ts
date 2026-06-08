@@ -29,6 +29,8 @@ export { ImageUpload } from './components/ImageUpload';
 export { CategorySidebar } from './components/CategorySidebar';
 export { ProductCardSkeleton } from './components/ProductCardSkeleton';
 export { ProductDetailSkeleton } from './components/ProductDetailSkeleton';
+export { ShopProductsCarousel } from './components/ShopProductsCarousel';
+export { RelatedProducts } from './components/RelatedProducts';
 
 // Utils
 export {

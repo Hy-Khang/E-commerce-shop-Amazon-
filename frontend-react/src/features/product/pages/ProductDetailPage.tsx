@@ -14,6 +14,8 @@ import { useCategories } from '../hooks/useCategories';
 import { ImageGallery } from '../components/ImageGallery';
 import { VariantSelector } from '../components/VariantSelector';
 import { ProductDetailSkeleton } from '../components/ProductDetailSkeleton';
+import { ShopProductsCarousel } from '../components/ShopProductsCarousel';
+import { RelatedProducts } from '../components/RelatedProducts';
 import { getEffectivePrice, isInStock } from '../utils/product.util';
 import type { ProductVariant } from '../types/product.types';
 
@@ -203,6 +205,19 @@ export default function ProductDetailPage() {
           <h2 className="mb-6 text-lg font-bold tracking-tight text-text-primary">Customer Reviews</h2>
           <ReviewList productId={product.id} />
         </div>
+
+        {product.shop && (
+          <ShopProductsCarousel
+            shopSlug={product.shop.slug}
+            shopName={product.shop.name}
+            currentProductId={product.id}
+          />
+        )}
+
+        <RelatedProducts
+          categoryId={product.category_id}
+          currentProductId={product.id}
+        />
       </div>
     </div>
   );
