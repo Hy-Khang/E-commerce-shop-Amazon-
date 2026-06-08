@@ -2,20 +2,21 @@
 
 @theme {
   --font-jakarta: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
 
   /* ── Layer 1: Primitive Color Ramps ── */
 
-  /* Coral (Shopee-inspired) */
-  --color-primary-50: #fff5f2;
-  --color-primary-100: #ffe8e0;
-  --color-primary-200: #ffc9b8;
-  --color-primary-300: #ffa38a;
-  --color-primary-400: #f97352;
-  --color-primary-500: #ee4d2d;
-  --color-primary-600: #d73a1c;
-  --color-primary-700: #b42f16;
-  --color-primary-800: #8f2612;
-  --color-primary-900: #6e1f10;
+  /* Evergreen (Nook) */
+  --color-primary-50: #f0faf5;
+  --color-primary-100: #dcf0e5;
+  --color-primary-200: #b8e0cb;
+  --color-primary-300: #8bcaaa;
+  --color-primary-400: #53a87e;
+  --color-primary-500: #2e7d5b;
+  --color-primary-600: #256b4c;
+  --color-primary-700: #1e5840;
+  --color-primary-800: #184835;
+  --color-primary-900: #12392a;
 
   /* Warm Neutrals */
   --color-neutral-50: #fafaf9;
@@ -126,7 +127,7 @@
 
   /* Shop / Customer components */
   .shop-container {
-    @apply mx-auto max-w-[1200px] px-4;
+    @apply w-full mx-auto max-w-[1200px] px-4;
   }
 
   .shop-card {

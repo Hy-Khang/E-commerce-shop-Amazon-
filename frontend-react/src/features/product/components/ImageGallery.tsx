@@ -35,7 +35,7 @@ export function ImageGallery({ images, productName }: Props) {
               key={img.id}
               onClick={() => setActiveIndex(idx)}
               className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
-                idx === activeIndex ? 'border-blue-600' : 'border-transparent hover:border-gray-300'
+                idx === activeIndex ? 'border-brand' : 'border-transparent hover:border-gray-300'
               }`}
             >
               <img

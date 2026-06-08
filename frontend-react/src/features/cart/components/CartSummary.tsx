@@ -38,7 +38,7 @@ export function CartSummary({ items }: Props) {
       <button
         onClick={() => navigate(ROUTES.CHECKOUT)}
         disabled={items.length === 0}
-        className="mt-6 w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+        className="mt-6 w-full rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300"
       >
         Proceed to Checkout
       </button>

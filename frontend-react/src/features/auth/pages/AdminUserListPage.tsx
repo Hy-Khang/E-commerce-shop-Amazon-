@@ -1,17 +1,18 @@
 import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, Ban, ShieldCheck } from 'lucide-react';
+import { Eye, Ban, ShieldCheck, CheckCircle } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
 import { Button } from '@/common/components/ui/Button';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminUsers } from '../hooks/useAdminUsers';
 import { useAdminRoles } from '../hooks/useAdminRoles';
 import { useToggleActivate } from '../hooks/useToggleActivate';
 import { UserFilters } from '../components/UserFilters';
 import { UserStatusBadge } from '../components/UserStatusBadge';
-import type { AdminUserQueryParams, AdminUserResponse } from '../types/admin.types';
+import type { AdminUserQueryParams, AdminUser } from '../types/admin.types';
 
 export default function AdminUserListPage() {
   const { params, setPage } = usePagination({
@@ -20,6 +21,7 @@ export default function AdminUserListPage() {
   });
 
   const [filters, setFilters] = useState<Pick<AdminUserQueryParams, 'search' | 'role' | 'is_active'>>({});
+  const [toggleTarget, setToggleTarget] = useState<AdminUser | null>(null);
 
   const queryParams: AdminUserQueryParams = { ...params, ...filters };
 
@@ -35,7 +37,21 @@ export default function AdminUserListPage() {
     [setPage],
   );
 
-  const columns: Column<AdminUserResponse>[] = [
+  const handleToggleClick = (user: AdminUser) => {
+    setToggleTarget(user);
+  };
+
+  const handleConfirmToggle = () => {
+    if (toggleTarget) {
+      toggleActivate.mutate(toggleTarget.id, {
+        onSuccess: () => {
+          setToggleTarget(null);
+        },
+      });
+    }
+  };
+
+  const columns: Column<AdminUser>[] = [
     {
       key: 'user',
       header: 'User',
@@ -82,9 +98,9 @@ export default function AdminUserListPage() {
           <Button
             variant="ghost"
             iconOnly
-            icon={Ban}
+            icon={user.is_active ? Ban : CheckCircle}
             aria-label={user.is_active ? 'Ban user' : 'Unban user'}
-            onClick={() => toggleActivate.mutate(user.id)}
+            onClick={() => handleToggleClick(user)}
             disabled={toggleActivate.isPending}
             className={user.is_active ? 'hover:!text-rose-600' : 'hover:!text-emerald-600'}
           />
@@ -115,6 +131,23 @@ export default function AdminUserListPage() {
           />
         }
       />
+
+      <ConfirmModal
+        open={toggleTarget !== null}
+        title={toggleTarget?.is_active ? 'Ban User Account' : 'Activate User Account'}
+        message={
+          toggleTarget?.is_active
+            ? `Are you sure you want to ban ${toggleTarget?.full_name}? They will immediately lose access to all portal features.`
+            : `Are you sure you want to activate the account for ${toggleTarget?.full_name}? They will gain immediate access to portal features.`
+        }
+        variant={toggleTarget?.is_active ? 'danger' : 'info'}
+        confirmVariant={toggleTarget?.is_active ? 'danger' : 'primary'}
+        confirmLabel={toggleTarget?.is_active ? 'Ban Account' : 'Activate'}
+        loading={toggleActivate.isPending}
+        onConfirm={handleConfirmToggle}
+        onCancel={() => setToggleTarget(null)}
+      />
     </div>
   );
 }
+

@@ -18,11 +18,13 @@ const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 
 const CartPage = lazy(() => import('@/features/cart/pages/CartPage'));
 const CheckoutPage = lazy(() => import('@/features/order/pages/CheckoutPage'));
+const CheckoutSuccessPage = lazy(() => import('@/features/order/pages/CheckoutSuccessPage'));
 const OrderHistoryPage = lazy(() => import('@/features/order/pages/OrderHistoryPage'));
 const OrderDetailPage = lazy(() => import('@/features/order/pages/OrderDetailPage'));
 
 const ProfilePage = lazy(() => import('@/features/user-profile/pages/ProfilePage'));
 const AddressListPage = lazy(() => import('@/features/user-profile/pages/AddressListPage'));
+const AccountLayout = lazy(() => import('@/core/layouts/AccountLayout'));
 
 const AdminDashboardPage = lazy(() => import('@/features/dashboard/pages/AdminDashboardPage'));
 const AdminProductListPage = lazy(() => import('@/features/product/pages/AdminProductListPage'));
@@ -87,14 +89,21 @@ export const router = createBrowserRouter([
         element: <AuthGuard />,
         children: [
           { path: 'checkout', element: <SuspenseWrapper><CheckoutPage /></SuspenseWrapper> },
-          { path: 'orders', element: <SuspenseWrapper><OrderHistoryPage /></SuspenseWrapper> },
+          { path: 'checkout/success', element: <SuspenseWrapper><CheckoutSuccessPage /></SuspenseWrapper> },
           { path: 'orders/:id', element: <SuspenseWrapper><OrderDetailPage /></SuspenseWrapper> },
-          { path: 'profile', element: <SuspenseWrapper><ProfilePage /></SuspenseWrapper> },
-          { path: 'profile/addresses', element: <SuspenseWrapper><AddressListPage /></SuspenseWrapper> },
-          { path: 'profile/reviews', element: <SuspenseWrapper><MyReviewsPage /></SuspenseWrapper> },
-          { path: 'wishlist', element: <SuspenseWrapper><WishlistPage /></SuspenseWrapper> },
+          {
+            element: <SuspenseWrapper><AccountLayout /></SuspenseWrapper>,
+            children: [
+              { path: 'orders', element: <SuspenseWrapper><OrderHistoryPage /></SuspenseWrapper> },
+              { path: 'profile', element: <SuspenseWrapper><ProfilePage /></SuspenseWrapper> },
+              { path: 'profile/addresses', element: <SuspenseWrapper><AddressListPage /></SuspenseWrapper> },
+              { path: 'profile/reviews', element: <SuspenseWrapper><MyReviewsPage /></SuspenseWrapper> },
+              { path: 'wishlist', element: <SuspenseWrapper><WishlistPage /></SuspenseWrapper> },
+            ],
+          },
         ],
       },
+
     ],
   },
   {

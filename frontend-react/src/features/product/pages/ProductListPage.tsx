@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { usePagination } from '@/common/hooks/usePagination';
+import { Button } from '@/common/components/ui/Button';
 import { useProducts } from '../hooks/useProducts';
 import { useCategories } from '../hooks/useCategories';
 import { ProductCard } from '../components/ProductCard';
@@ -44,37 +45,36 @@ export default function ProductListPage() {
   }
 
   return (
-    <div className="flex gap-8">
+    <div className="flex w-full gap-8">
       <aside className="hidden w-56 flex-shrink-0 lg:block">
         <CategorySidebar />
       </aside>
 
-      <div className="flex-1">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+      <div className="flex-1 min-w-0">
+        <div className="mb-6 flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-bold tracking-tight text-text-primary">Products</h1>
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
               name="search"
               type="text"
               placeholder="Search products..."
               defaultValue={searchParams.get('search') || ''}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="shop-input w-full sm:w-64"
             />
-            <button
-              type="submit"
-              className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-            >
+            <Button type="submit">
               Search
-            </button>
+            </Button>
           </form>
         </div>
 
         {categories && categories.length > 0 && (
-          <div className="mb-4 flex flex-wrap gap-2 lg:hidden">
+          <div className="mb-6 flex flex-wrap gap-2 lg:hidden">
             <button
               onClick={() => handleCategoryFilter(null)}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${
-                !filters.category_id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                !filters.category_id
+                  ? 'bg-brand text-white'
+                  : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200 hover:text-text-primary'
               }`}
             >
               All
@@ -83,8 +83,10 @@ export default function ProductListPage() {
               <button
                 key={cat.id}
                 onClick={() => handleCategoryFilter(cat.id)}
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  filters.category_id === cat.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  filters.category_id === cat.id
+                    ? 'bg-brand text-white'
+                    : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200 hover:text-text-primary'
                 }`}
               >
                 {cat.name}
@@ -108,29 +110,31 @@ export default function ProductListPage() {
             </div>
 
             {data.meta.totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-2">
-                <button
+              <div className="mt-8 flex items-center justify-center gap-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setPage(data.meta.page - 1)}
                   disabled={data.meta.page <= 1}
-                  className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
                 >
                   Previous
-                </button>
-                <span className="text-sm text-gray-600">
+                </Button>
+                <span className="text-sm text-text-secondary">
                   Page {data.meta.page} of {data.meta.totalPages}
                 </span>
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setPage(data.meta.page + 1)}
                   disabled={data.meta.page >= data.meta.totalPages}
-                  className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             )}
           </>
         ) : (
-          <div className="py-12 text-center text-gray-500">
+          <div className="py-12 text-center text-text-secondary">
             {searchParams.get('search')
               ? `No products found for "${searchParams.get('search')}"`
               : 'No products available.'}

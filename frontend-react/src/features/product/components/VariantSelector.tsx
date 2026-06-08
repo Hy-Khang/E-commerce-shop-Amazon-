@@ -47,12 +47,12 @@ export function VariantSelector({ variants, selectedVariantId, onSelect, option1
                   key={value}
                   onClick={() => handleOption1Select(value)}
                   disabled={outOfStock}
-                  className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                  className={`rounded-lg border px-3.5 py-1.5 text-sm transition-all duration-200 ${
                     selected?.option1 === value
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
+                      ? 'border-border-brand bg-brand-light text-text-brand font-semibold ring-1 ring-brand/5'
                       : outOfStock
-                        ? 'border-gray-200 text-gray-300 line-through'
-                        : 'border-gray-300 text-gray-700 hover:border-blue-400'
+                        ? 'border-border-default opacity-40 line-through cursor-not-allowed'
+                        : 'border-border-default text-text-secondary hover:border-border-brand hover:text-text-brand bg-white'
                   }`}
                 >
                   {value}
@@ -77,12 +77,12 @@ export function VariantSelector({ variants, selectedVariantId, onSelect, option1
                   key={value}
                   onClick={() => handleOption2Select(value)}
                   disabled={outOfStock}
-                  className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                  className={`rounded-lg border px-3.5 py-1.5 text-sm transition-all duration-200 ${
                     selected?.option2 === value
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
+                      ? 'border-border-brand bg-brand-light text-text-brand font-semibold ring-1 ring-brand/5'
                       : outOfStock
-                        ? 'border-gray-200 text-gray-300 line-through'
-                        : 'border-gray-300 text-gray-700 hover:border-blue-400'
+                        ? 'border-border-default opacity-40 line-through cursor-not-allowed'
+                        : 'border-border-default text-text-secondary hover:border-border-brand hover:text-text-brand bg-white'
                   }`}
                 >
                   {value}

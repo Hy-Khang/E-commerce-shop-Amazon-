@@ -1,9 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { X } from 'lucide-react';
 import { addressSchema, type AddressFormData, type Address } from '../types/user-profile.types';
 import { ApiError } from '@/core/api/api.types';
+import { FormInput } from '@/common/components/form/FormInput';
+import { Button } from '@/common/components/ui/Button';
 
 interface Props {
   address?: Address;
@@ -41,109 +42,70 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
   }, [address, reset]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {address ? 'Edit Address' : 'Add New Address'}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
+    <div className="flex flex-col h-full justify-between">
+      <div className="space-y-4">
         {error && (
-          <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
+          <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-4 text-sm text-rose-800">
             {error instanceof ApiError ? error.message : 'An unexpected error occurred'}
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label htmlFor="addr_full_name" className="block text-sm font-medium text-gray-700">
-              Recipient Name
-            </label>
-            <input
-              id="addr_full_name"
-              type="text"
-              {...register('full_name')}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            {errors.full_name && (
-              <p className="mt-1 text-sm text-red-600">{errors.full_name.message}</p>
-            )}
-          </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="address-form">
+          <FormInput
+            label="Recipient Name"
+            type="text"
+            registration={register('full_name')}
+            error={errors.full_name?.message}
+            placeholder="e.g. John Doe"
+          />
 
-          <div>
-            <label htmlFor="addr_phone" className="block text-sm font-medium text-gray-700">
-              Phone
-            </label>
-            <input
-              id="addr_phone"
-              type="tel"
-              {...register('phone')}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="e.g. 0901234567"
-            />
-            {errors.phone && (
-              <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-            )}
-          </div>
+          <FormInput
+            label="Phone Number"
+            type="tel"
+            registration={register('phone')}
+            error={errors.phone?.message}
+            placeholder="e.g. 0901234567"
+          />
 
-          <div>
-            <label htmlFor="addr_address_line" className="block text-sm font-medium text-gray-700">
-              Address
-            </label>
-            <input
-              id="addr_address_line"
-              type="text"
-              {...register('address_line')}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="Street number, street name"
-            />
-            {errors.address_line && (
-              <p className="mt-1 text-sm text-red-600">{errors.address_line.message}</p>
-            )}
-          </div>
+          <FormInput
+            label="Address details"
+            type="text"
+            registration={register('address_line')}
+            error={errors.address_line?.message}
+            placeholder="Street name, building/apartment number"
+          />
 
-          <div>
-            <label htmlFor="addr_city" className="block text-sm font-medium text-gray-700">
-              City
-            </label>
-            <input
-              id="addr_city"
-              type="text"
-              {...register('city')}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="e.g. Ho Chi Minh"
-            />
-            {errors.city && (
-              <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-            >
-              {isPending ? 'Saving...' : address ? 'Update' : 'Add Address'}
-            </button>
-          </div>
+          <FormInput
+            label="City"
+            type="text"
+            registration={register('city')}
+            error={errors.city?.message}
+            placeholder="e.g. Ho Chi Minh City"
+          />
         </form>
+      </div>
+
+      <div className="mt-8 border-t border-border-default pt-4 flex items-center justify-end gap-3 bg-white">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onClose}
+          disabled={isPending}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="address-form"
+          variant="brand"
+          disabled={isPending}
+          loading={isPending}
+          className="min-w-24"
+        >
+          {address ? 'Update' : 'Add Address'}
+        </Button>
       </div>
     </div>
   );
 }
+

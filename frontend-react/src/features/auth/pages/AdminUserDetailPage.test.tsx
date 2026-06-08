@@ -114,11 +114,15 @@ describe('AdminUserDetailPage', () => {
 
     const select = screen.getByLabelText('Role');
     await user.selectOptions(select, '2');
+    await user.click(screen.getByRole('button', { name: 'Change Role' }));
 
-    expect(mockChangeRoleMutate).toHaveBeenCalledWith({
-      id: 5,
-      data: { role_id: 2 },
-    });
+    expect(mockChangeRoleMutate).toHaveBeenCalledWith(
+      {
+        id: 5,
+        data: { role_id: 2 },
+      },
+      expect.any(Object)
+    );
   });
 
   it('should render Ban User button for active user', () => {
@@ -132,7 +136,9 @@ describe('AdminUserDetailPage', () => {
     renderWithProviders(<AdminUserDetailPage />);
 
     await user.click(screen.getByRole('button', { name: 'Ban User' }));
+    await user.click(screen.getByRole('button', { name: 'Ban Account' }));
 
-    expect(mockToggleMutate).toHaveBeenCalledWith(5);
+    expect(mockToggleMutate).toHaveBeenCalledWith(5, expect.any(Object));
   });
 });
+

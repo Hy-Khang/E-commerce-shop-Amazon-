@@ -51,7 +51,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
           <button
             type="button"
             onClick={() => setExpanded((prev) => !prev)}
-            className="flex shrink-0 items-center justify-center rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="flex shrink-0 items-center justify-center rounded p-0.5 text-text-muted hover:bg-neutral-100 hover:text-text-primary transition-colors"
           >
             {expanded
               ? <ChevronDown className="size-4" />
@@ -63,8 +63,8 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
         <Link
           to={ROUTES.CATEGORY(category.slug)}
           className={`block flex-1 rounded-md px-2 py-1.5 text-sm transition-colors ${isActive
-            ? 'bg-blue-50 font-medium text-blue-700'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            ? 'bg-brand-light font-semibold text-text-brand'
+            : 'text-text-secondary hover:bg-neutral-50 hover:text-text-primary'
             }`}
           style={{ paddingLeft: `${4 + depth * 8}px` }}
         >
@@ -88,7 +88,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
               <button
                 type="button"
                 onClick={() => setShowAll(true)}
-                className="ml-7 py-1 text-xs text-blue-600 hover:text-blue-800"
+                className="ml-7 py-1 text-xs font-semibold text-text-brand hover:text-primary-700 transition-colors"
               >
                 +{hiddenCount} more
               </button>
@@ -99,7 +99,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
               <button
                 type="button"
                 onClick={() => setShowAll(false)}
-                className="ml-7 py-1 text-xs text-blue-600 hover:text-blue-800"
+                className="ml-7 py-1 text-xs font-semibold text-text-brand hover:text-primary-700 transition-colors"
               >
                 Show less
               </button>
@@ -125,7 +125,7 @@ export function CategorySidebar() {
     return (
       <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-8 animate-pulse rounded-md bg-gray-200" />
+          <div key={i} className="h-8 animate-pulse rounded-md bg-neutral-200" />
         ))}
       </div>
     );
@@ -135,7 +135,7 @@ export function CategorySidebar() {
 
   return (
     <nav>
-      <h3 className="mb-3 text-sm font-semibold text-gray-900">Categories</h3>
+      <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Categories</h3>
       <ul className="space-y-0.5">
         {categories.filter((cat) => cat.parent_id === null).map((cat) => (
           <CategoryNode

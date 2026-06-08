@@ -80,7 +80,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
           {...register('comment')}
           rows={3}
           placeholder="Share your experience with this product..."
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
+          className="w-full rounded-lg border border-border-default px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-border-brand focus:outline-none focus:ring-1 focus:ring-brand bg-white transition-colors"
         />
         {errors.comment && (
           <p className="mt-1 text-xs text-red-500">{errors.comment.message}</p>
@@ -90,7 +90,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
       <button
         type="submit"
         disabled={createReview.isPending}
-        className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-50 shadow-xs"
       >
         {createReview.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
         Submit Review

@@ -60,8 +60,8 @@ describe('AdminRoleListPage', () => {
   it('should render edit and delete buttons per role', () => {
     renderWithProviders(<AdminRoleListPage />);
 
-    const editButtons = screen.getAllByRole('button', { name: 'Edit' });
-    const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
+    const editButtons = screen.getAllByRole('button', { name: 'Edit role' });
+    const deleteButtons = screen.getAllByRole('button', { name: 'Delete role' });
 
     expect(editButtons).toHaveLength(2);
     expect(deleteButtons).toHaveLength(2);
@@ -80,7 +80,7 @@ describe('AdminRoleListPage', () => {
     const user = userEvent.setup();
     renderWithProviders(<AdminRoleListPage />);
 
-    const editButtons = screen.getAllByRole('button', { name: 'Edit' });
+    const editButtons = screen.getAllByRole('button', { name: 'Edit role' });
     await user.click(editButtons[0]);
 
     expect(screen.getByText('Edit Role')).toBeInTheDocument();
@@ -89,24 +89,24 @@ describe('AdminRoleListPage', () => {
 
   it('should call delete mutation when confirmed', async () => {
     const user = userEvent.setup();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-
     renderWithProviders(<AdminRoleListPage />);
 
-    const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
+    const deleteButtons = screen.getAllByRole('button', { name: 'Delete role' });
     await user.click(deleteButtons[0]);
 
-    expect(mockDeleteMutate).toHaveBeenCalledWith(1);
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    expect(mockDeleteMutate).toHaveBeenCalledWith(1, expect.any(Object));
   });
 
   it('should not delete when user cancels confirm', async () => {
     const user = userEvent.setup();
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
-
     renderWithProviders(<AdminRoleListPage />);
 
-    const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
+    const deleteButtons = screen.getAllByRole('button', { name: 'Delete role' });
     await user.click(deleteButtons[0]);
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(mockDeleteMutate).not.toHaveBeenCalled();
   });

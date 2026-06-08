@@ -1,0 +1,153 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, Menu, HelpCircle, Store } from 'lucide-react';
+import { useAuthStore } from '@/features/auth';
+import { useCategories } from '@/features/product';
+import { CartBadge } from '@/features/cart';
+import { WishlistBadge } from '@/features/wishlist';
+import { ROUTES } from '@/common/constants/routes';
+import { UserDropdown } from './UserDropdown';
+import { MobileNav } from './MobileNav';
+
+export function Header() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-border-default/80 bg-white/95 backdrop-blur-md">
+      <div className="shop-container flex h-16 items-center gap-4 md:h-[72px] md:gap-8">
+        <button
+          onClick={() => setMobileNavOpen(true)}
+          className="rounded-lg p-2 text-text-secondary hover:bg-neutral-100 transition-colors md:hidden"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        <Link to={ROUTES.HOME} className="shrink-0">
+          <span className="font-display text-[26px] text-text-primary md:text-[30px] tracking-tight">
+            Nook<span className="text-brand">.</span>
+          </span>
+        </Link>
+
+        <SearchBar />
+
+        <div className="flex items-center gap-0.5 md:gap-1">
+          {(user?.role === 'seller' || user?.role === 'admin') && (
+            <Link
+              to={ROUTES.SELLER_DASHBOARD}
+              className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-text-secondary hover:bg-neutral-50 hover:text-text-primary transition-colors lg:flex"
+            >
+              <Store className="h-4 w-4" />
+              <span className="text-xs font-semibold">Seller</span>
+            </Link>
+          )}
+          {isAuthenticated && <WishlistBadge />}
+          <CartBadge />
+          <div className="hidden md:flex md:items-center md:ml-2">
+            {isAuthenticated ? (
+              <UserDropdown />
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  to={ROUTES.LOGIN}
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-text-secondary hover:bg-neutral-50 transition-colors"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to={ROUTES.REGISTER}
+                  className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <NavBar />
+      <MobileNav open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+    </header>
+  );
+}
+
+function SearchBar() {
+  const navigate = useNavigate();
+  const [focused, setFocused] = useState(false);
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const query = (formData.get('search') as string).trim();
+    if (query) {
+      navigate(`${ROUTES.PRODUCTS}?search=${encodeURIComponent(query)}`);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="hidden flex-1 md:block">
+      <div
+        className={`flex items-center rounded-full border transition-all ${
+          focused
+            ? 'border-primary-400 bg-white ring-4 ring-primary-500/5'
+            : 'border-neutral-200 bg-neutral-50/80 hover:border-neutral-300'
+        }`}
+      >
+        <button
+          type="submit"
+          className="flex shrink-0 items-center justify-center pl-4 text-neutral-400 hover:text-neutral-600 transition-colors"
+          aria-label="Search"
+        >
+          <Search className="h-[18px] w-[18px]" />
+        </button>
+        <input
+          name="search"
+          type="text"
+          placeholder="Search for products..."
+          className="w-full bg-transparent py-2.5 pl-3 pr-5 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none"
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        />
+      </div>
+    </form>
+  );
+}
+
+function NavBar() {
+  const { data: categories } = useCategories();
+  const rootCategories = categories?.filter((c) => !c.parent_id)?.slice(0, 8) ?? [];
+
+  return (
+    <nav className="hidden border-b border-border-default/50 md:block">
+      <div className="shop-container flex h-10 items-center gap-0.5 overflow-x-auto">
+        <Link
+          to={ROUTES.PRODUCTS}
+          className="shrink-0 rounded-md px-3 py-1.5 text-sm font-semibold text-text-primary hover:bg-neutral-100/50 transition-colors"
+        >
+          All Products
+        </Link>
+        {rootCategories.map((cat) => (
+          <Link
+            key={cat.id}
+            to={ROUTES.CATEGORY(cat.slug)}
+            className="shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary hover:bg-neutral-100/50 hover:text-text-primary transition-colors"
+          >
+            {cat.name}
+          </Link>
+        ))}
+        <div className="ml-auto">
+          <Link
+            to="#"
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-text-muted hover:bg-neutral-100/50 hover:text-text-secondary transition-colors"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            Help
+          </Link>
+        </div>
+      </div>
+    </nav>
+  );
+}

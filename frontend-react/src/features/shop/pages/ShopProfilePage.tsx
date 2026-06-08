@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { usePagination } from '@/common/hooks/usePagination';
+import { Button } from '@/common/components/ui/Button';
 import { ProductCard } from '@/features/product';
 import { ProductCardSkeleton } from '@/features/product/components/ProductCardSkeleton';
 import { useShop } from '../hooks/useShop';
@@ -13,19 +14,19 @@ export default function ShopProfilePage() {
   const { data: products, isLoading: productsLoading } = useShopProducts(slug!, params);
 
   if (shopLoading) {
-    return <div className="py-12 text-center text-gray-500">Loading shop...</div>;
+    return <div className="py-12 text-center text-text-secondary">Loading shop...</div>;
   }
 
   if (!shop) {
-    return <div className="py-12 text-center text-gray-500">Shop not found.</div>;
+    return <div className="py-12 text-center text-text-secondary">Shop not found.</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <ShopHeader shop={shop} />
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">All Products</h2>
+        <h2 className="mb-6 text-xl font-bold tracking-tight text-text-primary">All Products</h2>
 
         {productsLoading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
@@ -42,29 +43,31 @@ export default function ShopProfilePage() {
             </div>
 
             {products.meta.totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-2">
-                <button
+              <div className="mt-8 flex items-center justify-center gap-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setPage(products.meta.page - 1)}
                   disabled={products.meta.page <= 1}
-                  className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
                 >
                   Previous
-                </button>
-                <span className="text-sm text-gray-600">
+                </Button>
+                <span className="text-sm text-text-secondary">
                   Page {products.meta.page} of {products.meta.totalPages}
                 </span>
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setPage(products.meta.page + 1)}
                   disabled={products.meta.page >= products.meta.totalPages}
-                  className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             )}
           </>
         ) : (
-          <div className="py-12 text-center text-gray-500">No products yet.</div>
+          <div className="py-12 text-center text-text-secondary">No products yet.</div>
         )}
       </div>
     </div>

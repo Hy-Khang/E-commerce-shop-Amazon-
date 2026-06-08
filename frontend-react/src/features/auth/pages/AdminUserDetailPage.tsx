@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminUser } from '../hooks/useAdminUser';
 import { useAdminRoles } from '../hooks/useAdminRoles';
 import { useToggleActivate } from '../hooks/useToggleActivate';
@@ -18,14 +20,38 @@ export default function AdminUserDetailPage() {
   const toggleActivate = useToggleActivate();
   const changeRole = useChangeUserRole();
 
-  function handleToggleActivate() {
-    toggleActivate.mutate(userId);
+  const [showToggleModal, setShowToggleModal] = useState(false);
+  const [pendingRoleId, setPendingRoleId] = useState<number | null>(null);
+
+  function handleToggleActivateClick() {
+    setShowToggleModal(true);
   }
 
-  function handleRoleChange(e: React.ChangeEvent<HTMLSelectElement>) {
+  function handleConfirmToggle() {
+    toggleActivate.mutate(userId, {
+      onSuccess: () => {
+        setShowToggleModal(false);
+      },
+    });
+  }
+
+  function handleRoleChangeSelect(e: React.ChangeEvent<HTMLSelectElement>) {
     const roleId = Number(e.target.value);
-    if (roleId) {
-      changeRole.mutate({ id: userId, data: { role_id: roleId } });
+    if (roleId && roleId !== user?.role.id) {
+      setPendingRoleId(roleId);
+    }
+  }
+
+  function handleConfirmRoleChange() {
+    if (pendingRoleId) {
+      changeRole.mutate(
+        { id: userId, data: { role_id: pendingRoleId } },
+        {
+          onSuccess: () => {
+            setPendingRoleId(null);
+          },
+        },
+      );
     }
   }
 
@@ -47,6 +73,8 @@ export default function AdminUserDetailPage() {
     .join('')
     .slice(0, 2)
     .toUpperCase();
+
+  const selectedRoleName = roles?.find((r) => r.id === pendingRoleId)?.name ?? '';
 
   return (
     <div className="space-y-6">
@@ -124,7 +152,7 @@ export default function AdminUserDetailPage() {
             <select
               id="user-role"
               value={user.role.id ?? ''}
-              onChange={handleRoleChange}
+              onChange={handleRoleChangeSelect}
               disabled={changeRole.isPending}
               className="admin-input mt-1 w-40"
             >
@@ -138,13 +166,42 @@ export default function AdminUserDetailPage() {
 
           <Button
             variant={user.is_active ? 'danger' : 'primary'}
-            onClick={handleToggleActivate}
+            onClick={handleToggleActivateClick}
             loading={toggleActivate.isPending}
           >
             {user.is_active ? 'Ban User' : 'Unban User'}
           </Button>
         </div>
       </div>
+
+      <ConfirmModal
+        open={showToggleModal}
+        title={user.is_active ? 'Ban User Account' : 'Activate User Account'}
+        message={
+          user.is_active
+            ? `Are you sure you want to ban ${user.full_name}? They will immediately lose access to all portal features.`
+            : `Are you sure you want to activate the account for ${user.full_name}? They will gain immediate access to portal features.`
+        }
+        variant={user.is_active ? 'danger' : 'info'}
+        confirmVariant={user.is_active ? 'danger' : 'primary'}
+        confirmLabel={user.is_active ? 'Ban Account' : 'Activate'}
+        loading={toggleActivate.isPending}
+        onConfirm={handleConfirmToggle}
+        onCancel={() => setShowToggleModal(false)}
+      />
+
+      <ConfirmModal
+        open={pendingRoleId !== null}
+        title="Change User Role"
+        message={`Are you sure you want to change the role of ${user.full_name} to "${selectedRoleName}"? This will modify their system permissions.`}
+        variant="warning"
+        confirmVariant="primary"
+        confirmLabel="Change Role"
+        loading={changeRole.isPending}
+        onConfirm={handleConfirmRoleChange}
+        onCancel={() => setPendingRoleId(null)}
+      />
     </div>
   );
 }
+

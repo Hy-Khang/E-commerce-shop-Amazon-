@@ -45,7 +45,7 @@ export default function CheckoutPage() {
     };
     checkout.mutate(request, {
       onSuccess: (order) => {
-        navigate(ROUTES.ORDER_DETAIL(order.id));
+        navigate(`/checkout/success?orderId=${order.id}`);
       },
     });
   }
@@ -61,10 +61,10 @@ export default function CheckoutPage() {
   if (!cart || cart.items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <p className="text-gray-500">Your cart is empty.</p>
+        <p className="text-text-secondary">Your cart is empty.</p>
         <button
           onClick={() => navigate(ROUTES.PRODUCTS)}
-          className="mt-4 rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="mt-4 rounded-lg bg-brand px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
         >
           Browse Products
         </button>
@@ -85,8 +85,28 @@ export default function CheckoutPage() {
   const estimatedTotal = subtotal - discountAmount;
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Checkout</h1>
+    <div className="space-y-6">
+      {/* Step Indicator */}
+      <div className="rounded-xl bg-white p-4 border border-border-default shadow-xs">
+        <div className="flex items-center justify-center">
+          <div className="flex items-center gap-2 text-text-secondary">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold">1</span>
+            <span className="text-xs font-medium">Cart</span>
+          </div>
+          <div className="mx-4 h-[1px] w-12 bg-border-default" />
+          <div className="flex items-center gap-2 text-text-brand font-semibold">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">2</span>
+            <span className="text-xs">Checkout</span>
+          </div>
+          <div className="mx-4 h-[1px] w-12 bg-border-default" />
+          <div className="flex items-center gap-2 text-text-muted">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold">3</span>
+            <span className="text-xs">Complete</span>
+          </div>
+        </div>
+      </div>
+
+      <h1 className="text-2xl font-bold tracking-tight text-text-primary">Checkout</h1>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -109,8 +129,8 @@ export default function CheckoutPage() {
                       key={address.id}
                       className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
                         selectedAddressId === address.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-border-brand bg-brand-light/30 ring-1 ring-brand/10'
+                          : 'border-border-default hover:border-border-strong bg-white'
                       }`}
                     >
                       <input
@@ -124,7 +144,7 @@ export default function CheckoutPage() {
                         <p className="text-sm font-medium text-gray-900">
                           {address.full_name}
                           {address.is_default && (
-                            <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
+                            <span className="ml-2 rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-bold text-text-brand uppercase tracking-wider">
                               Default
                             </span>
                           )}
@@ -156,15 +176,15 @@ export default function CheckoutPage() {
                     key={method}
                     className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
                       watch('payment_method') === method
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-border-brand bg-brand-light/30 ring-1 ring-brand/10'
+                        : 'border-border-default hover:border-border-strong bg-white'
                     }`}
                   >
                     <input
                       type="radio"
                       value={method}
                       {...register('payment_method')}
-                      className="accent-blue-600"
+                      className="accent-brand"
                     />
                     <span className="text-sm font-medium text-gray-900">
                       {PAYMENT_METHOD_LABELS[method]}
@@ -250,7 +270,7 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={checkout.isPending || !addresses || addresses.length === 0}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300 shadow-xs"
               >
                 {checkout.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 {checkout.isPending ? 'Placing Order...' : 'Place Order'}

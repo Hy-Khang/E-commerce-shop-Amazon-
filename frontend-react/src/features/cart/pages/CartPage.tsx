@@ -33,7 +33,7 @@ export default function CartPage() {
         <p className="mt-1 text-sm text-gray-500">Browse products and add items to your cart.</p>
         <Link
           to={ROUTES.PRODUCTS}
-          className="mt-6 rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="mt-6 rounded-lg bg-brand px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
         >
           Browse Products
         </Link>

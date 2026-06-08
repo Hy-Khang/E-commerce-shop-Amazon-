@@ -67,7 +67,7 @@ export function CouponInput({ onApply, onRemove, appliedCode }: Props) {
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApply())}
             placeholder="Enter coupon code"
-            className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm uppercase placeholder:normal-case focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border-default py-2 pl-9 pr-3 text-sm uppercase placeholder:normal-case focus:border-border-brand focus:outline-none focus:ring-1 focus:ring-brand bg-white transition-colors"
           />
         </div>
         <button
@@ -88,14 +88,14 @@ export function CouponInput({ onApply, onRemove, appliedCode }: Props) {
       )}
 
       {validate.isSuccess && validate.data && (
-        <div className="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
-          <p className="font-medium">
+        <div className="rounded-lg bg-brand-light px-3 py-2.5 text-xs text-text-brand border border-brand/10">
+          <p className="font-semibold">
             {validate.data.discount_type === 'percentage'
               ? `${validate.data.discount_value}% off`
               : `${formatPrice(validate.data.discount_value)} off`}
             {validate.data.max_discount_amount && ` (max ${formatPrice(validate.data.max_discount_amount)})`}
           </p>
-          <p className="mt-0.5 text-blue-600">
+          <p className="mt-0.5 text-text-brand/80">
             Applies to: {SCOPE_LABELS[validate.data.scope]}
             {validate.data.min_order_amount && ` | Min: ${formatPrice(validate.data.min_order_amount)}`}
           </p>

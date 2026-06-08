@@ -89,7 +89,7 @@ describe('AdminUserListPage', () => {
   it('should render View links for each user', () => {
     renderWithProviders(<AdminUserListPage />);
 
-    const viewLinks = screen.getAllByRole('link', { name: 'View' });
+    const viewLinks = screen.getAllByRole('link', { name: 'View user' });
     expect(viewLinks).toHaveLength(2);
     expect(viewLinks[0]).toHaveAttribute('href', '/admin/users/1');
     expect(viewLinks[1]).toHaveAttribute('href', '/admin/users/2');
@@ -98,16 +98,17 @@ describe('AdminUserListPage', () => {
   it('should render Ban for active users and Unban for inactive', () => {
     renderWithProviders(<AdminUserListPage />);
 
-    expect(screen.getByRole('button', { name: 'Ban' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Unban' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ban user' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Unban user' })).toBeInTheDocument();
   });
 
   it('should call toggle activate when Ban/Unban clicked', async () => {
     const user = userEvent.setup();
     renderWithProviders(<AdminUserListPage />);
 
-    await user.click(screen.getByRole('button', { name: 'Ban' }));
+    await user.click(screen.getByRole('button', { name: 'Ban user' }));
+    await user.click(screen.getByRole('button', { name: 'Ban Account' }));
 
-    expect(mockToggleMutate).toHaveBeenCalledWith(1);
+    expect(mockToggleMutate).toHaveBeenCalledWith(1, expect.any(Object));
   });
 });

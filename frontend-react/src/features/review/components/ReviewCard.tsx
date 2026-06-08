@@ -20,26 +20,26 @@ export function ReviewCard({ review, showDelete, onDelete, isDeleting }: Props) 
   const variantLabel = formatVariant(review);
 
   return (
-    <div className="border-b border-gray-100 py-4 last:border-0">
+    <div className="py-5 first:pt-0 last:pb-0">
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <div className="flex">
+            <div className="flex gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-4 w-4 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`}
+                  className={`h-4 w-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-200'}`}
                 />
               ))}
             </div>
             {review.user_full_name && (
-              <span className="text-sm font-medium text-gray-900">{review.user_full_name}</span>
+              <span className="text-sm font-semibold text-text-primary">{review.user_full_name}</span>
             )}
           </div>
-          <div className="mt-0.5 flex items-center gap-2">
-            <span className="text-xs text-gray-500">{formatDate(review.created_at)}</span>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-xs text-text-muted">{formatDate(review.created_at)}</span>
             {variantLabel && (
-              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+              <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-medium text-text-secondary">
                 {variantLabel}
               </span>
             )}
@@ -50,7 +50,7 @@ export function ReviewCard({ review, showDelete, onDelete, isDeleting }: Props) 
           <button
             onClick={() => onDelete(review.id)}
             disabled={isDeleting}
-            className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+            className="rounded-lg p-1 text-text-muted hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition-colors"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -58,7 +58,7 @@ export function ReviewCard({ review, showDelete, onDelete, isDeleting }: Props) 
       </div>
 
       {review.comment && (
-        <p className="mt-2 text-sm text-gray-700">{review.comment}</p>
+        <p className="mt-2.5 text-sm text-text-secondary leading-relaxed">{review.comment}</p>
       )}
     </div>
   );

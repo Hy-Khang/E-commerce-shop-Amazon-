@@ -26,17 +26,20 @@ export function UserDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+        className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-neutral-700 hover:bg-neutral-50 transition-colors"
       >
-        {user?.full_name || 'Profile'}
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-50 text-xs font-bold text-primary-700">
+          {user?.full_name?.charAt(0).toUpperCase() ?? 'U'}
+        </div>
+        <span className="hidden max-w-[100px] truncate text-sm font-medium lg:inline">{user?.full_name || 'Profile'}</span>
+        <ChevronDown className={`h-3.5 w-3.5 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-56 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-          <div className="border-b border-gray-100 px-4 py-3">
-            <p className="text-sm font-medium text-gray-900">{user?.full_name}</p>
-            <p className="text-xs text-gray-500">{user?.email}</p>
+        <div className="absolute right-0 z-50 mt-2 w-56 rounded-xl border border-neutral-200/80 bg-white py-1 shadow-lg shadow-neutral-900/5">
+          <div className="border-b border-neutral-100 px-4 py-3">
+            <p className="text-sm font-medium text-neutral-900">{user?.full_name}</p>
+            <p className="text-xs text-neutral-500">{user?.email}</p>
           </div>
 
           <div className="py-1">
@@ -57,11 +60,11 @@ export function UserDropdown() {
             </DropdownLink>
           </div>
 
-          <div className="border-t border-gray-100 py-1">
+          <div className="border-t border-neutral-100 py-1">
             <button
               onClick={() => { logout(); setIsOpen(false); }}
               disabled={isLoggingOut}
-              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-error-500 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
             >
               <LogOut className="h-4 w-4" />
               {isLoggingOut ? 'Logging out...' : 'Logout'}
@@ -78,7 +81,7 @@ function DropdownLink({ to, icon, onClick, children }: { to: string; icon: React
     <Link
       to={to}
       onClick={onClick}
-      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+      className="flex items-center gap-3 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
     >
       {icon}
       {children}

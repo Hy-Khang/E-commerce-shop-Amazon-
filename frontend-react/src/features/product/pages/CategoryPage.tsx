@@ -9,12 +9,12 @@ export default function CategoryPage() {
   const { data, isLoading, error } = useCategoryBySlug(slug!);
 
   return (
-    <div className="flex gap-8">
+    <div className="flex w-full gap-8">
       <aside className="hidden w-56 flex-shrink-0 lg:block">
         <CategorySidebar />
       </aside>
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         {isLoading ? (
           <>
             <div className="mb-6 h-8 w-48 animate-pulse rounded bg-gray-200" />

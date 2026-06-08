@@ -67,7 +67,7 @@ export function RoleFormModal({ role, isOpen, isPending, error, onSubmit, onClos
               Cancel
             </Button>
             <Button type="submit" loading={isPending}>
-              {role ? 'Update' : 'Create'}
+              {isPending ? 'Saving...' : role ? 'Update' : 'Create'}
             </Button>
           </div>
         </form>
