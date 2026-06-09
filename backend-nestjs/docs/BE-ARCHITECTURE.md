@@ -25,6 +25,7 @@ graph TB
             Wishlist["wishlist<br/>wishlist_items"]
             Coupon["coupon<br/>coupons, coupon_categories,<br/>coupon_products, coupon_usages"]
             Upload["upload<br/>file storage"]
+            Notification["notification<br/>notifications"]
             Dashboard["dashboard<br/>analytics (read-only)"]
         end
 
@@ -98,6 +99,7 @@ src/
     ├── wishlist/                        — owns: wishlist_items
     ├── coupon/                          — owns: coupons, coupon_categories, coupon_products, coupon_usages
     ├── upload/                          — file upload (images)
+    ├── notification/                   — in-app notifications (order status changes)
     └── dashboard/                       — admin analytics (read-only, no owned entities)
 ```
 
@@ -232,6 +234,7 @@ graph TD
 
     Order -.->|event: order.created| Product
     Order -.->|event: order.cancelled| Product
+    Order -.->|event: order.status_updated| Notification["notification"]
 
 ```
 
@@ -256,6 +259,7 @@ graph TD
 | wishlist | ProductModule | — |
 | coupon | — | — |
 | upload | — | — |
+| notification | — | `order.status_updated` |
 | dashboard | TypeOrmModule (Order entity), ShopModule | — |
 
 **Forbidden:** direct import of another feature's repository/entity/dto file, circular module dependencies.

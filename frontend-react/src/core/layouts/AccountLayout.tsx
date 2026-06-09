@@ -21,11 +21,11 @@ export default function AccountLayout() {
 
   const initials = profile?.full_name
     ? profile.full_name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase()
     : 'U';
 
   const navItems = [
@@ -95,10 +95,9 @@ export default function AccountLayout() {
                   to={item.to}
                   end={item.exact}
                   className={({ isActive }) =>
-                    `flex shrink-0 items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 ${
-                      isActive
-                        ? 'bg-brand-light font-semibold text-text-brand ring-1 ring-brand/5'
-                        : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+                    `flex shrink-0 items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 ${isActive
+                      ? 'bg-brand-light font-semibold text-text-brand ring-1 ring-brand/5'
+                      : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
                     }`
                   }
                 >

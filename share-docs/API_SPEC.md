@@ -193,6 +193,7 @@ GET /products?sort=created_at&order=desc
 | SHOP_003 | 409 | Duplicate shop slug |
 | SHOP_004 | 400 | Shop not set up (seller tries product CRUD without a shop) |
 | SHOP_005 | 403 | Shop is not active (status != 'active') |
+| NOTIFICATION_001 | 404 | Notification not found |
 
 ### HTTP Status Usage
 
@@ -303,6 +304,17 @@ GET /products?sort=created_at&order=desc
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | POST | `/coupons/validate` | Validate coupon code, returns discount info + applicable scope | Customer |
+
+### Notification — `/api/v1/notifications`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/notifications` | List my notifications (paginated, `?is_read` filter) | Customer |
+| GET | `/notifications/unread-count` | Get unread notification count (lightweight, for badge polling) | Customer |
+| PATCH | `/notifications/:id/read` | Mark single notification as read (ownership enforced) | Customer |
+| PATCH | `/notifications/read-all` | Mark all notifications as read (HTTP 204) | Customer |
+
+> **Polling-based delivery:** Frontend polls `GET /notifications/unread-count` every 30s. No WebSocket infrastructure. Notifications are created automatically via `order.status_updated` event when admin/seller changes order status. Customer-initiated actions (placing order, cancelling own order) do **not** create notifications.
 
 ---
 
@@ -710,7 +722,7 @@ Read cart → validate stock for each variant → snapshot product_name/sku/pric
 
 - **Library:** `@nestjs/swagger`
 - **URL:** `/api/v1/docs` (development only)
-- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Shop, Cart, Order, Review, Wishlist, Coupon
+- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Shop, Cart, Order, Review, Wishlist, Coupon, Notification
 - **Tags (Admin):** Admin: Roles, Admin: Permissions, Admin: Users, Admin: Categories, Admin: Products, Admin: Shops, Admin: Orders, Admin: Reviews, Admin: Wishlist, Admin: Coupons, Admin: Dashboard, Upload
 - **Tags (Seller):** Seller: Shop
 - **Decorators:**

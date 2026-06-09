@@ -60,6 +60,7 @@ src/features/[feature-name]/
 | Wishlist | `src/features/wishlist/` | wishlist_items |
 | Coupon | `src/features/coupon/` | coupons, coupon_categories, coupon_products, coupon_usages |
 | Upload | `src/features/upload/` | — (file storage, no DB entities) |
+| Notification | `src/features/notification/` | notifications |
 | Dashboard | `src/features/dashboard/` | — (read-only analytics, no owned entities) |
 
 ---

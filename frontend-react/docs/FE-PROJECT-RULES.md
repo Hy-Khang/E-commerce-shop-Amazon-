@@ -62,6 +62,7 @@ src/features/[feature-name]/
 | Wishlist | `src/features/wishlist/` | Add/remove products, wishlist page, admin popular analytics |
 | Coupon | `src/features/coupon/` | Coupon validation at checkout, admin CRUD, usage tracking |
 | Shop | `src/features/shop/` | Public shop profile, seller shop settings, shop info on product detail |
+| Notification | `src/features/notification/` | Notification bell, dropdown, notification page, polling for unread count |
 | Dashboard | `src/features/dashboard/` | Admin analytics dashboard (charts, stats, top products, low stock alerts) |
 
 ---

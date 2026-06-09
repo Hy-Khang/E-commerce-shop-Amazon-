@@ -426,6 +426,38 @@
 
 ---
 
+### 2.10 Notification Feature
+
+#### `notifications`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id`, NOT NULL, CASCADE |
+| type | NVARCHAR(50) | NOT NULL — `'ORDER_STATUS_CHANGED'` |
+| title | NVARCHAR(255) | NOT NULL |
+| message | NVARCHAR(500) | NOT NULL |
+| data | NVARCHAR(MAX) | NULL — JSON payload (e.g. `{ orderId, oldStatus, newStatus }`) |
+| is_read | BIT | NOT NULL, DEFAULT `0` |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_notifications_user_id_is_read` | user_id, is_read | Paginated listing + unread count query |
+| `idx_notifications_created_at` | created_at | Sort by newest first |
+
+> **Design decisions:**
+> - **Event-driven creation** — notifications are created by `NotificationListener` via `@OnEvent('order.status_updated')`. Best-effort async: failures are logged, never propagate to the order flow.
+> - **No self-notification** — customer-initiated actions (placing order, cancelling own order) do NOT create notifications. Only admin/seller status changes trigger notifications.
+> - **JSON data field** — stored as `NVARCHAR(MAX)`, parsed safely on read. Contains `orderId`, `oldStatus`, `newStatus` for order status notifications. Extensible for future notification types.
+> - **No `updated_at`** — notifications are write-once + read-mark. Only `is_read` changes after creation.
+> - **CASCADE delete** — when a user is deleted, their notifications are automatically removed.
+> - **Future consideration** — cleanup cron for notifications older than 90 days.
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -441,6 +473,7 @@ erDiagram
     users ||--o{ reviews : "has many"
     users ||--o{ wishlist_items : "has wishlist"
     users ||--o{ coupon_usages : "used coupons"
+    users ||--o{ notifications : "has notifications"
 
     shops ||--o{ products : "sells"
 
@@ -476,6 +509,7 @@ erDiagram
 - **`reviews`** has a 3-way link: `user_id` + `product_id` + `order_id`
 - **`categories`** self-references via `parent_id` for N-level nesting
 - **`coupons`** uses junction tables (`coupon_categories`, `coupon_products`) for scope targeting, and `coupon_usages` for audit trail
+- **`notifications`** FK to `users` only — created asynchronously via `order.status_updated` event, not directly linked to orders table (order reference stored in JSON `data` field)
 
 ---
 
@@ -545,6 +579,7 @@ export class ProductVariant {
 | Order | `order.order_items` | Lazy | Only load when viewing order detail |
 | Review | `review.user` | Lazy | Load only when rendering review list |
 | Auth | `user.refresh_tokens` | Lazy | Rarely needed, only on token validation |
+| Notification | `notification.user` | Lazy | Not loaded — notifications queried by `user_id` directly |
 
 ---
 
@@ -572,6 +607,7 @@ export class ProductVariant {
 17. coupons
 18. coupon_categories + coupon_products  (parallel — both FK to coupons)
 19. coupon_usages  (FKs to coupons, users, orders)
+20. notifications  (FK to users)
 ```
 
 ### Commands
@@ -636,3 +672,5 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | coupon_usages | `idx_coupon_usages_coupon_id` | coupon_id | List usages per coupon |
 | coupon_usages | `idx_coupon_usages_user_id_coupon_id` | user_id, coupon_id | Per-user usage count check |
 | coupon_usages | `idx_coupon_usages_order_id` | order_id | Find usage by order (reversal) |
+| notifications | `idx_notifications_user_id_is_read` | user_id, is_read | Paginated listing + unread count |
+| notifications | `idx_notifications_created_at` | created_at | Sort by newest first |

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, MapPin, MessageSquare, Package, Heart, LogOut, ChevronDown, Shield, Store, Truck } from 'lucide-react';
+import { User, MapPin, MessageSquare, Package, LogOut, ChevronDown, Shield, Store, Truck } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { ROUTES } from '@/common/constants/routes';
 
@@ -54,9 +54,6 @@ export function UserDropdown() {
             </DropdownLink>
             <DropdownLink to={ROUTES.MY_REVIEWS} icon={<MessageSquare className="h-4 w-4" />} onClick={() => setIsOpen(false)}>
               My Reviews
-            </DropdownLink>
-            <DropdownLink to={ROUTES.WISHLIST} icon={<Heart className="h-4 w-4" />} onClick={() => setIsOpen(false)}>
-              Wishlist
             </DropdownLink>
           </div>
 

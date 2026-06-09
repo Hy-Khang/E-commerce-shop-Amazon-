@@ -23,6 +23,7 @@ graph TB
             Review["review"]
             Wishlist["wishlist"]
             Coupon["coupon"]
+            Notification["notification"]
             Dashboard["dashboard"]
         end
     end
@@ -85,6 +86,7 @@ src/
 │   ├── review/                        — create review, product reviews, my reviews, admin reviews
 │   ├── wishlist/                      — add/remove products, wishlist page, admin popular
 │   ├── coupon/                        — coupon validation, admin CRUD, usage tracking
+│   ├── notification/                  — notification bell, dropdown, polling, notification page
 │   └── dashboard/                     — admin analytics dashboard (charts, stats, alerts)
 │
 ├── assets/                            — static images, fonts
@@ -211,6 +213,7 @@ graph TD
     Coupon["coupon"] --> Auth
     Order --> Coupon
 
+    Notification["notification"] --> Auth
     Dashboard["dashboard"] --> Auth
 
     Product -.->|ShopInfoCard| Shop
@@ -224,6 +227,7 @@ graph TD
 |--------|----------|---------|
 | **Zustand store** | Auth state consumed everywhere | `useAuthStore`: isAuthenticated, user, role → read by guards, header, cart merge |
 | **Zustand store** | Cart badge in header | `useCartStore`: itemCount → written by cart hooks, read by MainLayout |
+| **Zustand store** | Notification badge in header + sidebar | `useNotificationStore`: unreadCount → written by polling hook, read by bell + account sidebar |
 | **TanStack cache invalidation** | Cross-feature side effects | Checkout success → invalidate `['cart']` + `['orders', 'list']` |
 | **Barrel exports** | Composing UI from multiple features | CheckoutPage imports `CartItemList` from `@/features/cart` |
 | **URL params** | Feature-to-feature navigation | ProductCard links to `/products/:slug`, OrderItemRow links back to product |
@@ -257,6 +261,7 @@ graph TD
 | `/profile/addresses` | AddressListPage | user-profile |
 | `/profile/reviews` | MyReviewsPage | review |
 | `/wishlist` | WishlistPage | wishlist |
+| `/notifications` | NotificationPage | notification |
 
 ### Admin Routes (AuthGuard + RoleGuard)
 
@@ -310,6 +315,7 @@ graph TD
 | Server state | TanStack Query | feature hooks | Products, orders, cart items, reviews |
 | Auth state | Zustand | `features/auth/stores` | accessToken, user, role, isAuthenticated |
 | Cart badge | Zustand | `features/cart/stores` | itemCount — derived from TanStack Query cart data |
+| Notification badge | Zustand | `features/notification/stores` | unreadCount — synced from polling query every 30s |
 | URL state | React Router | searchParams | page, limit, category_id, sort, search |
 | Form state | React Hook Form | component-local | Checkout, review, login forms — Zod-validated |
 | UI state | React useState | component-local | Modal open, dropdown, image gallery index, variant selection |
@@ -368,6 +374,12 @@ export const dashboardKeys = {
   stats: () => ['dashboard', 'stats'] as const,
 };
 
+export const notificationKeys = {
+  all:         ['notifications'] as const,
+  list:        (params: NotificationListParams) => ['notifications', 'list', params] as const,
+  unreadCount: () => ['notifications', 'unread-count'] as const,
+};
+
 export const adminCouponKeys = {
   all:       ['admin', 'coupons'] as const,
   list:      (params: CouponListParams) => ['admin', 'coupons', 'list', params] as const,
@@ -387,6 +399,8 @@ export const adminCouponKeys = {
 | Wishlist add/remove | `wishlistKeys.all` + `wishlistKeys.check(productId)` |
 | Admin coupon create/update/deactivate | `adminCouponKeys.all` |
 | Seller shop create/update | `['seller', 'shop']` |
+| Checkout success / cancel order | `notificationKeys.all` (new notifications may exist) |
+| Mark read / mark all read | `notificationKeys.all` + `notificationKeys.unreadCount()` → update `useNotificationStore.unreadCount` |
 
 ---
 
