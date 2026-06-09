@@ -326,6 +326,7 @@ export class OrderService {
       });
     }
 
+    const oldStatus = order.status;
     const allowedTransitions = VALID_STATUS_TRANSITIONS[order.status] || [];
     if (!allowedTransitions.includes(dto.status)) {
       throw new BadRequestException({
@@ -359,6 +360,13 @@ export class OrderService {
         })),
       });
     }
+
+    this.eventEmitter.emit('order.status_updated', {
+      orderId: order.id,
+      userId: order.user_id,
+      oldStatus,
+      newStatus: dto.status,
+    });
 
     this.logger.log(`Order #${orderId} status updated to ${dto.status}`);
 
@@ -449,6 +457,7 @@ export class OrderService {
       });
     }
 
+    const oldStatus = order.status;
     const allowedTransitions = SELLER_STATUS_TRANSITIONS[order.status] || [];
     if (!allowedTransitions.includes(dto.status)) {
       throw new BadRequestException({
@@ -459,6 +468,13 @@ export class OrderService {
 
     await this.orderRepository.updateStatus(orderId, dto.status);
     order.status = dto.status;
+
+    this.eventEmitter.emit('order.status_updated', {
+      orderId: order.id,
+      userId: order.user_id,
+      oldStatus,
+      newStatus: dto.status,
+    });
 
     this.logger.log(
       `Order #${orderId} status updated to ${dto.status} by seller ${userId}`,

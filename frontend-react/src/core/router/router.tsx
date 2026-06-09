@@ -35,6 +35,7 @@ const AdminOrderDetailPage = lazy(() => import('@/features/order/pages/AdminOrde
 
 const MyReviewsPage = lazy(() => import('@/features/review/pages/MyReviewsPage'));
 const WishlistPage = lazy(() => import('@/features/wishlist/pages/WishlistPage'));
+const NotificationPage = lazy(() => import('@/features/notification/pages/NotificationPage'));
 
 const AdminRoleListPage = lazy(() => import('@/features/auth/pages/AdminRoleListPage'));
 const AdminPermissionPage = lazy(() => import('@/features/auth/pages/AdminPermissionPage'));
@@ -98,6 +99,7 @@ export const router = createBrowserRouter([
               { path: 'orders', element: <SuspenseWrapper><OrderHistoryPage /></SuspenseWrapper> },
               { path: 'profile', element: <SuspenseWrapper><ProfilePage /></SuspenseWrapper> },
               { path: 'profile/addresses', element: <SuspenseWrapper><AddressListPage /></SuspenseWrapper> },
+              { path: 'notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
               { path: 'profile/reviews', element: <SuspenseWrapper><MyReviewsPage /></SuspenseWrapper> },
               { path: 'wishlist', element: <SuspenseWrapper><WishlistPage /></SuspenseWrapper> },
             ],

@@ -14,22 +14,22 @@ export function CartSummary({ items }: Props) {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="rounded-lg border bg-white p-6">
-      <h2 className="text-lg font-semibold text-gray-900">Order Summary</h2>
+    <div className="rounded-xl border border-border-default bg-white p-6">
+      <h2 className="text-lg font-bold tracking-tight text-text-primary">Order Summary</h2>
 
       <div className="mt-4 space-y-2">
-        <div className="flex justify-between text-sm text-gray-600">
+        <div className="flex justify-between text-sm text-text-secondary">
           <span>Items ({itemCount})</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
-        <div className="flex justify-between text-sm text-gray-600">
+        <div className="flex justify-between text-sm text-text-secondary">
           <span>Shipping</span>
-          <span className="text-gray-400">Calculated at checkout</span>
+          <span className="text-text-muted">Calculated at checkout</span>
         </div>
       </div>
 
-      <div className="mt-4 border-t pt-4">
-        <div className="flex justify-between text-base font-semibold text-gray-900">
+      <div className="mt-4 border-t border-border-default pt-4">
+        <div className="flex justify-between text-base font-bold text-text-primary">
           <span>Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
@@ -45,7 +45,7 @@ export function CartSummary({ items }: Props) {
 
       <button
         onClick={() => navigate(ROUTES.PRODUCTS)}
-        className="mt-2 w-full rounded-md border px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        className="mt-2 w-full rounded-lg border border-border-default px-4 py-3 text-sm font-medium text-text-secondary hover:bg-neutral-50"
       >
         Continue Shopping
       </button>

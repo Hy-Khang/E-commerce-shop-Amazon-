@@ -19,6 +19,7 @@ import { ConfigService } from '@nestjs/config';
         charset: 'utf8mb4',
         options: {
           trustServerCertificate: true,
+          useUTC: true,
         },
       }),
     }),

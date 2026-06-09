@@ -19,7 +19,7 @@ export default function CartPage() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+      <div className="flex flex-col items-center justify-center py-16 text-text-muted">
         <p>Failed to load your cart. Please try again.</p>
       </div>
     );
@@ -28,9 +28,9 @@ export default function CartPage() {
   if (!cart || cart.items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <ShoppingCart className="h-16 w-16 text-gray-300" />
-        <h2 className="mt-4 text-lg font-medium text-gray-900">Your cart is empty</h2>
-        <p className="mt-1 text-sm text-gray-500">Browse products and add items to your cart.</p>
+        <ShoppingCart className="h-16 w-16 text-text-muted/60" />
+        <h2 className="mt-4 text-lg font-semibold text-text-primary">Your cart is empty</h2>
+        <p className="mt-1 text-sm text-text-muted">Browse products and add items to your cart.</p>
         <Link
           to={ROUTES.PRODUCTS}
           className="mt-6 rounded-lg bg-brand px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
@@ -43,7 +43,7 @@ export default function CartPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-text-primary">
         Shopping Cart ({cart.items.length} {cart.items.length === 1 ? 'item' : 'items'})
       </h1>
 

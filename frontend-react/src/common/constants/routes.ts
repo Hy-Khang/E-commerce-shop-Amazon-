@@ -18,6 +18,7 @@ export const ROUTES = {
   ADDRESSES: '/profile/addresses',
   MY_REVIEWS: '/profile/reviews',
   WISHLIST: '/wishlist',
+  NOTIFICATIONS: '/notifications',
 
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_PRODUCTS: '/admin/products',

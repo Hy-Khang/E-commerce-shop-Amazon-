@@ -1,0 +1,5 @@
+ChatGPT feedback: implement if reasonable, otherwise skip. Do not apply suggestions blindly
+
+/compact and summarize only the context needed for upcoming tasks/plans. Remove unnecessary discussion and unrelated details.
+
+Proceed with the implementation plan, but stop after completing each phase for review and approval.

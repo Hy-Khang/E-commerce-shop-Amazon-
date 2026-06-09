@@ -6,6 +6,7 @@ import { useAuthStore } from '@/features/auth';
 import { useCategories } from '@/features/product';
 import { CartBadge } from '@/features/cart';
 import { WishlistBadge } from '@/features/wishlist';
+import { NotificationBell } from '@/features/notification';
 import { ROUTES } from '@/common/constants/routes';
 import { UserDropdown } from './UserDropdown';
 import { MobileNav } from './MobileNav';
@@ -37,6 +38,7 @@ export function Header() {
         <div className="flex items-center gap-0.5 md:gap-1">
           <PortalLinks role={user?.role} />
           {isAuthenticated && <WishlistBadge />}
+          {isAuthenticated && <NotificationBell />}
           <CartBadge />
           <div className="hidden md:flex md:items-center md:ml-2">
             {isAuthenticated ? (

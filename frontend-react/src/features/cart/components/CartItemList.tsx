@@ -10,11 +10,11 @@ interface Props {
 
 export function CartItemList({ items, onUpdateQuantity, onRemove, isUpdating }: Props) {
   return (
-    <div className="rounded-lg border bg-white">
-      <div className="hidden border-b px-4 py-3 sm:grid sm:grid-cols-[1fr_auto_7rem_2rem] sm:gap-4">
-        <span className="text-xs font-medium uppercase text-gray-500">Product</span>
-        <span className="text-xs font-medium uppercase text-gray-500">Quantity</span>
-        <span className="text-right text-xs font-medium uppercase text-gray-500">Total</span>
+    <div className="rounded-xl border border-border-default bg-white">
+      <div className="hidden border-b border-border-default px-4 py-3 sm:grid sm:grid-cols-[1fr_auto_7rem_2rem] sm:gap-4">
+        <span className="text-xs font-medium uppercase tracking-wider text-text-muted">Product</span>
+        <span className="text-xs font-medium uppercase tracking-wider text-text-muted">Quantity</span>
+        <span className="text-right text-xs font-medium uppercase tracking-wider text-text-muted">Total</span>
         <span />
       </div>
       <div className="px-4">

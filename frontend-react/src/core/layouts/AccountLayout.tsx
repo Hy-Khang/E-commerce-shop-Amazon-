@@ -1,9 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { User, MapPin, ShoppingCart, MessageSquare, Heart } from 'lucide-react';
+import { User, MapPin, ShoppingCart, MessageSquare, Heart, Bell } from 'lucide-react';
 import { useProfile } from '@/features/user-profile';
 import { useOrders } from '@/features/order';
 import { useWishlist } from '@/features/wishlist';
 import { useMyReviews } from '@/features/review';
+import { useNotificationStore } from '@/features/notification';
 
 export default function AccountLayout() {
   const { data: profile } = useProfile();
@@ -16,6 +17,7 @@ export default function AccountLayout() {
   const ordersCount = ordersData?.meta.total ?? 0;
   const wishlistCount = wishlistData?.meta.total ?? 0;
   const reviewsCount = reviewsData?.meta.total ?? 0;
+  const notificationUnreadCount = useNotificationStore((s) => s.unreadCount);
 
   const initials = profile?.full_name
     ? profile.full_name
@@ -43,6 +45,12 @@ export default function AccountLayout() {
       label: 'My Orders',
       icon: ShoppingCart,
       count: ordersCount,
+    },
+    {
+      to: '/notifications',
+      label: 'My Notifications',
+      icon: Bell,
+      count: notificationUnreadCount,
     },
     {
       to: '/profile/reviews',

@@ -25,6 +25,7 @@ import { CouponUsage } from '../../features/coupon/entities/coupon-usage.entity'
 import { Permission } from '../../features/auth/entities/permission.entity';
 import { RolePermission } from '../../features/auth/entities/role-permission.entity';
 import { Shop } from '../../features/shop/entities/shop.entity';
+import { Notification } from '../../features/notification/entities/notification.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -55,8 +56,10 @@ export const AppDataSource = new DataSource({
     Permission,
     RolePermission,
     Shop,
+    Notification,
   ],
   options: {
     trustServerCertificate: true,
+    useUTC: true,
   },
 });

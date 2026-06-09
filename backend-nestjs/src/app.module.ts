@@ -13,6 +13,7 @@ import { CouponModule } from './features/coupon/coupon.module';
 import { UploadModule } from './features/upload/upload.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { ShopModule } from './features/shop/shop.module';
+import { NotificationModule } from './features/notification/notification.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -32,6 +33,7 @@ import { AppService } from './app.service';
     UploadModule,
     DashboardModule,
     ShopModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
