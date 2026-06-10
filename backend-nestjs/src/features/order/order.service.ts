@@ -29,7 +29,7 @@ import {
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import {
-  VALID_STATUS_TRANSITIONS,
+  ADMIN_STATUS_TRANSITIONS,
   SELLER_STATUS_TRANSITIONS,
   DEFAULT_SHIPPING_FEE,
   IShippingAddressSnapshot,
@@ -335,7 +335,7 @@ export class OrderService {
     }
 
     const oldStatus = order.status;
-    const allowedTransitions = VALID_STATUS_TRANSITIONS[order.status] || [];
+    const allowedTransitions = ADMIN_STATUS_TRANSITIONS[order.status] || [];
     if (!allowedTransitions.includes(dto.status)) {
       throw new BadRequestException({
         code: 'ORDER_003',

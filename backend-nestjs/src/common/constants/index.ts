@@ -3,6 +3,8 @@ export enum OrderStatus {
   Confirmed = 'confirmed',
   Shipping = 'shipping',
   Delivered = 'delivered',
+  Completed = 'completed',
+  ReturnRequested = 'return_requested',
   Cancelled = 'cancelled',
 }
 

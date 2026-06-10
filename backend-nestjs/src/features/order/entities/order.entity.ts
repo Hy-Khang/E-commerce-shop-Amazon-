@@ -12,6 +12,7 @@ import { OrderItem } from './order-item.entity';
 
 @Entity('orders')
 @Index('idx_orders_user_id', ['user_id'])
+@Index('idx_orders_delivered_at', ['delivered_at'])
 export class Order {
   @PrimaryGeneratedColumn()
   id: number;
@@ -45,6 +46,9 @@ export class Order {
 
   @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
   created_at: Date;
+
+  @Column({ type: 'datetime2', nullable: true })
+  delivered_at: Date | null;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

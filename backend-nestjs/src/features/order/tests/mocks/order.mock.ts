@@ -48,6 +48,7 @@ export const mockOrder = (overrides: Partial<Order> = {}): Order => ({
   coupon_code: null,
   discount_amount: 0,
   created_at: new Date('2026-01-15T10:00:00Z'),
+  delivered_at: null,
   user: null as any,
   order_items: [mockOrderItem()],
   ...overrides,

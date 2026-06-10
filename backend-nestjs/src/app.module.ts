@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './core/database/database.module';
 import { AuthModule } from './features/auth/auth.module';
@@ -22,6 +23,7 @@ import { AppService } from './app.service';
     AppConfigModule,
     DatabaseModule,
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     AuthModule,
     UserProfileModule,
     ProductModule,
