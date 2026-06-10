@@ -9,6 +9,8 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
   confirmed: 'bg-sky-500 text-sky-700',
   shipping: 'bg-violet-500 text-violet-700',
   delivered: 'bg-emerald-500 text-emerald-700',
+  completed: 'bg-teal-500 text-teal-700',
+  return_requested: 'bg-orange-500 text-orange-700',
   cancelled: 'bg-rose-500 text-rose-700',
 };
 
@@ -32,11 +34,13 @@ export function calculateOrderItemsTotal(items: OrderItem[]): number {
   return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 
-const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+const ADMIN_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending: ['confirmed', 'cancelled'],
   confirmed: ['shipping', 'cancelled'],
   shipping: ['delivered', 'cancelled'],
-  delivered: [],
+  delivered: ['completed'],
+  completed: [],
+  return_requested: ['completed', 'cancelled'],
   cancelled: [],
 };
 
@@ -55,7 +59,7 @@ export function getValidNextStatuses(
   paymentStatus?: PaymentStatus,
   paymentMethod?: PaymentMethod,
 ): OrderStatus[] {
-  const transitions = VALID_TRANSITIONS[current] ?? [];
+  const transitions = ADMIN_TRANSITIONS[current] ?? [];
 
   if (paymentMethod && paymentMethod !== 'cod' && paymentStatus === 'unpaid') {
     return transitions.filter((s) => s !== 'delivered');
@@ -90,7 +94,7 @@ export function canMarkAsPaid(
   paymentMethod: PaymentMethod,
 ): boolean {
   if (paymentStatus === 'paid') return false;
-  if (status === 'cancelled') return false;
+  if (status === 'cancelled' || status === 'return_requested') return false;
 
   if (paymentMethod === 'cod') {
     return status === 'shipping' || status === 'delivered';

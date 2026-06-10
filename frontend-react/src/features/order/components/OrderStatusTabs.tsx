@@ -6,6 +6,8 @@ const ORDER_STATUS_TABS: { label: string; value: OrderStatus | undefined }[] = [
   { label: 'Confirmed', value: 'confirmed' },
   { label: 'Shipping', value: 'shipping' },
   { label: 'Delivered', value: 'delivered' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'Return Requested', value: 'return_requested' },
   { label: 'Cancelled', value: 'cancelled' },
 ];
 

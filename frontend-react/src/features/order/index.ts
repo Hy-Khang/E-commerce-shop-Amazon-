@@ -5,6 +5,8 @@ export { useOrders, orderKeys } from './hooks/useOrders';
 export { useOrder } from './hooks/useOrder';
 export { useCheckout } from './hooks/useCheckout';
 export { useCancelOrder } from './hooks/useCancelOrder';
+export { useConfirmReceipt } from './hooks/useConfirmReceipt';
+export { useRequestReturn } from './hooks/useRequestReturn';
 export { useAdminOrders, adminOrderKeys } from './hooks/useAdminOrders';
 export { useAdminOrder } from './hooks/useAdminOrder';
 export { useUpdateOrderStatus } from './hooks/useUpdateOrderStatus';

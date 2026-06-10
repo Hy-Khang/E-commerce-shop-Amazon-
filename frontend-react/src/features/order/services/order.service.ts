@@ -21,6 +21,12 @@ export const orderService = {
   cancel: (id: number) =>
     api.patch<SuccessResponse<Order>>(`/orders/${id}/cancel`),
 
+  confirmReceipt: (id: number) =>
+    api.patch<SuccessResponse<Order>>(`/orders/${id}/confirm-receipt`),
+
+  requestReturn: (id: number) =>
+    api.patch<SuccessResponse<Order>>(`/orders/${id}/return-request`),
+
   getAddresses: () =>
     api.get<SuccessResponse<Address[]>>('/addresses'),
 };

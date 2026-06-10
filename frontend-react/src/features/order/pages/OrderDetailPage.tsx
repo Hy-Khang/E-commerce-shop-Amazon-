@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Star, Store } from 'lucide-react';
+import { ArrowLeft, Loader2, Star, Store, PackageCheck, RotateCcw } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { Button } from '@/common/components/ui/Button';
 import { ROUTES, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
@@ -8,6 +8,8 @@ import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { ReviewForm } from '@/features/review';
 import { useOrder } from '../hooks/useOrder';
 import { useCancelOrder } from '../hooks/useCancelOrder';
+import { useConfirmReceipt } from '../hooks/useConfirmReceipt';
+import { useRequestReturn } from '../hooks/useRequestReturn';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderItemRow } from '../components/OrderItemRow';
 import { isOrderCancellable, getPaymentStatusColor, groupItemsByShop } from '../utils/order.util';
@@ -17,8 +19,12 @@ export default function OrderDetailPage() {
   const orderId = Number(id);
   const { data: order, isLoading, isError } = useOrder(orderId);
   const cancelOrder = useCancelOrder();
+  const confirmReceipt = useConfirmReceipt();
+  const requestReturn = useRequestReturn();
   const [reviewingItemId, setReviewingItemId] = useState<number | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showConfirmReceipt, setShowConfirmReceipt] = useState(false);
+  const [showReturnRequest, setShowReturnRequest] = useState(false);
 
   if (isLoading) {
     return (
@@ -44,6 +50,8 @@ export default function OrderDetailPage() {
   }
 
   const isDelivered = order.status === 'delivered';
+  const isCompleted = order.status === 'completed';
+  const canReview = isCompleted;
 
   return (
     <div>
@@ -71,6 +79,28 @@ export default function OrderDetailPage() {
             >
               {cancelOrder.isPending ? 'Cancelling...' : 'Cancel Order'}
             </Button>
+          )}
+          {isDelivered && (
+            <>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowConfirmReceipt(true)}
+                disabled={confirmReceipt.isPending || requestReturn.isPending}
+              >
+                <PackageCheck className="mr-1.5 h-4 w-4" />
+                Confirm Receipt
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowReturnRequest(true)}
+                disabled={confirmReceipt.isPending || requestReturn.isPending}
+              >
+                <RotateCcw className="mr-1.5 h-4 w-4" />
+                Return / Refund
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -100,7 +130,7 @@ export default function OrderDetailPage() {
                 {group.items.map((item) => (
                   <div key={item.id}>
                     <OrderItemRow item={item} />
-                    {isDelivered && item.product_id && (
+                    {canReview && item.product_id && (
                       <div className="pb-4 pl-20">
                         {reviewingItemId === item.id ? (
                           <div className="rounded-xl border border-border-default bg-neutral-50/50 p-5">
@@ -208,6 +238,34 @@ export default function OrderDetailPage() {
           cancelOrder.mutate(orderId);
         }}
         onCancel={() => setShowCancelConfirm(false)}
+      />
+
+      <ConfirmModal
+        open={showConfirmReceipt}
+        title="Confirm Receipt"
+        message="Confirm that you have received this order? Once confirmed, you can write reviews for the products."
+        variant="info"
+        confirmLabel="Confirm Receipt"
+        loading={confirmReceipt.isPending}
+        onConfirm={() => {
+          setShowConfirmReceipt(false);
+          confirmReceipt.mutate(orderId);
+        }}
+        onCancel={() => setShowConfirmReceipt(false)}
+      />
+
+      <ConfirmModal
+        open={showReturnRequest}
+        title="Request Return / Refund"
+        message="Are you sure you want to request a return for this order? An admin will review your request."
+        variant="warning"
+        confirmLabel="Submit Return Request"
+        loading={requestReturn.isPending}
+        onConfirm={() => {
+          setShowReturnRequest(false);
+          requestReturn.mutate(orderId);
+        }}
+        onCancel={() => setShowReturnRequest(false)}
       />
     </div>
   );

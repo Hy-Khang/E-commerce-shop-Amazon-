@@ -3,7 +3,7 @@ import type { PaginationParams } from '@/common/types/common.types';
 
 // --- Shared sub-types ---
 
-export type OrderStatus = 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'completed' | 'return_requested' | 'cancelled';
 export type PaymentMethod = 'cod' | 'banking' | 'momo';
 export type PaymentStatus = 'unpaid' | 'paid';
 
@@ -58,6 +58,7 @@ export interface Order {
   total_amount: number;
   shipping_address: ShippingAddress;
   order_items: OrderItem[];
+  delivered_at: string | null;
   created_at: string;
 }
 

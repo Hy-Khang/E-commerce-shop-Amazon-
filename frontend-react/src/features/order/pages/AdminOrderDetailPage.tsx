@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES, ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
@@ -101,6 +101,18 @@ export default function AdminOrderDetailPage() {
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
+
+      {order.status === 'return_requested' && (
+        <div className="flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-orange-500" />
+          <div>
+            <p className="text-sm font-semibold text-orange-800">Customer requested a return/refund</p>
+            <p className="mt-0.5 text-sm text-orange-700">
+              Review and resolve: mark as Completed to reject, or Cancel to approve the return.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

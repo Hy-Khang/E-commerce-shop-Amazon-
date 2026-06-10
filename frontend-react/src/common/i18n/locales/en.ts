@@ -5,6 +5,8 @@ export const en: TranslationSchema = {
     order: {
       placed: 'Order placed successfully!',
       cancelled: 'Order cancelled',
+      receiptConfirmed: 'Receipt confirmed — order completed',
+      returnRequested: 'Return request submitted',
       statusUpdated: 'Order status updated',
       paymentUpdated: 'Payment status updated',
     },

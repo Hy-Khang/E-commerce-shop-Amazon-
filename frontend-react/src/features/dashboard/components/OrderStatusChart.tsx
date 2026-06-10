@@ -10,6 +10,8 @@ const STATUS_COLORS: Record<string, string> = {
   confirmed: '#3b82f6',
   shipping: '#06b6d4',
   delivered: '#10b981',
+  completed: '#14b8a6',
+  return_requested: '#f97316',
   cancelled: '#f43f5e',
 };
 
@@ -18,6 +20,8 @@ const STATUS_LABELS: Record<string, string> = {
   confirmed: 'Confirmed',
   shipping: 'Shipping',
   delivered: 'Delivered',
+  completed: 'Completed',
+  return_requested: 'Return Requested',
   cancelled: 'Cancelled',
 };
 

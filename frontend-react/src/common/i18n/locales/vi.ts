@@ -3,6 +3,8 @@ export const vi = {
     order: {
       placed: 'Đặt hàng thành công!',
       cancelled: 'Đã hủy đơn hàng',
+      receiptConfirmed: 'Đã xác nhận nhận hàng',
+      returnRequested: 'Đã gửi yêu cầu trả hàng',
       statusUpdated: 'Đã cập nhật trạng thái đơn hàng',
       paymentUpdated: 'Đã cập nhật trạng thái thanh toán',
     },

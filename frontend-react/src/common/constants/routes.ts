@@ -58,6 +58,8 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   confirmed: 'Confirmed',
   shipping: 'Shipping',
   delivered: 'Delivered',
+  completed: 'Completed',
+  return_requested: 'Return Requested',
   cancelled: 'Cancelled',
 };
 
