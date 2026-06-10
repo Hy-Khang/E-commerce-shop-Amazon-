@@ -165,6 +165,7 @@ GET /products?sort=created_at&order=desc
 | ORDER_002 | 400 | Insufficient stock for checkout |
 | ORDER_003 | 400 | Invalid status transition (e.g. delivered → pending) |
 | ORDER_004 | 403 | Order does not belong to user |
+| ORDER_005 | 400 | Order has already been completed or is not in delivered status |
 | REVIEW_001 | 403 | Product not purchased — `order_id` verification failed |
 | REVIEW_002 | 409 | Review already exists for this order + product |
 | CATEGORY_001 | 400 | Cannot delete category with existing products or children |
@@ -279,6 +280,8 @@ GET /products?sort=created_at&order=desc
 | GET | `/orders` | List my orders (paginated) | Customer |
 | GET | `/orders/:id` | Get order detail + order_items (own only) | Customer |
 | PATCH | `/orders/:id/cancel` | Cancel order (if status = pending) | Customer |
+| PATCH | `/orders/:id/confirm-receipt` | Confirm receipt — delivered → completed | Customer |
+| PATCH | `/orders/:id/return-request` | Request return/refund — delivered → return_requested | Customer |
 
 ### Review — `/api/v1/reviews`
 
@@ -314,7 +317,7 @@ GET /products?sort=created_at&order=desc
 | PATCH | `/notifications/:id/read` | Mark single notification as read (ownership enforced) | Customer |
 | PATCH | `/notifications/read-all` | Mark all notifications as read (HTTP 204) | Customer |
 
-> **Polling-based delivery:** Frontend polls `GET /notifications/unread-count` every 30s. No WebSocket infrastructure. Notifications are created automatically via `order.status_updated` event when admin/seller changes order status. Customer-initiated actions (placing order, cancelling own order) do **not** create notifications.
+> **Polling-based delivery:** Frontend polls `GET /notifications/unread-count` every 30s. No WebSocket infrastructure. Notifications are created automatically via `order.status_updated` event. Admin/seller status changes notify the customer. Customer-initiated confirm receipt and return requests notify the seller(s). Customer-initiated order placement and cancellation do **not** create notifications.
 
 ---
 
@@ -394,7 +397,11 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 | PATCH | `/admin/orders/:id/status` | Update order status (valid transitions only) | — |
 | PATCH | `/admin/orders/:id/payment-status` | Update payment status (unpaid → paid) | — |
 
-> **Valid status transitions:** `pending → confirmed → shipping → delivered`, `pending → cancelled`, `confirmed → cancelled`, `shipping → cancelled`. Invalid transitions (e.g. `delivered → pending`) return `ORDER_003 (400)`.
+> **Valid status transitions (admin):** `pending → confirmed → shipping → delivered → completed`, `pending → cancelled`, `confirmed → cancelled`, `shipping → cancelled`, `return_requested → completed`, `return_requested → cancelled`. Invalid transitions (e.g. `delivered → pending`) return `ORDER_003 (400)`.
+>
+> **Customer status transitions:** `pending → cancelled`, `delivered → completed` (confirm receipt), `delivered → return_requested` (return request). Customer endpoints: `PATCH /orders/:id/cancel`, `PATCH /orders/:id/confirm-receipt`, `PATCH /orders/:id/return-request`.
+>
+> **Auto-complete:** Orders in `delivered` status for 7+ days are automatically moved to `completed` via hourly cron job. Revenue (dashboard) counts `completed` orders only.
 
 ### Admin: Review Management — `/api/v1/admin/reviews`
 
@@ -597,7 +604,7 @@ Read cart → validate stock for each variant → snapshot product_name/sku/pric
 { "product_id": 10, "order_id": 42, "rating": 5, "comment": "Chất lượng tốt, giao hàng nhanh" }
 ```
 
-**Flow:** Verify order belongs to user → verify order status = `delivered` → verify product exists in order_items → check no duplicate review for same order + product → create review.
+**Flow:** Verify order belongs to user → verify order status = `completed` → verify product exists in order_items → check no duplicate review for same order + product → create review.
 
 **Success (201):**
 

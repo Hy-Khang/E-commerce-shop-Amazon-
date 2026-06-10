@@ -235,8 +235,11 @@ graph TD
     Order -.->|event: order.created| Product
     Order -.->|event: order.cancelled| Product
     Order -.->|event: order.status_updated| Notification["notification"]
+    Order -.->|cron: auto-complete| Order
 
 ```
+
+> **`order.status_updated` event payload** includes `notifyUserIds: number[]` — admin/seller status changes notify the customer; customer confirm-receipt and return-request notify the seller(s). The `NotificationListener` creates one notification per user in the array.
 
 ### Two Mechanisms
 
@@ -244,6 +247,7 @@ graph TD
 |-----------|------|---------|
 | **Module exports + DI** | Synchronous, caller needs return value | Order imports CartModule → injects CartService → reads cart at checkout |
 | **EventEmitter2** | Async fire-and-forget side effects | `order.created` → product deducts stock; `order.cancelled` → product restores stock |
+| **@nestjs/schedule Cron** | Periodic background tasks | `OrderScheduler` auto-completes delivered orders after 7 days (hourly) |
 
 ### Dependency Map
 
@@ -254,7 +258,7 @@ graph TD
 | shop | AuthModule | — |
 | product | ShopModule | `order.created`, `order.cancelled` |
 | cart | AuthModule, ProductModule | — |
-| order | AuthModule, CartModule, ProductModule | — |
+| order | AuthModule, CartModule, ProductModule, ShopModule, ScheduleModule | — (emits `order.status_updated`, has `OrderScheduler` cron) |
 | review | AuthModule, OrderModule, ProductModule | — |
 | wishlist | ProductModule | — |
 | coupon | — | — |

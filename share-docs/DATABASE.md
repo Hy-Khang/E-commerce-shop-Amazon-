@@ -265,7 +265,7 @@
 |-------|------|-------------|
 | id | INT | PK, auto-increment |
 | user_id | INT | FK → `users.id`, NOT NULL |
-| status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `pending` / `confirmed` / `shipping` / `delivered` / `cancelled` |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `pending` / `confirmed` / `shipping` / `delivered` / `completed` / `return_requested` / `cancelled` |
 | payment_method | NVARCHAR(20) | NOT NULL — `cod` / `banking` / `momo` |
 | payment_status | NVARCHAR(20) | NOT NULL, DEFAULT `'unpaid'` — `unpaid` / `paid` |
 | shipping_fee | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
@@ -273,6 +273,7 @@
 | shipping_address | NVARCHAR(MAX) | NOT NULL — **JSON snapshot**, NOT FK to addresses |
 | coupon_code | NVARCHAR(50) | NULL — **snapshot** of applied coupon code |
 | discount_amount | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
+| delivered_at | DATETIME2 | NULL — set when order transitions to `delivered`, used by auto-complete cron |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
 > **Key decisions:**
@@ -281,6 +282,8 @@
 > - `coupon_code` and `discount_amount` are snapshots — immune to coupon edits/deletions after checkout.
 > - **Formula:** `total_amount = itemsTotal - discount_amount + shipping_fee`
 > - Enums stored as string columns for readability and easy migration.
+> - **Order completion flow:** `delivered` is no longer terminal. Customer can confirm receipt (`completed`) or request return (`return_requested`). Orders auto-complete 7 days after `delivered_at` via hourly cron. Revenue (dashboard) and review eligibility require `completed` status.
+> - **`delivered_at`** is set when order transitions to `delivered` (admin or seller). Used by auto-complete cron to find orders past the 7-day window.
 
 #### `order_items` — Immutable Snapshots
 
@@ -450,7 +453,7 @@
 
 > **Design decisions:**
 > - **Event-driven creation** — notifications are created by `NotificationListener` via `@OnEvent('order.status_updated')`. Best-effort async: failures are logged, never propagate to the order flow.
-> - **No self-notification** — customer-initiated actions (placing order, cancelling own order) do NOT create notifications. Only admin/seller status changes trigger notifications.
+> - **Multi-target notifications** — `order.status_updated` event includes `notifyUserIds: number[]`. Admin/seller status changes notify the customer. Customer confirm-receipt and return-request notify the seller(s). Customer-initiated order placement and cancellation do not create notifications.
 > - **JSON data field** — stored as `NVARCHAR(MAX)`, parsed safely on read. Contains `orderId`, `oldStatus`, `newStatus` for order status notifications. Extensible for future notification types.
 > - **No `updated_at`** — notifications are write-once + read-mark. Only `is_read` changes after creation.
 > - **CASCADE delete** — when a user is deleted, their notifications are automatically removed.
@@ -662,6 +665,7 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | order_items | `idx_order_items_order_id` | order_id | Load items for an order |
 | order_items | `idx_order_items_shop_id` | shop_id | Filter order items by shop |
 | orders | `idx_orders_user_id` | user_id | User's order history |
+| orders | `idx_orders_delivered_at` | delivered_at | Auto-complete cron: find delivered orders past 7-day window |
 | reviews | `idx_reviews_product_id` | product_id | Product review listing |
 | cart_items | `idx_cart_items_cart_id` | cart_id | Load cart contents |
 | wishlist_items | `uq_wishlist_items_user_product` | user_id, product_id | Unique constraint + "is wishlisted?" check |
