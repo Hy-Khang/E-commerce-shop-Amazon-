@@ -4,6 +4,7 @@ import { OrderController } from './order.controller';
 import { AdminOrderController } from './admin-order.controller';
 import { SellerOrderController } from './seller-order.controller';
 import { OrderService } from './order.service';
+import { OrderScheduler } from './order.scheduler';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { OrderRepository } from './repositories/order.repository';
@@ -26,6 +27,7 @@ import { ShopModule } from '../shop/shop.module';
   controllers: [OrderController, AdminOrderController, SellerOrderController],
   providers: [
     OrderService,
+    OrderScheduler,
     OrderRepository,
     OrderItemRepository,
   ],

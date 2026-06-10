@@ -17,33 +17,40 @@ export class NotificationListener {
   async handleOrderStatusUpdated(
     payload: OrderStatusUpdatedEvent,
   ): Promise<void> {
-    try {
-      const { title, message } = buildOrderStatusMessage(
-        payload.orderId,
-        payload.oldStatus,
-        payload.newStatus,
-      );
+    const userIds = payload.notifyUserIds;
+    if (!userIds || userIds.length === 0) return;
 
-      await this.notificationRepository.create({
-        user_id: payload.userId,
-        type: NotificationType.ORDER_STATUS_CHANGED,
-        title,
-        message,
-        data: JSON.stringify({
-          orderId: payload.orderId,
-          oldStatus: payload.oldStatus,
-          newStatus: payload.newStatus,
-        }),
-      });
+    const { title, message } = buildOrderStatusMessage(
+      payload.orderId,
+      payload.oldStatus,
+      payload.newStatus,
+    );
 
-      this.logger.log(
-        `Notification created for user ${payload.userId}: order #${payload.orderId} ${payload.oldStatus} → ${payload.newStatus}`,
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to create notification for order #${payload.orderId}`,
-        error instanceof Error ? error.stack : String(error),
-      );
+    const data = JSON.stringify({
+      orderId: payload.orderId,
+      oldStatus: payload.oldStatus,
+      newStatus: payload.newStatus,
+    });
+
+    for (const userId of userIds) {
+      try {
+        await this.notificationRepository.create({
+          user_id: userId,
+          type: NotificationType.ORDER_STATUS_CHANGED,
+          title,
+          message,
+          data,
+        });
+
+        this.logger.log(
+          `Notification created for user ${userId}: order #${payload.orderId} ${payload.oldStatus} → ${payload.newStatus}`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to create notification for user ${userId}, order #${payload.orderId}`,
+          error instanceof Error ? error.stack : String(error),
+        );
+      }
     }
   }
 }

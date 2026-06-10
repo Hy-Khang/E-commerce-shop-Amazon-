@@ -31,6 +31,7 @@ import { OrderItem } from './entities/order-item.entity';
 import {
   ADMIN_STATUS_TRANSITIONS,
   SELLER_STATUS_TRANSITIONS,
+  CUSTOMER_STATUS_TRANSITIONS,
   DEFAULT_SHIPPING_FEE,
   IShippingAddressSnapshot,
 } from './types/order.types';
@@ -253,6 +254,96 @@ export class OrderService {
     return toOrderResponse(order);
   }
 
+  async confirmReceipt(
+    userId: number,
+    orderId: number,
+  ): Promise<OrderResponseDto> {
+    const order = await this.orderRepository.findByIdWithItems(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    if (order.user_id !== userId) {
+      throw new ForbiddenException({
+        code: 'ORDER_004',
+        message: 'Order does not belong to user',
+      });
+    }
+
+    if (order.status !== OrderStatus.Delivered) {
+      throw new BadRequestException({
+        code: 'ORDER_005',
+        message: 'Order has already been completed or is not in delivered status',
+      });
+    }
+
+    await this.orderRepository.updateStatus(orderId, OrderStatus.Completed);
+    const oldStatus = order.status;
+    order.status = OrderStatus.Completed;
+
+    const sellerUserIds = await this.resolveSellerUserIds(order.order_items);
+
+    this.eventEmitter.emit('order.status_updated', {
+      orderId: order.id,
+      userId: order.user_id,
+      notifyUserIds: sellerUserIds,
+      oldStatus,
+      newStatus: OrderStatus.Completed,
+    });
+
+    this.logger.log(`Order #${orderId} receipt confirmed by user ${userId}`);
+
+    return toOrderResponse(order);
+  }
+
+  async requestReturn(
+    userId: number,
+    orderId: number,
+  ): Promise<OrderResponseDto> {
+    const order = await this.orderRepository.findByIdWithItems(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    if (order.user_id !== userId) {
+      throw new ForbiddenException({
+        code: 'ORDER_004',
+        message: 'Order does not belong to user',
+      });
+    }
+
+    if (order.status !== OrderStatus.Delivered) {
+      throw new BadRequestException({
+        code: 'ORDER_005',
+        message: 'Order has already been completed or is not in delivered status',
+      });
+    }
+
+    await this.orderRepository.updateStatus(orderId, OrderStatus.ReturnRequested);
+    const oldStatus = order.status;
+    order.status = OrderStatus.ReturnRequested;
+
+    const sellerUserIds = await this.resolveSellerUserIds(order.order_items);
+
+    this.eventEmitter.emit('order.status_updated', {
+      orderId: order.id,
+      userId: order.user_id,
+      notifyUserIds: sellerUserIds,
+      oldStatus,
+      newStatus: OrderStatus.ReturnRequested,
+    });
+
+    this.logger.log(`Order #${orderId} return requested by user ${userId}`);
+
+    return toOrderResponse(order);
+  }
+
   async cancelOrder(
     userId: number,
     orderId: number,
@@ -354,7 +445,15 @@ export class OrderService {
       });
     }
 
-    await this.orderRepository.updateStatus(orderId, dto.status);
+    if (dto.status === OrderStatus.Delivered) {
+      await this.orderRepository.updateStatusWithDeliveredAt(
+        orderId,
+        dto.status,
+        new Date(),
+      );
+    } else {
+      await this.orderRepository.updateStatus(orderId, dto.status);
+    }
     order.status = dto.status;
 
     if (dto.status === OrderStatus.Cancelled) {
@@ -372,6 +471,7 @@ export class OrderService {
     this.eventEmitter.emit('order.status_updated', {
       orderId: order.id,
       userId: order.user_id,
+      notifyUserIds: [order.user_id],
       oldStatus,
       newStatus: dto.status,
     });
@@ -393,10 +493,13 @@ export class OrderService {
       });
     }
 
-    if (order.status === OrderStatus.Cancelled) {
+    if (
+      order.status === OrderStatus.Cancelled ||
+      order.status === OrderStatus.ReturnRequested
+    ) {
       throw new BadRequestException({
         code: 'ORDER_003',
-        message: 'Cannot update payment status of a cancelled order',
+        message: `Cannot update payment status of a ${order.status} order`,
       });
     }
 
@@ -474,12 +577,21 @@ export class OrderService {
       });
     }
 
-    await this.orderRepository.updateStatus(orderId, dto.status);
+    if (dto.status === OrderStatus.Delivered) {
+      await this.orderRepository.updateStatusWithDeliveredAt(
+        orderId,
+        dto.status,
+        new Date(),
+      );
+    } else {
+      await this.orderRepository.updateStatus(orderId, dto.status);
+    }
     order.status = dto.status;
 
     this.eventEmitter.emit('order.status_updated', {
       orderId: order.id,
       userId: order.user_id,
+      notifyUserIds: [order.user_id],
       oldStatus,
       newStatus: dto.status,
     });
@@ -505,10 +617,13 @@ export class OrderService {
       });
     }
 
-    if (order.status === OrderStatus.Cancelled) {
+    if (
+      order.status === OrderStatus.Cancelled ||
+      order.status === OrderStatus.ReturnRequested
+    ) {
       throw new BadRequestException({
         code: 'ORDER_003',
-        message: 'Cannot update payment status of a cancelled order',
+        message: `Cannot update payment status of a ${order.status} order`,
       });
     }
 
@@ -536,5 +651,25 @@ export class OrderService {
 
   async findOrderByIdForReview(orderId: number): Promise<Order | null> {
     return this.orderRepository.findByIdWithItems(orderId);
+  }
+
+  // ─── Private helpers ───
+
+  private async resolveSellerUserIds(orderItems: OrderItem[]): Promise<number[]> {
+    const shopIds = [
+      ...new Set(
+        orderItems.map((i) => i.shop_id).filter((id): id is number => id != null),
+      ),
+    ];
+    const userIds: number[] = [];
+    for (const shopId of shopIds) {
+      try {
+        const shop = await this.shopService.findShopById(shopId);
+        userIds.push(shop.user_id);
+      } catch {
+        // Shop may have been deleted — skip notification
+      }
+    }
+    return userIds;
   }
 }

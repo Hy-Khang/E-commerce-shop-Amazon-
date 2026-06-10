@@ -65,6 +65,7 @@ export function toOrderResponse(order: Order): OrderResponseDto {
     shipping_address: parseShippingAddress(order.shipping_address),
     order_items: (order.order_items || []).map(toOrderItemResponse),
     created_at: order.created_at,
+    delivered_at: order.delivered_at ?? null,
   };
 }
 
@@ -79,6 +80,7 @@ export function toOrderListItemResponse(order: Order): OrderListItemResponseDto 
     discount_amount: Number(order.discount_amount ?? 0),
     total_amount: Number(order.total_amount),
     created_at: order.created_at,
+    delivered_at: order.delivered_at ?? null,
   };
 }
 

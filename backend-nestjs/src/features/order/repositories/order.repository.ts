@@ -172,7 +172,36 @@ export class OrderRepository {
     await this.repo.update(id, { status });
   }
 
+  async updateStatusWithDeliveredAt(
+    id: number,
+    status: string,
+    deliveredAt: Date,
+  ): Promise<void> {
+    await this.repo.update(id, { status, delivered_at: deliveredAt });
+  }
+
   async updatePaymentStatus(id: number, paymentStatus: string): Promise<void> {
     await this.repo.update(id, { payment_status: paymentStatus });
+  }
+
+  async findExpiredDeliveredOrders(
+    cutoff: Date,
+  ): Promise<{ id: number; user_id: number }[]> {
+    return this.repo
+      .createQueryBuilder('order')
+      .select(['order.id', 'order.user_id'])
+      .where('order.status = :status', { status: OrderStatus.Delivered })
+      .andWhere('order.delivered_at <= :cutoff', { cutoff })
+      .getMany();
+  }
+
+  async bulkCompleteOrders(ids: number[]): Promise<void> {
+    if (ids.length === 0) return;
+    await this.repo
+      .createQueryBuilder()
+      .update(Order)
+      .set({ status: OrderStatus.Completed })
+      .whereInIds(ids)
+      .execute();
   }
 }

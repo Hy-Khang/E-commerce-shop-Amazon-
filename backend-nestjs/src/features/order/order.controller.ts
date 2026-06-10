@@ -73,4 +73,30 @@ export class OrderController {
   ) {
     return this.orderService.cancelOrder(user.id, id);
   }
+
+  @Patch(':id/confirm-receipt')
+  @ApiOperation({ summary: 'Confirm receipt — mark delivered order as completed' })
+  @ApiResponse({ status: 200, description: 'Order completed', type: OrderResponseDto })
+  @ApiResponse({ status: 400, description: 'ORDER_005: Order not in delivered status' })
+  @ApiResponse({ status: 403, description: 'ORDER_004: Order does not belong to user' })
+  @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
+  async confirmReceipt(
+    @CurrentUser() user: ICurrentUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.orderService.confirmReceipt(user.id, id);
+  }
+
+  @Patch(':id/return-request')
+  @ApiOperation({ summary: 'Request return/refund for delivered order' })
+  @ApiResponse({ status: 200, description: 'Return requested', type: OrderResponseDto })
+  @ApiResponse({ status: 400, description: 'ORDER_005: Order not in delivered status' })
+  @ApiResponse({ status: 403, description: 'ORDER_004: Order does not belong to user' })
+  @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
+  async requestReturn(
+    @CurrentUser() user: ICurrentUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.orderService.requestReturn(user.id, id);
+  }
 }

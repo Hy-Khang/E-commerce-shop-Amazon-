@@ -31,7 +31,7 @@ export class DashboardRepository {
           .select('COALESCE(SUM(total_amount), 0)', 'totalRevenue')
           .from('orders', 'o')
           .where("o.payment_status = 'paid'")
-          .andWhere("o.status = 'delivered'")
+          .andWhere("o.status = 'completed'")
           .getRawOne(),
         mgr
           .createQueryBuilder()
@@ -68,7 +68,7 @@ export class DashboardRepository {
       .addSelect('COALESCE(SUM(o.total_amount), 0)', 'revenue')
       .from('orders', 'o')
       .where("o.payment_status = 'paid'")
-      .andWhere("o.status = 'delivered'")
+      .andWhere("o.status = 'completed'")
       .andWhere('o.created_at >= DATEADD(DAY, :days, GETUTCDATE())', {
         days: -days,
       })
@@ -159,7 +159,7 @@ export class DashboardRepository {
       .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
       .innerJoin('products', 'p', 'pv.product_id = p.id')
       .where("o.payment_status = 'paid'")
-      .andWhere("o.status = 'delivered'")
+      .andWhere("o.status = 'completed'")
       .groupBy('p.id')
       .addGroupBy('p.name')
       .addGroupBy('p.thumbnail_url')
@@ -217,7 +217,7 @@ export class DashboardRepository {
           .innerJoin('orders', 'o', 'oi.order_id = o.id')
           .where('oi.shop_id = :shopId', { shopId })
           .andWhere("o.payment_status = 'paid'")
-          .andWhere("o.status = 'delivered'")
+          .andWhere("o.status = 'completed'")
           .getRawOne(),
         mgr
           .createQueryBuilder()
@@ -265,7 +265,7 @@ export class DashboardRepository {
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
       .where('oi.shop_id = :shopId', { shopId })
       .andWhere("o.payment_status = 'paid'")
-      .andWhere("o.status = 'delivered'")
+      .andWhere("o.status = 'completed'")
       .andWhere('o.created_at >= DATEADD(DAY, :days, GETUTCDATE())', {
         days: -days,
       })
@@ -301,7 +301,7 @@ export class DashboardRepository {
       .innerJoin('products', 'p', 'pv.product_id = p.id')
       .where('oi.shop_id = :shopId', { shopId })
       .andWhere("o.payment_status = 'paid'")
-      .andWhere("o.status = 'delivered'")
+      .andWhere("o.status = 'completed'")
       .groupBy('p.id')
       .addGroupBy('p.name')
       .addGroupBy('p.thumbnail_url')

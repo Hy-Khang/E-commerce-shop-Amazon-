@@ -6,6 +6,8 @@ const STATUS_LABELS: Record<string, string> = {
   confirmed: 'Confirmed',
   shipping: 'Shipping',
   delivered: 'Delivered',
+  completed: 'Completed',
+  return_requested: 'Return Requested',
   cancelled: 'Cancelled',
 };
 
@@ -43,6 +45,20 @@ export function buildOrderStatusMessage(
     return {
       title: 'Order Cancelled',
       message: `Your order #${orderId} has been cancelled.`,
+    };
+  }
+
+  if (newStatus === 'completed') {
+    return {
+      title: 'Order Completed',
+      message: `Order #${orderId} has been completed.`,
+    };
+  }
+
+  if (newStatus === 'return_requested') {
+    return {
+      title: 'Return Requested',
+      message: `A return has been requested for order #${orderId}.`,
     };
   }
 

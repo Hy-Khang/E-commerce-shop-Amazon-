@@ -5,6 +5,7 @@ export enum NotificationType {
 export interface OrderStatusUpdatedEvent {
   orderId: number;
   userId: number;
+  notifyUserIds: number[];
   oldStatus: string;
   newStatus: string;
 }

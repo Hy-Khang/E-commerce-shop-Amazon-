@@ -57,10 +57,10 @@ export class ReviewService {
       });
     }
 
-    if (order.status !== OrderStatus.Delivered) {
+    if (order.status !== OrderStatus.Completed) {
       throw new ForbiddenException({
         code: 'REVIEW_001',
-        message: 'Can only review products from delivered orders',
+        message: 'Can only review products from completed orders',
       });
     }
 

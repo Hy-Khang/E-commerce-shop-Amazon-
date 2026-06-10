@@ -97,6 +97,9 @@ export class OrderResponseDto {
 
   @ApiProperty()
   created_at: Date;
+
+  @ApiPropertyOptional()
+  delivered_at: Date | null;
 }
 
 export class OrderListItemResponseDto {
@@ -126,6 +129,9 @@ export class OrderListItemResponseDto {
 
   @ApiProperty()
   created_at: Date;
+
+  @ApiPropertyOptional()
+  delivered_at: Date | null;
 }
 
 export class OrderListItemWithItemsResponseDto extends OrderListItemResponseDto {
