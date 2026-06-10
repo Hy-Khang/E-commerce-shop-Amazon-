@@ -14,6 +14,7 @@ import { ProductService } from '../product/product.service';
 import { UserProfileService } from '../user-profile/user-profile.service';
 import { CouponService } from '../coupon/coupon.service';
 import { IDiscountCalculation } from '../coupon/types/coupon.types';
+import { pickVariantThumbnail } from '../cart/utils/cart.util';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto';
@@ -23,6 +24,7 @@ import {
   AdminOrderResponseDto,
   SellerOrderResponseDto,
   OrderListItemResponseDto,
+  OrderListItemWithItemsResponseDto,
 } from './dto/order-response.dto';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
@@ -35,6 +37,7 @@ import {
 import {
   toOrderResponse,
   toOrderListItemResponse,
+  toOrderListItemWithItemsResponse,
   toAdminOrderResponse,
   toSellerOrderResponse,
 } from './utils/order.util';
@@ -115,7 +118,11 @@ export class OrderService {
         sku: variant.sku,
         price,
         quantity: item.quantity,
-        thumbnail_url: product?.thumbnail_url ?? null,
+        thumbnail_url: pickVariantThumbnail(
+          product?.images,
+          variant.option1,
+          product?.thumbnail_url ?? null,
+        ) as string,
         variant_option1_label: product?.option1_label ?? null,
         variant_option1_value: variant.option1 ?? null,
         variant_option2_label: product?.option2_label ?? null,
@@ -208,17 +215,18 @@ export class OrderService {
   async findMyOrders(
     userId: number,
     query: OrderQueryDto,
-  ): Promise<IPaginatedResult<OrderListItemResponseDto>> {
+  ): Promise<IPaginatedResult<OrderListItemWithItemsResponseDto>> {
     const result = await this.orderRepository.findByUserIdPaginated(
       userId,
       query.page || 1,
       query.limit || 20,
       query.sort,
       query.order,
+      query.status,
     );
 
     return {
-      data: result.data.map(toOrderListItemResponse),
+      data: result.data.map(toOrderListItemWithItemsResponse),
       meta: result.meta,
     };
   }

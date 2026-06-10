@@ -64,6 +64,26 @@ export function getValidNextStatuses(
   return transitions;
 }
 
+export function groupItemsByShop(items: OrderItem[]): Map<number | null, { shopName: string; shopSlug: string | null; items: OrderItem[] }> {
+  const groups = new Map<number | null, { shopName: string; shopSlug: string | null; items: OrderItem[] }>();
+
+  for (const item of items) {
+    const key = item.shop_id;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.items.push(item);
+    } else {
+      groups.set(key, {
+        shopName: item.shop_name ?? 'Nook',
+        shopSlug: item.shop_slug ?? null,
+        items: [item],
+      });
+    }
+  }
+
+  return groups;
+}
+
 export function canMarkAsPaid(
   status: OrderStatus,
   paymentStatus: PaymentStatus,

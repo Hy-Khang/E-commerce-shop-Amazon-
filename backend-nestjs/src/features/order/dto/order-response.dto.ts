@@ -36,6 +36,18 @@ export class OrderItemResponseDto {
 
   @ApiPropertyOptional()
   variant_option2_value: string | null;
+
+  @ApiPropertyOptional()
+  shop_id: number | null;
+
+  @ApiPropertyOptional()
+  shop_name: string | null;
+
+  @ApiPropertyOptional()
+  product_slug: string | null;
+
+  @ApiPropertyOptional()
+  shop_slug: string | null;
 }
 
 export class ShippingAddressResponseDto {
@@ -114,6 +126,11 @@ export class OrderListItemResponseDto {
 
   @ApiProperty()
   created_at: Date;
+}
+
+export class OrderListItemWithItemsResponseDto extends OrderListItemResponseDto {
+  @ApiProperty({ type: [OrderItemResponseDto] })
+  order_items: OrderItemResponseDto[];
 }
 
 export class AdminOrderResponseDto extends OrderResponseDto {

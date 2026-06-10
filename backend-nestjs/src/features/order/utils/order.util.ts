@@ -2,6 +2,7 @@ import { Order } from '../entities/order.entity';
 import {
   OrderResponseDto,
   OrderListItemResponseDto,
+  OrderListItemWithItemsResponseDto,
   AdminOrderResponseDto,
   SellerOrderResponseDto,
   OrderItemResponseDto,
@@ -20,11 +21,16 @@ function toOrderItemResponse(item: {
   quantity: number;
   thumbnail_url: string | null;
   product_variant_id: number | null;
-  product_variant?: { product_id: number } | null;
+  product_variant?: {
+    product_id: number;
+    product?: { slug: string; shop?: { slug: string } | null } | null;
+  } | null;
   variant_option1_label?: string | null;
   variant_option1_value?: string | null;
   variant_option2_label?: string | null;
   variant_option2_value?: string | null;
+  shop_id?: number | null;
+  shop_name?: string | null;
 }): OrderItemResponseDto {
   return {
     id: item.id,
@@ -35,10 +41,14 @@ function toOrderItemResponse(item: {
     thumbnail_url: item.thumbnail_url,
     product_variant_id: item.product_variant_id,
     product_id: item.product_variant?.product_id ?? null,
+    product_slug: item.product_variant?.product?.slug ?? null,
+    shop_slug: item.product_variant?.product?.shop?.slug ?? null,
     variant_option1_label: item.variant_option1_label ?? null,
     variant_option1_value: item.variant_option1_value ?? null,
     variant_option2_label: item.variant_option2_label ?? null,
     variant_option2_value: item.variant_option2_value ?? null,
+    shop_id: item.shop_id ?? null,
+    shop_name: item.shop_name ?? null,
   };
 }
 
@@ -69,6 +79,15 @@ export function toOrderListItemResponse(order: Order): OrderListItemResponseDto 
     discount_amount: Number(order.discount_amount ?? 0),
     total_amount: Number(order.total_amount),
     created_at: order.created_at,
+  };
+}
+
+export function toOrderListItemWithItemsResponse(
+  order: Order,
+): OrderListItemWithItemsResponseDto {
+  return {
+    ...toOrderListItemResponse(order),
+    order_items: (order.order_items || []).map(toOrderItemResponse),
   };
 }
 

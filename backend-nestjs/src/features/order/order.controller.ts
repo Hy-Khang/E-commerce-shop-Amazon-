@@ -17,7 +17,7 @@ import {
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
-import { OrderResponseDto, OrderListItemResponseDto } from './dto/order-response.dto';
+import { OrderResponseDto, OrderListItemWithItemsResponseDto } from './dto/order-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { ICurrentUser } from '../../common/interfaces/current-user.interface';
 
@@ -41,7 +41,7 @@ export class OrderController {
 
   @Get()
   @ApiOperation({ summary: 'List my orders (paginated)' })
-  @ApiResponse({ status: 200, description: 'Returns paginated order list', type: [OrderListItemResponseDto] })
+  @ApiResponse({ status: 200, description: 'Returns paginated order list', type: [OrderListItemWithItemsResponseDto] })
   async findMyOrders(
     @CurrentUser() user: ICurrentUser,
     @Query() query: OrderQueryDto,

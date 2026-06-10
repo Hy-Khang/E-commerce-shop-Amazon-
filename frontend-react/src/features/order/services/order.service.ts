@@ -2,7 +2,7 @@ import { api } from '@/core/api/axios-instance';
 import type { SuccessResponse, PaginatedResponse } from '@/core/api/api.types';
 import type {
   Order,
-  OrderListItem,
+  OrderListItemWithItems,
   OrderListParams,
   CreateOrderRequest,
   Address,
@@ -13,7 +13,7 @@ export const orderService = {
     api.post<SuccessResponse<Order>>('/orders', data),
 
   getList: (params: OrderListParams) =>
-    api.get<PaginatedResponse<OrderListItem>>('/orders', { params }),
+    api.get<PaginatedResponse<OrderListItemWithItems>>('/orders', { params }),
 
   getById: (id: number) =>
     api.get<SuccessResponse<Order>>(`/orders/${id}`),

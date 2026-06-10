@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Order } from '../entities/order.entity';
 import { OrderQueryDto } from '../dto/order-query.dto';
 import { IPaginatedResult } from '../../../common/interfaces/paginated-result.interface';
+import { OrderStatus } from '../../../common/constants';
 
 @Injectable()
 export class OrderRepository {
@@ -13,10 +14,16 @@ export class OrderRepository {
   ) {}
 
   async findByIdWithItems(id: number): Promise<Order | null> {
-    return this.repo.findOne({
-      where: { id },
-      relations: ['order_items', 'order_items.product_variant'],
-    });
+    return this.repo
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.order_items', 'items')
+      .leftJoinAndSelect('items.product_variant', 'variant')
+      .leftJoin('variant.product', 'product')
+      .addSelect(['product.id', 'product.slug'])
+      .leftJoin('product.shop', 'shop')
+      .addSelect(['shop.id', 'shop.slug'])
+      .where('order.id = :id', { id })
+      .getOne();
   }
 
   async findByIdWithItemsAndUser(id: number): Promise<Order | null> {
@@ -32,13 +39,22 @@ export class OrderRepository {
     limit: number,
     sort = 'created_at',
     order: 'asc' | 'desc' = 'desc',
+    status?: OrderStatus,
   ): Promise<IPaginatedResult<Order>> {
-    const [data, total] = await this.repo.findAndCount({
-      where: { user_id: userId },
-      order: { [sort]: order.toUpperCase() },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const qb = this.repo
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.order_items', 'items')
+      .where('order.user_id = :userId', { userId });
+
+    if (status) {
+      qb.andWhere('order.status = :status', { status });
+    }
+
+    qb.orderBy(`order.${sort}`, order.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
 
     return {
       data,

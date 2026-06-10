@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Star } from 'lucide-react';
+import { ArrowLeft, Loader2, Star, Store } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { Button } from '@/common/components/ui/Button';
 import { ROUTES, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
@@ -10,7 +10,7 @@ import { useOrder } from '../hooks/useOrder';
 import { useCancelOrder } from '../hooks/useCancelOrder';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderItemRow } from '../components/OrderItemRow';
-import { isOrderCancellable, getPaymentStatusColor } from '../utils/order.util';
+import { isOrderCancellable, getPaymentStatusColor, groupItemsByShop } from '../utils/order.util';
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -77,44 +77,61 @@ export default function OrderDetailPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          {/* Order Items */}
+          {/* Order Items grouped by shop */}
           <div className="shop-card p-6">
             <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">
               Items ({order.order_items.length})
             </h2>
-            {order.order_items.map((item) => (
-              <div key={item.id}>
-                <OrderItemRow item={item} />
-                {isDelivered && item.product_id && (
-                  <div className="pb-4 pl-20">
-                    {reviewingItemId === item.id ? (
-                      <div className="rounded-xl border border-border-default bg-neutral-50/50 p-5">
-                        <div className="mb-3.5 flex items-center justify-between">
-                          <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">Write a Review</h3>
+            {[...groupItemsByShop(order.order_items)].map(([shopId, group]) => (
+              <div key={shopId ?? 'no-shop'}>
+                <div className="flex items-center gap-2 border-b border-border-default pb-2 pt-2 first:pt-0">
+                  <Store className="h-4 w-4 text-text-muted" />
+                  {group.shopSlug ? (
+                    <Link
+                      to={ROUTES.SHOP_PROFILE(group.shopSlug)}
+                      className="text-sm font-semibold text-text-primary hover:text-text-brand transition-colors"
+                    >
+                      {group.shopName}
+                    </Link>
+                  ) : (
+                    <span className="text-sm font-semibold text-text-primary">{group.shopName}</span>
+                  )}
+                </div>
+                {group.items.map((item) => (
+                  <div key={item.id}>
+                    <OrderItemRow item={item} />
+                    {isDelivered && item.product_id && (
+                      <div className="pb-4 pl-20">
+                        {reviewingItemId === item.id ? (
+                          <div className="rounded-xl border border-border-default bg-neutral-50/50 p-5">
+                            <div className="mb-3.5 flex items-center justify-between">
+                              <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">Write a Review</h3>
+                              <button
+                                onClick={() => setReviewingItemId(null)}
+                                className="text-xs font-semibold text-text-muted hover:text-text-primary transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                            <ReviewForm
+                              productId={item.product_id}
+                              orderId={orderId}
+                              onSuccess={() => setReviewingItemId(null)}
+                            />
+                          </div>
+                        ) : (
                           <button
-                            onClick={() => setReviewingItemId(null)}
-                            className="text-xs font-semibold text-text-muted hover:text-text-primary transition-colors"
+                            onClick={() => setReviewingItemId(item.id)}
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-brand hover:text-primary-700 transition-colors"
                           >
-                            Cancel
+                            <Star className="h-3.5 w-3.5 fill-current" />
+                            Write a Review
                           </button>
-                        </div>
-                        <ReviewForm
-                          productId={item.product_id}
-                          orderId={orderId}
-                          onSuccess={() => setReviewingItemId(null)}
-                        />
+                        )}
                       </div>
-                    ) : (
-                      <button
-                        onClick={() => setReviewingItemId(item.id)}
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-brand hover:text-primary-700 transition-colors"
-                      >
-                        <Star className="h-3.5 w-3.5 fill-current" />
-                        Write a Review
-                      </button>
                     )}
                   </div>
-                )}
+                ))}
               </div>
             ))}
           </div>

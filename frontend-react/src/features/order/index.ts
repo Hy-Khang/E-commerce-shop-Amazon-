@@ -17,6 +17,7 @@ export type {
   Order,
   OrderItem,
   OrderListItem,
+  OrderListItemWithItems,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,

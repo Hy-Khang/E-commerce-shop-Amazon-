@@ -40,6 +40,10 @@ export interface OrderItem {
   variant_option1_value: string | null;
   variant_option2_label: string | null;
   variant_option2_value: string | null;
+  shop_id: number | null;
+  shop_name: string | null;
+  product_slug: string | null;
+  shop_slug: string | null;
 }
 
 export interface Order {
@@ -66,6 +70,10 @@ export interface OrderListItem {
   created_at: string;
 }
 
+export interface OrderListItemWithItems extends OrderListItem {
+  order_items: OrderItem[];
+}
+
 export interface AdminOrderDetail extends Order {
   user?: {
     id: number;
@@ -78,7 +86,7 @@ export interface AdminOrderDetail extends Order {
 // --- Query params ---
 
 export interface OrderListParams extends PaginationParams {
-  // Customer orders are filtered by JWT user_id automatically
+  status?: OrderStatus;
 }
 
 export interface AdminOrderListParams extends PaginationParams {
