@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, ChevronDown, ExternalLink, Store, Check } from 'lucide-react';
+import { LogOut, ChevronDown, ExternalLink, Store, Check, Bell } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { ROUTES } from '@/common/constants/routes';
 import { PERMISSIONS } from '@/common/constants/permissions';
+import { useNotificationRoutes } from '@/features/notification';
 import { getVisiblePortals } from './portal-links.util';
 
 export function PortalAccountDropdown() {
@@ -32,6 +33,7 @@ export function PortalAccountDropdown() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const visiblePortals = getVisiblePortals(hasPermission);
   const isSeller = hasPermission(PERMISSIONS.SHOPS_READ);
+  const { notificationsPath } = useNotificationRoutes();
 
   const handleLogout = () => {
     setIsOpen(false);
@@ -76,6 +78,17 @@ export function PortalAccountDropdown() {
               </Link>
             </div>
           )}
+
+          <div className="border-b border-neutral-100 py-1">
+            <Link
+              to={notificationsPath}
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
+            >
+              <Bell className="h-4 w-4" />
+              Notifications
+            </Link>
+          </div>
 
           {visiblePortals.length > 0 && (
             <div className="border-b border-neutral-100 py-1">

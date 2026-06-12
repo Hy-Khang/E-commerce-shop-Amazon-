@@ -175,6 +175,269 @@ export const ProductSeed: ISeed = {
     `);
     console.log('  + product_images: 41 rows');
 
+    // ══════════════════════════════════════════════════════════════
+    // ── NEW SEED DATA (based on uploaded product images) ──────────
+    // ══════════════════════════════════════════════════════════════
+
+    // ── New Categories (2) ──
+    await qr.query(`
+      SET IDENTITY_INSERT categories ON;
+      INSERT INTO categories (id, parent_id, name, slug) VALUES
+        (17, 5, N'Áo khoác',              N'ao-khoac'),
+        (18, 1, N'Phụ kiện thời trang',   N'phu-kien-thoi-trang');
+      SET IDENTITY_INSERT categories OFF;
+    `);
+    console.log('  + categories: +2 rows (17-18)');
+
+    // ── New Products (30) ──
+    await qr.query(`
+      SET IDENTITY_INSERT products ON;
+      INSERT INTO products (id, category_id, shop_id, name, slug, description, thumbnail_url, option1_label, option2_label, is_active) VALUES
+        (21, 17, 1, N'Áo khoác Non Branded 04',     N'ao-khoac-non-branded-04',     N'Áo khoác gió có nón, chất liệu nhẹ chống nước',
+          N'/uploads/products/ao/ao-khoac-non-branded-04-den-1174884707.webp', N'Màu sắc', N'Kích thước', 1),
+        (22, 17, 1, N'Áo khoác The Beginner M006',  N'ao-khoac-the-beginner-m006',  N'Áo khoác thể thao The Beginner, form slim fit, vải gió cao cấp',
+          N'/uploads/products/ao/ao-khoac-the-beginner-m006-den-1177437004.webp', N'Màu sắc', N'Kích thước', 1),
+        (23, 16, 1, N'Áo sơ mi Non Branded 19',     N'ao-so-mi-non-branded-19',     N'Áo sơ mi tay ngắn form regular, vải mềm thoáng mát',
+          N'/uploads/products/ao/ao-so-mi-non-branded-19-tr-ng-1174884380.webp', N'Kích thước', NULL, 1),
+        (24, 16, 1, N'Áo sơ mi Non Branded 33',     N'ao-so-mi-non-branded-33',     N'Áo sơ mi tay ngắn cổ bẻ, phong cách lịch lãm',
+          N'/uploads/products/ao/ao-so-mi-non-branded-33-xanh-d-ng-1174884119.webp', N'Màu sắc', N'Kích thước', 1),
+        (25, 16, 1, N'Áo sơ mi Seventy Seven 22',   N'ao-so-mi-seventy-seven-22',   N'Áo sơ mi phối tay contrast, chất liệu cotton pha',
+          N'/uploads/products/ao/ao-so-mi-seventy-seven-22-be-1174882837.webp', N'Màu sắc', N'Kích thước', 1),
+        (26, 15, 1, N'Áo thun Non Branded 01',      N'ao-thun-non-branded-01',      N'Áo thun cổ tròn basic, chất cotton thoáng mát',
+          N'/uploads/products/ao/ao-thun-non-branded-01-den-1174882387.webp', N'Kích thước', NULL, 1),
+        (27, 15, 1, N'Áo thun Seventy Seven 04',    N'ao-thun-seventy-seven-04',    N'Áo thun cổ tròn viền sọc, form vừa vặn thời trang',
+          N'/uploads/products/ao/ao-thun-seventy-seven-04-tr-ng-1174883207.webp', N'Màu sắc', N'Kích thước', 1),
+        (28, 15, 1, N'Áo thun Seventy Seven 10',    N'ao-thun-seventy-seven-10',    N'Áo thun oversize phong cách đường phố, logo metal',
+          N'/uploads/products/ao/ao-thun-seventy-seven-10-den-1174883597.webp', N'Kích thước', NULL, 1),
+        (29, 15, 1, N'Áo thun Seventy Seven 13',    N'ao-thun-seventy-seven-13',    N'Áo thun cổ tròn viền sọc raglan, đa dạng màu sắc',
+          N'/uploads/products/ao/ao-thun-seventy-seven-13-be-1174883511.webp', N'Màu sắc', N'Kích thước', 1),
+        (30, 6,  5, N'Quần jean The Original 28',   N'quan-jean-the-original-28',   N'Quần jean nam dáng slim, vải denim co giãn thoải mái',
+          N'/uploads/products/quan/quan-jean-the-original-28-xanh-d-ng-1174882630.webp', N'Màu sắc', N'Kích thước', 1),
+        (31, 6,  5, N'Quần jean The Original M101',  N'quan-jean-the-original-m101', N'Quần jean nam dáng rộng, chất liệu denim mềm',
+          N'/uploads/products/quan/quan-jean-the-original-m101-xanh-d-ng-1174882525.webp', N'Kích thước', NULL, 1),
+        (32, 6,  5, N'Quần short Non Branded 05',   N'quan-short-non-branded-05',   N'Quần short nam thun, lưng chun thoải mái, nhiều màu',
+          N'/uploads/products/quan/quan-short-non-branded-05-be-1174882076.webp', N'Màu sắc', N'Kích thước', 1),
+        (33, 9,  2, N'ASUS TUF Gaming F15',         N'asus-tuf-gaming-f15',         N'Laptop gaming ASUS TUF, bàn phím RGB, tản nhiệt hiệu quả',
+          N'/uploads/products/laptop/1711078092373-asus-01.png', NULL, NULL, 1),
+        (34, 9,  2, N'Dell Inspiron 15 3530',        N'dell-inspiron-15-3530',       N'Laptop Dell Inspiron 15 inch, mỏng nhẹ cho văn phòng',
+          N'/uploads/products/laptop/1711078452562-dell-01.png', NULL, NULL, 1),
+        (35, 9,  2, N'Lenovo IdeaPad Gaming 3',     N'lenovo-ideapad-gaming-3',     N'Laptop gaming Lenovo IdeaPad, hiệu năng mạnh mẽ',
+          N'/uploads/products/laptop/1711079073759-lenovo-01.png', NULL, NULL, 1),
+        (36, 9,  2, N'ASUS VivoBook X541',           N'asus-vivobook-x541',          N'Laptop ASUS VivoBook phổ thông, nhẹ nhàng cho học sinh',
+          N'/uploads/products/laptop/1711079496409-asus-02.png', NULL, NULL, 1),
+        (37, 9,  2, N'MacBook Pro M2 13 inch',       N'macbook-pro-m2',              N'MacBook Pro chip M2, màn Retina 13.3 inch, hiệu năng chuyên nghiệp',
+          N'/uploads/products/laptop/1711079954090-apple-01.png', NULL, NULL, 1),
+        (38, 9,  2, N'LG Gram 15 2024',              N'lg-gram-15-2024',             N'Laptop LG Gram siêu nhẹ, pin trâu, màn hình IPS sắc nét',
+          N'/uploads/products/laptop/1711080386941-lg-01.png', NULL, NULL, 1),
+        (39, 9,  2, N'MacBook Air M2',               N'macbook-air-m2',              N'MacBook Air chip M2, thiết kế mỏng nhẹ, Liquid Retina',
+          N'/uploads/products/laptop/1711080787179-apple-02.png', NULL, NULL, 1),
+        (40, 9,  2, N'Acer Nitro 5 Gaming',          N'acer-nitro-5',                N'Laptop gaming Acer Nitro, Intel + NVIDIA, hiệu năng cao',
+          N'/uploads/products/laptop/1711080948771-acer-01.png', NULL, NULL, 1),
+        (41, 9,  2, N'ASUS Vivobook Pro 15 OLED',    N'asus-vivobook-pro-15-oled',   N'Laptop ASUS Vivobook Pro, màn OLED 15 inch sắc nét',
+          N'/uploads/products/laptop/1711081080930-asus-03.png', NULL, NULL, 1),
+        (42, 9,  2, N'Dell Vostro 15 3530',          N'dell-vostro-15-3530',         N'Laptop Dell Vostro doanh nghiệp, Core i5, bền bỉ tin cậy',
+          N'/uploads/products/laptop/1711081278418-dell-02.png', NULL, NULL, 1),
+        (43, 18, 6, N'Nón lưỡi trai Non Branded 12', N'non-luoi-trai-non-branded-12', N'Nón lưỡi trai thoáng khí, chất liệu nhẹ chống UV',
+          N'/uploads/products/phu-kien/non-non-branded-12-be-1174878916.webp', NULL, NULL, 1),
+        (44, 18, 6, N'Nón Y2010 02',                 N'non-y2010-02',                N'Nón bucket đen Y2010, phong cách streetwear',
+          N'/uploads/products/phu-kien/non-y2010-02-den-1174879791.webp', NULL, NULL, 1),
+        (45, 18, 6, N'Nón Y2010 04',                 N'non-y2010-04',                N'Nón bucket xanh đen Y2010, chất liệu bền đẹp',
+          N'/uploads/products/phu-kien/non-y2010-04-xanh-den-1174878969.webp', NULL, NULL, 1),
+        (46, 18, 6, N'Bộ gối thể thao Beginner 87',  N'bo-goi-the-thao-beginner-87', N'Bộ đệm bảo vệ đầu gối khi tập gym, chạy bộ',
+          N'/uploads/products/phu-kien/bo-g-i-th-thao-beginner-87-1174879762.webp', NULL, NULL, 1),
+        (47, 18, 6, N'Dây nịt Y2010 D15',            N'day-nit-y2010-d15',           N'Dây nịt da đen Y2010, khóa tự động sang trọng',
+          N'/uploads/products/phu-kien/day-n-t-y2010-d15-den-1174880703.webp', NULL, NULL, 1),
+        (48, 18, 6, N'Túi đeo chéo Y2010 34',        N'tui-deo-cheo-y2010-34',       N'Túi đeo chéo Y2010 đen, thiết kế tối giản chống nước',
+          N'/uploads/products/phu-kien/tui-deo-y2010-34-den-1174880785.webp', NULL, NULL, 1),
+        (49, 18, 6, N'Ví da Y2010 02',               N'vi-da-y2010-02',              N'Ví đứng da Y2010, thiết kế nhỏ gọn nhiều ngăn',
+          N'/uploads/products/phu-kien/vi-y2010-02-den-1174880616.jpg', NULL, NULL, 1),
+        (50, 18, 6, N'Ví da Y2010 05',               N'vi-da-y2010-05',              N'Ví ngang da Y2010, kiểu dáng lịch lãm',
+          N'/uploads/products/phu-kien/vi-y2010-05-den-1174880343.webp', NULL, NULL, 1);
+      SET IDENTITY_INSERT products OFF;
+    `);
+    console.log('  + products: +30 rows (21-50)');
+
+    // ── New Product Variants — Fashion (42 variants) ──
+    await qr.query(`
+      SET IDENTITY_INSERT product_variants ON;
+      INSERT INTO product_variants (id, product_id, sku, option1, option2, price, sale_price, stock_quantity) VALUES
+        -- P21: Áo khoác Non Branded 04 (4 colors × M,L)
+        (47, 21, N'AK-NB04-DEN-M',  N'Đen',       N'M', 550000, 479000, 30),
+        (48, 21, N'AK-NB04-DEN-L',  N'Đen',       N'L', 550000, 479000, 25),
+        (49, 21, N'AK-NB04-HONG-M', N'Hồng',      N'M', 550000, 479000, 20),
+        (50, 21, N'AK-NB04-HONG-L', N'Hồng',      N'L', 550000, 479000, 15),
+        (51, 21, N'AK-NB04-XAM-M',  N'Xám đậm',   N'M', 550000, NULL,   25),
+        (52, 21, N'AK-NB04-XAM-L',  N'Xám đậm',   N'L', 550000, NULL,   20),
+        (53, 21, N'AK-NB04-XR-M',   N'Xanh rêu',  N'M', 550000, NULL,   20),
+        (54, 21, N'AK-NB04-XR-L',   N'Xanh rêu',  N'L', 550000, NULL,   15),
+        -- P22: Áo khoác The Beginner M006 (2 colors × M,L)
+        (55, 22, N'AK-TBM6-DEN-M',  N'Đen',       N'M', 650000, 569000, 20),
+        (56, 22, N'AK-TBM6-DEN-L',  N'Đen',       N'L', 650000, 569000, 15),
+        (57, 22, N'AK-TBM6-XR-M',   N'Xanh rêu',  N'M', 650000, NULL,   18),
+        (58, 22, N'AK-TBM6-XR-L',   N'Xanh rêu',  N'L', 650000, NULL,   12),
+        -- P23: Áo sơ mi Non Branded 19 (size only)
+        (59, 23, N'ASM-NB19-M',     N'M',  NULL, 380000, 329000, 25),
+        (60, 23, N'ASM-NB19-L',     N'L',  NULL, 380000, 329000, 20),
+        (61, 23, N'ASM-NB19-XL',    N'XL', NULL, 380000, NULL,   15),
+        -- P24: Áo sơ mi Non Branded 33 (3 colors × M,L)
+        (62, 24, N'ASM-NB33-DEN-M', N'Đen',        N'M', 420000, 369000, 20),
+        (63, 24, N'ASM-NB33-DEN-L', N'Đen',        N'L', 420000, 369000, 15),
+        (64, 24, N'ASM-NB33-TR-M',  N'Trắng',      N'M', 420000, NULL,   25),
+        (65, 24, N'ASM-NB33-TR-L',  N'Trắng',      N'L', 420000, NULL,   20),
+        (66, 24, N'ASM-NB33-XD-M',  N'Xanh dương', N'M', 420000, NULL,   20),
+        (67, 24, N'ASM-NB33-XD-L',  N'Xanh dương', N'L', 420000, NULL,   15),
+        -- P25: Áo sơ mi Seventy Seven 22 (2 colors × M,L)
+        (68, 25, N'ASM-SS22-BE-M',  N'Be',  N'M', 450000, 389000, 20),
+        (69, 25, N'ASM-SS22-BE-L',  N'Be',  N'L', 450000, 389000, 15),
+        (70, 25, N'ASM-SS22-DEN-M', N'Đen', N'M', 450000, NULL,   18),
+        (71, 25, N'ASM-SS22-DEN-L', N'Đen', N'L', 450000, NULL,   12),
+        -- P26: Áo thun Non Branded 01 (size only)
+        (72, 26, N'AT-NB01-M',      N'M',  NULL, 250000, 199000, 40),
+        (73, 26, N'AT-NB01-L',      N'L',  NULL, 250000, 199000, 35),
+        (74, 26, N'AT-NB01-XL',     N'XL', NULL, 250000, NULL,   25),
+        -- P27: Áo thun Seventy Seven 04 (2 colors × M,L)
+        (75, 27, N'AT-SS04-TR-M',   N'Trắng',    N'M', 320000, 269000, 25),
+        (76, 27, N'AT-SS04-TR-L',   N'Trắng',    N'L', 320000, 269000, 20),
+        (77, 27, N'AT-SS04-XG-M',   N'Xám ghi',  N'M', 320000, NULL,   22),
+        (78, 27, N'AT-SS04-XG-L',   N'Xám ghi',  N'L', 320000, NULL,   18),
+        -- P28: Áo thun Seventy Seven 10 (size only)
+        (79, 28, N'AT-SS10-M',      N'M', NULL, 290000, 249000, 30),
+        (80, 28, N'AT-SS10-L',      N'L', NULL, 290000, 249000, 25),
+        -- P29: Áo thun Seventy Seven 13 (4 colors × M,L)
+        (81, 29, N'AT-SS13-BE-M',   N'Be',    N'M', 280000, 239000, 25),
+        (82, 29, N'AT-SS13-BE-L',   N'Be',    N'L', 280000, 239000, 20),
+        (83, 29, N'AT-SS13-DEN-M',  N'Đen',   N'M', 280000, NULL,   30),
+        (84, 29, N'AT-SS13-DEN-L',  N'Đen',   N'L', 280000, NULL,   25),
+        (85, 29, N'AT-SS13-TR-M',   N'Trắng', N'M', 280000, NULL,   20),
+        (86, 29, N'AT-SS13-TR-L',   N'Trắng', N'L', 280000, NULL,   15),
+        (87, 29, N'AT-SS13-XAM-M',  N'Xám',   N'M', 280000, NULL,   22),
+        (88, 29, N'AT-SS13-XAM-L',  N'Xám',   N'L', 280000, NULL,   18);
+      SET IDENTITY_INSERT product_variants OFF;
+    `);
+    console.log('  + product_variants: +42 rows (47-88) — fashion');
+
+    // ── New Product Variants — Pants, Laptops, Accessories (35 variants) ──
+    await qr.query(`
+      SET IDENTITY_INSERT product_variants ON;
+      INSERT INTO product_variants (id, product_id, sku, option1, option2, price, sale_price, stock_quantity) VALUES
+        -- P30: Quần jean The Original 28 (3 colors × 30,32)
+        (89,  30, N'QJ-TO28-DEN-30',  N'Đen',        N'30', 520000, 459000, 20),
+        (90,  30, N'QJ-TO28-DEN-32',  N'Đen',        N'32', 520000, 459000, 18),
+        (91,  30, N'QJ-TO28-XDM-30',  N'Xanh đậm',   N'30', 520000, NULL,   22),
+        (92,  30, N'QJ-TO28-XDM-32',  N'Xanh đậm',   N'32', 520000, NULL,   20),
+        (93,  30, N'QJ-TO28-XDG-30',  N'Xanh dương',  N'30', 520000, NULL,   18),
+        (94,  30, N'QJ-TO28-XDG-32',  N'Xanh dương',  N'32', 520000, NULL,   15),
+        -- P31: Quần jean The Original M101 (size only)
+        (95,  31, N'QJ-TOM101-29',    N'29', NULL, 480000, 419000, 15),
+        (96,  31, N'QJ-TOM101-30',    N'30', NULL, 480000, 419000, 20),
+        (97,  31, N'QJ-TOM101-32',    N'32', NULL, 480000, NULL,   18),
+        -- P32: Quần short Non Branded 05 (4 colors × M,L)
+        (98,  32, N'QS-NB05-BE-M',    N'Be',       N'M', 320000, 269000, 25),
+        (99,  32, N'QS-NB05-BE-L',    N'Be',       N'L', 320000, 269000, 20),
+        (100, 32, N'QS-NB05-DEN-M',   N'Đen',      N'M', 320000, NULL,   30),
+        (101, 32, N'QS-NB05-DEN-L',   N'Đen',      N'L', 320000, NULL,   25),
+        (102, 32, N'QS-NB05-NR-M',    N'Nâu rêu',  N'M', 320000, NULL,   20),
+        (103, 32, N'QS-NB05-NR-L',    N'Nâu rêu',  N'L', 320000, NULL,   15),
+        (104, 32, N'QS-NB05-XD-M',    N'Xanh đen', N'M', 320000, NULL,   22),
+        (105, 32, N'QS-NB05-XD-L',    N'Xanh đen', N'L', 320000, NULL,   18),
+        -- P33-P42: Laptops (1 variant each)
+        (106, 33, N'ASUS-TUF-F15',    NULL, NULL, 18990000, 16990000, 8),
+        (107, 34, N'DELL-INS-3530',   NULL, NULL, 15990000, 14490000, 10),
+        (108, 35, N'LNV-IPG3',        NULL, NULL, 19990000, 17990000, 6),
+        (109, 36, N'ASUS-VB-X541',    NULL, NULL,  9990000,  8490000, 12),
+        (110, 37, N'MBP-M2-13',       NULL, NULL, 29990000, 27990000, 5),
+        (111, 38, N'LG-GRAM-15',      NULL, NULL, 25990000, 23990000, 7),
+        (112, 39, N'MBA-M2-13',       NULL, NULL, 24990000, 22990000, 8),
+        (113, 40, N'ACER-NITRO5',     NULL, NULL, 22990000, 20990000, 6),
+        (114, 41, N'ASUS-VBP15',      NULL, NULL, 21990000, 19990000, 7),
+        (115, 42, N'DELL-VOS-3530',   NULL, NULL, 14990000, 13490000, 10),
+        -- P43-P50: Phụ kiện thời trang (1 variant each)
+        (116, 43, N'NON-NB12',        NULL, NULL, 280000, 239000, 35),
+        (117, 44, N'NON-Y2010-02',    NULL, NULL, 320000, 269000, 30),
+        (118, 45, N'NON-Y2010-04',    NULL, NULL, 320000, NULL,   25),
+        (119, 46, N'GTTB-BG87',       NULL, NULL, 189000, 149000, 40),
+        (120, 47, N'DNIT-Y2010-D15',  NULL, NULL, 290000, 249000, 25),
+        (121, 48, N'TDC-Y2010-34',    NULL, NULL, 520000, 449000, 15),
+        (122, 49, N'VDA-Y2010-02',    NULL, NULL, 390000, 329000, 20),
+        (123, 50, N'VDA-Y2010-05',    NULL, NULL, 450000, 379000, 18);
+      SET IDENTITY_INSERT product_variants OFF;
+    `);
+    console.log('  + product_variants: +35 rows (89-123) — pants/laptops/accessories');
+
+    // ── New Product Images (52) ──
+    await qr.query(`
+      SET IDENTITY_INSERT product_images ON;
+      INSERT INTO product_images (id, product_id, image_url, sort_order, variant_option1) VALUES
+        -- P21: Áo khoác NB04 (4 color images)
+        (42, 21, N'/uploads/products/ao/ao-khoac-non-branded-04-den-1174884707.webp',      0, N'Đen'),
+        (43, 21, N'/uploads/products/ao/ao-khoac-non-branded-04-h-ng-1174884689.webp',     0, N'Hồng'),
+        (44, 21, N'/uploads/products/ao/ao-khoac-non-branded-04-xam-d-m-1174884510.webp',  0, N'Xám đậm'),
+        (45, 21, N'/uploads/products/ao/ao-khoac-non-branded-04-xanh-reu-1174884672.webp', 0, N'Xanh rêu'),
+        -- P22: Áo khoác TB M006 (2 color images)
+        (46, 22, N'/uploads/products/ao/ao-khoac-the-beginner-m006-den-1177437004.webp',     0, N'Đen'),
+        (47, 22, N'/uploads/products/ao/ao-khoac-the-beginner-m006-xanh-reu-1177436985.webp',0, N'Xanh rêu'),
+        -- P23: Áo sơ mi NB19 (1 shared)
+        (48, 23, N'/uploads/products/ao/ao-so-mi-non-branded-19-tr-ng-1174884380.webp', 0, NULL),
+        -- P24: Áo sơ mi NB33 (3 color images)
+        (49, 24, N'/uploads/products/ao/ao-so-mi-non-branded-33-den-1174884163.webp',      0, N'Đen'),
+        (50, 24, N'/uploads/products/ao/ao-so-mi-non-branded-33-tr-ng-1174884128.webp',    0, N'Trắng'),
+        (51, 24, N'/uploads/products/ao/ao-so-mi-non-branded-33-xanh-d-ng-1174884119.webp',0, N'Xanh dương'),
+        -- P25: Áo sơ mi SS22 (2 color images)
+        (52, 25, N'/uploads/products/ao/ao-so-mi-seventy-seven-22-be-1174882837.webp',  0, N'Be'),
+        (53, 25, N'/uploads/products/ao/ao-so-mi-seventy-seven-22-den-1174882869.webp', 0, N'Đen'),
+        -- P26: Áo thun NB01 (1 shared)
+        (54, 26, N'/uploads/products/ao/ao-thun-non-branded-01-den-1174882387.webp', 0, NULL),
+        -- P27: Áo thun SS04 (2 color + 4 shared detail/size chart)
+        (55, 27, N'/uploads/products/ao/ao-thun-seventy-seven-04-tr-ng-1174883207.webp',        0, N'Trắng'),
+        (56, 27, N'/uploads/products/ao/ao-thun-seventy-seven-04-xam-ghi-1174883153.webp',     0, N'Xám ghi'),
+        (57, 27, N'/uploads/products/ao-detail/ao-thun-seventy-seven-04-h-ng-1174883166.webp', 0, NULL),
+        (58, 27, N'/uploads/products/ao-detail/ao-thun-seventy-seven-04-h-ng-1174883170.webp', 1, NULL),
+        (59, 27, N'/uploads/products/ao-detail/size-ao-1.webp', 2, NULL),
+        (60, 27, N'/uploads/products/ao-detail/size-ao-2.webp', 3, NULL),
+        -- P28: Áo thun SS10 (1 shared)
+        (61, 28, N'/uploads/products/ao/ao-thun-seventy-seven-10-den-1174883597.webp', 0, NULL),
+        -- P29: Áo thun SS13 (4 color images)
+        (62, 29, N'/uploads/products/ao/ao-thun-seventy-seven-13-be-1174883511.webp',  0, N'Be'),
+        (63, 29, N'/uploads/products/ao/ao-thun-seventy-seven-13-den-1174883530.webp', 0, N'Đen'),
+        (64, 29, N'/uploads/products/ao/ao-thun-seventy-seven-13-tr-ng-1174883539.webp',0, N'Trắng'),
+        (65, 29, N'/uploads/products/ao/ao-thun-seventy-seven-13-xam-1174883483.webp', 0, N'Xám'),
+        -- P30: Quần jean TO28 (3 color images)
+        (66, 30, N'/uploads/products/quan/quan-jean-the-original-28-den-1174882647.webp',        0, N'Đen'),
+        (67, 30, N'/uploads/products/quan/quan-jean-the-original-28-xanh-d-m-1-1174882642.webp', 0, N'Xanh đậm'),
+        (68, 30, N'/uploads/products/quan/quan-jean-the-original-28-xanh-d-ng-1174882630.webp',  0, N'Xanh dương'),
+        -- P31: Quần jean TO M101 (1 shared)
+        (69, 31, N'/uploads/products/quan/quan-jean-the-original-m101-xanh-d-ng-1174882525.webp', 0, NULL),
+        -- P32: Quần short NB05 (4 color + 2 shared detail)
+        (70, 32, N'/uploads/products/quan/quan-short-non-branded-05-be-1174882076.webp',      0, N'Be'),
+        (71, 32, N'/uploads/products/quan/quan-short-non-branded-05-den-1174882099.webp',     0, N'Đen'),
+        (72, 32, N'/uploads/products/quan/quan-short-non-branded-05-nau-reu-1174882113.webp', 0, N'Nâu rêu'),
+        (73, 32, N'/uploads/products/quan/quan-short-non-branded-05-xanh-den-1174882061.webp',0, N'Xanh đen'),
+        (74, 32, N'/uploads/products/quan-detail/qu-n-short-non-branded-05-den-1174882100.webp', 1, NULL),
+        (75, 32, N'/uploads/products/quan-detail/QU._SHORT.webp', 2, NULL),
+        -- P33-P42: Laptops (1 each)
+        (76, 33, N'/uploads/products/laptop/1711078092373-asus-01.png',  0, NULL),
+        (77, 34, N'/uploads/products/laptop/1711078452562-dell-01.png',  0, NULL),
+        (78, 35, N'/uploads/products/laptop/1711079073759-lenovo-01.png',0, NULL),
+        (79, 36, N'/uploads/products/laptop/1711079496409-asus-02.png',  0, NULL),
+        (80, 37, N'/uploads/products/laptop/1711079954090-apple-01.png', 0, NULL),
+        (81, 38, N'/uploads/products/laptop/1711080386941-lg-01.png',    0, NULL),
+        (82, 39, N'/uploads/products/laptop/1711080787179-apple-02.png', 0, NULL),
+        (83, 40, N'/uploads/products/laptop/1711080948771-acer-01.png',  0, NULL),
+        (84, 41, N'/uploads/products/laptop/1711081080930-asus-03.png',  0, NULL),
+        (85, 42, N'/uploads/products/laptop/1711081278418-dell-02.png',  0, NULL),
+        -- P43-P50: Phụ kiện thời trang (1 each)
+        (86, 43, N'/uploads/products/phu-kien/non-non-branded-12-be-1174878916.webp',     0, NULL),
+        (87, 44, N'/uploads/products/phu-kien/non-y2010-02-den-1174879791.webp',          0, NULL),
+        (88, 45, N'/uploads/products/phu-kien/non-y2010-04-xanh-den-1174878969.webp',     0, NULL),
+        (89, 46, N'/uploads/products/phu-kien/bo-g-i-th-thao-beginner-87-1174879762.webp',0, NULL),
+        (90, 47, N'/uploads/products/phu-kien/day-n-t-y2010-d15-den-1174880703.webp',     0, NULL),
+        (91, 48, N'/uploads/products/phu-kien/tui-deo-y2010-34-den-1174880785.webp',      0, NULL),
+        (92, 49, N'/uploads/products/phu-kien/vi-y2010-02-den-1174880616.jpg',             0, NULL),
+        (93, 50, N'/uploads/products/phu-kien/vi-y2010-05-den-1174880343.webp',            0, NULL);
+      SET IDENTITY_INSERT product_images OFF;
+    `);
+    console.log('  + product_images: +52 rows (42-93)');
+
     await qr.release();
   },
 };

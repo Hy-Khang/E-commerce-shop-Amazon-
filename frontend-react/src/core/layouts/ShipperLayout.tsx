@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, Truck, Bell, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Truck, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
@@ -9,7 +9,6 @@ import { PortalAccountDropdown } from './PortalAccountDropdown';
 const shipperLinks: Array<{ to: string; label: string; icon: LucideIcon; permission: string }> = [
   { to: '/shipper/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.DASHBOARD_READ },
   { to: '/shipper/deliveries', label: 'Deliveries', icon: Truck, permission: PERMISSIONS.ORDERS_READ },
-  { to: '/shipper/notifications', label: 'Notifications', icon: Bell, permission: PERMISSIONS.PORTAL_SHIPPER },
 ];
 
 export function ShipperLayout() {
