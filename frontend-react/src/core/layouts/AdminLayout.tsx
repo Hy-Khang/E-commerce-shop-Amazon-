@@ -19,6 +19,8 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
+import { NotificationBell } from '@/features/notification';
+import { PortalAccountDropdown } from './PortalAccountDropdown';
 
 type NavItem = {
   to: string;
@@ -158,9 +160,15 @@ export function AdminLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 bg-slate-50 p-8">
-        <div className="motion-safe:animate-in">
-          <Outlet />
+      <main className="flex flex-1 flex-col bg-slate-50">
+        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-slate-200 bg-white px-4 py-3 md:px-8">
+          <NotificationBell />
+          <PortalAccountDropdown />
+        </header>
+        <div className="flex-1 overflow-auto p-8">
+          <div className="motion-safe:animate-in">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>

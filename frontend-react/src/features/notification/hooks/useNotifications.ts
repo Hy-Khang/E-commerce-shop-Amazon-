@@ -4,8 +4,10 @@ import type { NotificationListParams } from '../types/notification.types';
 
 export const notificationKeys = {
   all: ['notifications'] as const,
-  list: (params: NotificationListParams) => ['notifications', 'list', params] as const,
-  unreadCount: () => ['notifications', 'unread-count'] as const,
+  list: (params: NotificationListParams) =>
+    ['notifications', 'list', params] as const,
+  unreadCount: (context?: string) =>
+    ['notifications', 'unread-count', context] as const,
 };
 
 export function useNotifications(params: NotificationListParams = {}) {

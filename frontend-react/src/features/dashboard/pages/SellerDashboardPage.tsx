@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { DollarSign, ShoppingCart, Package, AlertTriangle } from 'lucide-react';
+import { DollarSign, Banknote, ShoppingCart, Package, AlertTriangle } from 'lucide-react';
 import { formatPrice } from '@/common/utils/format.util';
 import { useSellerDashboardStats } from '../hooks/useSellerDashboardStats';
 import { StatCard } from '../components/StatCard';
@@ -27,34 +27,41 @@ export default function SellerDashboardPage() {
       </h1>
 
       {stats.summary ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
-            title="My Revenue"
-            value={formatPrice(stats.summary.totalRevenue)}
+            title="Gross Revenue"
+            value={formatPrice(stats.summary.grossRevenue)}
             icon={DollarSign}
             color="emerald"
             index={0}
+          />
+          <StatCard
+            title="Collected Revenue"
+            value={formatPrice(stats.summary.collectedRevenue)}
+            icon={Banknote}
+            color="teal"
+            index={1}
           />
           <StatCard
             title="Orders with My Items"
             value={stats.summary.totalOrders.toLocaleString()}
             icon={ShoppingCart}
             color="blue"
-            index={1}
+            index={2}
           />
           <StatCard
             title="My Products"
             value={stats.summary.totalProducts.toLocaleString()}
             icon={Package}
             color="violet"
-            index={2}
+            index={3}
           />
           <StatCard
             title="Low Stock"
             value={stats.summary.lowStockCount.toLocaleString()}
             icon={AlertTriangle}
             color="amber"
-            index={3}
+            index={4}
           />
         </div>
       ) : (
@@ -66,7 +73,7 @@ export default function SellerDashboardPage() {
           <RevenueChart data={stats.revenueOverTime} />
         </Suspense>
       ) : (
-        <SectionError title="Revenue Trend" onRetry={refetch} />
+        <SectionError title="Collected Revenue Trend" onRetry={refetch} />
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

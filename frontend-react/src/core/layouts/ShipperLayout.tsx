@@ -3,6 +3,8 @@ import { LayoutDashboard, Truck, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
+import { NotificationBell } from '@/features/notification';
+import { PortalAccountDropdown } from './PortalAccountDropdown';
 
 const shipperLinks: Array<{ to: string; label: string; icon: LucideIcon; permission: string }> = [
   { to: '/shipper/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.DASHBOARD_READ },
@@ -47,8 +49,14 @@ export function ShipperLayout() {
           </Link>
         </div>
       </aside>
-      <main className="flex-1 bg-gray-50/50 p-6">
-        <Outlet />
+      <main className="flex flex-1 flex-col bg-gray-50/50">
+        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-gray-200 bg-white px-4 py-3 md:px-6">
+          <NotificationBell />
+          <PortalAccountDropdown />
+        </header>
+        <div className="flex-1 overflow-auto p-6">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

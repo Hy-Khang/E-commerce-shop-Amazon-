@@ -52,7 +52,7 @@ export default function RevenueChart({ data }: Props) {
   return (
     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
       <h2 className="mb-4 font-jakarta text-lg font-bold text-slate-900">
-        Revenue Trend
+        Collected Revenue Trend
       </h2>
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">

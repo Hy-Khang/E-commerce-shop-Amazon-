@@ -24,36 +24,49 @@ export class DashboardRepository {
   async getSummaryStats(): Promise<ISummaryStats> {
     const mgr = this.repo.manager;
 
-    const [revenueResult, orderResult, productResult, userResult] =
-      await Promise.all([
-        mgr
-          .createQueryBuilder()
-          .select('COALESCE(SUM(total_amount), 0)', 'totalRevenue')
-          .from('orders', 'o')
-          .where("o.payment_status = 'paid'")
-          .andWhere("o.status = 'completed'")
-          .getRawOne(),
-        mgr
-          .createQueryBuilder()
-          .select('COUNT(*)', 'totalOrders')
-          .from('orders', 'o')
-          .getRawOne(),
-        mgr
-          .createQueryBuilder()
-          .select('COUNT(*)', 'totalProducts')
-          .from('products', 'p')
-          .where('p.is_active = 1')
-          .getRawOne(),
-        mgr
-          .createQueryBuilder()
-          .select('COUNT(*)', 'totalUsers')
-          .from('users', 'u')
-          .where('u.is_active = 1')
-          .getRawOne(),
-      ]);
+    const [
+      grossRevenueResult,
+      collectedRevenueResult,
+      orderResult,
+      productResult,
+      userResult,
+    ] = await Promise.all([
+      mgr
+        .createQueryBuilder()
+        .select('COALESCE(SUM(total_amount), 0)', 'grossRevenue')
+        .from('orders', 'o')
+        .where("o.status = 'completed'")
+        .getRawOne(),
+      mgr
+        .createQueryBuilder()
+        .select('COALESCE(SUM(total_amount), 0)', 'collectedRevenue')
+        .from('orders', 'o')
+        .where("o.payment_status = 'paid'")
+        .andWhere("o.status = 'completed'")
+        .getRawOne(),
+      mgr
+        .createQueryBuilder()
+        .select('COUNT(*)', 'totalOrders')
+        .from('orders', 'o')
+        .getRawOne(),
+      mgr
+        .createQueryBuilder()
+        .select('COUNT(*)', 'totalProducts')
+        .from('products', 'p')
+        .where('p.is_active = 1')
+        .getRawOne(),
+      mgr
+        .createQueryBuilder()
+        .select('COUNT(*)', 'totalUsers')
+        .from('users', 'u')
+        .where('u.is_active = 1')
+        .getRawOne(),
+    ]);
 
     return {
-      totalRevenue: parseFloat(revenueResult.totalRevenue) || 0,
+      grossRevenue: parseFloat(grossRevenueResult.grossRevenue) || 0,
+      collectedRevenue:
+        parseFloat(collectedRevenueResult.collectedRevenue) || 0,
       totalOrders: parseInt(orderResult.totalOrders, 10),
       totalProducts: parseInt(productResult.totalProducts, 10),
       totalUsers: parseInt(userResult.totalUsers, 10),
@@ -208,45 +221,63 @@ export class DashboardRepository {
   async getSellerSummaryStats(shopId: number): Promise<ISellerSummaryStats> {
     const mgr = this.repo.manager;
 
-    const [revenueResult, orderResult, productResult, lowStockResult] =
-      await Promise.all([
-        mgr
-          .createQueryBuilder()
-          .select('COALESCE(SUM(oi.price * oi.quantity), 0)', 'totalRevenue')
-          .from('order_items', 'oi')
-          .innerJoin('orders', 'o', 'oi.order_id = o.id')
-          .where('oi.shop_id = :shopId', { shopId })
-          .andWhere("o.payment_status = 'paid'")
-          .andWhere("o.status = 'completed'")
-          .getRawOne(),
-        mgr
-          .createQueryBuilder()
-          .select('COUNT(DISTINCT oi.order_id)', 'totalOrders')
-          .from('order_items', 'oi')
-          .innerJoin('orders', 'o', 'oi.order_id = o.id')
-          .where('oi.shop_id = :shopId', { shopId })
-          .andWhere("o.status != 'cancelled'")
-          .getRawOne(),
-        mgr
-          .createQueryBuilder()
-          .select('COUNT(*)', 'totalProducts')
-          .from('products', 'p')
-          .where('p.shop_id = :shopId', { shopId })
-          .andWhere('p.is_active = 1')
-          .getRawOne(),
-        mgr
-          .createQueryBuilder()
-          .select('COUNT(*)', 'lowStockCount')
-          .from('product_variants', 'pv')
-          .innerJoin('products', 'p', 'pv.product_id = p.id')
-          .where('p.shop_id = :shopId', { shopId })
-          .andWhere('p.is_active = 1')
-          .andWhere('pv.stock_quantity < :threshold', { threshold: 10 })
-          .getRawOne(),
-      ]);
+    const [
+      grossRevenueResult,
+      collectedRevenueResult,
+      orderResult,
+      productResult,
+      lowStockResult,
+    ] = await Promise.all([
+      mgr
+        .createQueryBuilder()
+        .select('COALESCE(SUM(oi.price * oi.quantity), 0)', 'grossRevenue')
+        .from('order_items', 'oi')
+        .innerJoin('orders', 'o', 'oi.order_id = o.id')
+        .where('oi.shop_id = :shopId', { shopId })
+        .andWhere("o.status = 'completed'")
+        .getRawOne(),
+      mgr
+        .createQueryBuilder()
+        .select(
+          'COALESCE(SUM(oi.price * oi.quantity), 0)',
+          'collectedRevenue',
+        )
+        .from('order_items', 'oi')
+        .innerJoin('orders', 'o', 'oi.order_id = o.id')
+        .where('oi.shop_id = :shopId', { shopId })
+        .andWhere("o.payment_status = 'paid'")
+        .andWhere("o.status = 'completed'")
+        .getRawOne(),
+      mgr
+        .createQueryBuilder()
+        .select('COUNT(DISTINCT oi.order_id)', 'totalOrders')
+        .from('order_items', 'oi')
+        .innerJoin('orders', 'o', 'oi.order_id = o.id')
+        .where('oi.shop_id = :shopId', { shopId })
+        .andWhere("o.status != 'cancelled'")
+        .getRawOne(),
+      mgr
+        .createQueryBuilder()
+        .select('COUNT(*)', 'totalProducts')
+        .from('products', 'p')
+        .where('p.shop_id = :shopId', { shopId })
+        .andWhere('p.is_active = 1')
+        .getRawOne(),
+      mgr
+        .createQueryBuilder()
+        .select('COUNT(*)', 'lowStockCount')
+        .from('product_variants', 'pv')
+        .innerJoin('products', 'p', 'pv.product_id = p.id')
+        .where('p.shop_id = :shopId', { shopId })
+        .andWhere('p.is_active = 1')
+        .andWhere('pv.stock_quantity < :threshold', { threshold: 10 })
+        .getRawOne(),
+    ]);
 
     return {
-      totalRevenue: parseFloat(revenueResult.totalRevenue) || 0,
+      grossRevenue: parseFloat(grossRevenueResult.grossRevenue) || 0,
+      collectedRevenue:
+        parseFloat(collectedRevenueResult.collectedRevenue) || 0,
       totalOrders: parseInt(orderResult.totalOrders, 10),
       totalProducts: parseInt(productResult.totalProducts, 10),
       lowStockCount: parseInt(lowStockResult.lowStockCount, 10),

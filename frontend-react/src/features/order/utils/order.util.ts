@@ -97,7 +97,7 @@ export function canMarkAsPaid(
   if (status === 'cancelled' || status === 'return_requested') return false;
 
   if (paymentMethod === 'cod') {
-    return status === 'shipping' || status === 'delivered';
+    return status === 'shipping' || status === 'delivered' || status === 'completed';
   }
 
   return true;

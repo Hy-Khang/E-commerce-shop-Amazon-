@@ -11,6 +11,7 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -22,6 +23,7 @@ import {
 } from './dto/notification-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { ICurrentUser } from '../../common/interfaces/current-user.interface';
+import { NotificationContext } from './types/notification.types';
 
 @ApiTags('Notification')
 @ApiBearerAuth()
@@ -42,8 +44,12 @@ export class NotificationController {
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notification count' })
   @ApiResponse({ status: 200, type: UnreadCountResponseDto })
-  async getUnreadCount(@CurrentUser() user: ICurrentUser) {
-    return this.notificationService.getUnreadCount(user.id);
+  @ApiQuery({ name: 'context', enum: NotificationContext, required: false })
+  async getUnreadCount(
+    @CurrentUser() user: ICurrentUser,
+    @Query('context') context?: NotificationContext,
+  ) {
+    return this.notificationService.getUnreadCount(user.id, context);
   }
 
   @Patch(':id/read')
@@ -61,7 +67,11 @@ export class NotificationController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Mark all notifications as read' })
   @ApiResponse({ status: 204 })
-  async markAllAsRead(@CurrentUser() user: ICurrentUser) {
-    return this.notificationService.markAllAsRead(user.id);
+  @ApiQuery({ name: 'context', enum: NotificationContext, required: false })
+  async markAllAsRead(
+    @CurrentUser() user: ICurrentUser,
+    @Query('context') context?: NotificationContext,
+  ) {
+    return this.notificationService.markAllAsRead(user.id, context);
   }
 }

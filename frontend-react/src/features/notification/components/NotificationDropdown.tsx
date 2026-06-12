@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { ROUTES } from '@/common/constants/routes';
 import { useNotifications } from '../hooks/useNotifications';
 import { useMarkAllAsRead } from '../hooks/useMarkAllAsRead';
 import { useNotificationStore } from '../stores/notification.store';
+import { useNotificationRoutes } from '../hooks/useNotificationRoutes';
 import { NotificationItem } from './NotificationItem';
 
 interface Props {
@@ -13,8 +13,9 @@ interface Props {
 
 export function NotificationDropdown({ onClose }: Props) {
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { data, isLoading } = useNotifications({ limit: 10 });
-  const markAllAsRead = useMarkAllAsRead();
+  const { context, notificationsPath } = useNotificationRoutes();
+  const { data, isLoading } = useNotifications({ limit: 10, context });
+  const markAllAsRead = useMarkAllAsRead(context);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export function NotificationDropdown({ onClose }: Props) {
       {!isLoading && notifications.length > 0 && (
         <div className="border-t border-border-default">
           <Link
-            to={ROUTES.NOTIFICATIONS}
+            to={notificationsPath}
             onClick={onClose}
             className="block py-2.5 text-center text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-neutral-50 transition-colors"
           >

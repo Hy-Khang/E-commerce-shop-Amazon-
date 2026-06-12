@@ -3,13 +3,13 @@ import { notificationService } from '../services/notification.service';
 import { notificationKeys } from './useNotifications';
 import { useNotificationStore } from '../stores/notification.store';
 
-export function useMarkAllAsRead() {
+export function useMarkAllAsRead(notifContext?: string) {
   const queryClient = useQueryClient();
   const setUnreadCount = useNotificationStore((s) => s.setUnreadCount);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
 
   return useMutation({
-    mutationFn: () => notificationService.markAllAsRead(),
+    mutationFn: () => notificationService.markAllAsRead(notifContext),
 
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: notificationKeys.all });
@@ -18,15 +18,17 @@ export function useMarkAllAsRead() {
       return { previousCount };
     },
 
-    onError: (_err, _vars, context) => {
-      if (context) {
-        setUnreadCount(context.previousCount);
+    onError: (_err, _vars, ctx) => {
+      if (ctx) {
+        setUnreadCount(ctx.previousCount);
       }
     },
 
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-      queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount() });
+      queryClient.invalidateQueries({
+        queryKey: notificationKeys.unreadCount(notifContext),
+      });
     },
   });
 }

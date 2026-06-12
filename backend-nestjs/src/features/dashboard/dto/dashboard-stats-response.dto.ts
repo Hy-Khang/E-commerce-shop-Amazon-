@@ -1,8 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SummaryDto {
-  @ApiProperty()
-  totalRevenue: number;
+  @ApiProperty({ description: 'Total value of completed orders (regardless of payment)' })
+  grossRevenue: number;
+
+  @ApiProperty({ description: 'Total value of completed + paid orders' })
+  collectedRevenue: number;
 
   @ApiProperty()
   totalOrders: number;

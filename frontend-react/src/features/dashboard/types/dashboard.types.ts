@@ -9,7 +9,8 @@ export interface DashboardStats {
 }
 
 export interface SummaryStats {
-  totalRevenue: number;
+  grossRevenue: number;
+  collectedRevenue: number;
   totalOrders: number;
   totalProducts: number;
   totalUsers: number;
@@ -57,7 +58,8 @@ export interface LowStockAlert {
 }
 
 export interface SellerSummaryStats {
-  totalRevenue: number;
+  grossRevenue: number;
+  collectedRevenue: number;
   totalOrders: number;
   totalProducts: number;
   lowStockCount: number;

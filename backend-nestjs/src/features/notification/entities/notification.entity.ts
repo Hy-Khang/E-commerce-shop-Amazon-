@@ -9,7 +9,7 @@ import {
 import { User } from '../../auth/entities/user.entity';
 
 @Entity('notifications')
-@Index('idx_notifications_user_id_is_read', ['user_id', 'is_read'])
+@Index('idx_notifications_user_context_read', ['user_id', 'context', 'is_read'])
 @Index('idx_notifications_created_at', ['created_at'])
 export class Notification {
   @PrimaryGeneratedColumn()
@@ -20,6 +20,9 @@ export class Notification {
 
   @Column({ type: 'nvarchar', length: 50 })
   type: string;
+
+  @Column({ type: 'nvarchar', length: 20, default: 'customer' })
+  context: string;
 
   @Column({ type: 'nvarchar', length: 255 })
   title: string;

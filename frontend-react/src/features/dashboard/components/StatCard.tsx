@@ -4,7 +4,7 @@ interface Props {
   title: string;
   value: string;
   icon: LucideIcon;
-  color: 'emerald' | 'blue' | 'violet' | 'amber';
+  color: 'emerald' | 'blue' | 'violet' | 'amber' | 'teal';
   index: number;
 }
 
@@ -32,6 +32,12 @@ const colorMap = {
     border: 'border-l-amber-500',
     iconBg: 'bg-amber-100',
     iconText: 'text-amber-600',
+  },
+  teal: {
+    bg: 'bg-teal-50/60',
+    border: 'border-l-teal-500',
+    iconBg: 'bg-teal-100',
+    iconText: 'text-teal-600',
   },
 };
 

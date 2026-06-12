@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Bell } from 'lucide-react';
 import { useNotificationStore } from '../stores/notification.store';
 import { useUnreadCount } from '../hooks/useUnreadCount';
+import { useNotificationRoutes } from '../hooks/useNotificationRoutes';
 import { NotificationDropdown } from './NotificationDropdown';
 
 export function NotificationBell() {
-  useUnreadCount();
+  const { context } = useNotificationRoutes();
+  useUnreadCount(context);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
   const [isOpen, setIsOpen] = useState(false);
 

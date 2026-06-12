@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/common/constants/routes';
 import type { Notification } from '../types/notification.types';
 import { formatRelativeTime } from '../utils/notification.util';
 import { useMarkAsRead } from '../hooks/useMarkAsRead';
+import { useNotificationRoutes } from '../hooks/useNotificationRoutes';
 
 interface Props {
   notification: Notification;
@@ -11,14 +11,15 @@ interface Props {
 
 export function NotificationItem({ notification, onClose }: Props) {
   const navigate = useNavigate();
-  const markAsRead = useMarkAsRead();
+  const { context, orderDetailPath } = useNotificationRoutes();
+  const markAsRead = useMarkAsRead(context);
 
   function handleClick() {
     if (!notification.is_read) {
       markAsRead.mutate(notification.id);
     }
     if (notification.data?.orderId) {
-      navigate(ROUTES.ORDER_DETAIL(notification.data.orderId));
+      navigate(orderDetailPath(notification.data.orderId));
     }
     onClose();
   }

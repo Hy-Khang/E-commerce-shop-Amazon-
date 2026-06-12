@@ -1,7 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { NotificationContext } from '../types/notification.types';
 
 export class NotificationQueryDto extends PaginationDto {
   @ApiPropertyOptional({ description: 'Filter by read status' })
@@ -9,4 +10,12 @@ export class NotificationQueryDto extends PaginationDto {
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   is_read?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Portal context filter',
+    enum: NotificationContext,
+  })
+  @IsOptional()
+  @IsEnum(NotificationContext)
+  context?: NotificationContext;
 }

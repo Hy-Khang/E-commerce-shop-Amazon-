@@ -6,8 +6,11 @@ import {
 } from './dashboard-stats-response.dto';
 
 export class SellerSummaryDto {
-  @ApiProperty()
-  totalRevenue: number;
+  @ApiProperty({ description: 'Total value of completed orders (regardless of payment)' })
+  grossRevenue: number;
+
+  @ApiProperty({ description: 'Total value of completed + paid orders' })
+  collectedRevenue: number;
 
   @ApiProperty()
   totalOrders: number;

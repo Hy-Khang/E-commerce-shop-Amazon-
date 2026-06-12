@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderRepository } from './repositories/order.repository';
 import { OrderStatus } from '../../common/constants';
+import { ActorType } from '../notification/types/notification.types';
 
 const AUTO_COMPLETE_DAYS = 7;
 
@@ -34,6 +35,7 @@ export class OrderScheduler {
         notifyUserIds: [order.user_id],
         oldStatus: OrderStatus.Delivered,
         newStatus: OrderStatus.Completed,
+        actorType: ActorType.System,
       });
     }
 

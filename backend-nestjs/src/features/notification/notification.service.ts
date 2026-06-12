@@ -20,6 +20,7 @@ export class NotificationService {
       query.page,
       query.limit,
       query.is_read,
+      query.context,
     );
 
     return {
@@ -28,8 +29,14 @@ export class NotificationService {
     };
   }
 
-  async getUnreadCount(userId: number): Promise<{ count: number }> {
-    const count = await this.notificationRepository.countUnread(userId);
+  async getUnreadCount(
+    userId: number,
+    context?: string,
+  ): Promise<{ count: number }> {
+    const count = await this.notificationRepository.countUnread(
+      userId,
+      context,
+    );
     return { count };
   }
 
@@ -53,7 +60,7 @@ export class NotificationService {
     return toNotificationResponse(updated!);
   }
 
-  async markAllAsRead(userId: number): Promise<void> {
-    await this.notificationRepository.markAllAsRead(userId);
+  async markAllAsRead(userId: number, context?: string): Promise<void> {
+    await this.notificationRepository.markAllAsRead(userId, context);
   }
 }

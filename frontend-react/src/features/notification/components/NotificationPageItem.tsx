@@ -1,16 +1,16 @@
 import { Link } from 'react-router-dom';
-import { ROUTES } from '@/common/constants/routes';
 import type { Notification } from '../types/notification.types';
 import { formatRelativeTime } from '../utils/notification.util';
 
 interface Props {
   notification: Notification;
   onMarkAsRead: (id: number) => void;
+  orderDetailPath: (id: number) => string;
 }
 
-export function NotificationPageItem({ notification, onMarkAsRead }: Props) {
+export function NotificationPageItem({ notification, onMarkAsRead, orderDetailPath }: Props) {
   const orderLink = notification.data?.orderId
-    ? ROUTES.ORDER_DETAIL(notification.data.orderId)
+    ? orderDetailPath(notification.data.orderId)
     : null;
 
   return (

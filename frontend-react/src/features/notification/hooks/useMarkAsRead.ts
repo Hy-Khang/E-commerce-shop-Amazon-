@@ -3,7 +3,7 @@ import { notificationService } from '../services/notification.service';
 import { notificationKeys } from './useNotifications';
 import { useNotificationStore } from '../stores/notification.store';
 
-export function useMarkAsRead() {
+export function useMarkAsRead(notifContext?: string) {
   const queryClient = useQueryClient();
   const setUnreadCount = useNotificationStore((s) => s.setUnreadCount);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
@@ -19,15 +19,17 @@ export function useMarkAsRead() {
       return { previousCount };
     },
 
-    onError: (_err, _id, context) => {
-      if (context) {
-        setUnreadCount(context.previousCount);
+    onError: (_err, _id, ctx) => {
+      if (ctx) {
+        setUnreadCount(ctx.previousCount);
       }
     },
 
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-      queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount() });
+      queryClient.invalidateQueries({
+        queryKey: notificationKeys.unreadCount(notifContext),
+      });
     },
   });
 }

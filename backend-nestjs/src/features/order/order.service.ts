@@ -46,6 +46,7 @@ import { OrderStatus, PaymentMethod } from '../../common/constants';
 import { InsufficientStockException } from '../../common/exceptions/insufficient-stock.exception';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { ShopService } from '../shop/shop.service';
+import { ActorType } from '../notification/types/notification.types';
 
 @Injectable()
 export class OrderService {
@@ -292,6 +293,7 @@ export class OrderService {
       notifyUserIds: sellerUserIds,
       oldStatus,
       newStatus: OrderStatus.Completed,
+      actorType: ActorType.Customer,
     });
 
     this.logger.log(`Order #${orderId} receipt confirmed by user ${userId}`);
@@ -337,6 +339,7 @@ export class OrderService {
       notifyUserIds: sellerUserIds,
       oldStatus,
       newStatus: OrderStatus.ReturnRequested,
+      actorType: ActorType.Customer,
     });
 
     this.logger.log(`Order #${orderId} return requested by user ${userId}`);
@@ -474,6 +477,7 @@ export class OrderService {
       notifyUserIds: [order.user_id],
       oldStatus,
       newStatus: dto.status,
+      actorType: ActorType.Admin,
     });
 
     this.logger.log(`Order #${orderId} status updated to ${dto.status}`);
@@ -594,6 +598,7 @@ export class OrderService {
       notifyUserIds: [order.user_id],
       oldStatus,
       newStatus: dto.status,
+      actorType: ActorType.Seller,
     });
 
     this.logger.log(

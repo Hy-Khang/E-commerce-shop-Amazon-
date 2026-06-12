@@ -5,14 +5,21 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useMarkAsRead } from '../hooks/useMarkAsRead';
 import { useMarkAllAsRead } from '../hooks/useMarkAllAsRead';
 import { useNotificationStore } from '../stores/notification.store';
+import { useNotificationRoutes } from '../hooks/useNotificationRoutes';
 import { NotificationPageItem } from '../components/NotificationPageItem';
 
 export default function NotificationPage() {
   const { params, setPage } = usePagination({ limit: 15 });
-  const { data, isLoading } = useNotifications({ page: params.page, limit: params.limit });
-  const markAsRead = useMarkAsRead();
-  const markAllAsRead = useMarkAllAsRead();
+  const { orderDetailPath, context } = useNotificationRoutes();
+  const { data, isLoading } = useNotifications({
+    page: params.page,
+    limit: params.limit,
+    context,
+  });
+  const markAsRead = useMarkAsRead(context);
+  const markAllAsRead = useMarkAllAsRead(context);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
+  const isCustomer = context === 'customer';
 
   if (isLoading) {
     return (
@@ -31,9 +38,13 @@ export default function NotificationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-text-primary">My Notifications</h1>
+          <h1 className="text-xl font-bold tracking-tight text-text-primary">
+            {isCustomer ? 'My Notifications' : 'Notifications'}
+          </h1>
           <p className="mt-1 text-sm text-text-secondary">
-            Stay updated on your order status changes.
+            {isCustomer
+              ? 'Stay updated on your order status changes.'
+              : 'Order updates and status change alerts.'}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -52,7 +63,9 @@ export default function NotificationPage() {
           <Bell className="h-14 w-14 text-text-muted/60" />
           <h2 className="mt-4 text-base font-semibold text-text-primary">No notifications yet</h2>
           <p className="mt-1 text-sm text-text-secondary max-w-xs">
-            You'll be notified here when your order status changes.
+            {isCustomer
+              ? "You'll be notified here when your order status changes."
+              : "You'll be notified here about order updates."}
           </p>
         </div>
       ) : (
@@ -67,6 +80,7 @@ export default function NotificationPage() {
                 key={notification.id}
                 notification={notification}
                 onMarkAsRead={(id) => markAsRead.mutate(id)}
+                orderDetailPath={orderDetailPath}
               />
             ))}
           </div>

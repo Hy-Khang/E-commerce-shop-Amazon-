@@ -1,5 +1,6 @@
 import { Notification } from '../entities/notification.entity';
 import { NotificationResponseDto } from '../dto/notification-response.dto';
+import { ActorType } from '../types/notification.types';
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Pending',
@@ -38,6 +39,23 @@ export function buildOrderStatusMessage(
   orderId: number,
   oldStatus: string,
   newStatus: string,
+  actorType: ActorType,
+  recipientUserId: number,
+  orderOwnerUserId: number,
+): { title: string; message: string } {
+  const isRecipientOrderOwner = recipientUserId === orderOwnerUserId;
+
+  if (isRecipientOrderOwner) {
+    return buildCustomerMessage(orderId, newStatus, actorType);
+  }
+
+  return buildSellerMessage(orderId, newStatus, actorType);
+}
+
+function buildCustomerMessage(
+  orderId: number,
+  newStatus: string,
+  actorType: ActorType,
 ): { title: string; message: string } {
   const newLabel = STATUS_LABELS[newStatus] || newStatus;
 
@@ -48,22 +66,62 @@ export function buildOrderStatusMessage(
     };
   }
 
-  if (newStatus === 'completed') {
+  if (newStatus === 'completed' && actorType === ActorType.System) {
     return {
-      title: 'Order Completed',
-      message: `Order #${orderId} has been completed.`,
+      title: 'Order Auto-Completed',
+      message: `Your order #${orderId} has been automatically completed. You can now leave a review.`,
     };
   }
 
-  if (newStatus === 'return_requested') {
+  if (newStatus === 'completed') {
     return {
-      title: 'Return Requested',
-      message: `A return has been requested for order #${orderId}.`,
+      title: 'Order Completed',
+      message: `Your order #${orderId} has been completed. You can now leave a review.`,
     };
   }
 
   return {
     title: 'Order Status Updated',
     message: `Your order #${orderId} has been updated to ${newLabel}.`,
+  };
+}
+
+function buildSellerMessage(
+  orderId: number,
+  newStatus: string,
+  actorType: ActorType,
+): { title: string; message: string } {
+  if (newStatus === 'completed' && actorType === ActorType.Customer) {
+    return {
+      title: 'Receipt Confirmed',
+      message: `Customer confirmed receipt for order #${orderId}.`,
+    };
+  }
+
+  if (newStatus === 'return_requested') {
+    return {
+      title: 'Return Requested',
+      message: `Customer requested a return for order #${orderId}. Please review the request.`,
+    };
+  }
+
+  if (newStatus === 'cancelled' && actorType === ActorType.Admin) {
+    return {
+      title: 'Order Cancelled by Admin',
+      message: `Order #${orderId} has been cancelled by an admin.`,
+    };
+  }
+
+  if (newStatus === 'completed' && actorType === ActorType.Admin) {
+    return {
+      title: 'Order Completed by Admin',
+      message: `Order #${orderId} has been marked as completed by an admin.`,
+    };
+  }
+
+  const newLabel = STATUS_LABELS[newStatus] || newStatus;
+  return {
+    title: 'Order Status Updated',
+    message: `Order #${orderId} status changed to ${newLabel}.`,
   };
 }

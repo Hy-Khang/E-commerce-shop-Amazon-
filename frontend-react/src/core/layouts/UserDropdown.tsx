@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, MapPin, MessageSquare, Package, LogOut, ChevronDown, Shield, Store, Truck } from 'lucide-react';
+import { User, MapPin, MessageSquare, Package, LogOut, ChevronDown } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { ROUTES } from '@/common/constants/routes';
+import { getVisiblePortals } from './portal-links.util';
 
 export function UserDropdown() {
   const user = useAuthStore((s) => s.user);
@@ -88,19 +89,8 @@ function DropdownLink({ to, icon, onClick, children }: { to: string; icon: React
   );
 }
 
-const portalLinks = [
-  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin Portal', icon: Shield, accent: 'text-slate-600' },
-  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller Center', icon: Store, accent: 'text-amber-700' },
-  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper Portal', icon: Truck, accent: 'text-emerald-700' },
-];
-
 function PortalSection({ role, onClose }: { role?: string; onClose: () => void }) {
-  if (!role || role === 'customer') return null;
-
-  const visible = role === 'admin'
-    ? portalLinks.filter((p) => p.role === 'admin' || p.role === 'seller')
-    : portalLinks.filter((p) => p.role === role);
-
+  const visible = getVisiblePortals(role);
   if (visible.length === 0) return null;
 
   return (

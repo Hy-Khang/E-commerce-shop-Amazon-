@@ -6,12 +6,16 @@ export const notificationService = {
   getList: (params: NotificationListParams) =>
     api.get<PaginatedResponse<Notification>>('/notifications', { params }),
 
-  getUnreadCount: () =>
-    api.get<SuccessResponse<UnreadCount>>('/notifications/unread-count'),
+  getUnreadCount: (context?: string) =>
+    api.get<SuccessResponse<UnreadCount>>('/notifications/unread-count', {
+      params: context ? { context } : undefined,
+    }),
 
   markAsRead: (id: number) =>
     api.patch<SuccessResponse<Notification>>(`/notifications/${id}/read`),
 
-  markAllAsRead: () =>
-    api.patch('/notifications/read-all'),
+  markAllAsRead: (context?: string) =>
+    api.patch('/notifications/read-all', null, {
+      params: context ? { context } : undefined,
+    }),
 };

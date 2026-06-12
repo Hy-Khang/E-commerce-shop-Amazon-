@@ -5,13 +5,14 @@ import { notificationService } from '../services/notification.service';
 import { useNotificationStore } from '../stores/notification.store';
 import { notificationKeys } from './useNotifications';
 
-export function useUnreadCount() {
+export function useUnreadCount(context?: string) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const setUnreadCount = useNotificationStore((s) => s.setUnreadCount);
 
   const query = useQuery({
-    queryKey: notificationKeys.unreadCount(),
-    queryFn: () => notificationService.getUnreadCount().then((res) => res.data.data),
+    queryKey: notificationKeys.unreadCount(context),
+    queryFn: () =>
+      notificationService.getUnreadCount(context).then((res) => res.data.data),
     enabled: isAuthenticated,
     staleTime: 0,
     refetchInterval: 30 * 1000,

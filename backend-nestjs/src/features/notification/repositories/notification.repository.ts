@@ -16,10 +16,14 @@ export class NotificationRepository {
     page: number,
     limit: number,
     isRead?: boolean,
+    context?: string,
   ): Promise<IPaginatedResult<Notification>> {
     const where: Record<string, unknown> = { user_id: userId };
     if (isRead !== undefined) {
       where.is_read = isRead;
+    }
+    if (context) {
+      where.context = context;
     }
 
     const [data, total] = await this.repo.findAndCount({
@@ -40,10 +44,15 @@ export class NotificationRepository {
     };
   }
 
-  async countUnread(userId: number): Promise<number> {
-    return this.repo.count({
-      where: { user_id: userId, is_read: false },
-    });
+  async countUnread(userId: number, context?: string): Promise<number> {
+    const where: Record<string, unknown> = {
+      user_id: userId,
+      is_read: false,
+    };
+    if (context) {
+      where.context = context;
+    }
+    return this.repo.count({ where });
   }
 
   async create(data: Partial<Notification>): Promise<Notification> {
@@ -59,11 +68,15 @@ export class NotificationRepository {
     return result.affected ?? 0;
   }
 
-  async markAllAsRead(userId: number): Promise<void> {
-    await this.repo.update(
-      { user_id: userId, is_read: false },
-      { is_read: true },
-    );
+  async markAllAsRead(userId: number, context?: string): Promise<void> {
+    const where: Record<string, unknown> = {
+      user_id: userId,
+      is_read: false,
+    };
+    if (context) {
+      where.context = context;
+    }
+    await this.repo.update(where, { is_read: true });
   }
 
   async findById(id: number, userId: number): Promise<Notification | null> {

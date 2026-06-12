@@ -1,5 +1,6 @@
 export interface ISummaryStats {
-  totalRevenue: number;
+  grossRevenue: number;
+  collectedRevenue: number;
   totalOrders: number;
   totalProducts: number;
   totalUsers: number;
@@ -57,7 +58,8 @@ export interface IDashboardStats {
 }
 
 export interface ISellerSummaryStats {
-  totalRevenue: number;
+  grossRevenue: number;
+  collectedRevenue: number;
   totalOrders: number;
   totalProducts: number;
   lowStockCount: number;

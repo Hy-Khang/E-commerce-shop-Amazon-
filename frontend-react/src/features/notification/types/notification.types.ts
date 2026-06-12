@@ -6,6 +6,7 @@ export interface OrderStatusChangedData {
   orderId: number;
   oldStatus: string;
   newStatus: string;
+  actorType?: 'admin' | 'seller' | 'customer' | 'system';
 }
 
 export interface Notification {
@@ -26,4 +27,5 @@ export interface NotificationListParams {
   page?: number;
   limit?: number;
   is_read?: boolean;
+  context?: 'customer' | 'seller' | 'admin';
 }
