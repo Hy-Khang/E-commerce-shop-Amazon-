@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle, Store } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES, ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
@@ -10,7 +10,7 @@ import { useUpdateOrderStatus } from '../hooks/useUpdateOrderStatus';
 import { useUpdatePaymentStatus } from '../hooks/useUpdatePaymentStatus';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderItemRow } from '../components/OrderItemRow';
-import { getValidNextStatuses, getPaymentStatusColor, canMarkAsPaid } from '../utils/order.util';
+import { getValidNextStatuses, getPaymentStatusColor, canMarkAsPaid, groupItemsByShop } from '../utils/order.util';
 import type { OrderStatus, PaymentStatus } from '../types/order.types';
 
 export default function AdminOrderDetailPage() {
@@ -120,8 +120,29 @@ export default function AdminOrderDetailPage() {
             <h2 className="mb-4 text-lg font-semibold text-slate-900">
               Items ({order.order_items.length})
             </h2>
-            {order.order_items.map((item) => (
-              <OrderItemRow key={item.id} item={item} />
+            {[...groupItemsByShop(order.order_items)].map(([shopId, group]) => (
+              <div key={shopId ?? 'no-shop'}>
+                <div className="flex items-center gap-2 border-b border-slate-100 pb-2 pt-2 first:pt-0">
+                  <Store className="h-4 w-4 text-slate-400" />
+                  {shopId ? (
+                    <Link
+                      to={ROUTES.ADMIN_SHOP_DETAIL(shopId)}
+                      className="text-sm font-semibold text-slate-900 hover:text-teal-600 transition-colors"
+                    >
+                      {group.shopName}
+                    </Link>
+                  ) : (
+                    <span className="text-sm font-semibold text-slate-900">{group.shopName}</span>
+                  )}
+                </div>
+                {group.items.map((item) => (
+                  <OrderItemRow
+                    key={item.id}
+                    item={item}
+                    productLinkOverride={item.product_id ? ROUTES.ADMIN_PRODUCT_EDIT(item.product_id) : null}
+                  />
+                ))}
+              </div>
             ))}
           </div>
 

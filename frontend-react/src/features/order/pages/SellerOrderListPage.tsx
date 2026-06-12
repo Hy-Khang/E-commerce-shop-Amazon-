@@ -9,7 +9,7 @@ import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { getPaymentStatusColor } from '../utils/order.util';
 import type { SellerOrderListParams, OrderStatus, PaymentStatus, OrderListItem } from '../types/order.types';
 
-const STATUS_OPTIONS: OrderStatus[] = ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'];
+const STATUS_OPTIONS: OrderStatus[] = ['pending', 'confirmed', 'shipping', 'delivered', 'completed', 'return_requested', 'cancelled'];
 const PAYMENT_OPTIONS: PaymentStatus[] = ['unpaid', 'paid'];
 
 export default function SellerOrderListPage() {

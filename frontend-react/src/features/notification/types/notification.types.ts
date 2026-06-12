@@ -27,5 +27,5 @@ export interface NotificationListParams {
   page?: number;
   limit?: number;
   is_read?: boolean;
-  context?: 'customer' | 'seller' | 'admin';
+  context?: 'customer' | 'seller' | 'admin' | 'shipper';
 }

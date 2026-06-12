@@ -2,13 +2,13 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth';
 
 interface Props {
-  allowedRoles: string[];
+  requiredPermission: string;
 }
 
-export function PortalGuard({ allowedRoles }: Props) {
-  const user = useAuthStore((s) => s.user);
+export function PortalGuard({ requiredPermission }: Props) {
+  const hasPermission = useAuthStore((s) => s.hasPermission);
 
-  if (!user || !allowedRoles.includes(user.role)) {
+  if (!hasPermission(requiredPermission)) {
     return <Navigate to="/403" replace />;
   }
 

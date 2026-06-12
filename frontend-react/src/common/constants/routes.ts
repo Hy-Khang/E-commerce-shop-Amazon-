@@ -53,6 +53,7 @@ export const ROUTES = {
 
   SHIPPER_DASHBOARD: '/shipper/dashboard',
   SHIPPER_DELIVERIES: '/shipper/deliveries',
+  SHIPPER_NOTIFICATIONS: '/shipper/notifications',
 } as const;
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {

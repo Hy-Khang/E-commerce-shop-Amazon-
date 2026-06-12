@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { LogOut, ChevronDown, ExternalLink, Store, Check } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { ROUTES } from '@/common/constants/routes';
+import { PERMISSIONS } from '@/common/constants/permissions';
 import { getVisiblePortals } from './portal-links.util';
 
 export function PortalAccountDropdown() {
@@ -28,8 +29,9 @@ export function PortalAccountDropdown() {
     setIsOpen(false);
   }, [pathname]);
 
-  const visiblePortals = getVisiblePortals(user?.role);
-  const isSeller = user?.role === 'seller' || user?.role === 'admin';
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const visiblePortals = getVisiblePortals(hasPermission);
+  const isSeller = hasPermission(PERMISSIONS.SHOPS_READ);
 
   const handleLogout = () => {
     setIsOpen(false);

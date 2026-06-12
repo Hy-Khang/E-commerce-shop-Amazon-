@@ -15,7 +15,7 @@ export function ShopSettingsForm() {
   const createShop = useCreateMyShop();
   const updateShop = useUpdateMyShop();
 
-  const isNew = !shop && fetchError instanceof ApiError && fetchError.status === 404;
+  const isNew = !shop && fetchError instanceof ApiError && fetchError.code === 'SHOP_004';
 
   if (isLoading) {
     return <div className="py-12 text-center text-gray-500">Loading shop settings...</div>;

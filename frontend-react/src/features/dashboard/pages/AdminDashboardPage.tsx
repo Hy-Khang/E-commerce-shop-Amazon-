@@ -73,13 +73,9 @@ export default function AdminDashboardPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {stats.revenueOverTime.length > 0 ? (
-          <Suspense fallback={<ChartFallback />}>
-            <RevenueChart data={stats.revenueOverTime} />
-          </Suspense>
-        ) : (
-          <SectionError title="Collected Revenue Trend" onRetry={refetch} />
-        )}
+        <Suspense fallback={<ChartFallback />}>
+          <RevenueChart data={stats.revenueOverTime} />
+        </Suspense>
 
         {stats.ordersByStatus.length > 0 ? (
           <Suspense fallback={<ChartFallback />}>

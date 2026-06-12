@@ -8,10 +8,10 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
   pending: 'bg-amber-500 text-amber-700',
   confirmed: 'bg-sky-500 text-sky-700',
   shipping: 'bg-violet-500 text-violet-700',
-  delivered: 'bg-emerald-500 text-emerald-700',
-  completed: 'bg-teal-500 text-teal-700',
-  return_requested: 'bg-orange-500 text-orange-700',
-  cancelled: 'bg-rose-500 text-rose-700',
+  delivered: 'bg-blue-500 text-blue-700',
+  completed: 'bg-emerald-500 text-emerald-700',
+  return_requested: 'bg-rose-500 text-rose-700',
+  cancelled: 'bg-slate-500 text-slate-700',
 };
 
 export function getStatusColor(status: OrderStatus): string {

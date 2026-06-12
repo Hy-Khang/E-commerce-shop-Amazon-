@@ -43,6 +43,10 @@ export const PERMISSIONS = {
   SHOPS_UPDATE: 'shops:update',
   // Dashboard
   DASHBOARD_READ: 'dashboard:read',
+  // Portal Access
+  PORTAL_ADMIN: 'portal:admin',
+  PORTAL_SELLER: 'portal:seller',
+  PORTAL_SHIPPER: 'portal:shipper',
 } as const;
 
 export type PermissionString = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

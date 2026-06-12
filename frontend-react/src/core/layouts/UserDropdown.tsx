@@ -58,7 +58,7 @@ export function UserDropdown() {
             </DropdownLink>
           </div>
 
-          <PortalSection role={user?.role} onClose={() => setIsOpen(false)} />
+          <PortalSection onClose={() => setIsOpen(false)} />
 
           <div className="border-t border-neutral-100 py-1">
             <button
@@ -89,8 +89,9 @@ function DropdownLink({ to, icon, onClick, children }: { to: string; icon: React
   );
 }
 
-function PortalSection({ role, onClose }: { role?: string; onClose: () => void }) {
-  const visible = getVisiblePortals(role);
+function PortalSection({ onClose }: { onClose: () => void }) {
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const visible = getVisiblePortals(hasPermission);
   if (visible.length === 0) return null;
 
   return (

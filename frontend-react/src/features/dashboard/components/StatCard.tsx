@@ -49,14 +49,14 @@ export function StatCard({ title, value, icon: Icon, color, index }: Props) {
       className={`animate-slide-up rounded-xl border-l-[3px] ${c.border} ${c.bg} p-5 shadow-sm`}
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-slate-500">{title}</p>
-          <p className="mt-1 font-jakarta text-3xl font-bold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1 font-jakarta text-2xl font-bold tracking-tight text-slate-900 tabular-nums truncate">
             {value}
           </p>
         </div>
-        <div className={`rounded-xl ${c.iconBg} p-3`}>
+        <div className={`shrink-0 rounded-xl ${c.iconBg} p-3`}>
           <Icon className={`h-6 w-6 ${c.iconText}`} />
         </div>
       </div>

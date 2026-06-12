@@ -12,6 +12,7 @@ import {
   Heart,
   Tag,
   Store,
+  Bell,
   PanelLeftClose,
   PanelLeftOpen,
   ExternalLink,
@@ -59,6 +60,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { to: '/admin/reviews', label: 'Reviews', icon: MessageSquare, permission: PERMISSIONS.REVIEWS_READ },
       { to: '/admin/wishlist', label: 'Wishlist', icon: Heart, permission: PERMISSIONS.WISHLIST_READ },
+      { to: '/admin/notifications', label: 'Notifications', icon: Bell, permission: PERMISSIONS.PORTAL_ADMIN },
     ],
   },
 ];

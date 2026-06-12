@@ -31,6 +31,9 @@ export const PERMISSIONS = {
   SHOPS_CREATE: 'shops:create',
   SHOPS_READ: 'shops:read',
   SHOPS_UPDATE: 'shops:update',
+  PORTAL_ADMIN: 'portal:admin',
+  PORTAL_SELLER: 'portal:seller',
+  PORTAL_SHIPPER: 'portal:shipper',
 } as const;
 
 export type PermissionString = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

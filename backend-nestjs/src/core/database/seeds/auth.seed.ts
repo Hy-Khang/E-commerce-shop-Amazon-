@@ -11,11 +11,13 @@ const SELLER_PERMISSIONS = [
   'uploads:create',
   'dashboard:read',
   'shops:create', 'shops:read', 'shops:update',
+  'portal:seller',
 ];
 
 const SHIPPER_PERMISSIONS = [
   'orders:read', 'orders:update',
   'dashboard:read',
+  'portal:shipper',
 ];
 
 const SEED_PERMISSIONS = [
@@ -51,6 +53,9 @@ const SEED_PERMISSIONS = [
   { resource: 'shops', action: 'create', name: 'Create Shop' },
   { resource: 'shops', action: 'read', name: 'Read Shops' },
   { resource: 'shops', action: 'update', name: 'Update Shop' },
+  { resource: 'portal', action: 'admin', name: 'Access Admin Portal' },
+  { resource: 'portal', action: 'seller', name: 'Access Seller Portal' },
+  { resource: 'portal', action: 'shipper', name: 'Access Shipper Portal' },
 ];
 
 export const AuthSeed: ISeed = {

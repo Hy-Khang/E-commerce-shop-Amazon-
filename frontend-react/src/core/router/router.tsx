@@ -7,6 +7,7 @@ import { SellerLayout } from '@/core/layouts/SellerLayout';
 import { ShipperLayout } from '@/core/layouts/ShipperLayout';
 import { AuthGuard } from './AuthGuard';
 import { PortalGuard } from './PortalGuard';
+import { PERMISSIONS } from '@/common/constants/permissions';
 
 const HomePage = lazy(() => import('@/features/product/pages/HomePage'));
 const ProductListPage = lazy(() => import('@/features/product/pages/ProductListPage'));
@@ -67,6 +68,7 @@ const ShipperDashboardPage = lazy(() => import('@/features/dashboard/pages/Shipp
 const ShipperDeliveryListPage = lazy(() => import('@/features/order/pages/ShipperDeliveryListPage'));
 
 const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
+const ForbiddenPage = lazy(() => import('@/common/components/feedback/ForbiddenPage'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -120,7 +122,7 @@ export const router = createBrowserRouter([
     element: <AuthGuard />,
     children: [
       {
-        element: <PortalGuard allowedRoles={['admin']} />,
+        element: <PortalGuard requiredPermission={PERMISSIONS.PORTAL_ADMIN} />,
         children: [
           {
             element: <AdminLayout />,
@@ -156,7 +158,7 @@ export const router = createBrowserRouter([
     element: <AuthGuard />,
     children: [
       {
-        element: <PortalGuard allowedRoles={['seller']} />,
+        element: <PortalGuard requiredPermission={PERMISSIONS.PORTAL_SELLER} />,
         children: [
           {
             element: <SellerLayout />,
@@ -179,18 +181,20 @@ export const router = createBrowserRouter([
     element: <AuthGuard />,
     children: [
       {
-        element: <PortalGuard allowedRoles={['shipper']} />,
+        element: <PortalGuard requiredPermission={PERMISSIONS.PORTAL_SHIPPER} />,
         children: [
           {
             element: <ShipperLayout />,
             children: [
               { path: 'shipper/dashboard', element: <SuspenseWrapper><ShipperDashboardPage /></SuspenseWrapper> },
               { path: 'shipper/deliveries', element: <SuspenseWrapper><ShipperDeliveryListPage /></SuspenseWrapper> },
+              { path: 'shipper/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },
         ],
       },
     ],
   },
+  { path: '403', element: <SuspenseWrapper><ForbiddenPage /></SuspenseWrapper> },
   { path: '*', element: <SuspenseWrapper><NotFoundPage /></SuspenseWrapper> },
 ]);

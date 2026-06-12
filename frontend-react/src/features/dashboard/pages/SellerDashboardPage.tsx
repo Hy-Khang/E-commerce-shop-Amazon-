@@ -68,13 +68,9 @@ export default function SellerDashboardPage() {
         <SectionError title="Summary" onRetry={refetch} />
       )}
 
-      {stats.revenueOverTime.length > 0 ? (
-        <Suspense fallback={<ChartFallback />}>
-          <RevenueChart data={stats.revenueOverTime} />
-        </Suspense>
-      ) : (
-        <SectionError title="Collected Revenue Trend" onRetry={refetch} />
-      )}
+      <Suspense fallback={<ChartFallback />}>
+        <RevenueChart data={stats.revenueOverTime} />
+      </Suspense>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SellerRecentOrdersTable orders={stats.recentOrders} />

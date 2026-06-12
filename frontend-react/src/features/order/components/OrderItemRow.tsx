@@ -6,10 +6,13 @@ import { calculateItemSubtotal } from '../utils/order.util';
 
 interface Props {
   item: OrderItem;
+  productLinkOverride?: string | null;
 }
 
-export function OrderItemRow({ item }: Props) {
-  const productLink = item.product_slug ? ROUTES.PRODUCT_DETAIL(item.product_slug) : null;
+export function OrderItemRow({ item, productLinkOverride }: Props) {
+  const productLink = productLinkOverride !== undefined
+    ? productLinkOverride
+    : item.product_slug ? ROUTES.PRODUCT_DETAIL(item.product_slug) : null;
 
   const thumbnail = (
     <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-neutral-50">
