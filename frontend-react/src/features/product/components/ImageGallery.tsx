@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getImageUrl } from '@/common/utils/format.util';
 import type { ProductImage } from '../types/product.types';
 
 interface Props {
@@ -36,7 +37,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
       return (
         <div className="space-y-3">
           <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
-            <img src={thumbnailUrl} alt={productName} className="h-full w-full object-cover" />
+            <img src={getImageUrl(thumbnailUrl)} alt={productName} className="h-full w-full object-cover" />
           </div>
         </div>
       );
@@ -55,7 +56,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
     <div className="space-y-3">
       <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
         <img
-          src={activeImage.image_url}
+          src={getImageUrl(activeImage.image_url)}
           alt={`${productName} - ${clampedIndex + 1}`}
           className="h-full w-full object-cover"
         />
@@ -71,7 +72,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
               }`}
             >
               <img
-                src={img.image_url}
+                src={getImageUrl(img.image_url)}
                 alt={`${productName} thumbnail ${idx + 1}`}
                 className="h-full w-full object-cover"
               />

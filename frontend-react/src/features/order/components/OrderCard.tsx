@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Store } from 'lucide-react';
-import { formatPrice, formatDate } from '@/common/utils/format.util';
+import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import type { OrderListItemWithItems } from '../types/order.types';
 import { OrderStatusBadge } from './OrderStatusBadge';
@@ -54,7 +54,7 @@ export function OrderCard({ order }: Props) {
                       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-neutral-50">
                         {item.thumbnail_url ? (
                           <img
-                            src={item.thumbnail_url}
+                            src={getImageUrl(item.thumbnail_url)}
                             alt={item.product_name}
                             className="h-full w-full object-cover"
                           />

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MessageSquare, Star, Trash2, Package } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
-import { formatDate } from '@/common/utils/format.util';
+import { formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { Pagination } from '@/common/components/data/Pagination';
 import { useMyReviews } from '../hooks/useMyReviews';
@@ -109,7 +109,7 @@ function MyReviewCard({ review, onDelete, isDeleting }: MyReviewCardProps) {
         <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-border-default bg-neutral-50">
           {review.product_thumbnail_url ? (
             <img
-              src={review.product_thumbnail_url}
+              src={getImageUrl(review.product_thumbnail_url)}
               alt={review.product_name || ''}
               className="h-full w-full object-cover"
             />

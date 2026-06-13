@@ -1,5 +1,6 @@
 import { Package, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getImageUrl } from '@/common/utils/format.util';
 import { usePagination } from '@/common/hooks/usePagination';
 import { ROUTES } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
@@ -27,7 +28,7 @@ export default function AdminWishlistPopularPage() {
         <Link to={ROUTES.PRODUCT_DETAIL(item.product_slug)} className="flex items-center gap-3 group">
           <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg ring-1 ring-slate-900/5">
             {item.product_thumbnail_url ? (
-              <img src={item.product_thumbnail_url} alt="" className="h-full w-full object-cover" />
+              <img src={getImageUrl(item.product_thumbnail_url)} alt="" className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-slate-100">
                 <Package className="h-4 w-4 text-slate-400" />

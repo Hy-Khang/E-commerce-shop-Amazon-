@@ -1,5 +1,5 @@
 import { Minus, Plus, Trash2 } from 'lucide-react';
-import { formatPrice } from '@/common/utils/format.util';
+import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import type { CartItem } from '../types/cart.types';
 import { getEffectivePrice, getItemTotal } from '../utils/cart.util';
 
@@ -20,7 +20,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
       <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-neutral-50">
         {item.variant.thumbnail_url ? (
           <img
-            src={item.variant.thumbnail_url}
+            src={getImageUrl(item.variant.thumbnail_url)}
             alt={item.variant.product_name}
             className="h-full w-full object-cover"
           />

@@ -15,6 +15,16 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: '#f43f5e',
 };
 
+const ALL_STATUSES = [
+  'pending',
+  'confirmed',
+  'shipping',
+  'delivered',
+  'completed',
+  'return_requested',
+  'cancelled',
+] as const;
+
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Pending',
   confirmed: 'Confirmed',
@@ -44,7 +54,12 @@ function CustomTooltip({
 }
 
 export default function OrderStatusChart({ data }: Props) {
-  const total = data.reduce((sum, d) => sum + d.count, 0);
+  const dataMap = new Map(data.map((d) => [d.status, d.count]));
+  const fullData = ALL_STATUSES.map((status) => ({
+    status,
+    count: dataMap.get(status) ?? 0,
+  }));
+  const total = fullData.reduce((sum, d) => sum + d.count, 0);
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
@@ -55,7 +70,7 @@ export default function OrderStatusChart({ data }: Props) {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data}
+              data={fullData}
               dataKey="count"
               nameKey="status"
               cx="50%"
@@ -65,7 +80,7 @@ export default function OrderStatusChart({ data }: Props) {
               paddingAngle={2}
               strokeWidth={0}
             >
-              {data.map((entry) => (
+              {fullData.map((entry) => (
                 <Cell
                   key={entry.status}
                   fill={STATUS_COLORS[entry.status] || '#94a3b8'}
@@ -77,7 +92,7 @@ export default function OrderStatusChart({ data }: Props) {
         </ResponsiveContainer>
       </div>
       <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
-        {data.map((entry) => (
+        {fullData.map((entry) => (
           <div key={entry.status} className="flex items-center gap-1.5 text-xs">
             <span
               className="inline-block h-2.5 w-2.5 rounded-full"

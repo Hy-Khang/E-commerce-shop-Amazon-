@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { Pencil, Search, Plus, Package } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
-import { formatPrice, formatDate } from '@/common/utils/format.util';
+import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
 import { Button } from '@/common/components/ui/Button';
@@ -43,7 +43,7 @@ export default function AdminProductListPage() {
       render: (product) => (
         <div className="flex items-center gap-3">
           {product.thumbnail_url ? (
-            <img src={product.thumbnail_url} alt="" className="h-10 w-10 rounded-lg object-cover ring-1 ring-slate-900/5" />
+            <img src={getImageUrl(product.thumbnail_url)} alt="" className="h-10 w-10 rounded-lg object-cover ring-1 ring-slate-900/5" />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 ring-1 ring-slate-900/5">
               <Package className="h-4 w-4 text-slate-400" />

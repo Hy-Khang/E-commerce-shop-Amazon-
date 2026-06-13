@@ -6,6 +6,7 @@ export default registerAs('app', () => ({
   prefix: process.env.APP_PREFIX || 'api/v1',
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   nodeEnv: process.env.NODE_ENV || 'development',
+  appUrl: process.env.APP_URL || '',
   uploadDir: resolve(
     process.env.UPLOAD_DIR || join(__dirname, '..', '..', 'uploads'),
   ),

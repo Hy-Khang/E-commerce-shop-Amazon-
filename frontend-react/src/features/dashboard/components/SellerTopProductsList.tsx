@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Package } from 'lucide-react';
-import { formatPrice } from '@/common/utils/format.util';
+import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import type { TopProduct } from '../types/dashboard.types';
 
@@ -28,7 +28,7 @@ export function SellerTopProductsList({ products }: Props) {
               </span>
               {product.thumbnailUrl ? (
                 <img
-                  src={product.thumbnailUrl}
+                  src={getImageUrl(product.thumbnailUrl)}
                   alt={product.name}
                   className="h-10 w-10 shrink-0 rounded-lg object-cover"
                 />

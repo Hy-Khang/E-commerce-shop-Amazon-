@@ -14,9 +14,11 @@ const MIME_TO_EXT: Record<string, string> = {
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
   private readonly uploadDir: string;
+  private readonly appUrl: string;
 
   constructor(private readonly configService: ConfigService) {
     this.uploadDir = this.configService.get<string>('app.uploadDir')!;
+    this.appUrl = this.configService.get<string>('app.appUrl', '')!;
   }
 
   async saveImage(file: Express.Multer.File): Promise<string> {
@@ -36,7 +38,8 @@ export class UploadService {
 
     await writeFile(filePath, file.buffer);
 
-    const url = `/uploads/${subDir}/${filename}`;
+    const relativePath = `/uploads/${subDir}/${filename}`;
+    const url = this.appUrl ? `${this.appUrl}${relativePath}` : relativePath;
     this.logger.log(`Image uploaded: ${url}`);
     return url;
   }

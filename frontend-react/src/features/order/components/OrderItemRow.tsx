@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { formatPrice } from '@/common/utils/format.util';
+import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import type { OrderItem } from '../types/order.types';
 import { calculateItemSubtotal } from '../utils/order.util';
@@ -18,7 +18,7 @@ export function OrderItemRow({ item, productLinkOverride }: Props) {
     <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-neutral-50">
       {item.thumbnail_url ? (
         <img
-          src={item.thumbnail_url}
+          src={getImageUrl(item.thumbnail_url)}
           alt={item.product_name}
           className="h-full w-full object-cover"
         />

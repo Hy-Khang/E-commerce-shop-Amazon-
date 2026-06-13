@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePagination } from '@/common/hooks/usePagination';
-import { formatPrice, formatDate } from '@/common/utils/format.util';
+import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import { useSellerProducts } from '../hooks/useSellerProducts';
 import { useSellerToggleProductActive } from '../hooks/useSellerToggleProductActive';
@@ -92,7 +92,7 @@ export default function SellerProductListPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {product.thumbnail_url ? (
-                          <img src={product.thumbnail_url} alt="" className="h-10 w-10 rounded object-cover" />
+                          <img src={getImageUrl(product.thumbnail_url)} alt="" className="h-10 w-10 rounded object-cover" />
                         ) : (
                           <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100 text-xs text-gray-400">N/A</div>
                         )}

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Loader2, Trash2, X } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
-import { formatPrice } from '@/common/utils/format.util';
+import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { Button } from '@/common/components/ui/Button';
 import { useAdminProduct } from '../hooks/useAdminProduct';
 import { useUpdateProduct } from '../hooks/useUpdateProduct';
@@ -310,7 +310,7 @@ export default function AdminProductEditPage() {
           <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
             {[...product.images].sort((a, b) => a.sort_order - b.sort_order).map((img) => (
               <div key={img.id} className="group relative overflow-hidden rounded-lg ring-1 ring-slate-900/5">
-                <img src={img.image_url} alt="" className="aspect-square w-full object-cover" />
+                <img src={getImageUrl(img.image_url)} alt="" className="aspect-square w-full object-cover" />
                 <button
                   onClick={() => deleteImage.mutate(img.id)}
                   disabled={deleteImage.isPending}

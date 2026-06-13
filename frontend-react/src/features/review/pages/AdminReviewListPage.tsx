@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Star, ChevronDown, ChevronUp, Package, Trash2, MessageSquare } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
-import { formatDate } from '@/common/utils/format.util';
+import { formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { Button } from '@/common/components/ui/Button';
 import { getPageRange } from '@/common/utils/pagination.util';
@@ -186,7 +186,7 @@ function ReviewRow({ review, isExpanded, onToggle, onDelete, isDeleting }: Revie
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg ring-1 ring-slate-900/5">
               {review.product_thumbnail_url ? (
-                <img src={review.product_thumbnail_url} alt="" className="h-full w-full object-cover" />
+                <img src={getImageUrl(review.product_thumbnail_url)} alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-slate-100">
                   <Package className="h-4 w-4 text-slate-400" />
@@ -241,7 +241,7 @@ function ReviewRow({ review, isExpanded, onToggle, onDelete, isDeleting }: Revie
                 <div className="flex gap-3">
                   <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl ring-1 ring-slate-900/5">
                     {review.product_thumbnail_url ? (
-                      <img src={review.product_thumbnail_url} alt="" className="h-full w-full object-cover" />
+                      <img src={getImageUrl(review.product_thumbnail_url)} alt="" className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-slate-100">
                         <Package className="h-8 w-8 text-slate-300" />

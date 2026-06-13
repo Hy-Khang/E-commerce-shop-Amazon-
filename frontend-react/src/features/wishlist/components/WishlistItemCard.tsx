@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Heart, Package } from 'lucide-react';
-import { formatPrice } from '@/common/utils/format.util';
-import { formatDate } from '@/common/utils/format.util';
+import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import type { WishlistItem } from '../types/wishlist.types';
 
@@ -21,7 +20,7 @@ export function WishlistItemCard({ item, onRemove, isRemoving }: Props) {
         >
           {item.product_thumbnail_url ? (
             <img
-              src={item.product_thumbnail_url}
+              src={getImageUrl(item.product_thumbnail_url)}
               alt={item.product_name}
               className="h-full w-full object-cover"
             />

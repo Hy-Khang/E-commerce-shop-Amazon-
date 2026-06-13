@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/common/constants/routes';
-import { formatPrice } from '@/common/utils/format.util';
+import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { WishlistButton } from '@/features/wishlist';
 import { usePrefetchProduct } from '../hooks/usePrefetchProduct';
 import type { HomepageProductItem } from '../types/product.types';
@@ -22,7 +22,7 @@ export function SaleProductCard({ product }: Props) {
       <div className="relative aspect-square overflow-hidden bg-neutral-100">
         {product.thumbnailUrl ? (
           <img
-            src={product.thumbnailUrl}
+            src={getImageUrl(product.thumbnailUrl)}
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
