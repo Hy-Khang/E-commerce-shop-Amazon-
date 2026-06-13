@@ -91,6 +91,30 @@ export interface CategoryDetail {
   };
 }
 
+// --- Homepage types ---
+
+export interface HomepageProductItem {
+  id: number;
+  name: string;
+  slug: string;
+  thumbnailUrl: string | null;
+  price: number;
+  originalPrice: number | null;
+  maxDiscountPercent: number | null;
+  inStock: boolean;
+}
+
+export interface TrendingProductItem extends HomepageProductItem {
+  wishlistCount: number;
+}
+
+export interface HomepageData {
+  specialOffers: HomepageProductItem[];
+  bestSellers: HomepageProductItem[];
+  trending: TrendingProductItem[];
+  discoverMore: HomepageProductItem[];
+}
+
 // --- Query params ---
 
 export interface ProductListParams extends PaginationParams {

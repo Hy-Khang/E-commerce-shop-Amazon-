@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Truck, ShieldCheck, HelpCircle, Sparkles, ArrowRight, Store } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, ShieldCheck, HelpCircle, Sparkles, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ROUTES } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
 import { useProducts } from '../hooks/useProducts';
 import { useCategories } from '../hooks/useCategories';
+import { useHomepage } from '../hooks/useHomepage';
 import { ProductCard } from '../components/ProductCard';
 import { ProductCardSkeleton } from '../components/ProductCardSkeleton';
+import { SpecialOffersSection } from '../components/SpecialOffersSection';
+import { FeaturedCategoriesSection } from '../components/FeaturedCategoriesSection';
+import { PromotionalBanner } from '../components/PromotionalBanner';
+import { BestSellersSection } from '../components/BestSellersSection';
+import { TrendingSection } from '../components/TrendingSection';
+import { DiscoverMoreSection } from '../components/DiscoverMoreSection';
 
 const HERO_SLIDES = [
   {
@@ -69,9 +76,9 @@ const VALUE_PROPS = [
 ];
 
 export default function HomePage() {
-  const { data, isLoading } = useProducts({ page: 1, limit: 12, sort: 'created_at', order: 'desc' });
+  const { data: newArrivals, isLoading: isLoadingNewArrivals } = useProducts({ page: 1, limit: 12, sort: 'created_at', order: 'desc' });
   const { data: categories } = useCategories();
-  const rootCategories = categories?.filter((c) => !c.parent_id)?.slice(0, 4) ?? [];
+  const { data: homepage, isLoading: isLoadingHomepage } = useHomepage();
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -91,7 +98,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="space-y-12 pb-8">
+    <div className="space-y-16 pb-8">
       {/* ── 1. Hero Animated Carousel ── */}
       <div className="relative group overflow-hidden rounded-2xl h-[300px] sm:h-[400px]">
         <AnimatePresence mode="wait">
@@ -125,7 +132,6 @@ export default function HomePage() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Carousel Arrows */}
         <button
           onClick={handlePrev}
           className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20"
@@ -141,7 +147,6 @@ export default function HomePage() {
           <ChevronRight className="h-5 w-5" />
         </button>
 
-        {/* Carousel Dots */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
           {HERO_SLIDES.map((_, index) => (
             <button
@@ -174,38 +179,46 @@ export default function HomePage() {
         })}
       </div>
 
-      {/* ── 3. Shop by Category Grid ── */}
-      {rootCategories.length > 0 && (
-        <section className="space-y-6">
-          <h2 className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">
-            Shop by Category
-          </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {rootCategories.map((cat) => (
-              <Link
-                key={cat.id}
-                to={ROUTES.CATEGORY(cat.slug)}
-                className="shop-card group relative block overflow-hidden p-6 text-center transition-all hover:border-border-strong hover:shadow-sm"
-              >
-                <div className="flex justify-center mb-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-light text-text-brand group-hover:scale-110 transition-transform duration-300">
-                    <Store className="h-6 w-6" />
-                  </div>
-                </div>
-                <h3 className="text-sm font-bold text-text-primary group-hover:text-text-brand transition-colors">
-                  {cat.name}
-                </h3>
-                <p className="mt-1 text-xs text-text-muted">Explore Collection</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* ── 3. Special Offers ── */}
+      <SpecialOffersSection
+        products={homepage?.specialOffers ?? []}
+        isLoading={isLoadingHomepage}
+      />
 
-      {/* ── 4. New Arrivals Grid ── */}
-      <section className="space-y-6">
+      {/* ── 4. Featured Categories ── */}
+      {categories && <FeaturedCategoriesSection categories={categories} />}
+
+      {/* ── 5. Promotional Banner ── */}
+      <PromotionalBanner />
+
+      {/* ── 6. Best Sellers ── */}
+      <BestSellersSection
+        products={homepage?.bestSellers ?? []}
+        isLoading={isLoadingHomepage}
+      />
+
+      {/* ── 7. Trending Now ── */}
+      <TrendingSection
+        products={homepage?.trending ?? []}
+        isLoading={isLoadingHomepage}
+      />
+
+      {/* ── 8. Discover More ── */}
+      <DiscoverMoreSection
+        products={homepage?.discoverMore ?? []}
+        isLoading={isLoadingHomepage}
+      />
+
+      {/* ── 9. New Arrivals ── */}
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-6"
+      >
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">
+          <h2 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
             New Arrivals
           </h2>
           <Link
@@ -216,23 +229,27 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {isLoading ? (
+        {isLoadingNewArrivals ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
-        ) : data && data.data.length > 0 ? (
+        ) : newArrivals && newArrivals.data.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {data.data.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {newArrivals.data.map((product) => (
+              <div key={product.id} className="relative">
+                <ProductCard product={product} />
+                <span className="absolute left-2 top-2 z-10 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-bold text-white">
+                  NEW
+                </span>
+              </div>
             ))}
           </div>
         ) : (
           <div className="py-12 text-center text-text-secondary">No products available yet.</div>
         )}
-      </section>
+      </motion.section>
     </div>
   );
 }
-

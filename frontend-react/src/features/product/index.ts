@@ -3,6 +3,7 @@ export { productKeys, useProducts } from './hooks/useProducts';
 export { useProduct } from './hooks/useProduct';
 export { categoryKeys, useCategories, useCategoryBySlug } from './hooks/useCategories';
 export { usePrefetchProduct } from './hooks/usePrefetchProduct';
+export { homepageKeys, useHomepage } from './hooks/useHomepage';
 export { adminProductKeys, useAdminProducts } from './hooks/useAdminProducts';
 export { useAdminProduct } from './hooks/useAdminProduct';
 export { useCreateProduct } from './hooks/useCreateProduct';
@@ -23,6 +24,8 @@ export {
 // Components
 export { CategoryForm } from './components/CategoryForm';
 export { ProductCard } from './components/ProductCard';
+export { HomepageProductCard } from './components/HomepageProductCard';
+export { SaleProductCard } from './components/SaleProductCard';
 export { VariantSelector } from './components/VariantSelector';
 export { ImageGallery } from './components/ImageGallery';
 export { ImageUpload } from './components/ImageUpload';
@@ -31,6 +34,15 @@ export { ProductCardSkeleton } from './components/ProductCardSkeleton';
 export { ProductDetailSkeleton } from './components/ProductDetailSkeleton';
 export { ShopProductsCarousel } from './components/ShopProductsCarousel';
 export { RelatedProducts } from './components/RelatedProducts';
+export { SpecialOffersSection } from './components/SpecialOffersSection';
+export { FeaturedCategoriesSection } from './components/FeaturedCategoriesSection';
+export { PromotionalBanner } from './components/PromotionalBanner';
+export { BestSellersSection } from './components/BestSellersSection';
+export { TrendingSection } from './components/TrendingSection';
+export { DiscoverMoreSection } from './components/DiscoverMoreSection';
+
+// Constants
+export { HOMEPAGE_PROMO } from './constants/homepage.constants';
 
 // Utils
 export {
@@ -52,6 +64,9 @@ export type {
   Category,
   AdminCategory,
   AdminProductDetail,
+  HomepageProductItem,
+  TrendingProductItem,
+  HomepageData,
   ProductListParams,
   AdminProductListParams,
   AdminCategoryListParams,

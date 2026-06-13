@@ -15,6 +15,7 @@ import { UploadModule } from './features/upload/upload.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { ShopModule } from './features/shop/shop.module';
 import { NotificationModule } from './features/notification/notification.module';
+import { HomepageModule } from './features/homepage/homepage.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -36,6 +37,7 @@ import { AppService } from './app.service';
     DashboardModule,
     ShopModule,
     NotificationModule,
+    HomepageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

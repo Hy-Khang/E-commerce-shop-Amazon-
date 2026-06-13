@@ -69,6 +69,8 @@ async function bootstrap() {
 
   await app.listen(port);
 
+
+  console.log('CORS_ORIGIN =', corsOrigin);
   const logger = new Logger('Bootstrap');
   logger.log(`Application running on http://localhost:${port}/${prefix}`);
   logger.log(`Environment: ${nodeEnv}`);
