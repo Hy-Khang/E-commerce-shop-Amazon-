@@ -27,7 +27,7 @@ export function NotificationPageItem({ notification, onMarkAsRead, orderDetailPa
             {!notification.is_read ? (
               <span className="block h-2.5 w-2.5 rounded-full bg-primary-500" />
             ) : (
-              <span className="block h-2.5 w-2.5 rounded-full bg-slate-200" />
+              <span className="block h-2.5 w-2.5 rounded-full bg-neutral-200" />
             )}
           </div>
           <div className="min-w-0 flex-1">

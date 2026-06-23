@@ -42,7 +42,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">Rating</label>
+        <label className="mb-1 block text-sm font-medium text-text-secondary">Rating</label>
         <div className="flex gap-1">
           {Array.from({ length: 5 }).map((_, i) => {
             const starValue = i + 1;
@@ -59,7 +59,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
                   className={`h-6 w-6 transition-colors ${
                     starValue <= (hoverRating || currentRating)
                       ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300'
+                      : 'text-neutral-300'
                   }`}
                 />
               </button>
@@ -67,12 +67,12 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
           })}
         </div>
         {errors.rating && (
-          <p className="mt-1 text-xs text-red-500">{errors.rating.message}</p>
+          <p className="mt-1 text-xs text-error-600">{errors.rating.message}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="comment" className="mb-1 block text-sm font-medium text-gray-700">
+        <label htmlFor="comment" className="mb-1 block text-sm font-medium text-text-secondary">
           Comment (optional)
         </label>
         <textarea
@@ -83,7 +83,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
           className="w-full rounded-lg border border-border-default px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-border-brand focus:outline-none focus:ring-1 focus:ring-brand bg-white transition-colors"
         />
         {errors.comment && (
-          <p className="mt-1 text-xs text-red-500">{errors.comment.message}</p>
+          <p className="mt-1 text-xs text-error-600">{errors.comment.message}</p>
         )}
       </div>
 

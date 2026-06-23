@@ -20,10 +20,10 @@ export default function WishlistPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-6 w-32 rounded bg-slate-100 animate-pulse" />
+        <div className="h-6 w-32 rounded bg-neutral-200 animate-pulse" />
         <div className="space-y-4">
-          <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
+          <div className="h-24 rounded-xl bg-neutral-200 animate-pulse" />
+          <div className="h-24 rounded-xl bg-neutral-200 animate-pulse" />
         </div>
       </div>
     );

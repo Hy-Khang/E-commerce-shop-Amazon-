@@ -24,10 +24,10 @@ export default function NotificationPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-6 w-40 rounded bg-slate-100 animate-pulse" />
+        <div className="h-6 w-40 rounded bg-neutral-200 animate-pulse" />
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-xl bg-slate-100 animate-pulse" />
+            <div key={i} className="h-20 rounded-xl bg-neutral-200 animate-pulse" />
           ))}
         </div>
       </div>

@@ -36,7 +36,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
     if (thumbnailUrl) {
       return (
         <div className="space-y-3">
-          <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
+          <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100">
             <img src={getImageUrl(thumbnailUrl)} alt={productName} className="h-full w-full object-cover" />
           </div>
         </div>
@@ -44,7 +44,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
     }
 
     return (
-      <div className="flex aspect-square items-center justify-center rounded-lg bg-gray-100 text-gray-400">
+      <div className="flex aspect-square items-center justify-center rounded-xl bg-neutral-100 text-text-muted">
         No images
       </div>
     );
@@ -54,7 +54,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
 
   return (
     <div className="space-y-3">
-      <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
+      <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100">
         <img
           src={getImageUrl(activeImage.image_url)}
           alt={`${productName} - ${clampedIndex + 1}`}
@@ -68,7 +68,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
               key={img.id}
               onClick={() => setActiveIndex(idx)}
               className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border-2 transition-colors ${
-                idx === clampedIndex ? 'border-brand' : 'border-transparent hover:border-gray-300'
+                idx === clampedIndex ? 'border-brand' : 'border-transparent hover:border-border-strong'
               }`}
             >
               <img

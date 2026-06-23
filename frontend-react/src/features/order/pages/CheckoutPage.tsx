@@ -53,7 +53,7 @@ export default function CheckoutPage() {
   if (cartLoading || addressesLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-text-muted" />
       </div>
     );
   }
@@ -112,14 +112,14 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             {/* Shipping Address */}
-            <div className="rounded-lg border bg-white p-6">
+            <div className="rounded-xl border border-border-default bg-elevated p-6">
               <div className="mb-4 flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-gray-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Shipping Address</h2>
+                <MapPin className="h-5 w-5 text-text-secondary" />
+                <h2 className="text-lg font-semibold text-text-primary">Shipping Address</h2>
               </div>
 
               {!addresses || addresses.length === 0 ? (
-                <div className="rounded-md bg-yellow-50 p-4 text-sm text-yellow-800">
+                <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-700 ring-1 ring-inset ring-amber-600/20">
                   No addresses found. Please add an address in your profile first.
                 </div>
               ) : (
@@ -141,7 +141,7 @@ export default function CheckoutPage() {
                         className="mt-1"
                       />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-text-primary">
                           {address.full_name}
                           {address.is_default && (
                             <span className="ml-2 rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-bold text-text-brand uppercase tracking-wider">
@@ -149,8 +149,8 @@ export default function CheckoutPage() {
                             </span>
                           )}
                         </p>
-                        <p className="mt-0.5 text-sm text-gray-600">{address.phone}</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="mt-0.5 text-sm text-text-secondary">{address.phone}</p>
+                        <p className="text-sm text-text-secondary">
                           {address.address_line}, {address.city}
                         </p>
                       </div>
@@ -159,15 +159,15 @@ export default function CheckoutPage() {
                 </div>
               )}
               {errors.address_id && (
-                <p className="mt-2 text-sm text-red-600">{errors.address_id.message}</p>
+                <p className="mt-2 text-sm text-error-600">{errors.address_id.message}</p>
               )}
             </div>
 
             {/* Payment Method */}
-            <div className="rounded-lg border bg-white p-6">
+            <div className="rounded-xl border border-border-default bg-elevated p-6">
               <div className="mb-4 flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-gray-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Payment Method</h2>
+                <CreditCard className="h-5 w-5 text-text-secondary" />
+                <h2 className="text-lg font-semibold text-text-primary">Payment Method</h2>
               </div>
 
               <div className="space-y-3">
@@ -186,22 +186,22 @@ export default function CheckoutPage() {
                       {...register('payment_method')}
                       className="accent-brand"
                     />
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-text-primary">
                       {PAYMENT_METHOD_LABELS[method]}
                     </span>
                   </label>
                 ))}
               </div>
               {errors.payment_method && (
-                <p className="mt-2 text-sm text-red-600">{errors.payment_method.message}</p>
+                <p className="mt-2 text-sm text-error-600">{errors.payment_method.message}</p>
               )}
             </div>
 
             {/* Coupon Code */}
-            <div className="rounded-lg border bg-white p-6">
+            <div className="rounded-xl border border-border-default bg-elevated p-6">
               <div className="mb-4 flex items-center gap-2">
-                <Tag className="h-5 w-5 text-gray-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Coupon Code</h2>
+                <Tag className="h-5 w-5 text-text-secondary" />
+                <h2 className="text-lg font-semibold text-text-primary">Coupon Code</h2>
               </div>
               <CouponInput
                 appliedCode={appliedCoupon?.code ?? null}
@@ -211,8 +211,8 @@ export default function CheckoutPage() {
             </div>
 
             {/* Order Items Preview */}
-            <div className="rounded-lg border bg-white p-6">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            <div className="rounded-xl border border-border-default bg-elevated p-6">
+              <h2 className="mb-4 text-lg font-semibold text-text-primary">
                 Items ({cart.items.length})
               </h2>
               {cart.items.map((item) => (
@@ -235,33 +235,33 @@ export default function CheckoutPage() {
 
           {/* Order Summary */}
           <div>
-            <div className="sticky top-4 rounded-lg border bg-white p-6">
-              <h2 className="text-lg font-semibold text-gray-900">Order Summary</h2>
+            <div className="sticky top-[7.5rem] rounded-xl border border-border-default bg-elevated p-6">
+              <h2 className="text-lg font-semibold text-text-primary">Order Summary</h2>
 
               <div className="mt-4 space-y-2">
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-text-secondary">
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 {appliedCoupon && (
-                  <div className="flex justify-between text-sm text-green-600">
+                  <div className="flex justify-between text-sm text-emerald-700">
                     <span>Coupon ({appliedCoupon.code})</span>
                     <span>-{formatPrice(discountAmount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-text-secondary">
                   <span>Shipping</span>
-                  <span className="text-gray-400">Calculated after order</span>
+                  <span className="text-text-muted">Calculated after order</span>
                 </div>
               </div>
 
-              <div className="mt-4 border-t pt-4">
-                <div className="flex justify-between text-base font-semibold text-gray-900">
+              <div className="mt-4 border-t border-border-default pt-4">
+                <div className="flex justify-between text-base font-bold text-text-primary">
                   <span>Estimated Total</span>
                   <span>{formatPrice(estimatedTotal)}</span>
                 </div>
                 {appliedCoupon && (
-                  <p className="mt-1 text-xs text-green-600">
+                  <p className="mt-1 text-xs text-emerald-700">
                     You save {formatPrice(discountAmount)} with this coupon
                   </p>
                 )}
@@ -277,7 +277,7 @@ export default function CheckoutPage() {
               </button>
 
               {checkout.isError && (
-                <p className="mt-2 text-center text-sm text-red-600">
+                <p className="mt-2 text-center text-sm text-error-600">
                   {checkout.error instanceof Error ? checkout.error.message : 'Failed to place order'}
                 </p>
               )}

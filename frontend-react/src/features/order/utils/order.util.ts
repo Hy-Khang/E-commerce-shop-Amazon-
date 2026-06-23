@@ -11,18 +11,18 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
   delivered: 'bg-blue-500 text-blue-700',
   completed: 'bg-emerald-500 text-emerald-700',
   return_requested: 'bg-rose-500 text-rose-700',
-  cancelled: 'bg-slate-500 text-slate-700',
+  cancelled: 'bg-neutral-500 text-neutral-700',
 };
 
 export function getStatusColor(status: OrderStatus): string {
-  return STATUS_STYLES[status] ?? 'bg-slate-500 text-slate-700';
+  return STATUS_STYLES[status] ?? 'bg-neutral-500 text-neutral-700';
 }
 
 export function getPaymentStatusColor(status: string): string {
   switch (status) {
     case 'paid': return 'bg-emerald-500 text-emerald-700';
     case 'unpaid': return 'bg-amber-500 text-amber-700';
-    default: return 'bg-slate-500 text-slate-700';
+    default: return 'bg-neutral-500 text-neutral-700';
   }
 }
 

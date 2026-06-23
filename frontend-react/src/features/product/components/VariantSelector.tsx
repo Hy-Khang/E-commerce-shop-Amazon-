@@ -35,7 +35,7 @@ export function VariantSelector({ variants, selectedVariantId, onSelect, option1
     <div className="space-y-4">
       {option1Label && option1Values.length > 0 && (
         <div>
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-text-secondary">
             {option1Label}: {selected?.option1 ?? '—'}
           </span>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -65,7 +65,7 @@ export function VariantSelector({ variants, selectedVariantId, onSelect, option1
 
       {option2Label && option2Values.length > 0 && (
         <div>
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-text-secondary">
             {option2Label}: {selected?.option2 ?? '—'}
           </span>
           <div className="mt-2 flex flex-wrap gap-2">

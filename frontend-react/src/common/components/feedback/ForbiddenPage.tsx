@@ -4,9 +4,9 @@ import { ROUTES } from '@/common/constants/routes';
 export default function ForbiddenPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-6xl font-bold text-gray-300">403</h1>
-      <p className="text-lg text-gray-500">Access denied</p>
-      <Link to={ROUTES.HOME} className="text-blue-600 hover:underline">
+      <h1 className="text-6xl font-bold text-neutral-300">403</h1>
+      <p className="text-lg text-text-secondary">Access denied</p>
+      <Link to={ROUTES.HOME} className="text-text-brand hover:text-primary-700 transition-colors">
         Go back home
       </Link>
     </div>

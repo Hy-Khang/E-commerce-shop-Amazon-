@@ -40,15 +40,15 @@ export function CouponInput({ onApply, onRemove, appliedCode }: Props) {
 
   if (appliedCode) {
     return (
-      <div className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2">
+      <div className="flex items-center justify-between rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
         <div className="flex items-center gap-2">
-          <Check className="h-4 w-4 text-green-600" />
-          <span className="text-sm font-medium text-green-800">{appliedCode}</span>
+          <Check className="h-4 w-4 text-emerald-700" />
+          <span className="text-sm font-medium text-emerald-800">{appliedCode}</span>
         </div>
         <button
           type="button"
           onClick={handleRemove}
-          className="rounded p-0.5 text-green-600 hover:bg-green-100 hover:text-green-800"
+          className="rounded p-0.5 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
         >
           <X className="h-4 w-4" />
         </button>
@@ -60,7 +60,7 @@ export function CouponInput({ onApply, onRemove, appliedCode }: Props) {
     <div className="space-y-2">
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
           <input
             type="text"
             value={code}
@@ -74,7 +74,7 @@ export function CouponInput({ onApply, onRemove, appliedCode }: Props) {
           type="button"
           onClick={handleApply}
           disabled={validate.isPending || !code.trim()}
-          className="flex items-center gap-1.5 rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-text-secondary hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {validate.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           Apply
@@ -82,7 +82,7 @@ export function CouponInput({ onApply, onRemove, appliedCode }: Props) {
       </div>
 
       {validate.isError && (
-        <p className="text-xs text-red-600">
+        <p className="text-xs text-error-600">
           {validate.error instanceof ApiError ? validate.error.message : 'Invalid coupon code'}
         </p>
       )}
