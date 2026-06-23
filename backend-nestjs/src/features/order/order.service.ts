@@ -201,6 +201,19 @@ export class OrderService {
         })),
       });
 
+      const sellerUserIds = await this.resolveSellerUserIdsFromShopIds(
+        [...new Set(orderItemsData.map((i) => i.shop_id).filter((id): id is number => id != null))],
+      );
+      if (sellerUserIds.length > 0) {
+        this.eventEmitter.emit('order.placed', {
+          orderId: order.id,
+          customerId: userId,
+          sellerUserIds,
+          totalAmount,
+          itemCount: orderItemsData.reduce((sum, i) => sum + i.quantity, 0),
+        });
+      }
+
       this.logger.log(
         `Order #${order.id} created for user ${userId}, payment: ${dto.payment_method}${couponData ? `, coupon: ${couponData.coupon_code}, discount: ${discountAmount}` : ''}`,
       );
@@ -373,6 +386,7 @@ export class OrderService {
       });
     }
 
+    const oldStatus = order.status;
     await this.orderRepository.updateStatus(orderId, OrderStatus.Cancelled);
     order.status = OrderStatus.Cancelled;
 
@@ -385,6 +399,18 @@ export class OrderService {
         quantity: item.quantity,
       })),
     });
+
+    const sellerUserIds = await this.resolveSellerUserIds(order.order_items);
+    if (sellerUserIds.length > 0) {
+      this.eventEmitter.emit('order.status_updated', {
+        orderId: order.id,
+        userId: order.user_id,
+        notifyUserIds: sellerUserIds,
+        oldStatus,
+        newStatus: OrderStatus.Cancelled,
+        actorType: ActorType.Customer,
+      });
+    }
 
     this.logger.log(`Order #${orderId} cancelled by user ${userId}`);
 
@@ -666,6 +692,10 @@ export class OrderService {
         orderItems.map((i) => i.shop_id).filter((id): id is number => id != null),
       ),
     ];
+    return this.resolveSellerUserIdsFromShopIds(shopIds);
+  }
+
+  private async resolveSellerUserIdsFromShopIds(shopIds: number[]): Promise<number[]> {
     const userIds: number[] = [];
     for (const shopId of shopIds) {
       try {

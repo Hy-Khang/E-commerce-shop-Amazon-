@@ -5,8 +5,14 @@ import {
   NotificationContext,
   NotificationType,
 } from './types/notification.types';
-import type { OrderStatusUpdatedEvent } from './types/notification.types';
-import { buildOrderStatusMessage } from './utils/notification.util';
+import type {
+  OrderStatusUpdatedEvent,
+  OrderPlacedEvent,
+} from './types/notification.types';
+import {
+  buildOrderStatusMessage,
+  buildNewOrderMessage,
+} from './utils/notification.util';
 
 @Injectable()
 export class NotificationListener {
@@ -15,6 +21,41 @@ export class NotificationListener {
   constructor(
     private readonly notificationRepository: NotificationRepository,
   ) {}
+
+  @OnEvent('order.placed')
+  async handleOrderPlaced(payload: OrderPlacedEvent): Promise<void> {
+    for (const sellerUserId of payload.sellerUserIds) {
+      try {
+        const { title, message } = buildNewOrderMessage(
+          payload.orderId,
+          payload.totalAmount,
+          payload.itemCount,
+        );
+
+        await this.notificationRepository.create({
+          user_id: sellerUserId,
+          type: NotificationType.NEW_ORDER,
+          title,
+          message,
+          data: JSON.stringify({
+            orderId: payload.orderId,
+            totalAmount: payload.totalAmount,
+            itemCount: payload.itemCount,
+          }),
+          context: NotificationContext.Seller,
+        });
+
+        this.logger.log(
+          `New order notification created for seller ${sellerUserId}: order #${payload.orderId}`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to create new order notification for seller ${sellerUserId}, order #${payload.orderId}`,
+          error instanceof Error ? error.stack : String(error),
+        );
+      }
+    }
+  }
 
   @OnEvent('order.status_updated')
   async handleOrderStatusUpdated(

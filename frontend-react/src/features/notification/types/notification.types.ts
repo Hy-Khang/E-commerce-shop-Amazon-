@@ -1,5 +1,6 @@
 export enum NotificationType {
   ORDER_STATUS_CHANGED = 'ORDER_STATUS_CHANGED',
+  NEW_ORDER = 'NEW_ORDER',
 }
 
 export interface OrderStatusChangedData {
@@ -9,12 +10,20 @@ export interface OrderStatusChangedData {
   actorType?: 'admin' | 'seller' | 'customer' | 'system';
 }
 
+export interface NewOrderData {
+  orderId: number;
+  totalAmount: number;
+  itemCount: number;
+}
+
+export type NotificationData = OrderStatusChangedData | NewOrderData;
+
 export interface Notification {
   id: number;
   type: NotificationType;
   title: string;
   message: string;
-  data: OrderStatusChangedData | null;
+  data: NotificationData | null;
   is_read: boolean;
   created_at: string;
 }

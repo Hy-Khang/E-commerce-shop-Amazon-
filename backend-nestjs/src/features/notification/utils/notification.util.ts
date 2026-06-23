@@ -105,6 +105,13 @@ function buildSellerMessage(
     };
   }
 
+  if (newStatus === 'cancelled' && actorType === ActorType.Customer) {
+    return {
+      title: 'Order Cancelled',
+      message: `Customer cancelled order #${orderId}.`,
+    };
+  }
+
   if (newStatus === 'cancelled' && actorType === ActorType.Admin) {
     return {
       title: 'Order Cancelled by Admin',
@@ -123,5 +130,17 @@ function buildSellerMessage(
   return {
     title: 'Order Status Updated',
     message: `Order #${orderId} status changed to ${newLabel}.`,
+  };
+}
+
+export function buildNewOrderMessage(
+  orderId: number,
+  totalAmount: number,
+  itemCount: number,
+): { title: string; message: string } {
+  const formattedAmount = new Intl.NumberFormat('vi-VN').format(totalAmount);
+  return {
+    title: 'New Order Received',
+    message: `Order #${orderId} placed — ${itemCount} item${itemCount !== 1 ? 's' : ''}, ${formattedAmount}₫.`,
   };
 }
