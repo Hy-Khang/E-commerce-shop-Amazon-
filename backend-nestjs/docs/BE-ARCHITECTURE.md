@@ -234,7 +234,8 @@ graph TD
 
     Order -.->|event: order.created| Product
     Order -.->|event: order.cancelled| Product
-    Order -.->|event: order.status_updated| Notification["notification"]
+    Order -.->|event: order.placed| Notification["notification"]
+    Order -.->|event: order.status_updated| Notification
     Order -.->|cron: auto-complete| Order
 
 ```
@@ -263,7 +264,7 @@ graph TD
 | wishlist | ProductModule | — |
 | coupon | — | — |
 | upload | — | — |
-| notification | — | `order.status_updated` |
+| notification | — | `order.placed`, `order.status_updated` |
 | dashboard | TypeOrmModule (Order entity), ShopModule | — |
 
 **Forbidden:** direct import of another feature's repository/entity/dto file, circular module dependencies.
