@@ -6,7 +6,7 @@ interface Props {
 }
 
 const roleConfig: Record<string, { icon: typeof Shield; bg: string; text: string; label: string }> = {
-  admin: { icon: Shield, bg: 'bg-red-50', text: 'text-red-600', label: 'Admin' },
+  admin: { icon: Shield, bg: 'bg-rose-50', text: 'text-rose-600', label: 'Admin' },
   seller: { icon: Store, bg: 'bg-orange-50', text: 'text-orange-600', label: 'Seller' },
   shipper: { icon: Truck, bg: 'bg-cyan-50', text: 'text-cyan-600', label: 'Shipper' },
   customer: { icon: User, bg: 'bg-blue-50', text: 'text-blue-600', label: 'Customer' },

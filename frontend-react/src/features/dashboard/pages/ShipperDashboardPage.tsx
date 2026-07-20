@@ -3,7 +3,7 @@ import { Truck, BarChart3 } from 'lucide-react';
 export default function ShipperDashboardPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Shipper Dashboard</h1>
+      <h1 className="text-2xl font-bold text-slate-900">Shipper Dashboard</h1>
       <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6">
         <div className="flex items-start gap-4">
           <BarChart3 className="mt-0.5 h-6 w-6 text-emerald-600" />
@@ -17,17 +17,17 @@ export default function ShipperDashboardPage() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex items-center gap-3 rounded-lg border p-4 opacity-50">
-          <Truck className="h-5 w-5 text-gray-400" />
+          <Truck className="h-5 w-5 text-slate-400" />
           <div>
-            <div className="text-sm font-medium text-gray-900">Deliveries</div>
-            <div className="text-xs text-gray-500">Coming soon</div>
+            <div className="text-sm font-medium text-slate-900">Deliveries</div>
+            <div className="text-xs text-slate-500">Coming soon</div>
           </div>
         </div>
         <div className="flex items-center gap-3 rounded-lg border p-4 opacity-50">
-          <BarChart3 className="h-5 w-5 text-gray-400" />
+          <BarChart3 className="h-5 w-5 text-slate-400" />
           <div>
-            <div className="text-sm font-medium text-gray-900">Analytics</div>
-            <div className="text-xs text-gray-500">Coming soon</div>
+            <div className="text-sm font-medium text-slate-900">Analytics</div>
+            <div className="text-xs text-slate-500">Coming soon</div>
           </div>
         </div>
       </div>

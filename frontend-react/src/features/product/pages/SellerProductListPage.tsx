@@ -36,7 +36,7 @@ export default function SellerProductListPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">My Products</h1>
+        <h1 className="text-2xl font-bold text-slate-900">My Products</h1>
         <Link
           to={ROUTES.SELLER_PRODUCT_CREATE}
           className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
@@ -51,35 +51,35 @@ export default function SellerProductListPage() {
           type="text"
           placeholder="Search products..."
           defaultValue={searchParams.get('search') || ''}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
         />
         <button
           type="submit"
-          className="rounded-md bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          className="rounded-md bg-slate-100 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200"
         >
           Search
         </button>
       </form>
 
       <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Product</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Price Range</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Variants</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Created</th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Product</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Price Range</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Variants</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Created</th>
+              <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
+          <tbody className="divide-y divide-slate-200 bg-white">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 6 }).map((__, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-4 animate-pulse rounded bg-gray-200" />
+                      <div className="h-4 animate-pulse rounded bg-slate-200" />
                     </td>
                   ))}
                 </tr>
@@ -88,35 +88,35 @@ export default function SellerProductListPage() {
               data.data.map((product) => {
                 const range = getPriceRange(product.variants);
                 return (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr key={product.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {product.thumbnail_url ? (
                           <img src={getImageUrl(product.thumbnail_url)} alt="" className="h-10 w-10 rounded object-cover" />
                         ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100 text-xs text-gray-400">N/A</div>
+                          <div className="flex h-10 w-10 items-center justify-center rounded bg-slate-100 text-xs text-slate-400">N/A</div>
                         )}
-                        <span className="text-sm font-medium text-gray-900">{product.name}</span>
+                        <span className="text-sm font-medium text-slate-900">{product.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-4 py-3 text-sm text-slate-600">
                       {range ? `${formatPrice(range.min)} — ${formatPrice(range.max)}` : '—'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{product.variants.length}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{product.variants.length}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => toggleActive.mutate(product.id)}
                         disabled={toggleActive.isPending}
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                           product.is_active
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
+                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                            : 'bg-rose-100 text-rose-800 hover:bg-rose-200'
                         }`}
                       >
                         {product.is_active ? 'Active' : 'Inactive'}
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{formatDate(product.created_at)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{formatDate(product.created_at)}</td>
                     <td className="px-4 py-3 text-right">
                       <Link
                         to={ROUTES.SELLER_PRODUCT_EDIT(product.id)}
@@ -130,7 +130,7 @@ export default function SellerProductListPage() {
               })
             ) : (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
                   No products found. Create your first product to get started.
                 </td>
               </tr>
@@ -148,7 +148,7 @@ export default function SellerProductListPage() {
           >
             Previous
           </button>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-slate-600">
             Page {data.meta.page} of {data.meta.totalPages}
           </span>
           <button

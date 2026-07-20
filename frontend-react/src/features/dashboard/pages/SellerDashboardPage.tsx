@@ -12,7 +12,7 @@ import { SectionError } from '../components/SectionError';
 const RevenueChart = lazy(() => import('../components/RevenueChart'));
 
 function ChartFallback() {
-  return <div className="h-80 animate-pulse rounded-xl bg-gray-200" />;
+  return <div className="h-80 animate-pulse rounded-xl bg-slate-200" />;
 }
 
 export default function SellerDashboardPage() {
@@ -22,7 +22,7 @@ export default function SellerDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="font-jakarta text-3xl font-extrabold tracking-tight text-gray-900">
+      <h1 className="font-jakarta text-3xl font-extrabold tracking-tight text-slate-900">
         Seller Dashboard
       </h1>
 

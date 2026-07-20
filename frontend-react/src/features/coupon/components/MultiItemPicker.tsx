@@ -95,7 +95,7 @@ function PickerDropdown({ items, isLoading, selectedIds, onChange, search, setSe
       )}
 
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           value={search}
@@ -105,17 +105,17 @@ function PickerDropdown({ items, isLoading, selectedIds, onChange, search, setSe
           }}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
         {isLoading && (
-          <Loader2 className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-gray-400" />
+          <Loader2 className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
         )}
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+        <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
           {availableItems.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-gray-500">
+            <div className="px-3 py-2 text-sm text-slate-500">
               {isLoading ? 'Loading...' : 'No results found'}
             </div>
           ) : (
@@ -126,11 +126,11 @@ function PickerDropdown({ items, isLoading, selectedIds, onChange, search, setSe
                 onClick={() => handleSelect(item.id)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-blue-50"
               >
-                <span className="font-medium text-gray-900">{item.label}</span>
+                <span className="font-medium text-slate-900">{item.label}</span>
                 {item.sublabel && (
-                  <span className="text-xs text-gray-500">{item.sublabel}</span>
+                  <span className="text-xs text-slate-500">{item.sublabel}</span>
                 )}
-                <span className="ml-auto text-xs text-gray-400">#{item.id}</span>
+                <span className="ml-auto text-xs text-slate-400">#{item.id}</span>
               </button>
             ))
           )}

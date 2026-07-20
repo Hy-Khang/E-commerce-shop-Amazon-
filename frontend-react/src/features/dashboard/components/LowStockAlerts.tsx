@@ -8,15 +8,15 @@ interface Props {
 }
 
 function stockSeverity(qty: number): string {
-  if (qty === 0) return 'bg-red-50 text-red-700 border-red-200';
+  if (qty === 0) return 'bg-rose-50 text-rose-700 border-rose-200';
   if (qty <= 5) return 'bg-amber-50 text-amber-700 border-amber-200';
-  return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+  return 'bg-amber-50/50 text-amber-600 border-amber-200';
 }
 
 function stockBadge(qty: number): string {
-  if (qty === 0) return 'bg-red-100 text-red-700';
+  if (qty === 0) return 'bg-rose-100 text-rose-700';
   if (qty <= 5) return 'bg-amber-100 text-amber-700';
-  return 'bg-yellow-100 text-yellow-700';
+  return 'bg-amber-100/50 text-amber-600';
 }
 
 export function LowStockAlerts({ alerts }: Props) {

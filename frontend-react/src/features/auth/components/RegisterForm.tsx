@@ -22,7 +22,7 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit((data) => mutate(data))} className="space-y-4">
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+        <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-600">
           {error instanceof ApiError ? error.message : 'An unexpected error occurred'}
         </div>
       )}
@@ -39,7 +39,7 @@ export function RegisterForm() {
           className="mt-1 block shop-input"
           placeholder="Nguyen Van A"
         />
-        {errors.full_name && <p className="mt-1 text-sm text-red-600">{errors.full_name.message}</p>}
+        {errors.full_name && <p className="mt-1 text-sm text-rose-600">{errors.full_name.message}</p>}
       </div>
 
       <div>
@@ -54,7 +54,7 @@ export function RegisterForm() {
           className="mt-1 block shop-input"
           placeholder="you@example.com"
         />
-        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
+        {errors.email && <p className="mt-1 text-sm text-rose-600">{errors.email.message}</p>}
       </div>
 
       <div>
@@ -69,7 +69,7 @@ export function RegisterForm() {
           className="mt-1 block shop-input"
           placeholder="••••••••"
         />
-        {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
+        {errors.password && <p className="mt-1 text-sm text-rose-600">{errors.password.message}</p>}
       </div>
 
       <div>
@@ -85,7 +85,7 @@ export function RegisterForm() {
           placeholder="••••••••"
         />
         {errors.confirmPassword && (
-          <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+          <p className="mt-1 text-sm text-rose-600">{errors.confirmPassword.message}</p>
         )}
       </div>
 

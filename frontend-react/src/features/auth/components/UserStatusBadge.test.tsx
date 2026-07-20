@@ -19,15 +19,15 @@ describe('UserStatusBadge', () => {
     render(<UserStatusBadge isActive={true} />);
 
     const badge = screen.getByText('Active');
-    expect(badge.className).toContain('bg-green-100');
-    expect(badge.className).toContain('text-green-700');
+    expect(badge.className).toContain('bg-emerald-100');
+    expect(badge.className).toContain('text-emerald-700');
   });
 
   it('should have red styling when inactive', () => {
     render(<UserStatusBadge isActive={false} />);
 
     const badge = screen.getByText('Inactive');
-    expect(badge.className).toContain('bg-red-100');
-    expect(badge.className).toContain('text-red-700');
+    expect(badge.className).toContain('bg-rose-100');
+    expect(badge.className).toContain('text-rose-700');
   });
 });

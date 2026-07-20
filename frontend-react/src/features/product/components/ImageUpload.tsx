@@ -86,7 +86,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
   if (displayUrl) {
     return (
       <div className="space-y-1">
-        {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
+        {label && <label className="block text-sm font-medium text-slate-700">{label}</label>}
         <div className="relative inline-block">
           <img
             src={displayUrl}
@@ -102,7 +102,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
             <button
               type="button"
               onClick={handleClear}
-              className="absolute -right-2 -top-2 rounded-full bg-red-500 p-0.5 text-white shadow hover:bg-red-600"
+              className="absolute -right-2 -top-2 rounded-full bg-rose-500 p-0.5 text-white shadow hover:bg-rose-600"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -114,15 +114,15 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
 
   return (
     <div className="space-y-2">
-      {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
+      {label && <label className="block text-sm font-medium text-slate-700">{label}</label>}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-gray-300 bg-gray-50 text-sm text-gray-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+        className="flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
       >
         <Upload className="h-6 w-6" />
         <span>Click to upload</span>
-        <span className="text-xs text-gray-400">JPEG, PNG, WebP (max 5MB)</span>
+        <span className="text-xs text-slate-400">JPEG, PNG, WebP (max 5MB)</span>
       </button>
       <input
         ref={inputRef}
@@ -140,7 +140,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
             onChange={(e) => setUrlValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlSubmit())}
             placeholder="https://..."
-            className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+            className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
           />
           <button
             type="button"
@@ -152,7 +152,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
           <button
             type="button"
             onClick={() => { setShowUrlInput(false); setUrlValue(''); }}
-            className="rounded-md px-2 py-1.5 text-sm text-gray-500 hover:text-gray-700"
+            className="rounded-md px-2 py-1.5 text-sm text-slate-500 hover:text-slate-700"
           >
             Cancel
           </button>
@@ -161,7 +161,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
         <button
           type="button"
           onClick={() => setShowUrlInput(true)}
-          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600"
         >
           <Link className="h-3 w-3" />
           Or paste URL

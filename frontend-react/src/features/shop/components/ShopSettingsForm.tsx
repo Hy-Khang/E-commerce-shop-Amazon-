@@ -18,11 +18,11 @@ export function ShopSettingsForm() {
   const isNew = !shop && fetchError instanceof ApiError && fetchError.code === 'SHOP_004';
 
   if (isLoading) {
-    return <div className="py-12 text-center text-gray-500">Loading shop settings...</div>;
+    return <div className="py-12 text-center text-slate-500">Loading shop settings...</div>;
   }
 
   if (!shop && !isNew) {
-    return <div className="py-12 text-center text-gray-500">Unable to load shop data.</div>;
+    return <div className="py-12 text-center text-slate-500">Unable to load shop data.</div>;
   }
 
   if (isNew) {
@@ -53,12 +53,12 @@ function CreateShopView({ create }: { create: ReturnType<typeof useCreateMyShop>
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Set Up Your Shop</h2>
-        <p className="mt-1 text-sm text-gray-500">Create your shop profile to start selling.</p>
+        <h2 className="text-xl font-bold text-slate-900">Set Up Your Shop</h2>
+        <p className="mt-1 text-sm text-slate-500">Create your shop profile to start selling.</p>
       </div>
 
       {create.error instanceof ApiError && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{create.error.message}</div>
+        <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700">{create.error.message}</div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -112,20 +112,20 @@ function UpdateShopView({
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900">Shop Settings</h2>
+        <h2 className="text-xl font-bold text-slate-900">Shop Settings</h2>
         <StatusBadge status={shop.status} />
       </div>
 
-      <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600">
-        Slug: <span className="font-mono text-gray-900">{shop.slug}</span>
+      <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">
+        Slug: <span className="font-mono text-slate-900">{shop.slug}</span>
       </div>
 
       {update.error instanceof ApiError && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{update.error.message}</div>
+        <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700">{update.error.message}</div>
       )}
 
       {update.isSuccess && (
-        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">Shop updated successfully.</div>
+        <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">Shop updated successfully.</div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -148,14 +148,14 @@ function UpdateShopView({
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    active: 'bg-green-100 text-green-800',
-    pending_verification: 'bg-yellow-100 text-yellow-800',
-    suspended: 'bg-red-100 text-red-800',
-    banned: 'bg-gray-100 text-gray-800',
+    active: 'bg-emerald-100 text-emerald-800',
+    pending_verification: 'bg-amber-100 text-amber-800',
+    suspended: 'bg-rose-100 text-rose-800',
+    banned: 'bg-slate-100 text-slate-800',
   };
 
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] ?? 'bg-gray-100 text-gray-800'}`}>
+    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] ?? 'bg-slate-100 text-slate-800'}`}>
       {SHOP_STATUS_LABELS[status as keyof typeof SHOP_STATUS_LABELS] ?? status}
     </span>
   );
@@ -176,14 +176,14 @@ function FieldInput({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
+      <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
       <input
         id={id}
         {...register}
         placeholder={placeholder}
-        className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
       />
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
     </div>
   );
 }
@@ -199,12 +199,12 @@ function FieldTextarea({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">{label}</label>
+      <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
       <textarea
         id={id}
         rows={4}
         {...register}
-        className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
       />
     </div>
   );

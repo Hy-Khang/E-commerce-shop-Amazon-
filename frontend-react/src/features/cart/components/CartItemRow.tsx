@@ -77,7 +77,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
       <button
         onClick={() => onRemove(item.id)}
         disabled={isUpdating}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-rose-50 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Trash2 className="h-4 w-4" />
       </button>

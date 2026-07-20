@@ -51,8 +51,8 @@ export function WishlistButton({ productId, isInWishlist, size = 'md', className
         className ??
         `rounded-full p-2 transition-colors ${
           wishlisted
-            ? 'text-red-500 hover:bg-red-50'
-            : 'text-text-muted hover:bg-neutral-100 hover:text-red-500'
+            ? 'text-rose-500 hover:bg-rose-50'
+            : 'text-text-muted hover:bg-neutral-100 hover:text-rose-500'
         } disabled:opacity-50`
       }
       aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}

@@ -8,25 +8,25 @@ interface Props {
 }
 
 function stockSeverity(qty: number): string {
-  if (qty === 0) return 'bg-red-50 text-red-700 border-red-200';
+  if (qty === 0) return 'bg-rose-50 text-rose-700 border-rose-200';
   if (qty <= 5) return 'bg-amber-50 text-amber-700 border-amber-200';
-  return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+  return 'bg-amber-50/50 text-amber-600 border-amber-200';
 }
 
 function stockBadge(qty: number): string {
-  if (qty === 0) return 'bg-red-100 text-red-700';
+  if (qty === 0) return 'bg-rose-100 text-rose-700';
   if (qty <= 5) return 'bg-amber-100 text-amber-700';
-  return 'bg-yellow-100 text-yellow-700';
+  return 'bg-amber-100/50 text-amber-600';
 }
 
 export function SellerLowStockAlerts({ alerts }: Props) {
   if (alerts.length === 0) return null;
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm">
+    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
       <div className="mb-4 flex items-center gap-2">
         <AlertTriangle className="h-5 w-5 text-amber-500" />
-        <h2 className="font-jakarta text-lg font-bold text-gray-900">
+        <h2 className="font-jakarta text-lg font-bold text-slate-900">
           Low Stock Alerts
         </h2>
         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">

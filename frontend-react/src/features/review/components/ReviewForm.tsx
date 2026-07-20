@@ -58,7 +58,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
                 <Star
                   className={`h-6 w-6 transition-colors ${
                     starValue <= (hoverRating || currentRating)
-                      ? 'fill-yellow-400 text-yellow-400'
+                      ? 'fill-amber-400 text-amber-400'
                       : 'text-neutral-300'
                   }`}
                 />

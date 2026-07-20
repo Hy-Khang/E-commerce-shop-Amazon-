@@ -122,22 +122,22 @@ export function CategoryCascader({ categories, value, onChange, error }: Categor
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700">Category</label>
+      <label className="block text-sm font-medium text-slate-700">Category</label>
       <button
         type="button"
         onClick={openModal}
-        className="mt-1 flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="mt-1 flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
       >
         {displayPath ? (
-          <span className="truncate text-gray-900">{displayPath}</span>
+          <span className="truncate text-slate-900">{displayPath}</span>
         ) : (
-          <span className="text-gray-400">Chọn danh mục</span>
+          <span className="text-slate-400">Chọn danh mục</span>
         )}
-        <svg className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="ml-2 h-4 w-4 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
 
       {isOpen && (
         <>
@@ -148,8 +148,8 @@ export function CategoryCascader({ categories, value, onChange, error }: Categor
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between border-b px-6 py-4">
-                <h3 className="text-lg font-semibold text-gray-900">Chọn danh mục</h3>
-                <button type="button" onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
+                <h3 className="text-lg font-semibold text-slate-900">Chọn danh mục</h3>
+                <button type="button" onClick={handleCancel} className="text-slate-400 hover:text-slate-600">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -163,10 +163,10 @@ export function CategoryCascader({ categories, value, onChange, error }: Categor
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Tìm kiếm danh mục..."
-                    className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                   <svg
-                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -180,26 +180,26 @@ export function CategoryCascader({ categories, value, onChange, error }: Categor
                 {searchQuery.trim() ? (
                   <div className="h-full overflow-y-auto p-2">
                     {filteredSearch.length === 0 ? (
-                      <p className="py-8 text-center text-sm text-gray-500">Không tìm thấy danh mục</p>
+                      <p className="py-8 text-center text-sm text-slate-500">Không tìm thấy danh mục</p>
                     ) : (
                       filteredSearch.map((item) => (
                         <button
                           key={item.category.id}
                           type="button"
                           onClick={() => handleSearchSelect(item.category.id)}
-                          className="w-full rounded px-3 py-2 text-left text-sm hover:bg-gray-100"
+                          className="w-full rounded px-3 py-2 text-left text-sm hover:bg-slate-100"
                         >
-                          <span className="text-gray-400">
+                          <span className="text-slate-400">
                             {item.path.slice(0, -1).join(' > ')}
                             {item.path.length > 1 ? ' > ' : ''}
                           </span>
-                          <span className="font-medium text-gray-900">{item.category.name}</span>
+                          <span className="font-medium text-slate-900">{item.category.name}</span>
                         </button>
                       ))
                     )}
                   </div>
                 ) : (
-                  <div className="flex h-full divide-x divide-gray-200">
+                  <div className="flex h-full divide-x divide-slate-200">
                     {columns.map((col, colIndex) => (
                       <div key={colIndex} className="min-w-0 flex-1 overflow-y-auto">
                         {col.options.map((cat) => {
@@ -213,13 +213,13 @@ export function CategoryCascader({ categories, value, onChange, error }: Categor
                               className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
                                 isSelected
                                   ? 'bg-orange-50 font-medium text-orange-600'
-                                  : 'text-gray-700 hover:bg-gray-50'
+                                  : 'text-slate-700 hover:bg-slate-50'
                               }`}
                             >
                               <span className="truncate">{cat.name}</span>
                               {hasChildren && (
                                 <svg
-                                  className={`ml-1 h-4 w-4 flex-shrink-0 ${isSelected ? 'text-orange-500' : 'text-gray-400'}`}
+                                  className={`ml-1 h-4 w-4 flex-shrink-0 ${isSelected ? 'text-orange-500' : 'text-slate-400'}`}
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -237,11 +237,11 @@ export function CategoryCascader({ categories, value, onChange, error }: Categor
               </div>
 
               <div className="flex items-center justify-between border-t px-6 py-4">
-                <div className="min-w-0 flex-1 text-sm text-gray-600">
+                <div className="min-w-0 flex-1 text-sm text-slate-600">
                   {tempPath ? (
                     <>
                       Đã chọn:{' '}
-                      <span className="font-medium text-gray-900">{tempPath}</span>
+                      <span className="font-medium text-slate-900">{tempPath}</span>
                     </>
                   ) : (
                     'Chưa chọn danh mục'
@@ -251,7 +251,7 @@ export function CategoryCascader({ categories, value, onChange, error }: Categor
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                   >
                     Cancel
                   </button>
