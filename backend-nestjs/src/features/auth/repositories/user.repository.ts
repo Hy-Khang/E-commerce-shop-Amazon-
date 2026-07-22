@@ -118,4 +118,15 @@ export class UserRepository {
     await this.repo.update(id, { ...data, updated_at: new Date() });
     return this.repo.findOne({ where: { id }, relations: ['role'] });
   }
+
+  async findByPasswordResetTokenHash(tokenHash: string): Promise<User | null> {
+    return this.repo.findOne({
+      where: { password_reset_token_hash: tokenHash },
+      relations: ['role'],
+    });
+  }
+
+  async save(user: User): Promise<User> {
+    return this.repo.save(user);
+  }
 }

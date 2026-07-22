@@ -1,5 +1,6 @@
 import { useProfile } from '../hooks/useProfile';
 import { ProfileForm } from '../components/ProfileForm';
+import { ChangePasswordForm } from '@/features/auth';
 
 export default function ProfilePage() {
   const { data: profile, isLoading, error } = useProfile();
@@ -26,7 +27,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-xl font-bold tracking-tight text-text-primary">My Profile</h1>
         <p className="mt-1 text-sm text-text-secondary">Manage your personal account settings and details.</p>
@@ -35,7 +36,11 @@ export default function ProfilePage() {
       <div className="border-t border-border-default pt-6">
         <ProfileForm profile={profile} />
       </div>
+
+      <div className="border-t border-border-default pt-6">
+        <h2 className="mb-4 text-lg font-semibold text-text-primary">Security</h2>
+        <ChangePasswordForm />
+      </div>
     </div>
   );
 }
-

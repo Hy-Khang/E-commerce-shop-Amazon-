@@ -52,6 +52,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       role: data.role,
       role_id: data.role_id,
       permissions: data.permissions,
+      email_verified: data.email_verified,
+      has_password: data.has_password,
+      providers: data.providers,
     };
     storage.set('user', updatedUser);
     set({ user: updatedUser });

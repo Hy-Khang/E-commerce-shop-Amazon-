@@ -11,12 +11,15 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { randomUUID } from 'crypto';
 import { UserRepository } from './repositories/user.repository';
 import { RoleRepository } from './repositories/role.repository';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 import { PermissionRepository } from './repositories/permission.repository';
 import { RolePermissionRepository } from './repositories/role-permission.repository';
+import { UserAuthProviderRepository } from './repositories/user-auth-provider.repository';
+import { OAuthCodeRepository } from './repositories/oauth-code.repository';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -26,7 +29,14 @@ import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { AssignPermissionsDto } from './dto/assign-permissions.dto';
-import { IAuthMeResponse, IJwtPayload, ILoginResponse, ITokenPair } from './types/auth.types';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
+import { IAuthMeResponse, IJwtPayload, ILoginResponse, IOAuthProfile, IRegisterResponse, ITokenPair } from './types/auth.types';
+import { MailService } from '../../core/mail/mail.service';
 import { hashToken } from './utils/auth.util';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
@@ -45,13 +55,16 @@ export class AuthService {
     private readonly refreshTokenRepository: RefreshTokenRepository,
     private readonly permissionRepository: PermissionRepository,
     private readonly rolePermissionRepository: RolePermissionRepository,
+    private readonly userAuthProviderRepository: UserAuthProviderRepository,
+    private readonly oauthCodeRepository: OAuthCodeRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly mailService: MailService,
     @Inject(PERMISSION_CACHE_PROVIDER)
     private readonly permissionCache: IPermissionCacheProvider,
   ) {}
 
-  async register(dto: RegisterDto): Promise<ILoginResponse> {
+  async register(dto: RegisterDto): Promise<IRegisterResponse> {
     const emailExists = await this.userRepository.existsByEmail(dto.email);
     if (emailExists) {
       throw new ConflictException({
@@ -65,32 +78,339 @@ export class AuthService {
       throw new Error('Default role "customer" not found. Run database seeds.');
     }
 
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpHash = hashToken(otp);
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const user = await this.userRepository.create({
+    await this.userRepository.create({
       email: dto.email,
       password_hash: passwordHash,
       full_name: dto.full_name,
       role_id: customerRole.id,
+      email_verified: false,
+      email_verify_token: otpHash,
+      email_verify_expires: otpExpires,
+      email_verify_count: 1,
+      email_verify_count_reset: new Date(),
     });
 
-    const tokens = await this.generateTokenPair(user.id, customerRole.id);
-    await this.storeRefreshToken(user.id, tokens.refreshToken);
+    await this.mailService.sendVerificationEmail(dto.email, dto.full_name, otp);
 
-    const permissions = await this.rolePermissionRepository.findPermissionStringsByRoleId(customerRole.id);
-
-    this.logger.log(`User registered: ${user.email}`);
+    this.logger.log(`User registered: ${dto.email}`);
 
     return {
-      ...tokens,
-      user: {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        role: customerRole.name,
-        role_id: customerRole.id,
-        permissions,
-      },
+      email: dto.email,
+      expiresIn: 300,
+      message: 'Verification code sent to your email',
     };
+  }
+
+  async verifyEmail(dto: VerifyEmailDto): Promise<ILoginResponse> {
+    const user = await this.userRepository.findByEmail(dto.email);
+    if (!user) {
+      throw new BadRequestException({
+        code: 'AUTH_007',
+        message: 'Invalid verification code',
+      });
+    }
+
+    if (user.email_verified) {
+      throw new BadRequestException({
+        code: 'AUTH_007',
+        message: 'Email already verified',
+      });
+    }
+
+    if (user.email_verify_attempts >= 5) {
+      throw new BadRequestException({
+        code: 'AUTH_013',
+        message: 'Too many verification attempts. Please request a new code.',
+      });
+    }
+
+    if (!user.email_verify_expires || user.email_verify_expires < new Date()) {
+      throw new BadRequestException({
+        code: 'AUTH_012',
+        message: 'Verification code expired',
+      });
+    }
+
+    const incomingHash = hashToken(dto.otp);
+    const storedHash = user.email_verify_token || '';
+
+    const isMatch =
+      incomingHash.length === storedHash.length &&
+      crypto.timingSafeEqual(Buffer.from(incomingHash), Buffer.from(storedHash));
+
+    if (!isMatch) {
+      user.email_verify_attempts += 1;
+      await this.userRepository.save(user);
+      throw new BadRequestException({
+        code: 'AUTH_007',
+        message: 'Invalid verification code',
+      });
+    }
+
+    user.email_verified = true;
+    user.email_verify_token = null;
+    user.email_verify_expires = null;
+    user.email_verify_attempts = 0;
+    await this.userRepository.save(user);
+
+    return this.buildLoginResponse(user);
+  }
+
+  async resendVerification(dto: ResendVerificationDto): Promise<IRegisterResponse> {
+    const user = await this.userRepository.findByEmail(dto.email);
+    if (!user || user.email_verified) {
+      return {
+        email: dto.email,
+        expiresIn: 300,
+        message: 'If the email exists and is unverified, a new code has been sent',
+      };
+    }
+
+    // 60s cooldown: OTP was sent less than 60s ago
+    if (user.email_verify_expires) {
+      const sentAt = new Date(user.email_verify_expires.getTime() - 5 * 60 * 1000);
+      if (Date.now() - sentAt.getTime() < 60 * 1000) {
+        throw new BadRequestException({
+          code: 'AUTH_011',
+          message: 'Please wait before requesting a new code',
+        });
+      }
+    }
+
+    // Hourly limit: max 5 per hour
+    const now = new Date();
+    if (user.email_verify_count_reset) {
+      const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      if (user.email_verify_count_reset > hourAgo) {
+        if (user.email_verify_count >= 5) {
+          throw new BadRequestException({
+            code: 'AUTH_011',
+            message: 'Too many requests. Please try again later.',
+          });
+        }
+      } else {
+        user.email_verify_count = 0;
+        user.email_verify_count_reset = now;
+      }
+    } else {
+      user.email_verify_count_reset = now;
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    user.email_verify_token = hashToken(otp);
+    user.email_verify_expires = new Date(Date.now() + 5 * 60 * 1000);
+    user.email_verify_count += 1;
+    user.email_verify_attempts = 0;
+    await this.userRepository.save(user);
+
+    await this.mailService.sendVerificationEmail(dto.email, user.full_name, otp);
+
+    return {
+      email: dto.email,
+      expiresIn: 300,
+      message: 'Verification code sent to your email',
+    };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+    const user = await this.userRepository.findByEmail(dto.email);
+    if (!user || !user.is_active) {
+      return { message: 'If the email exists, a reset link has been sent' };
+    }
+
+    const rawToken = crypto.randomBytes(32).toString('base64url');
+    user.password_reset_token_hash = hashToken(rawToken);
+    user.password_reset_expires_at = new Date(Date.now() + 60 * 60 * 1000);
+    await this.userRepository.save(user);
+
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:5173');
+    const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+    await this.mailService.sendPasswordResetEmail(dto.email, user.full_name, resetUrl);
+
+    return { message: 'If the email exists, a reset link has been sent' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    const tokenHash = hashToken(dto.token);
+    const user = await this.userRepository.findByPasswordResetTokenHash(tokenHash);
+
+    if (!user) {
+      throw new BadRequestException({
+        code: 'AUTH_008',
+        message: 'Invalid or already-used reset token',
+      });
+    }
+
+    if (!user.password_reset_expires_at || user.password_reset_expires_at < new Date()) {
+      throw new BadRequestException({
+        code: 'AUTH_012',
+        message: 'Reset token expired',
+      });
+    }
+
+    user.password_hash = await bcrypt.hash(dto.password, 10);
+    user.password_reset_token_hash = null;
+    user.password_reset_expires_at = null;
+    await this.userRepository.save(user);
+
+    await this.refreshTokenRepository.revokeAllByUserId(user.id);
+
+    return { message: 'Password reset successfully' };
+  }
+
+  async changePassword(userId: number, dto: ChangePasswordDto): Promise<{ message: string }> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException({ code: 'USER_002', message: 'User not found' });
+    }
+
+    if (!user.password_hash) {
+      throw new BadRequestException({
+        code: 'AUTH_001',
+        message: 'Use set-password endpoint for OAuth accounts',
+      });
+    }
+
+    const isValid = await bcrypt.compare(dto.current_password, user.password_hash);
+    if (!isValid) {
+      throw new UnauthorizedException({
+        code: 'AUTH_001',
+        message: 'Current password is incorrect',
+      });
+    }
+
+    const isSame = await bcrypt.compare(dto.new_password, user.password_hash);
+    if (isSame) {
+      throw new BadRequestException({
+        code: 'AUTH_010',
+        message: 'New password must differ from current password',
+      });
+    }
+
+    user.password_hash = await bcrypt.hash(dto.new_password, 10);
+    await this.userRepository.save(user);
+    await this.refreshTokenRepository.revokeAllByUserId(userId);
+
+    return { message: 'Password changed successfully' };
+  }
+
+  async setPassword(userId: number, dto: SetPasswordDto): Promise<{ message: string }> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException({ code: 'USER_002', message: 'User not found' });
+    }
+
+    if (user.password_hash) {
+      throw new BadRequestException({
+        code: 'AUTH_001',
+        message: 'Use change-password endpoint for accounts with existing password',
+      });
+    }
+
+    user.password_hash = await bcrypt.hash(dto.new_password, 10);
+    await this.userRepository.save(user);
+    await this.refreshTokenRepository.revokeAllByUserId(userId);
+
+    return { message: 'Password set successfully' };
+  }
+
+  async oauthLogin(profile: IOAuthProfile): Promise<User> {
+    if (!profile.email) {
+      throw new BadRequestException({
+        code: 'AUTH_014',
+        message: 'OAuth provider did not return an email address',
+      });
+    }
+
+    const existingLink = await this.userAuthProviderRepository.findByProviderAndProviderId(
+      profile.provider,
+      profile.providerId,
+    );
+
+    if (existingLink) {
+      const user = existingLink.user;
+      if (!user.is_active) {
+        throw new ForbiddenException({ code: 'AUTH_005', message: 'Account deactivated' });
+      }
+      return user;
+    }
+
+    const existingUser = await this.userRepository.findByEmail(profile.email);
+
+    if (existingUser) {
+      if (!existingUser.is_active) {
+        throw new ForbiddenException({ code: 'AUTH_005', message: 'Account deactivated' });
+      }
+      if (!existingUser.email_verified) {
+        existingUser.email_verified = true;
+        await this.userRepository.save(existingUser);
+      }
+      await this.userAuthProviderRepository.linkProvider(existingUser.id, profile.provider, profile.providerId);
+      this.logger.log(`Linked ${profile.provider} to existing user: ${existingUser.email}`);
+      return existingUser;
+    }
+
+    const customerRole = await this.roleRepository.findByName('customer');
+    if (!customerRole) {
+      throw new Error('Default role "customer" not found. Run database seeds.');
+    }
+
+    const newUser = await this.userRepository.create({
+      email: profile.email,
+      password_hash: null as any,
+      full_name: profile.fullName,
+      role_id: customerRole.id,
+      email_verified: true,
+    });
+
+    await this.userAuthProviderRepository.linkProvider(newUser.id, profile.provider, profile.providerId);
+    this.logger.log(`OAuth user created: ${profile.email} via ${profile.provider}`);
+
+    const userWithRole = await this.userRepository.findById(newUser.id);
+    return userWithRole!;
+  }
+
+  async generateOAuthCode(userId: number): Promise<string> {
+    const rawCode = crypto.randomBytes(32).toString('base64url');
+    const codeHash = hashToken(rawCode);
+    const expiresAt = new Date(Date.now() + 60 * 1000);
+    await this.oauthCodeRepository.createCode(codeHash, userId, expiresAt);
+    return rawCode;
+  }
+
+  async exchangeOAuthCode(code: string): Promise<ILoginResponse> {
+    const codeHash = hashToken(code);
+    const oauthCode = await this.oauthCodeRepository.findAndDeleteByCodeHash(codeHash);
+
+    if (!oauthCode) {
+      throw new BadRequestException({
+        code: 'AUTH_009',
+        message: 'Invalid or expired OAuth code',
+      });
+    }
+
+    if (oauthCode.expires_at < new Date()) {
+      throw new BadRequestException({
+        code: 'AUTH_009',
+        message: 'OAuth code expired',
+      });
+    }
+
+    const user = await this.userRepository.findById(oauthCode.user_id);
+    if (!user) {
+      throw new BadRequestException({
+        code: 'AUTH_009',
+        message: 'Invalid OAuth code',
+      });
+    }
+
+    return this.buildLoginResponse(user);
   }
 
   async login(dto: LoginDto): Promise<ILoginResponse> {
@@ -109,6 +429,21 @@ export class AuthService {
       });
     }
 
+    if (!user.password_hash) {
+      throw new UnauthorizedException({
+        code: 'AUTH_001',
+        message: 'Invalid credentials',
+      });
+    }
+
+    if (!user.email_verified) {
+      throw new UnauthorizedException({
+        code: 'AUTH_006',
+        message: 'Email not verified',
+        email: user.email,
+      } as any);
+    }
+
     const passwordValid = await bcrypt.compare(dto.password, user.password_hash);
     if (!passwordValid) {
       throw new UnauthorizedException({
@@ -117,10 +452,15 @@ export class AuthService {
       });
     }
 
+    return this.buildLoginResponse(user);
+  }
+
+  private async buildLoginResponse(user: User): Promise<ILoginResponse> {
     const tokens = await this.generateTokenPair(user.id, user.role_id);
     await this.storeRefreshToken(user.id, tokens.refreshToken);
 
     const permissions = await this.rolePermissionRepository.findPermissionStringsByRoleId(user.role_id);
+    const providers = await this.userAuthProviderRepository.getProviderNamesByUserId(user.id);
 
     this.logger.log(`User logged in: ${user.email}`);
 
@@ -133,6 +473,9 @@ export class AuthService {
         role: user.role.name,
         role_id: user.role_id,
         permissions,
+        email_verified: user.email_verified,
+        has_password: user.password_hash !== null,
+        providers,
       },
     };
   }
@@ -185,6 +528,7 @@ export class AuthService {
     }
 
     const permissions = await this.rolePermissionRepository.findPermissionStringsByRoleId(user.role_id);
+    const providers = await this.userAuthProviderRepository.getProviderNamesByUserId(user.id);
 
     return {
       id: user.id,
@@ -194,6 +538,9 @@ export class AuthService {
       role_id: user.role_id,
       permissions,
       is_active: user.is_active,
+      email_verified: user.email_verified,
+      has_password: user.password_hash !== null,
+      providers,
     };
   }
 

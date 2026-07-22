@@ -38,9 +38,9 @@ describe('AuthController', () => {
         full_name: 'Test User',
       };
       const expected = {
-        accessToken: 'token',
-        refreshToken: 'refresh',
-        user: { id: 1, email: dto.email, full_name: dto.full_name, role: 'customer', role_id: 1, permissions: [] },
+        email: dto.email,
+        expiresIn: 300,
+        message: 'Verification code sent to your email',
       };
       service.register.mockResolvedValue(expected);
 
@@ -60,7 +60,7 @@ describe('AuthController', () => {
       const expected = {
         accessToken: 'token',
         refreshToken: 'refresh',
-        user: { id: 1, email: dto.email, full_name: 'Test User', role: 'customer', role_id: 1, permissions: [] },
+        user: { id: 1, email: dto.email, full_name: 'Test User', role: 'customer', role_id: 1, permissions: [], email_verified: true, has_password: true, providers: [] },
       };
       service.login.mockResolvedValue(expected);
 

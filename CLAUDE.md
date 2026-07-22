@@ -16,6 +16,7 @@ A full-featured e-commerce platform. Includes product catalog, user authenticati
 ```
 
 ## Shared Docs
+- @share-docs/PROJECT_MODULES.md — 22 modules, tech stack, permission matrix, dependency map, feature specs
 - @share-docs/API_SPEC.md — REST endpoints, request/response format, auth flow, error codes
 - @share-docs/DATABASE.md — schema, entities, relationships, TypeORM patterns, migration rules
 

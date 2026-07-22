@@ -3,7 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AuthService } from '../auth.service';
 import { AuthController } from '../auth.controller';
-import { ILoginResponse, ITokenPair } from '../types/auth.types';
+import { ILoginResponse, IRegisterResponse, ITokenPair } from '../types/auth.types';
 
 describe('Auth — Refresh Token Rotation (e2e)', () => {
   let app: INestApplication;
@@ -12,7 +12,7 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
   const mockLoginResponse: ILoginResponse = {
     accessToken: 'access-token-1',
     refreshToken: 'refresh-token-1',
-    user: { id: 1, email: 'user@example.com', full_name: 'Nguyen Van A', role: 'customer', role_id: 1, permissions: [] },
+    user: { id: 1, email: 'user@example.com', full_name: 'Nguyen Van A', role: 'customer', role_id: 1, permissions: [], email_verified: true, has_password: true, providers: [] },
   };
 
   const mockNewTokenPair: ITokenPair = {
@@ -137,13 +137,13 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
     });
   });
 
-  describe('POST /auth/register → token pair returned', () => {
-    it('should register and return tokens + user info', async () => {
+  describe('POST /auth/register → verification code sent', () => {
+    it('should register and return verification info', async () => {
       // Arrange
-      const registerResponse: ILoginResponse = {
-        accessToken: 'new-access',
-        refreshToken: 'new-refresh',
-        user: { id: 2, email: 'new@example.com', full_name: 'New User', role: 'customer', role_id: 1, permissions: [] },
+      const registerResponse: IRegisterResponse = {
+        email: 'new@example.com',
+        expiresIn: 300,
+        message: 'Verification code sent to your email',
       };
       authService.register.mockResolvedValue(registerResponse);
 
@@ -154,10 +154,9 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
         .expect(201);
 
       // Assert
-      expect(res.body.accessToken).toBe('new-access');
-      expect(res.body.refreshToken).toBe('new-refresh');
-      expect(res.body.user.email).toBe('new@example.com');
-      expect(res.body.user.role).toBe('customer');
+      expect(res.body.email).toBe('new@example.com');
+      expect(res.body.expiresIn).toBe(300);
+      expect(res.body.message).toBeDefined();
     });
   });
 
@@ -208,10 +207,10 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
 
     it('should strip unknown fields (whitelist)', async () => {
       // Arrange
-      const registerResponse: ILoginResponse = {
-        accessToken: 'token',
-        refreshToken: 'refresh',
-        user: { id: 1, email: 'valid@example.com', full_name: 'Test User', role: 'customer', role_id: 1, permissions: [] },
+      const registerResponse: IRegisterResponse = {
+        email: 'valid@example.com',
+        expiresIn: 300,
+        message: 'Verification code sent to your email',
       };
       authService.register.mockResolvedValue(registerResponse);
 

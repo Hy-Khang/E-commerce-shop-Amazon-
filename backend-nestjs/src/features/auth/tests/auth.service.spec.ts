@@ -15,7 +15,10 @@ import { RoleRepository } from '../repositories/role.repository';
 import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
 import { PermissionRepository } from '../repositories/permission.repository';
 import { RolePermissionRepository } from '../repositories/role-permission.repository';
+import { UserAuthProviderRepository } from '../repositories/user-auth-provider.repository';
+import { OAuthCodeRepository } from '../repositories/oauth-code.repository';
 import { PERMISSION_CACHE_PROVIDER } from '../interfaces/permission-cache.interface';
+import { MailService } from '../../../core/mail/mail.service';
 import {
   mockRole,
   mockAdminRole,
@@ -51,6 +54,8 @@ describe('AuthService', () => {
             updateIsActive: jest.fn(),
             updateRoleId: jest.fn(),
             updateProfile: jest.fn(),
+            save: jest.fn(),
+            findByPasswordResetTokenHash: jest.fn(),
           },
         },
         {
@@ -95,10 +100,35 @@ describe('AuthService', () => {
           provide: RolePermissionRepository,
           useValue: {
             findByRoleId: jest.fn(),
-            findPermissionStringsByRoleId: jest.fn(),
+            findPermissionStringsByRoleId: jest.fn().mockResolvedValue([]),
             syncPermissions: jest.fn(),
             addPermissions: jest.fn(),
             removePermissions: jest.fn(),
+          },
+        },
+        {
+          provide: UserAuthProviderRepository,
+          useValue: {
+            findByProviderAndProviderId: jest.fn(),
+            findByUserId: jest.fn(),
+            getProviderNamesByUserId: jest.fn().mockResolvedValue([]),
+            linkProvider: jest.fn(),
+            hasProvider: jest.fn(),
+          },
+        },
+        {
+          provide: OAuthCodeRepository,
+          useValue: {
+            createCode: jest.fn(),
+            findAndDeleteByCodeHash: jest.fn(),
+            cleanupExpired: jest.fn(),
+          },
+        },
+        {
+          provide: MailService,
+          useValue: {
+            sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+            sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
           },
         },
         {
@@ -156,29 +186,22 @@ describe('AuthService', () => {
       full_name: 'Nguyen Van A',
     };
 
-    it('should register a new user and return tokens + user info', async () => {
+    it('should register a new user and return verification info', async () => {
       // Arrange
       userRepository.existsByEmail.mockResolvedValue(false);
       roleRepository.findByName.mockResolvedValue(mockRole());
       (mockedBcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hashedpassword');
-      userRepository.create.mockResolvedValue(
-        mockUser({ id: 1, email: dto.email, full_name: dto.full_name }),
-      );
-      refreshTokenRepository.create.mockResolvedValue({} as any);
+      const createdUser = mockUser({ id: 1, email: dto.email, full_name: dto.full_name });
+      userRepository.create.mockResolvedValue(createdUser);
+      userRepository.save.mockResolvedValue(createdUser);
 
       // Act
       const result = await service.register(dto);
 
       // Assert
-      expect(result.accessToken).toBe('signed-access-token');
-      expect(result.refreshToken).toBeDefined();
-      expect(result.user).toEqual({
-        id: 1,
-        email: dto.email,
-        full_name: dto.full_name,
-        role: 'customer',
-        role_id: 1,
-      });
+      expect(result.email).toBe(dto.email);
+      expect(result.expiresIn).toBe(300);
+      expect(result.message).toBeDefined();
     });
 
     it('should hash the password with bcrypt before storing', async () => {
@@ -186,8 +209,9 @@ describe('AuthService', () => {
       userRepository.existsByEmail.mockResolvedValue(false);
       roleRepository.findByName.mockResolvedValue(mockRole());
       (mockedBcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hashed');
-      userRepository.create.mockResolvedValue(mockUser({ email: dto.email }));
-      refreshTokenRepository.create.mockResolvedValue({} as any);
+      const createdUser = mockUser({ email: dto.email });
+      userRepository.create.mockResolvedValue(createdUser);
+      userRepository.save.mockResolvedValue(createdUser);
 
       // Act
       await service.register(dto);
@@ -199,24 +223,24 @@ describe('AuthService', () => {
       );
     });
 
-    it('should store refresh token after registration', async () => {
+    it('should send verification email after registration', async () => {
       // Arrange
       userRepository.existsByEmail.mockResolvedValue(false);
       roleRepository.findByName.mockResolvedValue(mockRole());
       (mockedBcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hashed');
-      userRepository.create.mockResolvedValue(mockUser({ id: 42, email: dto.email }));
-      refreshTokenRepository.create.mockResolvedValue({} as any);
+      const createdUser = mockUser({ id: 42, email: dto.email });
+      userRepository.create.mockResolvedValue(createdUser);
+      userRepository.save.mockResolvedValue(createdUser);
+      const mailService = (service as any).mailService as jest.Mocked<MailService>;
 
       // Act
       await service.register(dto);
 
       // Assert
-      expect(refreshTokenRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 42,
-          token_hash: expect.any(String),
-          expires_at: expect.any(Date),
-        }),
+      expect(mailService.sendVerificationEmail).toHaveBeenCalledWith(
+        dto.email,
+        dto.full_name,
+        expect.any(String),
       );
     });
 
@@ -226,8 +250,9 @@ describe('AuthService', () => {
       userRepository.existsByEmail.mockResolvedValue(false);
       roleRepository.findByName.mockResolvedValue(customerRole);
       (mockedBcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hashed');
-      userRepository.create.mockResolvedValue(mockUser({ email: dto.email }));
-      refreshTokenRepository.create.mockResolvedValue({} as any);
+      const createdUser = mockUser({ email: dto.email });
+      userRepository.create.mockResolvedValue(createdUser);
+      userRepository.save.mockResolvedValue(createdUser);
 
       // Act
       await service.register(dto);
@@ -274,22 +299,20 @@ describe('AuthService', () => {
       );
     });
 
-    it('should generate JWT access token with correct payload', async () => {
+    it('should not generate JWT tokens during registration', async () => {
       // Arrange
       userRepository.existsByEmail.mockResolvedValue(false);
       roleRepository.findByName.mockResolvedValue(mockRole());
       (mockedBcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hashed');
-      userRepository.create.mockResolvedValue(mockUser({ id: 7, email: dto.email }));
-      refreshTokenRepository.create.mockResolvedValue({} as any);
+      const createdUser = mockUser({ id: 7, email: dto.email });
+      userRepository.create.mockResolvedValue(createdUser);
+      userRepository.save.mockResolvedValue(createdUser);
 
       // Act
       await service.register(dto);
 
-      // Assert
-      expect(jwtService.sign).toHaveBeenCalledWith({
-        sub: 7,
-        roleId: 1,
-      });
+      // Assert — register no longer generates tokens (verify-email does)
+      expect(jwtService.sign).not.toHaveBeenCalled();
     });
   });
 
@@ -313,13 +336,19 @@ describe('AuthService', () => {
       // Assert
       expect(result.accessToken).toBe('signed-access-token');
       expect(result.refreshToken).toBeDefined();
-      expect(result.user).toEqual({
-        id: 1,
-        email: dto.email,
-        full_name: 'Nguyen Van A',
-        role: 'customer',
-        role_id: 1,
-      });
+      expect(result.user).toEqual(
+        expect.objectContaining({
+          id: 1,
+          email: dto.email,
+          full_name: 'Nguyen Van A',
+          role: 'customer',
+          role_id: 1,
+          permissions: [],
+          email_verified: true,
+          has_password: true,
+          providers: [],
+        }),
+      );
     });
 
     it('should store refresh token after login', async () => {

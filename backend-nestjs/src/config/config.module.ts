@@ -4,12 +4,14 @@ import * as Joi from 'joi';
 import appConfig from './app.config';
 import databaseConfig from './database.config';
 import jwtConfig from './jwt.config';
+import mailConfig from './mail.config';
+import oauthConfig from './oauth.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, jwtConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailConfig, oauthConfig],
       validationSchema: Joi.object({
         APP_PORT: Joi.number().default(3000),
         APP_PREFIX: Joi.string().default('api/v1'),
@@ -26,6 +28,18 @@ import jwtConfig from './jwt.config';
         JWT_ACCESS_EXPIRY: Joi.string().default('15m'),
         JWT_REFRESH_SECRET: Joi.string().required(),
         JWT_REFRESH_EXPIRY: Joi.string().default('7d'),
+        FRONTEND_URL: Joi.string().default('http://localhost:5173'),
+        SMTP_HOST: Joi.string().optional().default('sandbox.smtp.mailtrap.io'),
+        SMTP_PORT: Joi.number().optional().default(2525),
+        SMTP_USER: Joi.string().optional().allow('').default(''),
+        SMTP_PASS: Joi.string().optional().allow('').default(''),
+        SMTP_FROM: Joi.string().optional().default('noreply@ecommerce.local'),
+        GOOGLE_CLIENT_ID: Joi.string().optional().allow('').default(''),
+        GOOGLE_CLIENT_SECRET: Joi.string().optional().allow('').default(''),
+        GOOGLE_CALLBACK_URL: Joi.string().optional().default('http://localhost:3000/api/v1/auth/google/callback'),
+        FACEBOOK_APP_ID: Joi.string().optional().allow('').default(''),
+        FACEBOOK_APP_SECRET: Joi.string().optional().allow('').default(''),
+        FACEBOOK_CALLBACK_URL: Joi.string().optional().default('http://localhost:3000/api/v1/auth/facebook/callback'),
       }),
     }),
   ],

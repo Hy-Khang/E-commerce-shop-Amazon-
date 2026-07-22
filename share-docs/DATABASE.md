@@ -74,14 +74,31 @@
 | id | INT | PK, auto-increment |
 | role_id | INT | FK → `roles.id`, NOT NULL |
 | email | NVARCHAR(255) | NOT NULL, UNIQUE |
-| password_hash | NVARCHAR(255) | NOT NULL — bcrypt hash, **never** store plain text |
+| password_hash | NVARCHAR(255) | NULL — bcrypt hash, **never** store plain text. NULL for OAuth-only users |
 | full_name | NVARCHAR(100) | NOT NULL |
 | phone | NVARCHAR(20) | NULL |
+| email_verified | BIT | NOT NULL, DEFAULT `0` — must verify email before login |
+| email_verify_token | NVARCHAR(255) | NULL — SHA-256 hash of 6-digit OTP |
+| email_verify_expires | DATETIME2 | NULL — OTP expiry (5 minutes) |
+| email_verify_count | INT | NOT NULL, DEFAULT `0` — resend counter (max 5/hour) |
+| email_verify_count_reset | DATETIME2 | NULL — resets counter each hour |
+| email_verify_attempts | INT | NOT NULL, DEFAULT `0` — failed verify attempts (max 5 before new OTP required) |
+| password_reset_token_hash | NVARCHAR(255) | NULL — SHA-256 hash of reset token |
+| password_reset_expires_at | DATETIME2 | NULL — reset token expiry (1 hour) |
 | is_active | BIT | NOT NULL, DEFAULT `1` — soft ban without deleting data |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 | updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_users_email_verify_token` | email_verify_token (filtered: NOT NULL) | Fast OTP lookup during verification |
+| `idx_users_password_reset_token_hash` | password_reset_token_hash (filtered: NOT NULL) | Fast reset token lookup |
+
 > **Shared entity** — referenced by Order, Review, Cart, and User Profile features.
+> **OAuth users** have `password_hash = NULL` — they authenticate via `user_auth_providers` instead. Use `POST /auth/set-password` to add a local password.
+> **Email verification** blocks login until `email_verified = true`. OTP sent via email on registration.
 
 #### `refresh_tokens`
 
@@ -106,6 +123,40 @@
 | `idx_refresh_tokens_expires_at` | expires_at | Scheduled cleanup of expired tokens |
 
 > **Multi-device support:** One user → many tokens. Soft revoke via `is_revoked` instead of hard delete for audit trail.
+
+#### `user_auth_providers` — OAuth Multi-Provider
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id`, NOT NULL, CASCADE delete |
+| provider | NVARCHAR(20) | NOT NULL — `'google'`, `'facebook'` |
+| provider_id | NVARCHAR(255) | NOT NULL — ID from OAuth provider |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Constraints:**
+- UNIQUE `(provider, provider_id)` — `uq_user_auth_providers_provider_provider_id` — one OAuth identity maps to one user
+- UNIQUE `(user_id, provider)` — `uq_user_auth_providers_user_provider` — one user per provider (can't link two Google accounts)
+
+> **Multi-provider design:** Replaces single `provider`/`provider_id` columns on `users`. Each user can link multiple OAuth providers (e.g. both Google and Facebook). When an OAuth login matches an existing user by email, a new `user_auth_providers` record is created (account linking). Users with `password_hash = NULL` are OAuth-only; they can add a local password via `POST /auth/set-password`.
+
+#### `oauth_codes` — One-Time Authorization Codes
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| code_hash | NVARCHAR(255) | NOT NULL — SHA-256 hash of one-time code |
+| user_id | INT | FK → `users.id`, NOT NULL |
+| expires_at | DATETIME2 | NOT NULL — TTL 60 seconds |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:**
+
+| Index | Column(s) | Purpose |
+|-------|-----------|---------|
+| `idx_oauth_codes_code_hash` | code_hash | Fast lookup during code exchange |
+
+> **Security flow:** OAuth callback generates a one-time code → stores SHA-256 hash in `oauth_codes` → redirects to frontend with raw code → frontend exchanges code for JWT tokens via `POST /auth/oauth/exchange` → backend deletes the code record before returning tokens (atomic find+delete prevents replay). Cleanup cron deletes expired codes every 10 minutes.
 
 ---
 
@@ -469,6 +520,8 @@ erDiagram
     roles ||--o{ role_permissions : "has permissions"
     permissions ||--o{ role_permissions : "assigned to roles"
     users ||--o{ refresh_tokens : "has many"
+    users ||--o{ user_auth_providers : "OAuth providers"
+    users ||--o{ oauth_codes : "OAuth codes"
     users ||--o{ addresses : "has many"
     users ||--o{ shops : "owns (1:1)"
     users ||--o{ carts : "has many"
@@ -513,6 +566,8 @@ erDiagram
 - **`categories`** self-references via `parent_id` for N-level nesting
 - **`coupons`** uses junction tables (`coupon_categories`, `coupon_products`) for scope targeting, and `coupon_usages` for audit trail
 - **`notifications`** FK to `users` only — created asynchronously via `order.status_updated` event, not directly linked to orders table (order reference stored in JSON `data` field)
+- **`user_auth_providers`** supports multi-provider OAuth — each user can link multiple providers (Google, Facebook). Replaces single `provider`/`provider_id` columns
+- **`oauth_codes`** stores temporary one-time codes for secure OAuth callback exchange — deleted before returning tokens
 
 ---
 
@@ -596,6 +651,8 @@ export class ProductVariant {
 3. role_permissions  (FKs to roles, permissions)
 4. users
 5. refresh_tokens
+5a. user_auth_providers  (FK to users)
+5b. oauth_codes  (FK to users)
 6. addresses
 7. shops  (FK to users)
 8. categories
@@ -653,9 +710,12 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | permissions | `idx_permissions_resource` | resource | Filter permissions by resource |
 | role_permissions | `idx_role_permissions_role_id` | role_id | List permissions for a role |
 | role_permissions | `idx_role_permissions_permission_id` | permission_id | Find roles with a permission |
+| users | `idx_users_email_verify_token` | email_verify_token (filtered: NOT NULL) | OTP lookup during verification |
+| users | `idx_users_password_reset_token_hash` | password_reset_token_hash (filtered: NOT NULL) | Reset token lookup |
 | refresh_tokens | `idx_refresh_tokens_token_hash` | token_hash | Token lookup on every request |
 | refresh_tokens | `idx_refresh_tokens_user_id` | user_id | Logout all devices |
 | refresh_tokens | `idx_refresh_tokens_expires_at` | expires_at | Scheduled cleanup job |
+| oauth_codes | `idx_oauth_codes_code_hash` | code_hash | OAuth code exchange lookup |
 | shops | `idx_shops_user_id` | user_id | Lookup shop by user |
 | shops | `idx_shops_status` | status | Filter shops by status |
 | products | `idx_products_category_id` | category_id | Filter products by category |

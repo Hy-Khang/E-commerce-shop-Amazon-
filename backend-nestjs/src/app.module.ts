@@ -16,6 +16,7 @@ import { DashboardModule } from './features/dashboard/dashboard.module';
 import { ShopModule } from './features/shop/shop.module';
 import { NotificationModule } from './features/notification/notification.module';
 import { HomepageModule } from './features/homepage/homepage.module';
+import { MailModule } from './core/mail/mail.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -25,7 +26,7 @@ import { AppService } from './app.service';
     DatabaseModule,
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
-    AuthModule,
+    AuthModule.forRoot(),
     UserProfileModule,
     ProductModule,
     CartModule,
@@ -38,6 +39,7 @@ import { AppService } from './app.service';
     ShopModule,
     NotificationModule,
     HomepageModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

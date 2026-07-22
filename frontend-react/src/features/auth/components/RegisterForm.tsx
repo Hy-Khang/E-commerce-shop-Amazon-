@@ -7,6 +7,7 @@ import { ApiError } from '@/core/api/api.types';
 import { ROUTES } from '@/common/constants/routes';
 
 import { Button } from '@/common/components/ui/Button';
+import { SocialLoginButtons } from './SocialLoginButtons';
 
 export function RegisterForm() {
   const {
@@ -97,6 +98,17 @@ export function RegisterForm() {
       >
         {isPending ? 'Creating account...' : 'Create account'}
       </Button>
+
+      <div className="relative my-2">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border-default" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-surface-primary px-2 text-text-secondary">or</span>
+        </div>
+      </div>
+
+      <SocialLoginButtons />
 
       <p className="text-center text-sm text-text-secondary">
         Already have an account?{' '}

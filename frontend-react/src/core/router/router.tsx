@@ -16,6 +16,10 @@ const CategoryPage = lazy(() => import('@/features/product/pages/CategoryPage'))
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
+const VerifyEmailPage = lazy(() => import('@/features/auth/pages/VerifyEmailPage'));
+const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
+const OAuthCallbackPage = lazy(() => import('@/features/auth/pages/OAuthCallbackPage'));
 
 const CartPage = lazy(() => import('@/features/cart/pages/CartPage'));
 const CheckoutPage = lazy(() => import('@/features/order/pages/CheckoutPage'));
@@ -116,7 +120,14 @@ export const router = createBrowserRouter([
     children: [
       { path: 'login', element: <SuspenseWrapper><LoginPage /></SuspenseWrapper> },
       { path: 'register', element: <SuspenseWrapper><RegisterPage /></SuspenseWrapper> },
+      { path: 'verify-email', element: <SuspenseWrapper><VerifyEmailPage /></SuspenseWrapper> },
+      { path: 'forgot-password', element: <SuspenseWrapper><ForgotPasswordPage /></SuspenseWrapper> },
+      { path: 'reset-password', element: <SuspenseWrapper><ResetPasswordPage /></SuspenseWrapper> },
     ],
+  },
+  {
+    path: 'oauth/callback',
+    element: <SuspenseWrapper><OAuthCallbackPage /></SuspenseWrapper>,
   },
   {
     element: <AuthGuard />,
