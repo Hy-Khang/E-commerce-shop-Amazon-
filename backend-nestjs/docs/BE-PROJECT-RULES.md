@@ -46,23 +46,6 @@ src/features/[feature-name]/
 └── context.md                        — purpose, entities, dependencies, design decisions
 ```
 
-### Feature List
-
-| Feature | Folder | Owns Entities |
-|---------|--------|---------------|
-| Auth | `src/features/auth/` | roles, permissions, role_permissions, users, refresh_tokens |
-| User Profile | `src/features/user-profile/` | addresses |
-| Product | `src/features/product/` | categories, products, product_variants, product_images |
-| Shop | `src/features/shop/` | shops |
-| Cart | `src/features/cart/` | carts, cart_items |
-| Order | `src/features/order/` | orders, order_items |
-| Review | `src/features/review/` | reviews |
-| Wishlist | `src/features/wishlist/` | wishlist_items |
-| Coupon | `src/features/coupon/` | coupons, coupon_categories, coupon_products, coupon_usages |
-| Upload | `src/features/upload/` | — (file storage, no DB entities) |
-| Notification | `src/features/notification/` | notifications |
-| Dashboard | `src/features/dashboard/` | — (read-only analytics, no owned entities) |
-
 ---
 
 ## 3. Naming Conventions
@@ -88,40 +71,13 @@ Each feature is a **self-contained NestJS module**. No reaching into another fea
 
 ### Cross-Feature Communication
 
-```typescript
-// ✅ DO — Module exports + DI
-// order.module.ts
-@Module({
-  imports: [CartModule, ProductModule],  // import the MODULE
-  ...
-})
-export class OrderModule {}
+- ✅ Import the **module**, inject its **service**: `OrderModule imports [CartModule] → OrderService injects CartService`
+- ❌ Never import another feature's repository, entity, or DTO directly
 
-// order.service.ts
-constructor(
-  private readonly cartService: CartService,       // injected via DI
-  private readonly productService: ProductService,
-) {}
-```
+### Decoupled Side Effects
 
-```typescript
-// ❌ DON'T — Direct internal imports
-import { ProductRepository } from '../product/repositories/product.repository';
-import { ProductVariant } from '../product/entities/product-variant.entity';
-```
-
-### Decoupled Side Effects — EventEmitter2
-
-```typescript
-// order.service.ts — emit event after checkout
-this.eventEmitter.emit('order.created', { orderId, items });
-
-// product.service.ts — listen and deduct stock
-@OnEvent('order.created')
-async handleOrderCreated(payload: OrderCreatedEvent) {
-  await this.productRepository.deductStock(payload.items);
-}
-```
+- Use `EventEmitter2` for async fire-and-forget: `this.eventEmitter.emit('order.created', payload)` → listener in another feature handles it
+- Example: `order.created` → product deducts stock; `order.cancelled` → product restores stock
 
 ### Feature Dependency Map
 
@@ -136,109 +92,31 @@ async handleOrderCreated(payload: OrderCreatedEvent) {
 ## 5. Code Patterns
 
 ### Error Handling
+- Use NestJS built-in exceptions (`NotFoundException`, `BadRequestException`) or custom exceptions in `common/exceptions/`
+- Never `throw new Error()` — always a typed HTTP exception
 
-```typescript
-// ✅ DO — NestJS built-in exceptions
-throw new NotFoundException(`Product with slug "${slug}" not found`);
-throw new BadRequestException('Quantity exceeds available stock');
-
-// ✅ DO — Custom domain exceptions in common/exceptions/
-export class InsufficientStockException extends BadRequestException {
-  constructor(sku: string) {
-    super(`Insufficient stock for variant ${sku}`);
-  }
-}
-
-// ❌ DON'T
-throw new Error('something went wrong');
-```
-
-### Validation — DTO Level Only
-
-```typescript
-// src/features/order/dto/create-order.dto.ts
-export class CreateOrderDto {
-  @IsEnum(PaymentMethod)
-  payment_method: PaymentMethod;
-
-  @IsInt()
-  @IsPositive()
-  address_id: number;
-}
-```
-
-Global pipe in `main.ts`: `whitelist: true`, `forbidNonWhitelisted: true`, `transform: true`. Services assume valid input.
+### Validation
+- DTO-level only via `class-validator` decorators. Global `ValidationPipe` handles it (`whitelist: true`, `forbidNonWhitelisted: true`, `transform: true`).
+- Services assume valid input — no re-validation.
 
 ### Response Format
+- All responses wrapped by `TransformInterceptor`: `{ success, data, meta? }` or `{ success: false, error: { code, message } }`
 
-All responses wrapped by `common/interceptors/transform.interceptor.ts`:
+### Auth
+- `@Public()` to skip auth. `@Permissions(PERMISSIONS.X)` for admin endpoints. `@CurrentUser()` for user context.
+- Never parse `req.user` manually. Permission strings: `resource:action` format in `common/constants/permissions.constant.ts`.
 
-```typescript
-// Success
-{ "success": true, "data": { ... }, "meta": { "page": 1, "limit": 20, "total": 58 } }
+### Repository
+- Always wrap `TypeORM Repository<Entity>` in an `@Injectable()` repository class
+- Never inject `@InjectRepository()` directly in services
 
-// Error
-{ "success": false, "error": { "code": "NOT_FOUND", "message": "Product not found" } }
-```
+### Stock
+- Atomic updates with guard clause: `SET stock = stock - :qty WHERE stock >= :qty`
+- Never read-then-write (race condition)
 
-### Auth Pattern
-
-```typescript
-// ✅ Public route
-@Public()
-@Get('products')
-findAll() { ... }
-
-// ✅ Permission-based access control (admin endpoints)
-@Permissions(PERMISSIONS.PRODUCTS_CREATE)
-@Post('products')
-create(@CurrentUser() user: ICurrentUser, @Body() dto: CreateProductDto) { ... }
-```
-
-- `@CurrentUser()` extracts user from JWT — never parse `req.user` manually
-- `JwtAuthGuard` applied globally, `@Public()` to opt out
-- `PermissionsGuard` per-route via `@Permissions()` decorator — checks `role_permissions` table with caching
-- Permission strings follow `resource:action` format — defined in `common/constants/permissions.constant.ts`
-
-### Repository Pattern
-
-```typescript
-// ✅ DO — Injectable repository wrapping TypeORM
-@Injectable()
-export class ProductRepository {
-  constructor(
-    @InjectRepository(Product)
-    private readonly repo: Repository<Product>,
-  ) {}
-
-  async findBySlug(slug: string): Promise<Product | null> {
-    return this.repo.findOne({ where: { slug, is_active: true } });
-  }
-}
-
-// ❌ DON'T — Inject Repository directly into service
-constructor(
-  @InjectRepository(Product)
-  private readonly productRepo: Repository<Product>,
-) {}
-```
-
-### Stock — Optimistic Locking
-
-```typescript
-// ✅ DO — Atomic update with guard clause
-await this.repo
-  .createQueryBuilder()
-  .update(ProductVariant)
-  .set({ stock_quantity: () => `stock_quantity - :qty` })
-  .where('id = :id AND stock_quantity >= :qty', { id: variantId, qty })
-  .execute();
-
-// ❌ DON'T — Read-then-write (race condition)
-const variant = await this.repo.findOne(id);
-variant.stock_quantity -= qty;
-await this.repo.save(variant);
-```
+### Logging
+- `new Logger(ClassName.name)` — `.error()` for exceptions, `.warn()` for business rule violations, `.log()` for key actions
+- Never log: `password_hash`, `token_hash`, payment details, PII beyond user ID
 
 ---
 
@@ -255,69 +133,3 @@ await this.repo.save(variant);
 | Raw SQL strings scattered in code | QueryBuilder in repository layer only |
 | Circular feature dependencies | Use EventEmitter2 or restructure boundaries |
 
----
-
-## 7. Logging
-
-```typescript
-private readonly logger = new Logger(OrderService.name);
-
-// Levels
-this.logger.error(`Checkout failed for user ${userId}`, error.stack);   // exceptions
-this.logger.warn(`Cart is empty for user ${userId}`);                    // business rule violations
-this.logger.log(`Order #${orderId} created, payment: ${method}`);        // key actions
-```
-
-**Never log:** `password_hash`, `token_hash`, full payment details, PII beyond user ID.
-
----
-
-## 8. Git Workflow
-
-### Branch Naming
-
-`[type]/[feature]-[short-description]` — e.g. `feat/cart-guest-merge`, `fix/order-payment-status`
-
-Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
-
-### Commit Messages — Conventional Commits
-
-```
-feat(order): add checkout endpoint
-fix(cart): handle guest merge on login
-refactor(auth): extract token hashing to util
-```
-
-### PR Requirements
-
-- Reference task/issue number
-- At least 1 approval from another team member
-- All tests pass, no lint errors
-- Description includes: what changed, why, how to test
-- **Max 400 lines** per PR — split larger work into stacked PRs
-
----
-
-## 9. Testing
-
-- **Location:** co-located in each feature's `tests/` folder
-- **Naming:** `*.spec.ts` (unit), `*.e2e-spec.ts` (integration)
-- **Structure:** Arrange → Act → Assert
-
-```typescript
-describe('OrderService', () => {
-  describe('checkout', () => {
-    it('should create order with snapshot data from cart items', async () => {
-      // Arrange
-      const cart = mockCartWithItems(2);
-      // Act
-      const order = await service.checkout(userId, dto);
-      // Assert
-      expect(order.order_items).toHaveLength(2);
-      expect(order.order_items[0].product_name).toBe(cart.items[0].variant.product.name);
-    });
-  });
-});
-```
-
-**Coverage:** 80% line coverage for services, 60% overall — focus on business logic, not boilerplate.

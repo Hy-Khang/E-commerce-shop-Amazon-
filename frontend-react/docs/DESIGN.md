@@ -241,13 +241,7 @@ Variants: `success`, `warning`, `error`, `info`, `neutral`, `brand`
 
 ### 5.6 Empty States
 
-```
-Container: flex flex-col items-center justify-center py-16 text-center
-Icon:      h-16 w-16 text-text-muted/60  (or wrapped in bg-neutral-100 rounded-full)
-Title:     mt-4 text-lg font-semibold text-text-primary
-Desc:      mt-1 text-sm text-text-secondary
-Action:    mt-6 (Button or Link)
-```
+Centered column (`flex flex-col items-center py-16 text-center`): icon (`h-16 w-16 text-text-muted/60`) → title (`mt-4 text-lg font-semibold`) → description (`mt-1 text-sm text-text-secondary`) → action button (`mt-6`).
 
 ### 5.7 Skeletons
 
@@ -258,15 +252,7 @@ Action:    mt-6 (Button or Link)
 
 ### 5.8 Item Rows (list items in cards)
 
-Pattern used consistently in cart, order, wishlist:
-```
-Container: flex items-center gap-4 border-b border-border-default py-4 last:border-b-0
-Thumbnail: h-16..20 w-16..20 flex-shrink-0 overflow-hidden rounded-lg
-           border border-border-default bg-neutral-50
-Name:      truncate text-sm font-semibold text-text-primary
-Metadata:  flex flex-wrap gap-x-3 text-xs text-text-muted
-Price:     text-sm font-bold text-text-primary (total) or text-text-price (sale)
-```
+Pattern for cart, order, wishlist rows: `flex items-center gap-4 border-b border-border-default py-4 last:border-b-0`. Thumbnail (`h-16..20 w-16..20 flex-shrink-0 rounded-lg border border-border-default bg-neutral-50`) → name (`truncate text-sm font-semibold text-text-primary`) → metadata (`flex flex-wrap gap-x-3 text-xs text-text-muted`) → price (`text-sm font-bold text-text-primary` or `text-text-price` for sale).
 
 ### 5.9 Modals & Drawers
 
@@ -309,27 +295,23 @@ text-xs font-medium uppercase tracking-wider text-text-muted
 
 ## 7. Transitions & Animation
 
-| Animation | Usage | Implementation |
-|-----------|-------|----------------|
-| Color transitions | All interactive elements | `transition-colors` |
-| Card hover scale | Product card images | `transition-transform duration-300 group-hover:scale-105` |
-| Slide-up entrance | Dashboard cards | `animate-slide-up` (custom keyframe) |
-| Fade-in entrance | Admin page content | `animate-in` (custom keyframe), wrapped in `motion-safe:` |
-| Drawer slide | Side drawers | motion/react spring: `damping: 30, stiffness: 300` |
-| Modal pop | Confirm modals | motion/react spring: `damping: 25, stiffness: 350` |
-| Skeleton shimmer | Loading placeholders | `animation: shimmer 1.5s infinite ease-in-out` |
-| Scroll behavior | Page navigation | React Router `<ScrollRestoration />` |
+- All interactive elements: `transition-colors`
+- Card hover (product images): `transition-transform duration-300 group-hover:scale-105`
+- Dashboard cards: `animate-slide-up` (custom keyframe)
+- Admin content: `animate-in` (custom keyframe), wrapped in `motion-safe:`
+- Drawers: motion/react spring `damping: 30, stiffness: 300`
+- Modals: motion/react spring `damping: 25, stiffness: 350`
+- Skeleton shimmer: `animation: shimmer 1.5s infinite ease-in-out`
+- Scroll: React Router `<ScrollRestoration />`
 
 ---
 
 ## 8. Responsive Breakpoints
 
-| Breakpoint | Width | Common usage |
-|------------|-------|--------------|
-| `sm` | 640px | 2→3 col grids, side-by-side form+button |
-| `md` | 768px | Show search bar, desktop nav, hide mobile menu |
-| `lg` | 1024px | Category sidebar, 3-col cart layout, footer 4-col |
-| `xl` | 1280px | 4-col product grid |
+- `sm` — 2→3 col grids, side-by-side form+button
+- `md` — Show search bar, desktop nav, hide mobile menu
+- `lg` — Category sidebar, 3-col cart layout, footer 4-col
+- `xl` — 4-col product grid
 
 ### Mobile patterns
 - Hamburger menu → `MobileNav` drawer (left side)

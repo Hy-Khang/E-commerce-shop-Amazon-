@@ -1,6 +1,6 @@
 # Project Status — E-Commerce Platform
 
-> **Cập nhật:** 2026-07-20
+> **Cập nhật:** 2026-07-23
 > **Tổng quan:** 22 modules theo PROJECT_MODULES.md
 
 ---
@@ -9,7 +9,7 @@
 
 | # | Module | Phase | Backend | Frontend | Tổng | Ghi chú |
 |:-:|--------|:-----:|:-------:|:--------:|:----:|---------|
-| 1 | Auth & Security | 1 | 90% | 80% | **85%** | Thiếu OAuth (Google/FB), Forgot Password |
+| 1 | Auth & Security | 1 | 100% | 100% | **100%** | Hoàn chỉnh (OAuth, Email Verify, Forgot/Reset/Change/Set Password) |
 | 2 | User Profile & Addresses | 1 | 100% | 100% | **100%** | Hoàn chỉnh |
 | 3 | Image Upload | 1 | 100% | 100% | **100%** | Hoàn chỉnh (tích hợp trong Product) |
 | 4 | Shop Management | 2 | 100% | 100% | **100%** | Hoàn chỉnh |
@@ -38,12 +38,12 @@
 
 | Trạng thái | Số module | Danh sách |
 |------------|:---------:|-----------|
-| Hoàn chỉnh (100%) | **10** | User Profile, Image Upload, Shop, Product, Cart, Order, Coupons, Wishlist & Reviews, Admin Panel, Seller Dashboard |
-| Gần hoàn chỉnh (80-99%) | **2** | Auth (85%), Notifications (90%) |
+| Hoàn chỉnh (100%) | **11** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Coupons, Wishlist & Reviews, Admin Panel, Seller Dashboard |
+| Gần hoàn chỉnh (80-99%) | **1** | Notifications (90%) |
 | Đang làm dở / Thiếu nhiều | **2** | Search & Filter (25%), Shipper Dashboard (5%) |
 | Chưa làm (0%) | **8** | Payment Gateway, Order Tracking, Flash Sale, Recently Viewed, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
 
-**Tổng tiến độ ước tính: ~55% (12/22 modules hoạt động)**
+**Tổng tiến độ ước tính: ~59% (12/22 modules hoạt động)**
 
 ---
 
@@ -51,22 +51,9 @@
 
 ### Phase 1 — Nền tảng
 
-#### Module 1: Auth & Security — 85%
+#### Module 1: Auth & Security — 100% ✅
 
-**Đã làm:**
-- Register / Login / Logout (JWT + Refresh Token hashed, multi-device)
-- Dynamic RBAC đầy đủ: CRUD Roles, Permissions, role_permissions junction
-- Escalation prevention (không thể gán quyền cao hơn role mình)
-- Permission guard trên mọi admin endpoint
-- In-memory permission cache
-- BE: 5 entities, 4 controllers, 14 DTOs, 7 test files, seed data
-- FE: Login/Register pages + forms, auth store (Zustand), permission hooks, tests
-
-**Chưa làm:**
-- **OAuth Google/Facebook** — không có passport-google-oauth20, passport-facebook strategies, không có FE social login buttons
-- **Forgot Password** — không có endpoint reset password, không có gửi email OTP/link
-- **Email Verification** — không có flow verify email khi đăng ký
-- **Change Password** — không có endpoint đổi mật khẩu trong profile
+Hoàn chỉnh. Register / Login / Logout (JWT + Refresh Token hashed, multi-device). Dynamic RBAC đầy đủ (CRUD Roles, Permissions, escalation prevention). OAuth Google/Facebook (passport strategies + FE SocialLoginButtons). Email Verification (OTP 6 chữ số qua email, verify trước khi login). Forgot/Reset Password (gửi token qua email). Change Password (local users) + Set Password (OAuth users). BE: entities, controllers, DTOs, strategies, guards, seed data. FE: Login/Register/VerifyEmail/ForgotPassword/ResetPassword pages, ChangePasswordForm, auth store (Zustand).
 
 #### Module 2: User Profile & Addresses — 100% ✅
 
@@ -224,9 +211,8 @@ Backend có thêm `src/features/homepage/` với controller/service/repository r
 Dựa trên dependency map, thứ tự hoàn thành hợp lý cho các module còn lại:
 
 ### Ưu tiên 1 — Hoàn thiện modules gần xong
-1. **Auth (OAuth + Forgot Password)** — nền tảng, nhiều module khác phụ thuộc
-2. **Search & Filter** — core UX, cần cho mua sắm
-3. **Notifications (Socket.IO)** — cần cho Chat Realtime (Module 20)
+1. **Search & Filter** — core UX, cần cho mua sắm
+2. **Notifications (Socket.IO)** — cần cho Chat Realtime (Module 20)
 
 ### Ưu tiên 2 — Phase 3 còn thiếu
 4. **Payment Gateway (VNPay/MoMo)** — luồng mua hàng chưa hoàn chỉnh
@@ -249,9 +235,6 @@ Dựa trên dependency map, thứ tự hoàn thành hợp lý cho các module c�
 
 | Package | Cho module | Side |
 |---------|-----------|------|
-| `passport-google-oauth20` | Auth OAuth | BE |
-| `passport-facebook` | Auth OAuth | BE |
-| `@nestjs-modules/mailer` + `nodemailer` | Auth (email verify, forgot password) | BE |
 | `socket.io` + `@nestjs/websockets` + `@nestjs/platform-socket.io` | Notifications, Chat | BE |
 | `socket.io-client` | Notifications, Chat | FE |
 | `leaflet` + `react-leaflet` + `@types/leaflet` | Order Tracking | FE |

@@ -40,12 +40,6 @@
 
 **Constraints:** UNIQUE `(resource, action)` — `uq_permissions_resource_action`
 
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_permissions_resource` | resource | Filter permissions by resource |
-
 > **Dynamic RBAC:** Permissions are stored as `resource:action` strings (e.g. `products:create`). Admin endpoints use `@Permissions(PERMISSIONS.PRODUCTS_CREATE)` decorator instead of role-based `@Roles()`. Permission strings are defined in `common/constants/permissions.constant.ts`.
 
 #### `role_permissions` — Junction
@@ -57,13 +51,6 @@
 | permission_id | INT | FK → `permissions.id`, NOT NULL, CASCADE delete |
 
 **Constraints:** UNIQUE `(role_id, permission_id)` — `uq_role_permissions_role_permission`
-
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_role_permissions_role_id` | role_id | List permissions for a role |
-| `idx_role_permissions_permission_id` | permission_id | Find roles with a specific permission |
 
 > **Role-permission mapping:** Admin role gets all permissions. Seller gets products CRUD + categories read + orders read + uploads + dashboard. Shipper gets orders read/update + dashboard. Customer has no admin permissions (all customer actions are handled by JWT auth, not permission checks).
 
@@ -89,13 +76,6 @@
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 | updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_users_email_verify_token` | email_verify_token (filtered: NOT NULL) | Fast OTP lookup during verification |
-| `idx_users_password_reset_token_hash` | password_reset_token_hash (filtered: NOT NULL) | Fast reset token lookup |
-
 > **Shared entity** — referenced by Order, Review, Cart, and User Profile features.
 > **OAuth users** have `password_hash = NULL` — they authenticate via `user_auth_providers` instead. Use `POST /auth/set-password` to add a local password.
 > **Email verification** blocks login until `email_verified = true`. OTP sent via email on registration.
@@ -113,14 +93,6 @@
 | ip_address | NVARCHAR(45) | NULL — supports IPv4/IPv6 |
 | user_agent | NVARCHAR(500) | NULL |
 | device_name | NVARCHAR(100) | NULL — e.g. "Chrome on Windows" |
-
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_refresh_tokens_token_hash` | token_hash | Fast token lookup on every authenticated request |
-| `idx_refresh_tokens_user_id` | user_id | Find all tokens for a user (logout all devices) |
-| `idx_refresh_tokens_expires_at` | expires_at | Scheduled cleanup of expired tokens |
 
 > **Multi-device support:** One user → many tokens. Soft revoke via `is_revoked` instead of hard delete for audit trail.
 
@@ -149,12 +121,6 @@
 | user_id | INT | FK → `users.id`, NOT NULL |
 | expires_at | DATETIME2 | NOT NULL — TTL 60 seconds |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
-
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_oauth_codes_code_hash` | code_hash | Fast lookup during code exchange |
 
 > **Security flow:** OAuth callback generates a one-time code → stores SHA-256 hash in `oauth_codes` → redirects to frontend with raw code → frontend exchanges code for JWT tokens via `POST /auth/oauth/exchange` → backend deletes the code record before returning tokens (atomic find+delete prevents replay). Cleanup cron deletes expired codes every 10 minutes.
 
@@ -197,13 +163,6 @@
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 | updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_shops_user_id` | user_id | Lookup shop by user (also covered by UNIQUE) |
-| `idx_shops_status` | status | Filter shops by status |
-
 > **1:1 with users:** Each seller has exactly one shop. UNIQUE constraint on `user_id` enforces this. Race condition on concurrent POST handled by catching SQL Server error 2627/2601 → mapped to SHOP_002.
 > **Status lifecycle:** `pending_verification` → `active` → `suspended`/`banned`. `verified_at`/`verified_by` are set once on first approval and preserved permanently. `suspended_at`/`banned_at` are overwritten on each state change.
 > **Public visibility:** Products from shops with `status != 'active'` are hidden from the public storefront. All public product queries join shops and filter `shops.status = 'active'`.
@@ -240,13 +199,6 @@
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 | updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_products_category_id` | category_id | Filter products by category |
-| `idx_products_shop_id` | shop_id | Filter products by shop |
-
 > **Flexible variant axes:** Products define their own option labels. A clothing product might use "Color" + "Size", while a phone uses "Storage" + "Color". Labels are snapshotted into `order_items.variant_option*_label` at checkout.
 
 #### `product_variants` ⚠️ Transaction Hub
@@ -261,15 +213,6 @@
 | price | DECIMAL(10,2) | NOT NULL — original price |
 | sale_price | DECIMAL(10,2) | NULL — promotional price |
 | stock_quantity | INT | NOT NULL, DEFAULT `0` |
-
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_product_variants_product_options` | product_id, option1, option2 | Lookup variants by product + options |
-| `uq_pv_both_options` | product_id, option1, option2 | UNIQUE (filtered: both NOT NULL) |
-| `uq_pv_option1_only` | product_id, option1 | UNIQUE (filtered: option1 NOT NULL, option2 NULL) |
-| `uq_pv_no_options` | product_id | UNIQUE (filtered: both NULL) — single-variant product |
 
 > **Critical design decision:** `cart_items` and `order_items` FK to `product_variants`, **NOT** to `products`. Each combination of option1 + option2 = 1 separate variant row. Columns are generic (`option1`/`option2`) instead of domain-specific (`color`/`size`) to support any product type.
 
@@ -355,12 +298,6 @@
 | variant_option2_label | NVARCHAR(50) | NULL — **snapshot** of `products.option2_label` (e.g. "Kích thước") |
 | variant_option2_value | NVARCHAR(50) | NULL — **snapshot** of `product_variants.option2` (e.g. "L") |
 
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_order_items_shop_id` | shop_id | Filter order items by shop |
-
 > All snapshot fields are copied at purchase time — immune to future product edits/deletions. The `variant_option*` fields preserve the variant attributes (label from product, value from variant) so order history displays correctly even if the product is later modified. `shop_id` and `shop_name` are nullable — historical order_items from before the shop feature may have NULL values.
 
 ---
@@ -423,13 +360,6 @@
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 | updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_coupons_is_active` | is_active | Filter active coupons |
-| `idx_coupons_expires_at` | expires_at | Scheduled cleanup / expiration queries |
-
 > **Scope design:** `scope = 'all'` applies to entire order. `scope = 'categories'` uses `coupon_categories` junction table (includes sub-categories via recursive `parent_id` traversal). `scope = 'products'` uses `coupon_products` junction table. `min_order_amount` checks against applicable items total only, not entire cart.
 
 #### `coupon_categories` — Junction
@@ -468,14 +398,6 @@
 | status | NVARCHAR(20) | NOT NULL, DEFAULT `'applied'` — `'applied'` / `'reversed'` |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_coupon_usages_coupon_id` | coupon_id | List usages per coupon |
-| `idx_coupon_usages_user_id_coupon_id` | user_id, coupon_id | Per-user usage count check |
-| `idx_coupon_usages_order_id` | order_id | Find usage by order (for reversal) |
-
 > **Soft reversal:** On order cancellation, `status` changes to `'reversed'` and `coupons.current_uses` is decremented. No hard delete — preserves audit trail. Optimistic locking on `current_uses` increment prevents race conditions.
 
 ---
@@ -494,13 +416,6 @@
 | data | NVARCHAR(MAX) | NULL — JSON payload (e.g. `{ orderId, oldStatus, newStatus }`) |
 | is_read | BIT | NOT NULL, DEFAULT `0` |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
-
-**Indexes:**
-
-| Index | Column(s) | Purpose |
-|-------|-----------|---------|
-| `idx_notifications_user_id_is_read` | user_id, is_read | Paginated listing + unread count query |
-| `idx_notifications_created_at` | created_at | Sort by newest first |
 
 > **Design decisions:**
 > - **Event-driven creation** — notifications are created by `NotificationListener` via `@OnEvent('order.status_updated')`. Best-effort async: failures are logged, never propagate to the order flow.
@@ -556,77 +471,9 @@ erDiagram
     coupons ||--o{ coupon_usages : "has usages"
 ```
 
-**Key relationships to note:**
-- **`roles` ↔ `permissions`** linked via `role_permissions` junction — dynamic RBAC, not hardcoded role checks
-- **`users` → `shops`** is 1:1 (UNIQUE on `user_id`) — each seller has exactly one shop
-- **`shops` → `products`** — products belong to shops, not directly to users. Public product queries join shops and filter `status = 'active'`
-- **`product_variants`** is the transaction hub — both `cart_items` and `order_items` FK here, not to `products`
-- **`products`** defines `option1_label`/`option2_label`, **`product_variants`** stores `option1`/`option2` values — generic axes, not `color`/`size`
-- **`reviews`** has a 3-way link: `user_id` + `product_id` + `order_id`
-- **`categories`** self-references via `parent_id` for N-level nesting
-- **`coupons`** uses junction tables (`coupon_categories`, `coupon_products`) for scope targeting, and `coupon_usages` for audit trail
-- **`notifications`** FK to `users` only — created asynchronously via `order.status_updated` event, not directly linked to orders table (order reference stored in JSON `data` field)
-- **`user_auth_providers`** supports multi-provider OAuth — each user can link multiple providers (Google, Facebook). Replaces single `provider`/`provider_id` columns
-- **`oauth_codes`** stores temporary one-time codes for secure OAuth callback exchange — deleted before returning tokens
-
 ---
 
-## 4. Conventions
-
-| Convention | Implementation |
-|------------|----------------|
-| Primary keys | Auto-increment `INT` |
-| Soft delete | `is_active` (BIT) on `users`, `products` |
-| Soft revoke | `is_revoked` (BIT) on `refresh_tokens` |
-| Timestamps | `created_at`, `updated_at` — `DATETIME2` |
-| Enums | String columns: `orders.status`, `payment_method`, `payment_status`, `shops.status` |
-| SEO slugs | `slug` (UNIQUE) on `categories`, `products`, `shops` |
-| Unicode | `NVARCHAR` everywhere — Vietnamese names, addresses |
-| Money | `DECIMAL(10,2)` — never `FLOAT` or `MONEY` |
-| JSON columns | `NVARCHAR(MAX)` — `orders.shipping_address` |
-| Index naming | `idx_{table}_{column}` |
-
----
-
-## 5. TypeORM Patterns
-
-### Entity Decorator Example
-
-```typescript
-// src/features/product/entities/product-variant.entity.ts
-@Entity('product_variants')
-export class ProductVariant {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column({ type: 'nvarchar', length: 50, unique: true })
-  sku: string;
-
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
-  option1: string | null;
-
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
-  option2: string | null;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  sale_price: number;
-
-  @Column({ type: 'int', default: 0 })
-  stock_quantity: number;
-
-  @Column()
-  product_id: number;
-
-  @ManyToOne(() => Product, (product) => product.variants)
-  @JoinColumn({ name: 'product_id' })
-  product: Product;
-}
-```
-
-### Relation Loading Strategy
+## 4. Relation Loading Strategy
 
 | Feature | Relation | Strategy | Reason |
 |---------|----------|----------|--------|
@@ -641,67 +488,7 @@ export class ProductVariant {
 
 ---
 
-## 6. Migration Rules
-
-### Migration Order (FK-safe)
-
-```
-1. roles
-2. permissions
-3. role_permissions  (FKs to roles, permissions)
-4. users
-5. refresh_tokens
-5a. user_auth_providers  (FK to users)
-5b. oauth_codes  (FK to users)
-6. addresses
-7. shops  (FK to users)
-8. categories
-9. products  (FKs to categories, shops)
-10. product_variants + product_images  (parallel — both FK to products)
-11. carts
-12. cart_items
-13. orders  (includes coupon_code, discount_amount columns)
-14. order_items  (includes shop_id, shop_name snapshots)
-15. reviews  (FKs to users, products, orders)
-16. wishlist_items  (FKs to users, products)
-17. coupons
-18. coupon_categories + coupon_products  (parallel — both FK to coupons)
-19. coupon_usages  (FKs to coupons, users, orders)
-20. notifications  (FK to users)
-```
-
-### Commands
-
-```bash
-# Generate a new migration after entity changes
-npx typeorm migration:generate src/database/migrations/MigrationName -d src/database/data-source.ts
-
-# Run pending migrations
-npx typeorm migration:run -d src/database/data-source.ts
-
-# Revert last migration
-npx typeorm migration:revert -d src/database/data-source.ts
-```
-
-### Migration Naming
-
-Format: `{timestamp}-{DescriptiveName}.ts`
-
-Examples:
-- `1700000000000-CreateRolesAndUsersTable.ts`
-- `1700000001000-CreateProductCatalogTables.ts`
-- `1700000002000-AddIndexesToRefreshTokens.ts`
-
-### Rollback Policy
-
-- Every migration **must** have a working `down()` method
-- Test rollback locally before pushing to `main`
-- Production rollbacks require team lead approval
-- Data migrations (seed/backfill) go in separate migration files from schema changes
-
----
-
-## 7. Indexing Strategy
+## 5. Indexing Strategy
 
 High-read tables get explicit indexes beyond PKs and unique constraints:
 
@@ -721,6 +508,9 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | products | `idx_products_category_id` | category_id | Filter products by category |
 | products | `idx_products_shop_id` | shop_id | Filter products by shop |
 | product_variants | `idx_product_variants_product_options` | product_id, option1, option2 | Lookup variants by product + options |
+| product_variants | `uq_pv_both_options` | product_id, option1, option2 | UNIQUE (filtered: both NOT NULL) |
+| product_variants | `uq_pv_option1_only` | product_id, option1 | UNIQUE (filtered: option1 NOT NULL, option2 NULL) |
+| product_variants | `uq_pv_no_options` | product_id | UNIQUE (filtered: both NULL) — single-variant product |
 | product_variants | `idx_product_variants_sku` | sku | Already covered by UNIQUE |
 | order_items | `idx_order_items_order_id` | order_id | Load items for an order |
 | order_items | `idx_order_items_shop_id` | shop_id | Filter order items by shop |

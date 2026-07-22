@@ -50,27 +50,13 @@ src/
 ├── App.tsx                            — wraps Providers + RouterProvider
 │
 ├── core/                              — app-level infrastructure, initialized once
-│   ├── providers/
-│   │   ├── AppProviders.tsx           — composes QueryClient + Zustand + ErrorBoundary
-│   │   └── query-client.ts            — staleTime 5min products, 0 cart, retry 1 mutations
-│   ├── router/
-│   │   ├── router.tsx                 — createBrowserRouter, lazy-loaded feature pages
-│   │   ├── AuthGuard.tsx              — redirects /login if !isAuthenticated
-│   │   └── RoleGuard.tsx              — redirects /403 if role !== required
-│   ├── api/
-│   │   ├── axios-instance.ts          — baseURL, JWT interceptor, 401 refresh, error transform
-│   │   └── api.types.ts               — SuccessResponse<T>, PaginatedResponse<T>, ApiError
-│   └── layouts/
-│       ├── MainLayout.tsx             — header (nav, cart badge, user menu) + outlet + footer
-│       ├── AdminLayout.tsx            — admin sidebar + outlet
-│       └── AuthLayout.tsx             — centered card for login/register
+│   ├── providers/                     — AppProviders (QueryClient + Zustand + ErrorBoundary), query-client config
+│   ├── router/                        — createBrowserRouter, AuthGuard, PortalGuard, lazy-loaded pages
+│   ├── api/                           — axios-instance (JWT interceptor, 401 refresh, error transform), api.types
+│   └── layouts/                       — MainLayout, AdminLayout, SellerLayout, ShipperLayout, AuthLayout, AccountLayout
 │
-├── shared/                            — reusable, no business logic
-│   ├── components/
-│   │   ├── ui/                        — Button, Input, Modal, Badge, Skeleton, Spinner, Table
-│   │   ├── form/                      — FormInput, FormSelect, FormTextarea (RHF integrated)
-│   │   ├── feedback/                  — EmptyState, ErrorBoundary, Toast
-│   │   └── data/                      — Pagination, SortableHeader, FilterBar
+├── shared/                            — reusable UI primitives, hooks, utils, types, constants (no business logic)
+│   ├── components/                    — ui/ (Button, Input, Modal, Badge, Skeleton, Table), form/ (RHF wrappers), feedback/, data/ (Pagination, FilterBar)
 │   ├── hooks/                         — useDebounce, usePagination, useMediaQuery
 │   ├── utils/                         — formatPrice (VND), formatDate, truncateText, storage
 │   ├── types/                         — PaginationParams, SelectOption, SortParams
@@ -98,58 +84,22 @@ src/
 
 ## 3. Feature Anatomy
 
-Example: `src/features/cart/`
-
 ```
-cart/
-├── pages/
-│   └── CartPage.tsx                   — route-level page (default export for React.lazy)
-├── components/
-│   ├── CartItemList.tsx               — renders items, quantity change + remove
-│   ├── CartItemRow.tsx                — single item: variant info, quantity, remove
-│   ├── CartSummary.tsx                — subtotal, shipping, checkout button
-│   ├── CartBadge.tsx                  — header icon + itemCount from useCartStore
-│   ├── AddToCartButton.tsx            — exported via barrel, used by product feature
-│   ├── CartPageSkeleton.tsx           — loading skeleton
-│   └── *.test.tsx                     — co-located tests
-├── hooks/
-│   ├── useCart.ts                     — useQuery(['cart'], cartService.getCart)
-│   ├── useAddToCart.ts                — useMutation, optimistic update + rollback
-│   ├── useUpdateCartItem.ts           — useMutation, optimistic
-│   ├── useRemoveCartItem.ts           — useMutation, optimistic
-│   └── useMergeCart.ts                — useMutation, called on login success
-├── services/
-│   └── cart.service.ts                — getCart, addItem, updateItem, removeItem, merge
-├── stores/
-│   └── cart.store.ts                  — useCartStore: { itemCount, setItemCount }
-├── types/
-│   └── cart.types.ts                  — Cart, CartItem, AddToCartRequest
-├── utils/
-│   └── cart.util.ts                   — calculateSubtotal, isCartEmpty
-├── index.ts                           — barrel: CartPage, CartBadge, AddToCartButton, hooks, store, types
-└── context.md
+src/features/[feature]/
+├── pages/             — route-level pages (default export for React.lazy)
+├── components/        — UI components + co-located *.test.tsx
+├── hooks/             — TanStack Query wrappers (useQuery/useMutation), query key factory
+├── services/          — typed Axios calls, 1:1 to API_SPEC endpoints
+├── stores/            — Zustand (only if cross-feature client state needed)
+├── types/             — request/response types, domain models
+├── utils/             — feature-specific helpers
+├── index.ts           — barrel file: public exports only
+└── context.md         — purpose, pages, API deps, state decisions
 ```
 
 ---
 
 ## 4. Data Flow
-
-### Read Flow — Product Listing
-
-```
-User visits /products?category_id=5&page=2
-  │
-  ├─ ① React Router       — extracts searchParams
-  ├─ ② ProductListPage    — reads params via usePagination + useSearchParams
-  ├─ ③ useProducts(params) — TanStack Query checks cache
-  │     Cache miss → productService.getProducts(params)
-  │       → Axios GET /api/v1/products?category_id=5&page=2
-  │       → Request interceptor attaches JWT (optional, @Public)
-  │       → Response: { success, data, meta }
-  │       → TanStack Query caches result
-  ├─ ④ Render              — ProductCard[] + Pagination
-  └─ ⑤ Prefetch            — hover ProductCard → prefetchQuery(productKeys.detail(slug))
-```
 
 ### Write Flow — Add to Cart (Optimistic)
 
@@ -235,76 +185,9 @@ graph TD
 
 ---
 
-## 6. Routing Structure
+## 6. Routing
 
-### Public Routes (no auth)
-
-| Path | Page | Feature |
-|------|------|---------|
-| `/` | Home (product listing) | product |
-| `/products` | ProductListPage | product |
-| `/products/:slug` | ProductDetailPage | product + cart + review + wishlist + shop |
-| `/categories/:slug` | CategoryPage | product |
-| `/shops/:slug` | ShopProfilePage | shop + product |
-| `/login` | LoginPage | auth |
-| `/register` | RegisterPage | auth |
-
-### Protected Routes (AuthGuard)
-
-| Path | Page | Feature |
-|------|------|---------|
-| `/cart` | CartPage | cart |
-| `/checkout` | CheckoutPage | order + cart + user-profile |
-| `/orders` | OrderHistoryPage | order |
-| `/orders/:id` | OrderDetailPage | order |
-| `/profile` | ProfilePage | user-profile |
-| `/profile/addresses` | AddressListPage | user-profile |
-| `/profile/reviews` | MyReviewsPage | review |
-| `/wishlist` | WishlistPage | wishlist |
-| `/notifications` | NotificationPage | notification |
-
-### Admin Routes (AuthGuard + RoleGuard)
-
-| Path | Page | Feature |
-|------|------|---------|
-| `/admin/dashboard` | AdminDashboardPage | dashboard |
-| `/admin/products` | AdminProductListPage | product |
-| `/admin/products/new` | AdminProductCreatePage | product |
-| `/admin/products/:id/edit` | AdminProductEditPage | product |
-| `/admin/categories` | AdminCategoryListPage | product |
-| `/admin/categories/new` | AdminCategoryCreatePage | product |
-| `/admin/categories/:id/edit` | AdminCategoryEditPage | product |
-| `/admin/orders` | AdminOrderListPage | order |
-| `/admin/orders/:id` | AdminOrderDetailPage | order |
-| `/admin/users` | AdminUserListPage | auth |
-| `/admin/users/:id` | AdminUserDetailPage | auth |
-| `/admin/roles` | AdminRoleListPage | auth |
-| `/admin/permissions` | AdminPermissionPage | auth |
-| `/admin/reviews` | AdminReviewListPage | review |
-| `/admin/wishlist` | AdminWishlistPopularPage | wishlist |
-| `/admin/coupons` | AdminCouponListPage | coupon |
-| `/admin/coupons/new` | AdminCouponCreatePage | coupon |
-| `/admin/coupons/:id/edit` | AdminCouponEditPage | coupon |
-
-### Seller Routes (AuthGuard + PortalGuard)
-
-| Path | Page | Feature |
-|------|------|---------|
-| `/seller/dashboard` | SellerDashboardPage | dashboard |
-| `/seller/shop` | SellerShopSettingsPage | shop |
-| `/seller/products` | SellerProductListPage | product |
-| `/seller/products/new` | SellerProductCreatePage | product |
-| `/seller/products/:id/edit` | SellerProductEditPage | product |
-| `/seller/orders` | SellerOrderListPage | order |
-
-### Shipper Routes (AuthGuard + PortalGuard)
-
-| Path | Page | Feature |
-|------|------|---------|
-| `/shipper/dashboard` | ShipperDashboardPage | dashboard |
-| `/shipper/deliveries` | ShipperDeliveryListPage | order |
-
-**Config:** `createBrowserRouter` in `core/router/router.tsx`. Each page lazy-loaded via `React.lazy`. Layouts as route parents. 404 catch-all → NotFoundPage.
+All routes defined in `core/router/router.tsx`. Each page lazy-loaded via `React.lazy`. Layouts as route parents (`MainLayout`, `AuthLayout`, `AdminLayout`, `SellerLayout`, `ShipperLayout`). Guards: `AuthGuard` → `/login`, `PortalGuard` → `/403`. 404 catch-all → NotFoundPage.
 
 ---
 
@@ -336,56 +219,6 @@ features/[x]/services/[x].service.ts    — typed functions, 1:1 to API_SPEC end
 features/[x]/hooks/use[Action].ts       — TanStack Query wrappers, cache keys, optimistic updates
     ↓
 features/[x]/components/[X].tsx          — calls hooks, renders data/loading/error, never touches Axios
-```
-
-### Query Key Factory
-
-```typescript
-export const productKeys = {
-  all:    ['products'] as const,
-  list:   (filters: ProductListParams) => ['products', 'list', filters] as const,
-  detail: (slug: string) => ['products', 'detail', slug] as const,
-};
-
-export const cartKeys = {
-  current: () => ['cart'] as const,
-};
-
-export const orderKeys = {
-  list:   (params: OrderListParams) => ['orders', 'list', params] as const,
-  detail: (id: number) => ['orders', 'detail', id] as const,
-  admin:  (filters: AdminOrderFilters) => ['admin', 'orders', filters] as const,
-};
-
-export const wishlistKeys = {
-  all:       ['wishlist'] as const,
-  list:      (params: WishlistListParams) => ['wishlist', 'list', params] as const,
-  check:     (productId: number) => ['wishlist', 'check', productId] as const,
-  bulkCheck: (productIds: number[]) => ['wishlist', 'bulkCheck', productIds] as const,
-};
-
-export const shopKeys = {
-  all:      ['shops'] as const,
-  detail:   (slug: string) => ['shops', 'detail', slug] as const,
-  products: (slug: string, params: Record<string, unknown>) => ['shops', 'products', slug, params] as const,
-};
-
-export const dashboardKeys = {
-  stats: () => ['dashboard', 'stats'] as const,
-};
-
-export const notificationKeys = {
-  all:         ['notifications'] as const,
-  list:        (params: NotificationListParams) => ['notifications', 'list', params] as const,
-  unreadCount: () => ['notifications', 'unread-count'] as const,
-};
-
-export const adminCouponKeys = {
-  all:       ['admin', 'coupons'] as const,
-  list:      (params: CouponListParams) => ['admin', 'coupons', 'list', params] as const,
-  detail:    (id: number) => ['admin', 'coupons', 'detail', id] as const,
-  usages:    (id: number) => ['admin', 'coupons', 'usages', id] as const,
-};
 ```
 
 ### Cache Invalidation Map

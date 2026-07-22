@@ -15,7 +15,7 @@ graph TB
         Pipes --> Features
 
         subgraph Features["Feature Modules"]
-            Auth["auth<br/>roles, permissions, role_permissions,<br/>users, refresh_tokens"]
+            Auth["auth<br/>roles, permissions, role_permissions,<br/>users, refresh_tokens,<br/>user_auth_providers, oauth_codes"]
             UP["user-profile<br/>addresses"]
             Prod["product<br/>categories, products,<br/>variants, images"]
             Shop["shop<br/>shops"]
@@ -48,48 +48,36 @@ src/
 │   ├── app.config.ts                    — port, CORS, global prefix (api/v1)
 │   ├── database.config.ts               — TypeORM SQL Server connection
 │   ├── jwt.config.ts                    — access secret/expiry (15m), refresh expiry (7d)
+│   ├── mail.config.ts                   — SMTP host/port/credentials (Mailtrap for dev)
+│   ├── oauth.config.ts                  — Google/Facebook OAuth client IDs/secrets (optional)
 │   └── config.module.ts                 — @nestjs/config with .env validation via Joi
 │
-├── common/                              — reusable across all features
-│   ├── decorators/
-│   │   ├── current-user.decorator.ts    — @CurrentUser() extracts user from JWT payload
-│   │   ├── public.decorator.ts          — @Public() skips JwtAuthGuard
-│   │   ├── roles.decorator.ts           — @Roles('admin', 'customer') (legacy)
-│   │   └── permissions.decorator.ts     — @Permissions(PERMISSIONS.PRODUCTS_CREATE)
-│   ├── guards/
-│   │   ├── jwt-auth.guard.ts            — global, validates access token
-│   │   ├── roles.guard.ts              — per-route, checks role against @Roles() (legacy)
-│   │   └── permissions.guard.ts         — per-route, checks permissions via @Permissions()
-│   ├── interceptors/
-│   │   ├── transform.interceptor.ts     — wraps: { success, data, meta? }
-│   │   └── logging.interceptor.ts       — logs method, URL, duration
-│   ├── filters/
-│   │   └── http-exception.filter.ts     — formats: { success: false, error: { code, message } }
-│   ├── pipes/
-│   │   └── parse-slug.pipe.ts           — validates slug format
-│   ├── dto/
-│   │   └── pagination.dto.ts            — shared page + limit for all list endpoints
-│   ├── validators/
-│   │   └── is-vietnamese-phone.validator.ts
-│   ├── exceptions/
-│   │   ├── insufficient-stock.exception.ts
-│   │   └── cart-empty.exception.ts
-│   ├── constants/
-│   │   ├── index.ts                     — ORDER_STATUS, PAYMENT_METHOD, PAYMENT_STATUS enums
-│   │   └── permissions.constant.ts      — PERMISSIONS object + PermissionString type
-│   └── interfaces/
-│       └── paginated-result.interface.ts
+├── common/                              — shared across all features
+│   ├── decorators/                      — @CurrentUser(), @Public(), @Roles(), @Permissions()
+│   ├── guards/                          — jwt-auth, roles (legacy), permissions
+│   ├── interceptors/                    — transform (response wrapper), logging
+│   ├── filters/                         — http-exception (error formatter)
+│   ├── pipes/                           — parse-slug
+│   ├── dto/                             — pagination.dto.ts (shared)
+│   ├── validators/                      — is-vietnamese-phone
+│   ├── exceptions/                      — insufficient-stock, cart-empty
+│   ├── constants/                       — ORDER_STATUS, PAYMENT enums, PERMISSIONS
+│   └── interfaces/                      — paginated-result
 │
 ├── core/                                — initialized once at app bootstrap
 │   ├── database/
 │   │   ├── database.module.ts           — TypeOrmModule.forRootAsync with SQL Server config
 │   │   ├── migrations/                  — timestamp-based migration files
 │   │   └── seeds/                       — roles (customer, admin, seller, shipper), permissions, role_permissions, test data
+│   ├── mail/
+│   │   ├── mail.module.ts               — MailerModule.forRootAsync (HandlebarsAdapter)
+│   │   ├── mail.service.ts              — sendVerificationEmail, sendPasswordResetEmail
+│   │   └── templates/                   — .hbs email templates (layouts, partials, verify-email, reset-password)
 │   └── logger/
 │       └── logger.module.ts
 │
 └── features/
-    ├── auth/                            — owns: roles, permissions, role_permissions, users, refresh_tokens
+    ├── auth/                            — owns: roles, permissions, role_permissions, users, refresh_tokens, user_auth_providers, oauth_codes
     ├── user-profile/                    — owns: addresses
     ├── product/                         — owns: categories, products, product_variants, product_images
     ├── shop/                            — owns: shops (1:1 with users, seller storefront identity)
@@ -105,40 +93,18 @@ src/
 
 ---
 
-## 3. Feature Anatomy
-
-Example: `src/features/product/`
+## 3. Feature Anatomy (Template)
 
 ```
-product/
-├── product.module.ts                — imports: TypeOrmModule.forFeature([Product, ProductVariant, ProductImage, Category])
-│                                      exports: ProductService (consumed by cart, order, review)
-├── product.controller.ts            — routes: /products, /products/:slug, /categories, /variants/:id
-├── product.service.ts               — orchestrates 4 repositories, business logic
-├── repositories/
-│   ├── product.repository.ts        — findBySlug, findActive, search with pagination
-│   ├── product-variant.repository.ts — findBySku, deductStock (optimistic lock)
-│   ├── product-image.repository.ts  — findByProductId, reorder
-│   └── category.repository.ts       — findTree (recursive parent_id), findBySlug
-├── dto/
-│   ├── create-product.dto.ts
-│   ├── update-product.dto.ts
-│   ├── create-variant.dto.ts
-│   ├── product-response.dto.ts      — excludes internal fields, includes variants + images
-│   └── category-response.dto.ts
-├── entities/
-│   ├── product.entity.ts            — @Entity('products'), @OneToMany → variants, images, reviews
-│   ├── product-variant.entity.ts    — @Entity('product_variants'), @ManyToOne → product
-│   ├── product-image.entity.ts      — @Entity('product_images'), @ManyToOne → product
-│   └── category.entity.ts           — @Entity('categories'), self-ref @ManyToOne → parent
-├── types/
-│   └── product.types.ts             — ProductSortBy, ProductFilterParams
-├── utils/
-│   └── product.util.ts              — generateSlug, calculateDiscountPercent
-├── tests/
-│   ├── product.controller.spec.ts
-│   └── product.service.spec.ts
-└── context.md                       — "Product feature owns the catalog..."
+src/features/[feature]/
+├── [feature].module.ts          — imports, exports, providers
+├── [feature].controller.ts      — routes only, delegates to service
+├── [feature].service.ts         — business logic, orchestrates repositories
+├── repositories/                — one per entity, wraps TypeORM Repository<Entity>
+├── dto/                         — create-*, update-*, *-response.dto.ts
+├── entities/                    — TypeORM entities (@Entity, relations)
+├── types/, utils/, tests/
+└── context.md                   — purpose, entities, dependencies, design decisions
 ```
 
 ---
@@ -187,19 +153,6 @@ Request (JWT + CreateOrderDto)
           → ProductService.onOrderCreated()             — deducts stock (optimistic lock)
   → TransformInterceptor          — wraps: { success: true, data: OrderResponseDto }
   ← 201 Created
-```
-
-### Simple Example — GET /api/v1/products/:slug
-
-```
-Request
-  → JwtAuthGuard (@Public() — skipped)
-  → ParseSlugPipe                 — validates slug format
-  → ProductController.findBySlug()
-    → ProductService.findBySlug(slug)
-      → ProductRepository.findBySlug()    — joins variants + images, is_active = true
-  → TransformInterceptor
-  ← 200 OK
 ```
 
 ---
@@ -254,18 +207,20 @@ graph TD
 
 | Feature | Imports Modules | Listens To Events |
 |---------|----------------|-------------------|
-| auth | — | — |
-| user-profile | AuthModule | — |
-| shop | AuthModule | — |
+| auth | MailModule *(global module — exports AuthService, guards, permission cache to all features)* | — |
+| user-profile | *(via global AuthModule)* | — |
+| shop | *(via global AuthModule)* | — |
 | product | ShopModule | `order.created`, `order.cancelled` |
-| cart | AuthModule, ProductModule | — |
-| order | AuthModule, CartModule, ProductModule, ShopModule, ScheduleModule | — (emits `order.status_updated`, has `OrderScheduler` cron) |
-| review | AuthModule, OrderModule, ProductModule | — |
+| cart | ProductModule | — |
+| order | CartModule, ProductModule, ShopModule, ScheduleModule | — (emits `order.status_updated`, has `OrderScheduler` cron) |
+| review | OrderModule, ProductModule | — |
 | wishlist | ProductModule | — |
 | coupon | — | — |
 | upload | — | — |
 | notification | — | `order.placed`, `order.status_updated` |
 | dashboard | TypeOrmModule (Order entity), ShopModule | — |
+
+> **AuthModule is global** — registered via `AuthModule.forRoot()` in AppModule with `global: true`. All features receive AuthService, JwtAuthGuard, PermissionsGuard automatically without explicit imports.
 
 **Forbidden:** direct import of another feature's repository/entity/dto file, circular module dependencies.
 
@@ -286,17 +241,6 @@ graph TD
 
 ## 7. Configuration
 
-### Environment Variables
-
-| Variable | Example | Purpose |
-|----------|---------|---------|
-| `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` | `localhost`, `1433` | SQL Server connection |
-| `JWT_ACCESS_SECRET`, `JWT_ACCESS_EXPIRY`, `JWT_REFRESH_EXPIRY` | `secret`, `15m`, `7d` | Auth tokens |
-| `APP_PORT`, `APP_PREFIX`, `CORS_ORIGIN` | `3000`, `api/v1`, `http://localhost:5173` | App config |
-| `NODE_ENV` | `development` | Environment switch |
-
-### Rules
-
 - `config/*.config.ts` registered via `@nestjs/config` `registerAs()`
 - Validated at startup with Joi schema — app **crashes immediately** on missing/invalid env vars
 - Injected via `ConfigService.get<T>()` — **never** `process.env` directly
@@ -307,20 +251,11 @@ graph TD
 
 ## 8. Global Providers (main.ts)
 
-```typescript
-// Registered in main.ts bootstrap
-app.useGlobalGuards(new JwtAuthGuard(), new PermissionsGuard());
-app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
-app.useGlobalInterceptors(new TransformInterceptor());
-app.useGlobalFilters(new HttpExceptionFilter());
-```
-
-| Provider | Type | Scope |
-|----------|------|-------|
-| `JwtAuthGuard` | APP_GUARD | Global — `@Public()` to opt out |
-| `PermissionsGuard` | APP_GUARD | Global — activates only when `@Permissions()` present, caches per role |
-| `ValidationPipe` | APP_PIPE | Global — all DTOs validated automatically |
-| `TransformInterceptor` | APP_INTERCEPTOR | Global — wraps all success responses |
-| `HttpExceptionFilter` | APP_FILTER | Global — formats all error responses |
-| `RequestIdMiddleware` | Middleware | All routes — attaches `X-Request-Id` |
-| `RateLimitMiddleware` | Middleware | Auth routes only |
+| Provider | Registered In | Scope |
+|----------|--------------|-------|
+| `JwtAuthGuard` | AuthModule (`APP_GUARD`) | Global — `@Public()` to opt out |
+| `PermissionsGuard` | AuthModule (`APP_GUARD`) | Global — activates only when `@Permissions()` present, caches per role |
+| `ValidationPipe` | main.ts (`useGlobalPipes`) | Global — all DTOs validated, whitelist + forbidNonWhitelisted + transform |
+| `TransformInterceptor` | main.ts (`useGlobalInterceptors`) | Global — wraps all success responses |
+| `LoggingInterceptor` | main.ts (`useGlobalInterceptors`) | Global — logs method, URL, duration |
+| `HttpExceptionFilter` | main.ts (`useGlobalFilters`) | Global — formats all error responses |

@@ -16,15 +16,7 @@
 - **Method:** JWT Bearer Token (access + refresh)
 - **Header:** `Authorization: Bearer <access_token>`
 
-**Token flow:**
-
-```
-Login → { accessToken (15min), refreshToken (7d) }
-  → Every request: Authorization: Bearer <accessToken>
-  → Token expired: POST /auth/refresh { refreshToken } → new token pair
-  → Logout: POST /auth/logout → revoke refresh token (is_revoked = true)
-  → Logout all: POST /auth/logout-all → revoke all tokens for user
-```
+**Token flow:** Login → `{ accessToken (15min), refreshToken (7d) }`. Every request: `Authorization: Bearer <accessToken>`. Expired → `POST /auth/refresh` → new pair. Logout → revoke refresh token (`is_revoked = true`). Logout all → revoke all tokens for user.
 
 **Auth levels:**
 
@@ -48,33 +40,11 @@ Admin endpoints use **permission-based access control** via `@Permissions()` dec
 
 The `PermissionsGuard` resolves the user's role → looks up permissions via `role_permissions` → caches per role ID → checks against required permissions.
 
-**Auth errors:**
-
-| Code | Status | Trigger |
-|------|--------|---------|
-| AUTH_001 | 401 | Invalid credentials (wrong email/password) |
-| AUTH_002 | 401 | Access token expired or malformed |
-| AUTH_003 | 401 | Refresh token expired or revoked |
-| AUTH_004 | 403 | Insufficient permissions (missing required `resource:action`) |
-| AUTH_005 | 403 | Account deactivated (`is_active = false`) |
-
 ---
 
 ## 3. Request Conventions
 
-**Pagination** (all list endpoints):
-
-```
-GET /products?page=1&limit=20
-```
-
-Defaults: `page=1`, `limit=20`, max `limit=100`.
-
-**Sorting:**
-
-```
-GET /products?sort=created_at&order=desc
-```
+**Pagination:** `?page=1&limit=20` (defaults: `page=1`, `limit=20`, max `limit=100`). **Sorting:** `?sort=created_at&order=desc`.
 
 **Filtering by feature:**
 
@@ -86,51 +56,13 @@ GET /products?sort=created_at&order=desc
 | Reviews | `?product_id=10&rating=5` |
 | Coupons (admin) | `?search=keyword&scope=categories&discount_type=percentage&is_active=true` |
 
-**Validation:** All request bodies validated by `class-validator` DTOs via global `ValidationPipe` (`whitelist: true`, `forbidNonWhitelisted: true`, `transform: true`).
-
 ---
 
 ## 4. Response Format
 
-**Success (single):**
+**Success:** `{ "success": true, "data": { ... } }` — lists add `"meta": { "page", "limit", "total", "totalPages" }`. Delete returns `HTTP 204`, no body.
 
-```json
-{ "success": true, "data": { "id": 1, "name": "..." } }
-```
-
-**Success (list):**
-
-```json
-{
-  "success": true,
-  "data": [ ... ],
-  "meta": { "page": 1, "limit": 20, "total": 150, "totalPages": 8 }
-}
-```
-
-**Success (delete):** `HTTP 204`, no body.
-
-**Error:**
-
-```json
-{
-  "success": false,
-  "error": { "code": "PRODUCT_001", "message": "Product not found or inactive" }
-}
-```
-
-**Validation error:**
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_001",
-    "message": "Validation failed",
-    "details": [{ "field": "email", "message": "email must be a valid email address" }]
-  }
-}
-```
+**Error:** `{ "success": false, "error": { "code": "PRODUCT_001", "message": "..." } }` — validation errors add `"details": [{ "field", "message" }]`.
 
 ---
 
@@ -196,21 +128,6 @@ GET /products?sort=created_at&order=desc
 | SHOP_005 | 403 | Shop is not active (status != 'active') |
 | NOTIFICATION_001 | 404 | Notification not found |
 
-### HTTP Status Usage
-
-| Status | Usage |
-|--------|-------|
-| 200 | GET success, PUT/PATCH success |
-| 201 | POST resource created |
-| 204 | DELETE success |
-| 400 | Bad request, business rule violation |
-| 401 | Authentication failure |
-| 403 | Authorization failure |
-| 404 | Resource not found |
-| 409 | Conflict (duplicate email, SKU, slug, review) |
-| 422 | Validation failure |
-| 500 | Internal server error |
-
 ---
 
 ## 6. Customer & Public Endpoints
@@ -219,11 +136,22 @@ GET /products?sort=created_at&order=desc
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| POST | `/auth/register` | Register new customer account | Public |
-| POST | `/auth/login` | Login, returns token pair | Public |
+| POST | `/auth/register` | Register new customer account (sends OTP email, no auto-login) | Public |
+| POST | `/auth/verify-email` | Verify email with 6-digit OTP → returns token pair | Public |
+| POST | `/auth/resend-verification` | Resend verification OTP (60s cooldown, max 5/hour) | Public |
+| POST | `/auth/login` | Login, returns token pair (requires `email_verified`) | Public |
 | POST | `/auth/refresh` | Refresh access token | Public |
+| POST | `/auth/forgot-password` | Request password reset email (silent on unknown email) | Public |
+| POST | `/auth/reset-password` | Reset password with token from email | Public |
+| POST | `/auth/change-password` | Change password (local users with existing password) | Customer |
+| POST | `/auth/set-password` | Set password (OAuth users without password) | Customer |
 | POST | `/auth/logout` | Revoke current refresh token | Customer |
 | POST | `/auth/logout-all` | Revoke all refresh tokens | Customer |
+| GET | `/auth/google` | Initiate Google OAuth redirect | Public |
+| GET | `/auth/google/callback` | Google OAuth callback → redirect to frontend with code | Public |
+| GET | `/auth/facebook` | Initiate Facebook OAuth redirect | Public |
+| GET | `/auth/facebook/callback` | Facebook OAuth callback → redirect to frontend with code | Public |
+| POST | `/auth/oauth/exchange` | Exchange one-time OAuth code for token pair | Public |
 
 ### User Profile — `/api/v1/users`, `/api/v1/addresses`
 
@@ -456,284 +384,3 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 
 > **Partial failure tolerance:** Uses `Promise.allSettled()` — if one query fails, other sections still return. Failed sections return `null` or `[]`. Response includes 7 data sections: `summary`, `revenueOverTime`, `ordersByStatus`, `recentOrders`, `usersByRole`, `topProducts`, `lowStockAlerts`.
 
----
-
-## 8. Endpoint Details
-
-### POST `/api/v1/auth/login`
-
-**Request:**
-
-```json
-{ "email": "user@example.com", "password": "securePassword123" }
-```
-
-**Success (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "accessToken": "eyJhbGciOi...",
-    "refreshToken": "dGhpcyBpcyBh...",
-    "user": { "id": 1, "email": "user@example.com", "full_name": "Nguyen Van A", "role": "customer" }
-  }
-}
-```
-
-**Errors:** AUTH_001 (invalid credentials), AUTH_005 (account deactivated)
-
----
-
-### POST `/api/v1/auth/refresh`
-
-**Request:**
-
-```json
-{ "refreshToken": "dGhpcyBpcyBh..." }
-```
-
-**Success (200):**
-
-```json
-{ "success": true, "data": { "accessToken": "eyJhbGciOi...", "refreshToken": "bmV3IHRva2Vu..." } }
-```
-
-**Flow:** Hash token → lookup in `refresh_tokens` → check `is_revoked` → check `expires_at` → generate new pair → revoke old token, create new.
-
-**Errors:** AUTH_003 (expired/revoked)
-
----
-
-### POST `/api/v1/orders` (Checkout)
-
-**Request:**
-
-```json
-{
-  "payment_method": "cod",
-  "address_id": 5,
-  "coupon_code": "SUMMER2026"
-}
-```
-
-> `coupon_code` is optional. If provided, it is validated and applied to the order.
-
-**Flow:**
-
-```
-Read cart → validate stock for each variant → snapshot product_name/sku/price/thumbnail
-→ lookup address by address_id → JSON-serialize as shipping_address snapshot
-→ if coupon_code: validate coupon → calculate scope-aware discount (all/categories/products)
-→ total_amount = itemsTotal - discount_amount + shipping_fee
-→ Transaction: create order + order_items + record coupon usage + clear cart
-→ emit order.created event
-```
-
-**Success (201):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": 42,
-    "status": "pending",
-    "payment_method": "cod",
-    "payment_status": "unpaid",
-    "shipping_fee": 30000.00,
-    "coupon_code": "SUMMER2026",
-    "discount_amount": 100000.00,
-    "total_amount": 1150000.00,
-    "shipping_address": {
-      "full_name": "Nguyen Van A",
-      "phone": "0901234567",
-      "address_line": "123 Le Loi",
-      "city": "Ho Chi Minh"
-    },
-    "order_items": [
-      {
-        "product_name": "Áo thun nam basic",
-        "sku": "ATN-BLK-L",
-        "price": 250000.00,
-        "quantity": 2,
-        "thumbnail_url": "https://cdn.example.com/img/atn-blk.jpg"
-      }
-    ],
-    "created_at": "2026-05-07T10:30:00.000Z"
-  }
-}
-```
-
-**Errors:** CART_002 (empty cart), ORDER_002 (insufficient stock), AUTH_002 (token expired), COUPON_001-008 (coupon validation errors)
-
----
-
-### POST `/api/v1/cart/merge`
-
-**Request:**
-
-```json
-{ "session_id": "guest_abc123" }
-```
-
-**Flow:** Find guest cart by `session_id` → find user cart → merge items (same variant → sum quantities) → delete guest cart.
-
-**Success (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": 10,
-    "items": [
-      { "id": 1, "product_variant_id": 5, "quantity": 3, "variant": { "sku": "ATN-BLK-L", "price": 250000.00, "color": "Black", "size": "L" } }
-    ]
-  }
-}
-```
-
-**Errors:** CART_001 (guest cart not found)
-
----
-
-### POST `/api/v1/reviews`
-
-**Request:**
-
-```json
-{ "product_id": 10, "order_id": 42, "rating": 5, "comment": "Chất lượng tốt, giao hàng nhanh" }
-```
-
-**Flow:** Verify order belongs to user → verify order status = `completed` → verify product exists in order_items → check no duplicate review for same order + product → create review.
-
-**Success (201):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": 7,
-    "product_id": 10,
-    "order_id": 42,
-    "rating": 5,
-    "comment": "Chất lượng tốt, giao hàng nhanh",
-    "created_at": "2026-05-07T14:00:00.000Z"
-  }
-}
-```
-
-**Errors:** REVIEW_001 (not purchased), REVIEW_002 (duplicate review), ORDER_004 (order not yours)
-
----
-
-### POST `/api/v1/coupons/validate`
-
-**Request:**
-
-```json
-{ "code": "SUMMER2026" }
-```
-
-**Success (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "valid": true,
-    "code": "SUMMER2026",
-    "discount_type": "percentage",
-    "discount_value": 10,
-    "max_discount_amount": 100000,
-    "min_order_amount": 200000,
-    "scope": "categories",
-    "applicable_category_ids": [5, 12],
-    "applicable_product_ids": null
-  }
-}
-```
-
-**Flow:** Find coupon by code (uppercase) → check `is_active` → check date range → check global usage limit → check per-user usage limit → return discount info with scope details.
-
-**Errors:** COUPON_001 (not found), COUPON_002 (expired), COUPON_003 (limit exceeded), COUPON_004 (user limit), COUPON_006 (inactive)
-
----
-
-### POST `/api/v1/admin/coupons`
-
-**Request (scope = categories):**
-
-```json
-{
-  "code": "FASHION20",
-  "description": "Giảm 20% cho thời trang",
-  "discount_type": "percentage",
-  "discount_value": 20,
-  "scope": "categories",
-  "category_ids": [5, 12],
-  "max_discount_amount": 200000,
-  "min_order_amount": 300000,
-  "max_uses": 500,
-  "max_uses_per_user": 1,
-  "starts_at": "2026-06-01T00:00:00Z",
-  "expires_at": "2026-06-30T23:59:59Z"
-}
-```
-
-**Request (scope = products):**
-
-```json
-{
-  "code": "IPHONE50K",
-  "discount_type": "fixed",
-  "discount_value": 50000,
-  "scope": "products",
-  "product_ids": [101, 102, 103],
-  "starts_at": "2026-06-01T00:00:00Z",
-  "expires_at": "2026-06-15T23:59:59Z"
-}
-```
-
-**Success (201):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "code": "FASHION20",
-    "description": "Giảm 20% cho thời trang",
-    "discount_type": "percentage",
-    "discount_value": 20,
-    "scope": "categories",
-    "min_order_amount": 300000,
-    "max_discount_amount": 200000,
-    "max_uses": 500,
-    "max_uses_per_user": 1,
-    "current_uses": 0,
-    "starts_at": "2026-06-01T00:00:00.000Z",
-    "expires_at": "2026-06-30T23:59:59.000Z",
-    "is_active": true,
-    "category_ids": [5, 12],
-    "product_ids": [],
-    "created_at": "2026-05-20T10:00:00.000Z"
-  }
-}
-```
-
-**Errors:** COUPON_007 (duplicate code)
-
----
-
-## 9. Swagger Integration
-
-- **Library:** `@nestjs/swagger`
-- **URL:** `/api/v1/docs` (development only)
-- **Tags (Customer/Public):** Auth, User Profile, Product Catalog, Shop, Cart, Order, Review, Wishlist, Coupon, Notification
-- **Tags (Admin):** Admin: Roles, Admin: Permissions, Admin: Users, Admin: Categories, Admin: Products, Admin: Shops, Admin: Orders, Admin: Reviews, Admin: Wishlist, Admin: Coupons, Admin: Dashboard, Upload
-- **Tags (Seller):** Seller: Shop
-- **Decorators:**
-  - DTOs: `@ApiProperty()` on every field
-  - Controllers: `@ApiTags('Admin: Products')`, `@ApiBearerAuth()`
-  - Endpoints: `@ApiOperation()`, `@ApiResponse()`, `@ApiQuery()` for pagination/filter params
-  - Admin controllers: separate controller files per feature (e.g. `admin-product.controller.ts`)
