@@ -1,6 +1,6 @@
 import { api } from '@/core/api/axios-instance';
 import type { SuccessResponse, PaginatedResponse } from '@/core/api/api.types';
-import type { Product, ProductListItem, Category, ProductListParams, CategoryDetail, HomepageData } from '../types/product.types';
+import type { Product, ProductListItem, Category, ProductListParams, CategoryDetail, HomepageData, SearchSuggestions, VisualSearchResult } from '../types/product.types';
 
 export const productService = {
   getList: (params: ProductListParams) =>
@@ -17,4 +17,15 @@ export const productService = {
 
   getHomepage: () =>
     api.get<SuccessResponse<HomepageData>>('/homepage'),
+
+  getSuggestions: (q: string, limit?: number) =>
+    api.get<SuccessResponse<SearchSuggestions>>('/products/suggestions', { params: { q, limit } }),
+
+  searchByImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<SuccessResponse<VisualSearchResult>>('/products/search-by-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };

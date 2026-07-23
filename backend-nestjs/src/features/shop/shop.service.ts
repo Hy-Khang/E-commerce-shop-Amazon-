@@ -49,6 +49,10 @@ export class ShopService {
     return this.shopRepository.findActivePaginated(query);
   }
 
+  async suggestShops(query: string, limit: number): Promise<{ name: string; slug: string; logo_url: string | null }[]> {
+    return this.shopRepository.suggestShops(query, limit);
+  }
+
   async findShopBySlug(slug: string) {
     const result = await this.shopRepository.findBySlugWithStats(slug);
     if (!result) {

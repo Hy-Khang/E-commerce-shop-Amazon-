@@ -12,6 +12,8 @@ export { useToggleProductActive } from './hooks/useToggleProductActive';
 export { useAddVariant, useUpdateVariant, useDeleteVariant } from './hooks/useAdminVariants';
 export { useAddImage, useUpdateImage, useDeleteImage } from './hooks/useAdminImages';
 export { useUploadImage } from './hooks/useUploadImage';
+export { searchSuggestionKeys, useSearchSuggestions } from './hooks/useSearchSuggestions';
+export { useVisualSearch } from './hooks/useVisualSearch';
 export {
   adminCategoryKeys,
   useAdminCategories,
@@ -30,6 +32,10 @@ export { VariantSelector } from './components/VariantSelector';
 export { ImageGallery } from './components/ImageGallery';
 export { ImageUpload } from './components/ImageUpload';
 export { CategorySidebar } from './components/CategorySidebar';
+export { SearchBarWithSuggestions } from './components/SearchBarWithSuggestions';
+export { FilterSidebar } from './components/FilterSidebar';
+export { SortDropdown } from './components/SortDropdown';
+export { VisualSearchModal } from './components/VisualSearchModal';
 export { ProductCardSkeleton } from './components/ProductCardSkeleton';
 export { ProductDetailSkeleton } from './components/ProductDetailSkeleton';
 export { ShopProductsCarousel } from './components/ShopProductsCarousel';
@@ -81,5 +87,8 @@ export type {
   CreateProductFormData,
   CreateVariantFormData,
   CreateCategoryFormData,
+  SearchSuggestions,
+  VisualSearchTags,
+  VisualSearchResult,
 } from './types/product.types';
 export { createProductSchema, createVariantSchema, createCategorySchema } from './types/product.types';

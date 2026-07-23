@@ -8,12 +8,13 @@ import mailConfig from './mail.config';
 import oauthConfig from './oauth.config';
 import vnpayConfig from './vnpay.config';
 import momoConfig from './momo.config';
+import visualSearchConfig from './grok.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, jwtConfig, mailConfig, oauthConfig, vnpayConfig, momoConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailConfig, oauthConfig, vnpayConfig, momoConfig, visualSearchConfig],
       validationSchema: Joi.object({
         APP_PORT: Joi.number().default(3000),
         APP_PREFIX: Joi.string().default('api/v1'),
@@ -54,6 +55,10 @@ import momoConfig from './momo.config';
         MOMO_ENDPOINT: Joi.string().optional().default('https://test-payment.momo.vn/v2/gateway/api/create'),
         MOMO_RETURN_URL: Joi.string().optional().default('http://localhost:3000/api/v1/payments/momo/return'),
         MOMO_IPN_URL: Joi.string().optional().default('http://localhost:3000/api/v1/payments/momo/ipn'),
+        // Visual Search — OpenRouter (optional)
+        OPENROUTER_API_KEY: Joi.string().optional().allow('').default(''),
+        OPENROUTER_BASE_URL: Joi.string().optional().default('https://openrouter.ai/api/v1'),
+        OPENROUTER_MODEL: Joi.string().optional().default('google/gemma-4-31b-it:free'),
       }),
     }),
   ],

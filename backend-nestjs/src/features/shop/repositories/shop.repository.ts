@@ -164,6 +164,17 @@ export class ShopRepository {
     };
   }
 
+  async suggestShops(query: string, limit: number): Promise<{ name: string; slug: string; logo_url: string | null }[]> {
+    return this.repo
+      .createQueryBuilder('shop')
+      .select(['shop.name', 'shop.slug', 'shop.logo_url'])
+      .where('shop.status = :status', { status: ShopStatus.Active })
+      .andWhere('shop.name LIKE :q', { q: `%${query}%` })
+      .orderBy('shop.name', 'ASC')
+      .limit(limit)
+      .getMany();
+  }
+
   async existsBySlug(slug: string): Promise<boolean> {
     return this.repo.exists({ where: { slug } });
   }

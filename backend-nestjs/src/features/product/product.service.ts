@@ -30,6 +30,7 @@ import { IPaginatedResult } from '../../common/interfaces/paginated-result.inter
 import { ConfigService } from '@nestjs/config';
 import { ShopService } from '../shop/shop.service';
 import { Shop } from '../shop/entities/shop.entity';
+import { analyzeProductImage, VisualSearchAttributes } from './utils/grok-visual-search.util';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 
@@ -83,7 +84,51 @@ export class ProductService {
   // ─── Public: Products ───
 
   async findActiveProducts(query: ProductQueryDto): Promise<IPaginatedResult<Product>> {
-    return this.productRepository.findActivePaginated(query);
+    const filter: any = { ...query };
+
+    if (query.category_id) {
+      const categoryIds = await this.categoryRepository.findDescendantIds(query.category_id);
+      filter.category_ids = categoryIds;
+    }
+
+    return this.productRepository.findActivePaginated(filter);
+  }
+
+  async getSearchSuggestions(q: string, limit: number = 5) {
+    const [products, categories, shops] = await Promise.all([
+      this.productRepository.suggestProducts(q, limit),
+      this.productRepository.suggestCategories(q, limit),
+      this.shopService.suggestShops(q, limit),
+    ]);
+
+    return { products, categories, shops };
+  }
+
+  async searchByImage(
+    file: Express.Multer.File,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{ tags: VisualSearchAttributes; products: IPaginatedResult<Product> }> {
+    const apiKey = this.configService.get<string>('visualSearch.apiKey');
+    if (!apiKey) {
+      throw new BadRequestException({
+        code: 'COMMON_002',
+        message: 'Visual search is not configured',
+      });
+    }
+
+    const vsConfig = {
+      apiKey,
+      baseUrl: this.configService.get<string>('visualSearch.baseUrl')!,
+      model: this.configService.get<string>('visualSearch.model')!,
+    };
+
+    const tags = await analyzeProductImage(file.buffer, file.mimetype, vsConfig);
+    this.logger.log(`Visual search tags: ${JSON.stringify(tags)}`);
+
+    const products = await this.productRepository.findByVisualAttributes(tags, page, limit);
+
+    return { tags, products };
   }
 
   async findProductBySlug(slug: string): Promise<Product> {

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, HelpCircle, Shield, Store, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Menu, HelpCircle, Shield, Store, Truck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '@/features/auth';
-import { useCategories } from '@/features/product';
+import { useCategories, SearchBarWithSuggestions } from '@/features/product';
 import { CartBadge } from '@/features/cart';
 import { WishlistBadge } from '@/features/wishlist';
 import { NotificationBell } from '@/features/notification';
@@ -33,7 +33,7 @@ export function Header() {
           </span>
         </Link>
 
-        <SearchBar />
+        <SearchBarWithSuggestions />
 
         <div className="flex items-center gap-0.5 md:gap-1">
           <PortalLinks role={user?.role} />
@@ -66,48 +66,6 @@ export function Header() {
       <NavBar />
       <MobileNav open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
     </header>
-  );
-}
-
-function SearchBar() {
-  const navigate = useNavigate();
-  const [focused, setFocused] = useState(false);
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const query = (formData.get('search') as string).trim();
-    if (query) {
-      navigate(`${ROUTES.PRODUCTS}?search=${encodeURIComponent(query)}`);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="hidden flex-1 md:block">
-      <div
-        className={`flex items-center rounded-full border transition-all ${
-          focused
-            ? 'border-primary-400 bg-white ring-4 ring-primary-500/5'
-            : 'border-neutral-200 bg-neutral-50/80 hover:border-neutral-300'
-        }`}
-      >
-        <button
-          type="submit"
-          className="flex shrink-0 items-center justify-center pl-4 text-neutral-400 hover:text-neutral-600 transition-colors"
-          aria-label="Search"
-        >
-          <Search className="h-[18px] w-[18px]" />
-        </button>
-        <input
-          name="search"
-          type="text"
-          placeholder="Search for products..."
-          className="w-full bg-transparent py-2.5 pl-3 pr-5 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none"
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-        />
-      </div>
-    </form>
   );
 }
 

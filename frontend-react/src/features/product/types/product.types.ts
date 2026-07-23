@@ -123,6 +123,31 @@ export interface ProductListParams extends PaginationParams {
   max_price?: number;
   search?: string;
   is_active?: boolean;
+  min_rating?: number;
+  shop_id?: number;
+  in_stock?: string;
+}
+
+export interface SearchSuggestions {
+  products: { name: string; slug: string; thumbnail_url: string | null }[];
+  categories: { name: string; slug: string }[];
+  shops: { name: string; slug: string; logo_url: string | null }[];
+}
+
+export interface VisualSearchTags {
+  category: string;
+  color: string;
+  material: string;
+  style: string;
+  keywords: string[];
+}
+
+export interface VisualSearchResult {
+  tags: VisualSearchTags;
+  products: {
+    data: ProductListItem[];
+    meta: { page: number; limit: number; total: number; totalPages: number };
+  };
 }
 
 export interface AdminProductListParams extends PaginationParams {

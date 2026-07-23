@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './core/database/database.module';
 import { AuthModule } from './features/auth/auth.module';
@@ -27,6 +28,7 @@ import { AppService } from './app.service';
     DatabaseModule,
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
     AuthModule.forRoot(),
     UserProfileModule,
     ProductModule,

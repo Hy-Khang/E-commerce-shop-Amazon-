@@ -20,7 +20,7 @@
 | 9 | Coupons | 3 | 100% | 100% | **100%** | Hoàn chỉnh (cả auto-reversal) |
 | 10 | Wishlist & Reviews | 4 | 100% | 100% | **100%** | Hoàn chỉnh |
 | 11 | Notifications | 4 | 85% | 100% | **90%** | Polling-based. Chưa có Socket.IO realtime push |
-| 12 | Search & Filter | 4 | 20% | 30% | **25%** | Chỉ có LIKE search + category filter. Thiếu visual search, filter sidebar |
+| 12 | Search & Filter | 4 | 95% | 95% | **95%** | Hoàn chỉnh search/filter/sort/suggestions/visual search. Visual search chờ API key hoạt động |
 | 13 | Admin Panel | 5 | 100% | 100% | **100%** | Hoàn chỉnh (distributed across modules) |
 | 14 | Seller Dashboard & Analytics | 5 | 100% | 100% | **100%** | Hoàn chỉnh (Recharts) |
 | 15 | Shipper Dashboard | 5 | 5% | 5% | **5%** | Chỉ có role/permission seed + stub pages "Coming Soon" |
@@ -39,11 +39,11 @@
 | Trạng thái | Số module | Danh sách |
 |------------|:---------:|-----------|
 | Hoàn chỉnh (100%) | **12** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Admin Panel, Seller Dashboard |
-| Gần hoàn chỉnh (80-99%) | **1** | Notifications (90%) |
-| Đang làm dở / Thiếu nhiều | **2** | Search & Filter (25%), Shipper Dashboard (5%) |
+| Gần hoàn chỉnh (80-99%) | **2** | Search & Filter (95%), Notifications (90%) |
+| Đang làm dở / Thiếu nhiều | **1** | Shipper Dashboard (5%) |
 | Chưa làm (0%) | **7** | Order Tracking, Flash Sale, Recently Viewed, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
 
-**Tổng tiến độ ước tính: ~64% (13/22 modules hoạt động)**
+**Tổng tiến độ ước tính: ~68% (14/22 modules hoạt động)**
 
 ---
 
@@ -115,20 +115,20 @@ Hoàn chỉnh. Wishlist CRUD + bulk check. Reviews với purchase verification (
 - **Socket.IO Gateway** — hiện tại chỉ polling, chưa có WebSocket realtime push
 - Theo API_SPEC, polling là design hiện tại. Nhưng PROJECT_MODULES.md yêu cầu Socket.IO
 
-#### Module 12: Search & Filter — 25%
+#### Module 12: Search & Filter — 95%
 
 **Đã làm:**
-- Basic `LIKE` search trên product name (`?search=keyword`)
-- Filter: `category_id`, `min_price`, `max_price`, `is_active`
-- Sort: configurable column + order
-- FE: Search bar trong Header, CategorySidebar
+- **Global search** — tìm kiếm trên product name, description, category name, shop name với relevance ranking (CASE-based scoring)
+- **Sub-category recursive filter** — chọn parent category → hiển thị sản phẩm tất cả sub-categories (recursive CTE)
+- **Filter sidebar** — price range, rating (min_rating), in-stock filter, collapsible sections, mobile Drawer support
+- **Sort dropdown** — Newest, Price Low→High, Price High→Low, Best Selling, Highest Rated. Fix latent bug sort by price (dùng MIN variant price thay vì product.price)
+- **Search suggestions** — multi-type grouped dropdown (Products, Categories, Shops) với keyboard navigation, highlight matching text, debounced 300ms
+- **Visual Search (tìm bằng ảnh)** — `POST /products/search-by-image` endpoint, VisualSearchModal (drag-and-drop upload), camera button trong SearchBar, AI tag badges hiển thị kết quả. Rate limiting 10 req/min via `@nestjs/throttler`. Provider-agnostic config (OpenRouter)
+- **Result count** — hiển thị "{total} results for '{keyword}'"
+- **Pagination** — đầy đủ cho tất cả queries
 
-**Chưa làm:**
-- **Full-text search** — không dùng SQL Server `CONTAINS`/`FREETEXT`
-- **Visual Search (tìm bằng ảnh)** — không có endpoint `POST /products/search-by-image`, không có Grok API integration
-- **Filter sidebar UI** — không có price range slider, rating filter, stock filter, shop filter
-- **Search suggestions** — không có auto-suggest/autocomplete
-- **Dedicated search module** — logic nằm rải rác trong product module
+**Chưa hoàn thiện:**
+- **Visual Search API** — code hoàn chỉnh nhưng chưa có API key hoạt động (free tier providers đều bị giới hạn). Cần API key OpenRouter có credit hoặc provider khác
 
 ---
 
@@ -205,8 +205,7 @@ Backend có thêm `src/features/homepage/` với controller/service/repository r
 Dựa trên dependency map, thứ tự hoàn thành hợp lý cho các module còn lại:
 
 ### Ưu tiên 1 — Hoàn thiện modules gần xong
-1. **Search & Filter** — core UX, cần cho mua sắm
-2. **Notifications (Socket.IO)** — cần cho Chat Realtime (Module 20)
+1. **Notifications (Socket.IO)** — cần cho Chat Realtime (Module 20)
 
 ### Ưu tiên 2 — Phase 5 còn thiếu
 3. **Shipper Dashboard** — cần trước Order Tracking
@@ -229,5 +228,5 @@ Dựa trên dependency map, thứ tự hoàn thành hợp lý cho các module c�
 | `socket.io` + `@nestjs/websockets` + `@nestjs/platform-socket.io` | Notifications, Chat | BE |
 | `socket.io-client` | Notifications, Chat | FE |
 | `leaflet` + `react-leaflet` + `@types/leaflet` | Order Tracking | FE |
-| Grok API SDK / HTTP client | AI Chatbox, Visual Search | BE |
+| OpenRouter / vision API key | AI Chatbox, Visual Search | BE (đã có code, cần API key) |
 | `@nestjs/cache-manager` + `cache-manager-redis-store` | Flash Sale, Recommendations | BE |

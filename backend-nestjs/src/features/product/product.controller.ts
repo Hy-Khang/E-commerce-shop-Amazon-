@@ -2,9 +2,18 @@ import {
   Controller,
   Get,
   Param,
+  Post,
   Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import {
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiQuery,
   ApiResponse,
@@ -12,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { ProductService } from './product.service';
 import { ProductQueryDto } from './dto/product-query.dto';
+import { SearchSuggestionsQueryDto } from './dto/search-suggestions-query.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import {
   CategoryTreeResponseDto,
@@ -56,6 +66,46 @@ export class ProductController {
   @ApiResponse({ status: 200, description: 'Returns paginated product list', type: [ProductResponseDto] })
   async findAll(@Query() query: ProductQueryDto) {
     return this.productService.findActiveProducts(query);
+  }
+
+  @Public()
+  @Get('products/suggestions')
+  @ApiOperation({ summary: 'Search suggestions (products, categories, shops)' })
+  @ApiResponse({ status: 200, description: 'Returns grouped search suggestions' })
+  async getSuggestions(@Query() query: SearchSuggestionsQueryDto) {
+    return this.productService.getSearchSuggestions(query.q, query.limit);
+  }
+
+  @Public()
+  @Post('products/search-by-image')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Visual search — find products by image (AI)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+      required: ['file'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Returns AI tags and matching products' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  async searchByImage(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /^image\/(jpeg|png|webp)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.productService.searchByImage(file, pagination.page, pagination.limit);
   }
 
   @Public()

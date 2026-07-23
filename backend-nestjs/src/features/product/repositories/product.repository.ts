@@ -1,16 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Product } from '../entities/product.entity';
 import { IPaginatedResult } from '../../../common/interfaces/paginated-result.interface';
 import { ShopStatus } from '../../../common/constants';
+import { ProductSortBy } from '../dto/product-query.dto';
 
 export interface IProductFilter {
   search?: string;
   category_id?: number;
+  category_ids?: number[];
   min_price?: number;
   max_price?: number;
+  min_rating?: number;
+  shop_id?: number;
+  in_stock?: string;
   is_active?: string;
+  globalSearch?: boolean;
   sort?: string;
   order?: 'asc' | 'desc';
   page: number;
@@ -59,11 +65,8 @@ export class ProductRepository {
       .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
       .where('product.is_active = :isActive', { isActive: true });
 
-    this.applyFilters(qb, filter);
-
-    const sortColumn = filter.sort || 'created_at';
-    const sortOrder = (filter.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
-    qb.orderBy(`product.${sortColumn}`, sortOrder);
+    this.applyFilters(qb, { ...filter, globalSearch: true });
+    this.applySorting(qb, filter);
 
     const total = await qb.getCount();
     const skip = (filter.page - 1) * filter.limit;
@@ -222,29 +225,215 @@ export class ProductRepository {
     });
   }
 
-  private applyFilters(qb: any, filter: IProductFilter): void {
-    if (filter.search) {
-      qb.andWhere('product.name LIKE :search', {
-        search: `%${filter.search}%`,
-      });
+  // ─── Search Suggestions ───
+
+  async suggestProducts(query: string, limit: number): Promise<{ name: string; slug: string; thumbnail_url: string | null }[]> {
+    return this.repo
+      .createQueryBuilder('product')
+      .select(['product.name', 'product.slug', 'product.thumbnail_url'])
+      .innerJoin('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .where('product.is_active = :isActive', { isActive: true })
+      .andWhere('product.name LIKE :q', { q: `%${query}%` })
+      .orderBy('product.name', 'ASC')
+      .limit(limit)
+      .getMany();
+  }
+
+  async suggestCategories(query: string, limit: number): Promise<{ name: string; slug: string }[]> {
+    return this.repo.manager
+      .createQueryBuilder()
+      .select(['c.name AS name', 'c.slug AS slug'])
+      .from('categories', 'c')
+      .where('c.name LIKE :q', { q: `%${query}%` })
+      .orderBy('c.name', 'ASC')
+      .limit(limit)
+      .getRawMany();
+  }
+
+  // ─── Visual Search ───
+
+  async findByVisualAttributes(
+    attrs: { category?: string; color?: string; material?: string; style?: string; keywords?: string[] },
+    page: number,
+    limit: number,
+  ): Promise<IPaginatedResult<Product>> {
+    const qb = this.repo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.variants', 'variant')
+      .leftJoinAndSelect('product.images', 'image')
+      .leftJoinAndSelect('product.category', 'category')
+      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .where('product.is_active = :isActive', { isActive: true });
+
+    const orClauses: string[] = [];
+    const scoreExprs: string[] = [];
+    const params: Record<string, any> = {};
+
+    if (attrs.category) {
+      params.vsCat = `%${attrs.category}%`;
+      orClauses.push('category.name LIKE :vsCat');
+      scoreExprs.push('CASE WHEN category.name LIKE :vsCat THEN 5 ELSE 0 END');
     }
 
-    if (filter.category_id) {
+    if (attrs.color) {
+      params.vsColor = `%${attrs.color}%`;
+      orClauses.push(
+        `product.id IN (SELECT pv_c.product_id FROM product_variants pv_c WHERE pv_c.option1 LIKE :vsColor OR pv_c.option2 LIKE :vsColor)`,
+      );
+      scoreExprs.push(
+        `CASE WHEN product.id IN (SELECT pv_c2.product_id FROM product_variants pv_c2 WHERE pv_c2.option1 LIKE :vsColor OR pv_c2.option2 LIKE :vsColor) THEN 3 ELSE 0 END`,
+      );
+    }
+
+    const textTerms = [
+      ...(attrs.keywords || []),
+      ...(attrs.material ? [attrs.material] : []),
+      ...(attrs.style ? [attrs.style] : []),
+    ];
+
+    textTerms.forEach((term, i) => {
+      params[`vsT${i}`] = `%${term}%`;
+      orClauses.push(`(product.name LIKE :vsT${i} OR product.description LIKE :vsT${i})`);
+      scoreExprs.push(
+        `CASE WHEN product.name LIKE :vsT${i} THEN 2 WHEN product.description LIKE :vsT${i} THEN 1 ELSE 0 END`,
+      );
+    });
+
+    if (orClauses.length === 0) {
+      return { data: [], meta: { page, limit, total: 0, totalPages: 0 } };
+    }
+
+    qb.andWhere(`(${orClauses.join(' OR ')})`, params);
+
+    if (scoreExprs.length > 0) {
+      qb.addSelect(`(${scoreExprs.join(' + ')})`, 'vs_score');
+      qb.orderBy('vs_score', 'DESC');
+    }
+
+    const total = await qb.getCount();
+    const skip = (page - 1) * limit;
+    const data = await qb.skip(skip).take(limit).getMany();
+
+    return {
+      data,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  // ─── Private ───
+
+  private applyFilters(qb: SelectQueryBuilder<Product>, filter: IProductFilter): void {
+    if (filter.search) {
+      if (filter.globalSearch) {
+        qb.andWhere(
+          '(product.name LIKE :search OR product.description LIKE :search OR category.name LIKE :search OR shop.name LIKE :search)',
+          { search: `%${filter.search}%` },
+        );
+      } else {
+        qb.andWhere('product.name LIKE :search', {
+          search: `%${filter.search}%`,
+        });
+      }
+    }
+
+    if (filter.category_ids && filter.category_ids.length > 0) {
+      qb.andWhere('product.category_id IN (:...categoryIds)', {
+        categoryIds: filter.category_ids,
+      });
+    } else if (filter.category_id) {
       qb.andWhere('product.category_id = :categoryId', {
         categoryId: filter.category_id,
       });
     }
 
     if (filter.min_price !== undefined) {
-      qb.andWhere('variant.price >= :minPrice', {
-        minPrice: filter.min_price,
-      });
+      qb.andWhere(
+        `product.id IN (SELECT pv_price.product_id FROM product_variants pv_price WHERE COALESCE(pv_price.sale_price, pv_price.price) >= :minPrice)`,
+        { minPrice: filter.min_price },
+      );
     }
 
     if (filter.max_price !== undefined) {
-      qb.andWhere('variant.price <= :maxPrice', {
-        maxPrice: filter.max_price,
-      });
+      qb.andWhere(
+        `product.id IN (SELECT pv_price2.product_id FROM product_variants pv_price2 WHERE COALESCE(pv_price2.sale_price, pv_price2.price) <= :maxPrice)`,
+        { maxPrice: filter.max_price },
+      );
+    }
+
+    if (filter.min_rating !== undefined) {
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM reviews r WHERE r.product_id = product.id GROUP BY r.product_id HAVING AVG(CAST(r.rating AS FLOAT)) >= :minRating)`,
+        { minRating: filter.min_rating },
+      );
+    }
+
+    if (filter.shop_id !== undefined) {
+      qb.andWhere('product.shop_id = :shopId', { shopId: filter.shop_id });
+    }
+
+    if (filter.in_stock === 'true') {
+      qb.andWhere(
+        `product.id IN (SELECT pv_stock.product_id FROM product_variants pv_stock GROUP BY pv_stock.product_id HAVING SUM(pv_stock.stock_quantity) > 0)`,
+      );
+    }
+  }
+
+  private applySorting(qb: SelectQueryBuilder<Product>, filter: IProductFilter): void {
+    const sortOrder = (filter.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
+
+    switch (filter.sort) {
+      case ProductSortBy.Price:
+        qb.addSelect(
+          `(SELECT MIN(COALESCE(pv_s.sale_price, pv_s.price)) FROM product_variants pv_s WHERE pv_s.product_id = product.id)`,
+          'min_price_sort',
+        );
+        qb.orderBy('min_price_sort', sortOrder);
+        break;
+
+      case ProductSortBy.BestSelling:
+        qb.addSelect(
+          `(SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi INNER JOIN orders o ON o.id = oi.order_id INNER JOIN product_variants pv_bs ON pv_bs.id = oi.product_variant_id WHERE pv_bs.product_id = product.id AND o.status IN ('delivered', 'completed'))`,
+          'total_sold_sort',
+        );
+        qb.orderBy('total_sold_sort', sortOrder);
+        break;
+
+      case ProductSortBy.Rating:
+        qb.addSelect(
+          `(SELECT COALESCE(AVG(CAST(r.rating AS FLOAT)), 0) FROM reviews r WHERE r.product_id = product.id)`,
+          'avg_rating_sort',
+        );
+        qb.orderBy('avg_rating_sort', sortOrder);
+        break;
+
+      case ProductSortBy.Name:
+        qb.orderBy('product.name', sortOrder);
+        break;
+
+      case ProductSortBy.CreatedAt:
+        qb.orderBy('product.created_at', sortOrder);
+        break;
+
+      default:
+        if (filter.search && filter.globalSearch) {
+          qb.addSelect(
+            `CASE
+              WHEN product.name LIKE :exactSearch THEN 1
+              WHEN product.name LIKE :search THEN 2
+              WHEN product.description LIKE :search THEN 3
+              WHEN category.name LIKE :search THEN 4
+              WHEN shop.name LIKE :search THEN 5
+              ELSE 6
+            END`,
+            'relevance_score',
+          );
+          qb.setParameter('exactSearch', filter.search);
+          qb.setParameter('search', `%${filter.search}%`);
+          qb.orderBy('relevance_score', 'ASC');
+        } else {
+          qb.orderBy('product.created_at', 'DESC');
+        }
+        break;
     }
   }
 }
