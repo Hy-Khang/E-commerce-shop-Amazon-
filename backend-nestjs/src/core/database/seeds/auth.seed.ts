@@ -49,6 +49,8 @@ const SEED_PERMISSIONS = [
   { resource: 'coupons', action: 'delete', name: 'Delete Coupon' },
   { resource: 'wishlist', action: 'read', name: 'Read Wishlist Analytics' },
   { resource: 'uploads', action: 'create', name: 'Upload Files' },
+  { resource: 'payments', action: 'create', name: 'Create Payment' },
+  { resource: 'payments', action: 'read', name: 'Read Payments' },
   { resource: 'dashboard', action: 'read', name: 'Read Dashboard' },
   { resource: 'shops', action: 'create', name: 'Create Shop' },
   { resource: 'shops', action: 'read', name: 'Read Shops' },

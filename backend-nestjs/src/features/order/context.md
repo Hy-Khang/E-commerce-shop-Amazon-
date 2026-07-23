@@ -36,6 +36,10 @@ pending → confirmed → shipping → delivered
 ## Scheduler
 - `OrderScheduler` — hourly cron auto-completes orders in `delivered` status with `delivered_at` older than 7 days
 
+## Events Listened
+- `payment.completed` — `OrderPaymentListener` marks order as paid (`payment_status = 'paid'`)
+
 ## Consumed By
 - ReviewModule — verifies purchase for review eligibility (requires `completed` status)
+- PaymentModule — reads order data for payment validation, updates payment_status via event
 - DashboardModule — revenue queries use `completed` status

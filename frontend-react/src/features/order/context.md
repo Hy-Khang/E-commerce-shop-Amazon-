@@ -36,3 +36,6 @@ Checkout from cart, order history, order detail, cancel pending orders, admin or
 - Uses `useCart` from `@/features/cart` for checkout item preview
 - Loads addresses via `/addresses` endpoint (self-contained until user-profile is built)
 - Review feature needs `order_id` for purchase verification
+- **Payment integration**: CheckoutPage imports `useCreatePayment` from `@/features/payment` — after creating order with VNPay/MoMo, calls POST /payments/create then redirects to gateway URL
+- **Payment retry**: OrderDetailPage imports `useCreatePayment` + `PaymentTransactionList` from `@/features/payment` — shows "Pay Now" button for unpaid online orders and transaction history
+- **Admin transactions**: AdminOrderDetailPage shows `PaymentTransactionList` for non-COD orders

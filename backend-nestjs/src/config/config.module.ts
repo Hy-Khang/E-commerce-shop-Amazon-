@@ -6,12 +6,14 @@ import databaseConfig from './database.config';
 import jwtConfig from './jwt.config';
 import mailConfig from './mail.config';
 import oauthConfig from './oauth.config';
+import vnpayConfig from './vnpay.config';
+import momoConfig from './momo.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, jwtConfig, mailConfig, oauthConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailConfig, oauthConfig, vnpayConfig, momoConfig],
       validationSchema: Joi.object({
         APP_PORT: Joi.number().default(3000),
         APP_PREFIX: Joi.string().default('api/v1'),
@@ -40,6 +42,18 @@ import oauthConfig from './oauth.config';
         FACEBOOK_APP_ID: Joi.string().optional().allow('').default(''),
         FACEBOOK_APP_SECRET: Joi.string().optional().allow('').default(''),
         FACEBOOK_CALLBACK_URL: Joi.string().optional().default('http://localhost:3000/api/v1/auth/facebook/callback'),
+        // VNPay (optional)
+        VNPAY_TMN_CODE: Joi.string().optional().allow('').default(''),
+        VNPAY_HASH_SECRET: Joi.string().optional().allow('').default(''),
+        VNPAY_PAYMENT_URL: Joi.string().optional().default('https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
+        VNPAY_RETURN_URL: Joi.string().optional().default('http://localhost:3000/api/v1/payments/vnpay/return'),
+        // MoMo (optional)
+        MOMO_PARTNER_CODE: Joi.string().optional().allow('').default(''),
+        MOMO_ACCESS_KEY: Joi.string().optional().allow('').default(''),
+        MOMO_SECRET_KEY: Joi.string().optional().allow('').default(''),
+        MOMO_ENDPOINT: Joi.string().optional().default('https://test-payment.momo.vn/v2/gateway/api/create'),
+        MOMO_RETURN_URL: Joi.string().optional().default('http://localhost:3000/api/v1/payments/momo/return'),
+        MOMO_IPN_URL: Joi.string().optional().default('http://localhost:3000/api/v1/payments/momo/ipn'),
       }),
     }),
   ],

@@ -260,7 +260,7 @@
 | id | INT | PK, auto-increment |
 | user_id | INT | FK → `users.id`, NOT NULL |
 | status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `pending` / `confirmed` / `shipping` / `delivered` / `completed` / `return_requested` / `cancelled` |
-| payment_method | NVARCHAR(20) | NOT NULL — `cod` / `banking` / `momo` |
+| payment_method | NVARCHAR(20) | NOT NULL — `cod` / `vnpay` / `momo` |
 | payment_status | NVARCHAR(20) | NOT NULL, DEFAULT `'unpaid'` — `unpaid` / `paid` |
 | shipping_fee | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
 | total_amount | DECIMAL(10,2) | NOT NULL |
@@ -427,6 +427,32 @@
 
 ---
 
+### 2.11 Payment Feature
+
+#### `payment_transactions`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| order_id | INT | FK → `orders.id`, NOT NULL |
+| transaction_ref | NVARCHAR(100) | NOT NULL, UNIQUE — reference sent to payment gateway |
+| gateway | NVARCHAR(20) | NOT NULL — `'vnpay'` / `'momo'` |
+| amount | DECIMAL(10,2) | NOT NULL |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `'pending'` / `'completed'` / `'failed'` / `'refunded'` |
+| gateway_transaction_id | NVARCHAR(100) | NULL — transaction ID from gateway response |
+| gateway_response | NVARCHAR(MAX) | NULL — JSON of full gateway callback data |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> **Design decisions:**
+> - **One order → many transactions** — each payment attempt (including retries) creates a new record. Supports retry after failure/timeout.
+> - **Timeout cron** — transactions pending for 15+ minutes are automatically marked `failed` (every 5 minutes). Order `payment_status` stays `unpaid` — user can retry.
+> - **Idempotency** — IPN callbacks check `status !== 'pending'` before updating. Duplicate callbacks are no-ops.
+> - **Event-driven** — on successful payment, `payment.completed` event is emitted → `OrderPaymentListener` sets `orders.payment_status = 'paid'`.
+> - **Signature verification** — HMAC-SHA512 for VNPay, HMAC-SHA256 for MoMo. Invalid signatures are rejected before any state change.
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -463,6 +489,7 @@ erDiagram
 
     carts ||--o{ cart_items : "contains"
     orders ||--o{ order_items : "contains"
+    orders ||--o{ payment_transactions : "has payments"
     orders ||--o{ reviews : "verified by"
     orders ||--o{ coupon_usages : "applied coupon"
 
@@ -528,3 +555,6 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | coupon_usages | `idx_coupon_usages_order_id` | order_id | Find usage by order (reversal) |
 | notifications | `idx_notifications_user_id_is_read` | user_id, is_read | Paginated listing + unread count |
 | notifications | `idx_notifications_created_at` | created_at | Sort by newest first |
+| payment_transactions | `idx_payment_transactions_order_id` | order_id | List transactions for an order |
+| payment_transactions | `idx_payment_transactions_status` | status | Timeout cron: find pending transactions |
+| payment_transactions | `uq_payment_transactions_transaction_ref` | transaction_ref | UNIQUE — IPN lookup by gateway ref |

@@ -42,7 +42,7 @@ import {
   toAdminOrderResponse,
   toSellerOrderResponse,
 } from './utils/order.util';
-import { OrderStatus, PaymentMethod } from '../../common/constants';
+import { OrderStatus, PaymentMethod, PaymentStatus } from '../../common/constants';
 import { InsufficientStockException } from '../../common/exceptions/insufficient-stock.exception';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { ShopService } from '../shop/shop.service';
@@ -160,7 +160,7 @@ export class OrderService {
           user_id: userId,
           status: OrderStatus.Pending,
           payment_method: dto.payment_method,
-          payment_status: 'unpaid',
+          payment_status: PaymentStatus.Unpaid,
           shipping_fee: shippingFee,
           coupon_code: couponData?.coupon_code ?? null,
           discount_amount: discountAmount,
@@ -682,6 +682,18 @@ export class OrderService {
 
   async findOrderByIdForReview(orderId: number): Promise<Order | null> {
     return this.orderRepository.findByIdWithItems(orderId);
+  }
+
+  async findOrderForPayment(
+    orderId: number,
+    userId: number,
+  ): Promise<Order | null> {
+    return this.orderRepository.findByIdAndUserId(orderId, userId);
+  }
+
+  async markOrderAsPaid(orderId: number): Promise<void> {
+    await this.orderRepository.updatePaymentStatus(orderId, PaymentStatus.Paid);
+    this.logger.log(`Order #${orderId} marked as paid via payment gateway`);
   }
 
   // ─── Private helpers ───

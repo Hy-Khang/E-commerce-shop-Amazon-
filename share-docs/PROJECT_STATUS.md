@@ -16,7 +16,7 @@
 | 5 | Product Catalog | 2 | 100% | 100% | **100%** | Hoàn chỉnh |
 | 6 | Cart & Checkout | 3 | 100% | 100% | **100%** | Hoàn chỉnh |
 | 7 | Order Management | 3 | 100% | 100% | **100%** | Hoàn chỉnh (cả auto-complete cron) |
-| 8 | Payment Gateway | 3 | 0% | 0% | **0%** | Chưa làm — chỉ có enum placeholder |
+| 8 | Payment Gateway | 3 | 100% | 100% | **100%** | Hoàn chỉnh (VNPay + MoMo sandbox) |
 | 9 | Coupons | 3 | 100% | 100% | **100%** | Hoàn chỉnh (cả auto-reversal) |
 | 10 | Wishlist & Reviews | 4 | 100% | 100% | **100%** | Hoàn chỉnh |
 | 11 | Notifications | 4 | 85% | 100% | **90%** | Polling-based. Chưa có Socket.IO realtime push |
@@ -38,12 +38,12 @@
 
 | Trạng thái | Số module | Danh sách |
 |------------|:---------:|-----------|
-| Hoàn chỉnh (100%) | **11** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Coupons, Wishlist & Reviews, Admin Panel, Seller Dashboard |
+| Hoàn chỉnh (100%) | **12** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Admin Panel, Seller Dashboard |
 | Gần hoàn chỉnh (80-99%) | **1** | Notifications (90%) |
 | Đang làm dở / Thiếu nhiều | **2** | Search & Filter (25%), Shipper Dashboard (5%) |
-| Chưa làm (0%) | **8** | Payment Gateway, Order Tracking, Flash Sale, Recently Viewed, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
+| Chưa làm (0%) | **7** | Order Tracking, Flash Sale, Recently Viewed, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
 
-**Tổng tiến độ ước tính: ~59% (12/22 modules hoạt động)**
+**Tổng tiến độ ước tính: ~64% (13/22 modules hoạt động)**
 
 ---
 
@@ -87,15 +87,9 @@ Hoàn chỉnh. Guest cart (session_id), merge cart on login, checkout flow với
 
 Hoàn chỉnh. Full status lifecycle, auto-complete cron (delivered → completed sau 7 ngày), customer/admin/seller endpoints, coupon reversal on cancel.
 
-#### Module 8: Payment Gateway — 0% ❌
+#### Module 8: Payment Gateway — 100% ✅
 
-**Chưa làm gì cả.**
-- Không có VNPay integration (redirect, IPN callback, signature verify)
-- Không có MoMo integration
-- `payment_method` chỉ là string enum (`cod`, `banking`, `momo`) — không có xử lý thực tế
-- `payment_status` được update thủ công qua admin endpoint
-- Không có bảng `payment_transactions`
-- Không có timeout 15 phút cho giao dịch pending
+Hoàn chỉnh. VNPay (HMAC-SHA512) + MoMo (HMAC-SHA256) sandbox integration. Payment flow: POST /orders → POST /payments/create → redirect to gateway → IPN callback → verify signature → update transaction + order payment_status → redirect to FE result page. Bảng `payment_transactions` với retry support (mỗi order có thể nhiều transactions). Cron timeout 15 phút cho pending transactions. FE: CheckoutPage redirect cho VNPay/MoMo, PaymentResultPage (success/failure + retry), PaymentTransactionList component trên OrderDetailPage + AdminOrderDetailPage. Renamed `banking` → `vnpay` across cả BE + FE. Event-driven: `payment.completed` → OrderPaymentListener marks order paid.
 
 #### Module 9: Coupons — 100% ✅
 
@@ -214,12 +208,9 @@ Dựa trên dependency map, thứ tự hoàn thành hợp lý cho các module c�
 1. **Search & Filter** — core UX, cần cho mua sắm
 2. **Notifications (Socket.IO)** — cần cho Chat Realtime (Module 20)
 
-### Ưu tiên 2 — Phase 3 còn thiếu
-4. **Payment Gateway (VNPay/MoMo)** — luồng mua hàng chưa hoàn chỉnh
-
-### Ưu tiên 3 — Phase 5 còn thiếu
-5. **Shipper Dashboard** — cần trước Order Tracking
-6. **Order Tracking** — phụ thuộc Shipper Dashboard
+### Ưu tiên 2 — Phase 5 còn thiếu
+3. **Shipper Dashboard** — cần trước Order Tracking
+4. **Order Tracking** — phụ thuộc Shipper Dashboard
 
 ### Ưu tiên 4 — Phase 6 (độc lập, làm song song được)
 7. **Flash Sale** — cần BE + FE

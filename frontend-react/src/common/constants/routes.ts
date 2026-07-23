@@ -14,6 +14,7 @@ export const ROUTES = {
 
   CART: '/cart',
   CHECKOUT: '/checkout',
+  PAYMENT_RESULT: '/checkout/payment-result',
 
   ORDERS: '/orders',
   ORDER_DETAIL: (id: number) => `/orders/${id}`,
@@ -77,6 +78,13 @@ export const PAYMENT_STATUS_LABELS: Record<string, string> = {
 
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cod: 'Cash on Delivery',
-  banking: 'Bank Transfer',
+  vnpay: 'VNPay',
   momo: 'MoMo',
+};
+
+export const TRANSACTION_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  completed: 'Completed',
+  failed: 'Failed',
+  refunded: 'Refunded',
 };

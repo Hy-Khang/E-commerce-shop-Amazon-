@@ -15,6 +15,7 @@ import { UploadModule } from './features/upload/upload.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { ShopModule } from './features/shop/shop.module';
 import { NotificationModule } from './features/notification/notification.module';
+import { PaymentModule } from './features/payment/payment.module';
 import { HomepageModule } from './features/homepage/homepage.module';
 import { MailModule } from './core/mail/mail.module';
 import { AppController } from './app.controller';
@@ -38,6 +39,7 @@ import { AppService } from './app.service';
     DashboardModule,
     ShopModule,
     NotificationModule,
+    PaymentModule,
     HomepageModule,
     MailModule,
   ],

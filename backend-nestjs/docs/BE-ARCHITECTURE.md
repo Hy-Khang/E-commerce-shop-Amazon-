@@ -26,6 +26,7 @@ graph TB
             Coupon["coupon<br/>coupons, coupon_categories,<br/>coupon_products, coupon_usages"]
             Upload["upload<br/>file storage"]
             Notification["notification<br/>notifications"]
+            Payment["payment<br/>payment_transactions"]
             Dashboard["dashboard<br/>analytics (read-only)"]
         end
 
@@ -88,6 +89,7 @@ src/
     ├── coupon/                          — owns: coupons, coupon_categories, coupon_products, coupon_usages
     ├── upload/                          — file upload (images)
     ├── notification/                   — in-app notifications (order status changes)
+    ├── payment/                         — VNPay/MoMo gateway integration, payment_transactions
     └── dashboard/                       — admin analytics (read-only, no owned entities)
 ```
 
@@ -185,11 +187,15 @@ graph TD
     Dashboard --> Auth
     Dashboard --> Shop
 
+    Payment["payment"] --> Order
+    Payment -.->|event: payment.completed| Order
+
     Order -.->|event: order.created| Product
     Order -.->|event: order.cancelled| Product
     Order -.->|event: order.placed| Notification["notification"]
     Order -.->|event: order.status_updated| Notification
     Order -.->|cron: auto-complete| Order
+    Payment -.->|cron: timeout| Payment
 
 ```
 
@@ -212,12 +218,13 @@ graph TD
 | shop | *(via global AuthModule)* | — |
 | product | ShopModule | `order.created`, `order.cancelled` |
 | cart | ProductModule | — |
-| order | CartModule, ProductModule, ShopModule, ScheduleModule | — (emits `order.status_updated`, has `OrderScheduler` cron) |
+| order | CartModule, ProductModule, ShopModule, ScheduleModule | `payment.completed` (emits `order.status_updated`, has `OrderScheduler` cron) |
 | review | OrderModule, ProductModule | — |
 | wishlist | ProductModule | — |
 | coupon | — | — |
 | upload | — | — |
 | notification | — | `order.placed`, `order.status_updated` |
+| payment | OrderModule | — (emits `payment.completed`, has timeout cron) |
 | dashboard | TypeOrmModule (Order entity), ShopModule | — |
 
 > **AuthModule is global** — registered via `AuthModule.forRoot()` in AppModule with `global: true`. All features receive AuthService, JwtAuthGuard, PermissionsGuard automatically without explicit imports.

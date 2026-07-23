@@ -10,7 +10,19 @@ export enum OrderStatus {
 
 export enum PaymentMethod {
   Cod = 'cod',
-  Banking = 'banking',
+  VnPay = 'vnpay',
+  Momo = 'momo',
+}
+
+export enum TransactionStatus {
+  Pending = 'pending',
+  Completed = 'completed',
+  Failed = 'failed',
+  Refunded = 'refunded',
+}
+
+export enum PaymentGateway {
+  VnPay = 'vnpay',
   Momo = 'momo',
 }
 

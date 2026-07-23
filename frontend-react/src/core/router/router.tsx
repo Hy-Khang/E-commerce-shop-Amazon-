@@ -24,6 +24,7 @@ const OAuthCallbackPage = lazy(() => import('@/features/auth/pages/OAuthCallback
 const CartPage = lazy(() => import('@/features/cart/pages/CartPage'));
 const CheckoutPage = lazy(() => import('@/features/order/pages/CheckoutPage'));
 const CheckoutSuccessPage = lazy(() => import('@/features/order/pages/CheckoutSuccessPage'));
+const PaymentResultPage = lazy(() => import('@/features/payment/pages/PaymentResultPage'));
 const OrderHistoryPage = lazy(() => import('@/features/order/pages/OrderHistoryPage'));
 const OrderDetailPage = lazy(() => import('@/features/order/pages/OrderDetailPage'));
 
@@ -98,6 +99,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'checkout', element: <SuspenseWrapper><CheckoutPage /></SuspenseWrapper> },
           { path: 'checkout/success', element: <SuspenseWrapper><CheckoutSuccessPage /></SuspenseWrapper> },
+          { path: 'checkout/payment-result', element: <SuspenseWrapper><PaymentResultPage /></SuspenseWrapper> },
           { path: 'orders/:id', element: <SuspenseWrapper><OrderDetailPage /></SuspenseWrapper> },
           {
             element: <SuspenseWrapper><AccountLayout /></SuspenseWrapper>,

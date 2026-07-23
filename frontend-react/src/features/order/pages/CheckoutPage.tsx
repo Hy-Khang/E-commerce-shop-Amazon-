@@ -5,20 +5,23 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { MapPin, CreditCard, Tag, Loader2 } from 'lucide-react';
 import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
+import { showErrorToast } from '@/common/components/feedback/toast';
 import { useCart } from '@/features/cart';
 import { CouponInput, type CouponValidationResult } from '@/features/coupon';
+import { useCreatePayment } from '@/features/payment';
 import { useCheckout } from '../hooks/useCheckout';
 import { useAddresses } from '../hooks/useAddresses';
 import { checkoutSchema, type CheckoutFormData, type PaymentMethod } from '../types/order.types';
 import { OrderItemRow } from '../components/OrderItemRow';
 
-const PAYMENT_METHODS: PaymentMethod[] = ['cod', 'banking', 'momo'];
+const PAYMENT_METHODS: PaymentMethod[] = ['cod', 'vnpay', 'momo'];
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { data: cart, isLoading: cartLoading } = useCart();
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
   const checkout = useCheckout();
+  const createPayment = useCreatePayment();
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; validation: CouponValidationResult } | null>(null);
 
   const defaultAddress = addresses?.find((a) => a.is_default);
@@ -38,6 +41,8 @@ export default function CheckoutPage() {
 
   const selectedAddressId = watch('address_id');
 
+  const isProcessing = checkout.isPending || createPayment.isPending;
+
   function onSubmit(data: CheckoutFormData) {
     const request = {
       ...data,
@@ -45,7 +50,22 @@ export default function CheckoutPage() {
     };
     checkout.mutate(request, {
       onSuccess: (order) => {
-        navigate(`/checkout/success?orderId=${order.id}`);
+        if (data.payment_method === 'cod') {
+          navigate(`/checkout/success?orderId=${order.id}`);
+          return;
+        }
+        createPayment.mutate(
+          { order_id: order.id },
+          {
+            onSuccess: (paymentData) => {
+              window.location.href = paymentData.payment_url;
+            },
+            onError: (error) => {
+              showErrorToast(error);
+              navigate(ROUTES.ORDER_DETAIL(order.id));
+            },
+          },
+        );
       },
     });
   }
@@ -269,16 +289,22 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-                disabled={checkout.isPending || !addresses || addresses.length === 0}
+                disabled={isProcessing || !addresses || addresses.length === 0}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300 shadow-xs"
               >
-                {checkout.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                {checkout.isPending ? 'Placing Order...' : 'Place Order'}
+                {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
+                {createPayment.isPending
+                  ? 'Redirecting to payment...'
+                  : checkout.isPending
+                    ? 'Placing Order...'
+                    : 'Place Order'}
               </button>
 
-              {checkout.isError && (
+              {(checkout.isError || createPayment.isError) && (
                 <p className="mt-2 text-center text-sm text-error-600">
-                  {checkout.error instanceof Error ? checkout.error.message : 'Failed to place order'}
+                  {(checkout.error ?? createPayment.error) instanceof Error
+                    ? (checkout.error ?? createPayment.error)?.message
+                    : 'Failed to place order'}
                 </p>
               )}
             </div>

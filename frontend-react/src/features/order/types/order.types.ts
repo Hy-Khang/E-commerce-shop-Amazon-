@@ -4,7 +4,7 @@ import type { PaginationParams } from '@/common/types/common.types';
 // --- Shared sub-types ---
 
 export type OrderStatus = 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'completed' | 'return_requested' | 'cancelled';
-export type PaymentMethod = 'cod' | 'banking' | 'momo';
+export type PaymentMethod = 'cod' | 'vnpay' | 'momo';
 export type PaymentStatus = 'unpaid' | 'paid';
 
 export interface ShippingAddress {
@@ -128,7 +128,7 @@ export interface UpdatePaymentStatusRequest {
 // --- Zod schemas (forms) ---
 
 export const checkoutSchema = z.object({
-  payment_method: z.enum(['cod', 'banking', 'momo'], {
+  payment_method: z.enum(['cod', 'vnpay', 'momo'], {
     error: 'Payment method is required',
   }),
   address_id: z.number({ error: 'Please select a shipping address' }).int().positive(),

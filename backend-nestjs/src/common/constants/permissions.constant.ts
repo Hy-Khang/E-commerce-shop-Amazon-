@@ -41,6 +41,9 @@ export const PERMISSIONS = {
   SHOPS_CREATE: 'shops:create',
   SHOPS_READ: 'shops:read',
   SHOPS_UPDATE: 'shops:update',
+  // Payments
+  PAYMENTS_CREATE: 'payments:create',
+  PAYMENTS_READ: 'payments:read',
   // Dashboard
   DASHBOARD_READ: 'dashboard:read',
   // Portal Access

@@ -163,6 +163,13 @@ export class OrderRepository {
     return order;
   }
 
+  async findByIdAndUserId(
+    id: number,
+    userId: number,
+  ): Promise<Order | null> {
+    return this.repo.findOne({ where: { id, user_id: userId } });
+  }
+
   async create(data: Partial<Order>): Promise<Order> {
     const order = this.repo.create(data);
     return this.repo.save(order);

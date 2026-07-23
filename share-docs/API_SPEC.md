@@ -127,6 +127,12 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | SHOP_004 | 400 | Shop not set up (seller tries product CRUD without a shop) |
 | SHOP_005 | 403 | Shop is not active (status != 'active') |
 | NOTIFICATION_001 | 404 | Notification not found |
+| PAYMENT_001 | 400 | Order not eligible for payment (COD, cancelled, already paid) |
+| PAYMENT_002 | 400 | Active payment already pending for this order |
+| PAYMENT_003 | 404 | Payment transaction not found |
+| PAYMENT_004 | 400 | Invalid gateway signature |
+| PAYMENT_005 | 400 | Amount mismatch |
+| PAYMENT_006 | 502 | Gateway API error |
 
 ---
 
@@ -246,6 +252,25 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | PATCH | `/notifications/read-all` | Mark all notifications as read (HTTP 204) | Customer |
 
 > **Polling-based delivery:** Frontend polls `GET /notifications/unread-count` every 30s. No WebSocket infrastructure. Notifications are created automatically via `order.status_updated` event. Admin/seller status changes notify the customer. Customer-initiated confirm receipt and return requests notify the seller(s). Customer-initiated order placement and cancellation do **not** create notifications.
+
+### Payment Gateway — `/api/v1/payments`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/payments/create` | Create payment URL for an order (VNPay/MoMo) | Customer |
+| GET | `/payments/vnpay/ipn` | VNPay IPN callback (verify HMAC-SHA512 + update) | Public |
+| GET | `/payments/vnpay/return` | VNPay return → redirect to FE result page | Public |
+| POST | `/payments/momo/ipn` | MoMo IPN callback (verify HMAC-SHA256 + update) | Public |
+| GET | `/payments/momo/return` | MoMo return → redirect to FE result page | Public |
+| GET | `/payments/order/:orderId` | Get payment transactions for an order | Customer |
+
+> **Payment flow:** Customer selects VNPay/MoMo at checkout → `POST /orders` creates order (payment_status=unpaid) → `POST /payments/create` returns `{ payment_url }` → frontend redirects to gateway → user pays → gateway calls IPN endpoint → backend verifies signature + updates `payment_transactions.status` + emits `payment.completed` event → `OrderPaymentListener` sets `orders.payment_status = paid` → gateway redirects user to return URL → backend redirects to frontend `/checkout/payment-result`.
+>
+> **Retry:** If payment fails or times out, customer can call `POST /payments/create` again — creates a new `payment_transactions` record. Each order can have multiple transactions.
+>
+> **Timeout cron:** Every 5 minutes, transactions pending for 15+ minutes are marked as `failed`. Order `payment_status` stays `unpaid` (user can retry).
+>
+> **PaymentMethod values:** `cod`, `vnpay`, `momo` (formerly `banking`, renamed to `vnpay`).
 
 ---
 

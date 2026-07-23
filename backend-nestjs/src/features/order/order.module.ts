@@ -7,6 +7,7 @@ import { OrderService } from './order.service';
 import { OrderScheduler } from './order.scheduler';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
+import { OrderPaymentListener } from './order-payment.listener';
 import { OrderRepository } from './repositories/order.repository';
 import { OrderItemRepository } from './repositories/order-item.repository';
 import { CartModule } from '../cart/cart.module';
@@ -28,6 +29,7 @@ import { ShopModule } from '../shop/shop.module';
   providers: [
     OrderService,
     OrderScheduler,
+    OrderPaymentListener,
     OrderRepository,
     OrderItemRepository,
   ],

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Star, Store, PackageCheck, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Loader2, Star, Store, PackageCheck, RotateCcw, RefreshCw } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { Button } from '@/common/components/ui/Button';
 import { ROUTES, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
+import { showErrorToast } from '@/common/components/feedback/toast';
 import { ReviewForm } from '@/features/review';
+import { PaymentTransactionList, useCreatePayment } from '@/features/payment';
 import { useOrder } from '../hooks/useOrder';
 import { useCancelOrder } from '../hooks/useCancelOrder';
 import { useConfirmReceipt } from '../hooks/useConfirmReceipt';
@@ -21,6 +23,7 @@ export default function OrderDetailPage() {
   const cancelOrder = useCancelOrder();
   const confirmReceipt = useConfirmReceipt();
   const requestReturn = useRequestReturn();
+  const createPayment = useCreatePayment();
   const [reviewingItemId, setReviewingItemId] = useState<number | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showConfirmReceipt, setShowConfirmReceipt] = useState(false);
@@ -52,6 +55,22 @@ export default function OrderDetailPage() {
   const isDelivered = order.status === 'delivered';
   const isCompleted = order.status === 'completed';
   const canReview = isCompleted;
+  const isOnlinePayment = order.payment_method !== 'cod';
+  const canRetryPayment = isOnlinePayment && order.payment_status === 'unpaid' && order.status === 'pending';
+
+  function handleRetryPayment() {
+    createPayment.mutate(
+      { order_id: orderId },
+      {
+        onSuccess: (data) => {
+          window.location.href = data.payment_url;
+        },
+        onError: (error) => {
+          showErrorToast(error);
+        },
+      },
+    );
+  }
 
   return (
     <div>
@@ -78,6 +97,17 @@ export default function OrderDetailPage() {
               disabled={cancelOrder.isPending}
             >
               {cancelOrder.isPending ? 'Cancelling...' : 'Cancel Order'}
+            </Button>
+          )}
+          {canRetryPayment && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleRetryPayment}
+              loading={createPayment.isPending}
+            >
+              <RefreshCw className="mr-1.5 h-4 w-4" />
+              Pay Now
             </Button>
           )}
           {isDelivered && (
@@ -223,6 +253,8 @@ export default function OrderDetailPage() {
               </div>
             </div>
           </div>
+
+          {isOnlinePayment && <PaymentTransactionList orderId={orderId} />}
         </div>
       </div>
 

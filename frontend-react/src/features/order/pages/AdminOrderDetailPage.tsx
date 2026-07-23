@@ -5,6 +5,7 @@ import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES, ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { Button } from '@/common/components/ui/Button';
+import { PaymentTransactionList } from '@/features/payment';
 import { useAdminOrder } from '../hooks/useAdminOrder';
 import { useUpdateOrderStatus } from '../hooks/useUpdateOrderStatus';
 import { useUpdatePaymentStatus } from '../hooks/useUpdatePaymentStatus';
@@ -252,6 +253,10 @@ export default function AdminOrderDetailPage() {
               </div>
             </div>
           </div>
+
+          {order.payment_method !== 'cod' && (
+            <PaymentTransactionList orderId={orderId} variant="admin" />
+          )}
         </div>
       </div>
 
