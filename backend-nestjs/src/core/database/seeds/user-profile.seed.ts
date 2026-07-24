@@ -17,9 +17,9 @@ export const UserProfileSeed: ISeed = {
         (3, 3,  N'Trần Thị Bình',    N'0901000002', N'789 Trần Hưng Đạo, Quận 5',    N'Hồ Chí Minh',  1),
         (4, 4,  N'Lê Hoàng Cường',   N'0901000003', N'12 Hoàng Diệu, Hải Châu',      N'Đà Nẵng',      1),
         (5, 5,  N'Phạm Minh Đức',    N'0901000004', N'34 Tràng Tiền, Hoàn Kiếm',     N'Hà Nội',       1),
-        (6, 14, N'Hoàng Thị Nga',    N'0901000013', N'56 Bà Triệu, Hai Bà Trưng',    N'Hà Nội',       1),
-        (7, 15, N'Đỗ Văn Khoa',      N'0901000014', N'78 Hùng Vương, Thanh Khê',     N'Đà Nẵng',      1),
-        (8, 16, N'Bùi Minh Tâm',     N'0901000015', N'90 Nguyễn Trãi, Quận 5',       N'Hồ Chí Minh',  1);
+        (6, 6,  N'Hoàng Thị Nga',    N'0901000005', N'56 Bà Triệu, Hai Bà Trưng',    N'Hà Nội',       1),
+        (7, 7,  N'Đỗ Văn Khoa',      N'0901000006', N'78 Hùng Vương, Thanh Khê',     N'Đà Nẵng',      1),
+        (8, 8,  N'Bùi Minh Tâm',     N'0901000007', N'90 Nguyễn Trãi, Quận 5',       N'Hồ Chí Minh',  1);
       SET IDENTITY_INSERT addresses OFF;
     `);
     console.log('  + addresses: 8 rows');

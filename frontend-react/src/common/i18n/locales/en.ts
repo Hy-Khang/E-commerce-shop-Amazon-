@@ -9,6 +9,8 @@ export const en: TranslationSchema = {
       returnRequested: 'Return request submitted',
       statusUpdated: 'Order status updated',
       paymentUpdated: 'Payment status updated',
+      accepted: 'Order accepted for delivery',
+      delivered: 'Order marked as delivered',
     },
     auth: {
       loggedOut: 'Logged out',

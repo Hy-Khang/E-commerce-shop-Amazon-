@@ -7,6 +7,8 @@ export const vi = {
       returnRequested: 'Đã gửi yêu cầu trả hàng',
       statusUpdated: 'Đã cập nhật trạng thái đơn hàng',
       paymentUpdated: 'Đã cập nhật trạng thái thanh toán',
+      accepted: 'Đã nhận đơn giao hàng',
+      delivered: 'Đã giao hàng thành công',
     },
     auth: {
       loggedOut: 'Đã đăng xuất',

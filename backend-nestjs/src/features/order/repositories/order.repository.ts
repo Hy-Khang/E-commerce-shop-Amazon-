@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { Order } from '../entities/order.entity';
 import { OrderQueryDto } from '../dto/order-query.dto';
+import { ShipperOrderQueryDto } from '../dto/shipper-order-query.dto';
 import { IPaginatedResult } from '../../../common/interfaces/paginated-result.interface';
 import { OrderStatus } from '../../../common/constants';
 
@@ -209,6 +210,76 @@ export class OrderRepository {
       .update(Order)
       .set({ status: OrderStatus.Completed })
       .whereInIds(ids)
+      .execute();
+  }
+
+  // ─── Shipper methods ───
+
+  async findAvailableForShipperPaginated(
+    query: ShipperOrderQueryDto,
+  ): Promise<IPaginatedResult<Order>> {
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const sort = query.sort || 'created_at';
+    const order = (query.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
+
+    const qb = this.repo
+      .createQueryBuilder('order')
+      .where('order.status = :status', { status: OrderStatus.Confirmed })
+      .andWhere('order.shipper_id IS NULL');
+
+    qb.orderBy(`order.${sort}`, order)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      data,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  async findByShipperIdPaginated(
+    shipperId: number,
+    query: ShipperOrderQueryDto,
+  ): Promise<IPaginatedResult<Order>> {
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const sort = query.sort || 'created_at';
+    const order = (query.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
+
+    const qb = this.repo
+      .createQueryBuilder('order')
+      .where('order.shipper_id = :shipperId', { shipperId });
+
+    if (query.status) {
+      qb.andWhere('order.status = :status', { status: query.status });
+    }
+
+    qb.orderBy(`order.${sort}`, order)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      data,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  async atomicAssignShipper(
+    orderId: number,
+    shipperId: number,
+  ): Promise<UpdateResult> {
+    return this.repo
+      .createQueryBuilder()
+      .update(Order)
+      .set({ shipper_id: shipperId, status: OrderStatus.Shipping })
+      .where('id = :orderId', { orderId })
+      .andWhere('shipper_id IS NULL')
+      .andWhere('status = :status', { status: OrderStatus.Confirmed })
       .execute();
   }
 }

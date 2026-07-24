@@ -12,6 +12,9 @@ import type {
   ILowStockAlert,
   ISellerSummaryStats,
   ISellerRecentOrder,
+  IShipperSummaryStats,
+  IShipperDeliveryDataPoint,
+  IShipperRecentDelivery,
 } from '../types/dashboard.types';
 
 @Injectable()
@@ -417,5 +420,98 @@ export class DashboardRepository {
       option2: row.option2,
       stockQuantity: parseInt(row.stockQuantity, 10),
     }));
+  }
+
+  // ─── Shipper dashboard ───
+
+  async getShipperSummaryStats(
+    shipperId: number,
+  ): Promise<IShipperSummaryStats> {
+    const mgr = this.repo.manager;
+
+    const result = await mgr
+      .createQueryBuilder()
+      .select([
+        `SUM(CASE WHEN status IN ('delivered','completed') THEN 1 ELSE 0 END) AS totalDelivered`,
+        `SUM(CASE WHEN status = 'shipping' THEN 1 ELSE 0 END) AS activeDeliveries`,
+        `(SELECT COUNT(*) FROM orders WHERE status = 'confirmed' AND shipper_id IS NULL) AS availableForPickup`,
+        `SUM(CASE WHEN status IN ('delivered','completed') AND CAST(delivered_at AS DATE) = CAST(GETUTCDATE() AS DATE) THEN 1 ELSE 0 END) AS deliveredToday`,
+      ])
+      .from('orders', 'o')
+      .where('o.shipper_id = :shipperId', { shipperId })
+      .getRawOne();
+
+    return {
+      totalDelivered: parseInt(result.totalDelivered, 10) || 0,
+      activeDeliveries: parseInt(result.activeDeliveries, 10) || 0,
+      availableForPickup: parseInt(result.availableForPickup, 10) || 0,
+      deliveredToday: parseInt(result.deliveredToday, 10) || 0,
+    };
+  }
+
+  async getShipperDeliveriesOverTime(
+    shipperId: number,
+    days: number = 30,
+  ): Promise<IShipperDeliveryDataPoint[]> {
+    const rows = await this.repo.manager
+      .createQueryBuilder()
+      .select('CAST(o.delivered_at AS DATE)', 'date')
+      .addSelect('COUNT(*)', 'count')
+      .from('orders', 'o')
+      .where('o.shipper_id = :shipperId', { shipperId })
+      .andWhere("o.status IN ('delivered','completed')")
+      .andWhere('o.delivered_at >= DATEADD(DAY, :days, GETUTCDATE())', {
+        days: -days,
+      })
+      .groupBy('CAST(o.delivered_at AS DATE)')
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    return rows.map((row) => ({
+      date:
+        row.date instanceof Date
+          ? row.date.toISOString().split('T')[0]
+          : String(row.date),
+      count: parseInt(row.count, 10) || 0,
+    }));
+  }
+
+  async getShipperRecentDeliveries(
+    shipperId: number,
+    limit: number = 10,
+  ): Promise<IShipperRecentDelivery[]> {
+    const rows = await this.repo.manager
+      .createQueryBuilder()
+      .select([
+        'o.id AS id',
+        'o.status AS status',
+        'o.total_amount AS totalAmount',
+        'o.shipping_address AS shippingAddress',
+        'o.created_at AS createdAt',
+        'o.delivered_at AS deliveredAt',
+      ])
+      .from('orders', 'o')
+      .where('o.shipper_id = :shipperId', { shipperId })
+      .orderBy('o.created_at', 'DESC')
+      .limit(limit)
+      .getRawMany();
+
+    return rows.map((row) => {
+      let customerName = 'Unknown';
+      try {
+        const addr = JSON.parse(row.shippingAddress);
+        customerName = addr.full_name || 'Unknown';
+      } catch {}
+
+      return {
+        id: row.id,
+        customerName,
+        status: row.status,
+        totalAmount: parseFloat(row.totalAmount) || 0,
+        shippingAddress: row.shippingAddress,
+        createdAt: row.createdAt,
+        deliveredAt: row.deliveredAt ?? null,
+      };
+    });
   }
 }

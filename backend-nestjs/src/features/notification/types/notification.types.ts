@@ -8,6 +8,7 @@ export enum ActorType {
   Seller = 'seller',
   Customer = 'customer',
   System = 'system',
+  Shipper = 'shipper',
 }
 
 export enum NotificationContext {

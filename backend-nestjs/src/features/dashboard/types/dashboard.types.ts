@@ -81,3 +81,31 @@ export interface ISellerDashboardStats {
   recentOrders: ISellerRecentOrder[];
   lowStockAlerts: ILowStockAlert[];
 }
+
+export interface IShipperSummaryStats {
+  totalDelivered: number;
+  activeDeliveries: number;
+  availableForPickup: number;
+  deliveredToday: number;
+}
+
+export interface IShipperRecentDelivery {
+  id: number;
+  customerName: string;
+  status: string;
+  totalAmount: number;
+  shippingAddress: string;
+  createdAt: Date;
+  deliveredAt: Date | null;
+}
+
+export interface IShipperDeliveryDataPoint {
+  date: string;
+  count: number;
+}
+
+export interface IShipperDashboardStats {
+  summary: IShipperSummaryStats | null;
+  deliveriesOverTime: IShipperDeliveryDataPoint[];
+  recentDeliveries: IShipperRecentDelivery[];
+}

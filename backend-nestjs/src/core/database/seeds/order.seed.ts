@@ -29,16 +29,16 @@ export const OrderSeed: ISeed = {
         (5,  2,  N'delivered',  N'momo',    N'paid',   0,        6039000,
           N'{"full_name":"Nguyễn Văn An","phone":"0901000001","address_line":"123 Lê Lợi, Quận 1","city":"Hồ Chí Minh"}',
           NULL, 0, '2026-03-20T11:00:00'),
-        (6,  14, N'delivered',  N'cod',     N'paid',   30000,    969000,
-          N'{"full_name":"Hoàng Thị Nga","phone":"0901000013","address_line":"56 Bà Triệu, Hai Bà Trưng","city":"Hà Nội"}',
+        (6,  6,  N'delivered',  N'cod',     N'paid',   30000,    969000,
+          N'{"full_name":"Hoàng Thị Nga","phone":"0901000005","address_line":"56 Bà Triệu, Hai Bà Trưng","city":"Hà Nội"}',
           N'WELCOME10', 100000, '2026-03-25T08:30:00'),
-        (7,  15, N'delivered',  N'vnpay', N'paid',   0,        29990000,
-          N'{"full_name":"Đỗ Văn Khoa","phone":"0901000014","address_line":"78 Hùng Vương, Thanh Khê","city":"Đà Nẵng"}',
+        (7,  7,  N'delivered',  N'vnpay', N'paid',   0,        29990000,
+          N'{"full_name":"Đỗ Văn Khoa","phone":"0901000006","address_line":"78 Hùng Vương, Thanh Khê","city":"Đà Nẵng"}',
           NULL, 0, '2026-03-30T15:45:00'),
 
         -- April 2026: mix of delivered and cancelled
-        (8,  16, N'delivered',  N'cod',     N'paid',   30000,    4320000,
-          N'{"full_name":"Bùi Minh Tâm","phone":"0901000015","address_line":"90 Nguyễn Trãi, Quận 5","city":"Hồ Chí Minh"}',
+        (8,  8,  N'delivered',  N'cod',     N'paid',   30000,    4320000,
+          N'{"full_name":"Bùi Minh Tâm","phone":"0901000007","address_line":"90 Nguyễn Trãi, Quận 5","city":"Hồ Chí Minh"}',
           NULL, 0, '2026-04-03T13:10:00'),
         (9,  3,  N'delivered',  N'momo',    N'paid',   30000,    1070000,
           N'{"full_name":"Trần Thị Bình","phone":"0901000002","address_line":"789 Trần Hưng Đạo, Quận 5","city":"Hồ Chí Minh"}',
@@ -52,16 +52,16 @@ export const OrderSeed: ISeed = {
         (12, 2,  N'delivered',  N'vnpay', N'paid',   30000,    2339000,
           N'{"full_name":"Nguyễn Văn An","phone":"0901000001","address_line":"456 Nguyễn Huệ, Quận 1","city":"Hồ Chí Minh"}',
           N'FREESHIP', 30000, '2026-04-22T14:20:00'),
-        (13, 14, N'delivered',  N'cod',     N'paid',   30000,    287000,
-          N'{"full_name":"Hoàng Thị Nga","phone":"0901000013","address_line":"56 Bà Triệu, Hai Bà Trưng","city":"Hà Nội"}',
+        (13, 6,  N'delivered',  N'cod',     N'paid',   30000,    287000,
+          N'{"full_name":"Hoàng Thị Nga","phone":"0901000005","address_line":"56 Bà Triệu, Hai Bà Trưng","city":"Hà Nội"}',
           NULL, 0, '2026-04-28T11:45:00'),
 
         -- May 2026: mix of delivered, shipping, confirmed
-        (14, 15, N'delivered',  N'momo',    N'paid',   30000,    962200,
-          N'{"full_name":"Đỗ Văn Khoa","phone":"0901000014","address_line":"78 Hùng Vương, Thanh Khê","city":"Đà Nẵng"}',
+        (14, 7,  N'delivered',  N'momo',    N'paid',   30000,    962200,
+          N'{"full_name":"Đỗ Văn Khoa","phone":"0901000006","address_line":"78 Hùng Vương, Thanh Khê","city":"Đà Nẵng"}',
           N'FASHION20', 95800, '2026-05-02T16:30:00'),
-        (15, 16, N'delivered',  N'vnpay', N'paid',   0,        33490000,
-          N'{"full_name":"Bùi Minh Tâm","phone":"0901000015","address_line":"90 Nguyễn Trãi, Quận 5","city":"Hồ Chí Minh"}',
+        (15, 8,  N'delivered',  N'vnpay', N'paid',   0,        33490000,
+          N'{"full_name":"Bùi Minh Tâm","phone":"0901000007","address_line":"90 Nguyễn Trãi, Quận 5","city":"Hồ Chí Minh"}',
           NULL, 0, '2026-05-07T09:00:00'),
         (16, 3,  N'shipping',   N'cod',     N'unpaid', 30000,    969000,
           N'{"full_name":"Trần Thị Bình","phone":"0901000002","address_line":"789 Trần Hưng Đạo, Quận 5","city":"Hồ Chí Minh"}',
@@ -75,16 +75,16 @@ export const OrderSeed: ISeed = {
         (19, 5,  N'confirmed',  N'vnpay', N'paid',   0,        32990000,
           N'{"full_name":"Phạm Minh Đức","phone":"0901000004","address_line":"34 Tràng Tiền, Hoàn Kiếm","city":"Hà Nội"}',
           NULL, 0, '2026-05-25T15:20:00'),
-        (20, 14, N'shipping',   N'momo',    N'paid',   30000,    356000,
-          N'{"full_name":"Hoàng Thị Nga","phone":"0901000013","address_line":"56 Bà Triệu, Hai Bà Trưng","city":"Hà Nội"}',
+        (20, 6,  N'shipping',   N'momo',    N'paid',   30000,    356000,
+          N'{"full_name":"Hoàng Thị Nga","phone":"0901000005","address_line":"56 Bà Triệu, Hai Bà Trưng","city":"Hà Nội"}',
           N'BOOK30', 33000, '2026-05-28T08:15:00'),
 
         -- June 2026: mostly pending/confirmed
-        (21, 15, N'confirmed',  N'cod',     N'unpaid', 30000,    4320000,
-          N'{"full_name":"Đỗ Văn Khoa","phone":"0901000014","address_line":"78 Hùng Vương, Thanh Khê","city":"Đà Nẵng"}',
+        (21, 7,  N'confirmed',  N'cod',     N'unpaid', 30000,    4320000,
+          N'{"full_name":"Đỗ Văn Khoa","phone":"0901000006","address_line":"78 Hùng Vương, Thanh Khê","city":"Đà Nẵng"}',
           NULL, 0, '2026-06-01T11:30:00'),
-        (22, 16, N'pending',    N'vnpay', N'unpaid', 30000,    819000,
-          N'{"full_name":"Bùi Minh Tâm","phone":"0901000015","address_line":"90 Nguyễn Trãi, Quận 5","city":"Hồ Chí Minh"}',
+        (22, 8,  N'pending',    N'vnpay', N'unpaid', 30000,    819000,
+          N'{"full_name":"Bùi Minh Tâm","phone":"0901000007","address_line":"90 Nguyễn Trãi, Quận 5","city":"Hồ Chí Minh"}',
           NULL, 0, '2026-06-03T09:45:00'),
         (23, 3,  N'pending',    N'cod',     N'unpaid', 30000,    579000,
           N'{"full_name":"Trần Thị Bình","phone":"0901000002","address_line":"789 Trần Hưng Đạo, Quận 5","city":"Hồ Chí Minh"}',
@@ -131,17 +131,17 @@ export const OrderSeed: ISeed = {
         (9,  5,  37, 6, N'Lan Accessories',        N'Sạc nhanh 65W GaN',       N'SN65W-GAN',       549000, 1,
           N'https://picsum.photos/seed/sac-65w-gan/400/400',      NULL,          NULL,              NULL,          NULL),
 
-        -- Order 6: user 14, shop 1 + shop 7 (with WELCOME10 coupon)
+        -- Order 6: user 6, shop 1 + shop 7 (with WELCOME10 coupon)
         (10, 6,  6,  1, N'Shop Thời Trang Hằng', N'Áo thun nam oversize',     N'ATO-DEN-L',       249000, 1,
           N'https://picsum.photos/seed/ao-thun-oversize/400/400', N'Màu sắc',    N'Đen',            N'Kích thước', N'L'),
         (11, 6,  21, 7, N'Sơn Sneakers',          N'Giày sneaker trắng',       N'GST-40',          790000, 1,
           N'https://picsum.photos/seed/sneaker-trang/400/400',    N'Kích thước', N'40',             NULL,          NULL),
 
-        -- Order 7: user 15, shop 2
+        -- Order 7: user 7, shop 2
         (12, 7,  31, 2, N'TechZone VN',           N'Samsung Galaxy S24 Ultra', N'SS24U-256-DEN',   29990000, 1,
           N'https://picsum.photos/seed/samsung-s24/400/400',      N'Dung lượng', N'256GB',          N'Màu',        N'Đen'),
 
-        -- Order 8: user 16, shop 3
+        -- Order 8: user 8, shop 3
         (13, 8,  40, 3, N'Mai''s Home & Living',  N'Ghế công thái học',        N'GCT-DEN',         4290000, 1,
           N'https://picsum.photos/seed/ghe-ergonomic/400/400',    N'Màu sắc',    N'Đen',            NULL,          NULL),
 
@@ -167,19 +167,19 @@ export const OrderSeed: ISeed = {
         (20, 12, 43, 3, N'Mai''s Home & Living',  N'Bộ dao nhà bếp 6 món',    N'BD-6MON',         749000, 1,
           N'https://picsum.photos/seed/bo-dao/400/400',           NULL,          NULL,              NULL,          NULL),
 
-        -- Order 13: user 14, shop 4
+        -- Order 13: user 6, shop 4
         (21, 13, 44, 4, N'Bảo Books',             N'Đắc Nhân Tâm',            N'DNT-01',           69000, 2,
           N'https://picsum.photos/seed/dac-nhan-tam/400/400',     NULL,          NULL,              NULL,          NULL),
         (22, 13, 45, 4, N'Bảo Books',             N'Atomic Habits',            N'AH-01',            119000, 1,
           N'https://picsum.photos/seed/atomic-habits/400/400',    NULL,          NULL,              NULL,          NULL),
 
-        -- Order 14: user 15, shop 5 + shop 6 (with FASHION20 coupon)
+        -- Order 14: user 7, shop 5 + shop 6 (with FASHION20 coupon)
         (23, 14, 14, 5, N'Hùng Style',            N'Quần jean nam slim fit',   N'QJS-XANH-30',     479000, 1,
           N'https://picsum.photos/seed/quan-jean-slim/400/400',   N'Màu sắc',    N'Xanh đậm',      N'Kích thước', N'30'),
         (24, 14, 37, 6, N'Lan Accessories',        N'Sạc nhanh 65W GaN',       N'SN65W-GAN',       549000, 1,
           N'https://picsum.photos/seed/sac-65w-gan/400/400',      NULL,          NULL,              NULL,          NULL),
 
-        -- Order 15: user 16, shop 2
+        -- Order 15: user 8, shop 2
         (25, 15, 35, 2, N'TechZone VN',           N'Lenovo ThinkPad X1 Carbon', N'TP-X1-C12',      33490000, 1,
           N'https://picsum.photos/seed/thinkpad-x1/400/400',      NULL,          NULL,              NULL,          NULL),
 
@@ -203,17 +203,17 @@ export const OrderSeed: ISeed = {
         (31, 19, 29, 2, N'TechZone VN',           N'iPhone 15 Pro Max',        N'IP15PM-256-XD',   32990000, 1,
           N'https://picsum.photos/seed/iphone-15-promax/400/400', N'Dung lượng', N'256GB',          N'Màu',        N'Xanh dương'),
 
-        -- Order 20: user 14, shop 4 + shop 1 (with BOOK30 coupon, shipping)
+        -- Order 20: user 6, shop 4 + shop 1 (with BOOK30 coupon, shipping)
         (32, 20, 46, 4, N'Bảo Books',             N'Nhà Giả Kim',             N'NGK-01',           55000, 2,
           N'https://picsum.photos/seed/nha-gia-kim/400/400',      NULL,          NULL,              NULL,          NULL),
         (33, 20, 6,  1, N'Shop Thời Trang Hằng', N'Áo thun nam oversize',     N'ATO-DEN-L',       249000, 1,
           N'https://picsum.photos/seed/ao-thun-oversize/400/400', N'Màu sắc',    N'Đen',            N'Kích thước', N'L'),
 
-        -- Order 21: user 15, shop 3 (confirmed)
+        -- Order 21: user 7, shop 3 (confirmed)
         (34, 21, 40, 3, N'Mai''s Home & Living',  N'Ghế công thái học',        N'GCT-DEN',         4290000, 1,
           N'https://picsum.photos/seed/ghe-ergonomic/400/400',    N'Màu sắc',    N'Đen',            NULL,          NULL),
 
-        -- Order 22: user 16, shop 5 (pending)
+        -- Order 22: user 8, shop 5 (pending)
         (35, 22, 18, 5, N'Hùng Style',            N'Quần kaki nam',            N'QKK-BE-30',       420000, 1,
           N'https://picsum.photos/seed/quan-kaki/400/400',        N'Màu sắc',    N'Be',             N'Kích thước', N'30'),
         (36, 22, 20, 5, N'Hùng Style',            N'Quần kaki nam',            N'QKK-DEN-30',      369000, 1,
@@ -233,6 +233,16 @@ export const OrderSeed: ISeed = {
       SET IDENTITY_INSERT order_items OFF;
     `);
     console.log('  + order_items: 39 rows');
+
+    // Assign shipper (user_id=16) to delivered & shipping orders + set delivered_at
+    await qr.query(`
+      UPDATE orders SET shipper_id = 16, delivered_at = DATEADD(DAY, 2, created_at)
+      WHERE id IN (1,2,3,5,6,7,8,9,10,12,13,14,15,17);
+
+      UPDATE orders SET shipper_id = 16
+      WHERE id IN (16,18,20);
+    `);
+    console.log('  + shipper assignments: 17 orders (14 delivered + 3 shipping)');
 
     await qr.release();
   },

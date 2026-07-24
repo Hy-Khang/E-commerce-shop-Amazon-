@@ -13,6 +13,7 @@ import { OrderItem } from './order-item.entity';
 @Entity('orders')
 @Index('idx_orders_user_id', ['user_id'])
 @Index('idx_orders_delivered_at', ['delivered_at'])
+@Index('idx_orders_shipper_id', ['shipper_id'])
 export class Order {
   @PrimaryGeneratedColumn()
   id: number;
@@ -50,9 +51,16 @@ export class Order {
   @Column({ type: 'datetime2', nullable: true })
   delivered_at: Date | null;
 
+  @Column({ type: 'int', nullable: true })
+  shipper_id: number | null;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'shipper_id' })
+  shipper: User;
 
   @OneToMany(() => OrderItem, (item) => item.order)
   order_items: OrderItem[];

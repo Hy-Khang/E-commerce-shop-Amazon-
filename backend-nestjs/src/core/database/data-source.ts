@@ -24,8 +24,11 @@ import { CouponProduct } from '../../features/coupon/entities/coupon-product.ent
 import { CouponUsage } from '../../features/coupon/entities/coupon-usage.entity';
 import { Permission } from '../../features/auth/entities/permission.entity';
 import { RolePermission } from '../../features/auth/entities/role-permission.entity';
+import { UserAuthProvider } from '../../features/auth/entities/user-auth-provider.entity';
+import { OAuthCode } from '../../features/auth/entities/oauth-code.entity';
 import { Shop } from '../../features/shop/entities/shop.entity';
 import { Notification } from '../../features/notification/entities/notification.entity';
+import { PaymentTransaction } from '../../features/payment/entities/payment-transaction.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -55,8 +58,11 @@ export const AppDataSource = new DataSource({
     CouponUsage,
     Permission,
     RolePermission,
+    UserAuthProvider,
+    OAuthCode,
     Shop,
     Notification,
+    PaymentTransaction,
   ],
   options: {
     trustServerCertificate: true,

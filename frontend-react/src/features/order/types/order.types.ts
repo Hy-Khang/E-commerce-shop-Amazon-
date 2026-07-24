@@ -109,6 +109,11 @@ export interface SellerOrderDetail extends Order {
   seller_items_total: number;
 }
 
+export interface ShipperOrderListParams extends PaginationParams {
+  filter?: 'available' | 'my_deliveries';
+  status?: OrderStatus;
+}
+
 // --- Request types ---
 
 export interface CreateOrderRequest {

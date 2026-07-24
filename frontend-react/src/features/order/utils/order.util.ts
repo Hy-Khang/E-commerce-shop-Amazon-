@@ -54,6 +54,15 @@ export function getSellerNextStatuses(current: OrderStatus): OrderStatus[] {
   return SELLER_TRANSITIONS[current] ?? [];
 }
 
+const SHIPPER_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus[]>> = {
+  confirmed: ['shipping'],
+  shipping: ['delivered'],
+};
+
+export function getShipperNextStatuses(current: OrderStatus): OrderStatus[] {
+  return SHIPPER_TRANSITIONS[current] ?? [];
+}
+
 export function getValidNextStatuses(
   current: OrderStatus,
   paymentStatus?: PaymentStatus,

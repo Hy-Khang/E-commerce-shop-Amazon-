@@ -71,6 +71,7 @@ const AdminShopDetailPage = lazy(() => import('@/features/shop/pages/AdminShopDe
 
 const ShipperDashboardPage = lazy(() => import('@/features/dashboard/pages/ShipperDashboardPage'));
 const ShipperDeliveryListPage = lazy(() => import('@/features/order/pages/ShipperDeliveryListPage'));
+const ShipperDeliveryDetailPage = lazy(() => import('@/features/order/pages/ShipperDeliveryDetailPage'));
 
 const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
 const ForbiddenPage = lazy(() => import('@/common/components/feedback/ForbiddenPage'));
@@ -201,6 +202,7 @@ export const router = createBrowserRouter([
             children: [
               { path: 'shipper/dashboard', element: <SuspenseWrapper><ShipperDashboardPage /></SuspenseWrapper> },
               { path: 'shipper/deliveries', element: <SuspenseWrapper><ShipperDeliveryListPage /></SuspenseWrapper> },
+              { path: 'shipper/deliveries/:id', element: <SuspenseWrapper><ShipperDeliveryDetailPage /></SuspenseWrapper> },
               { path: 'shipper/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },

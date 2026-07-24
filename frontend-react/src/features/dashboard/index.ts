@@ -1,2 +1,3 @@
 export { useDashboardStats, dashboardKeys } from './hooks/useDashboardStats';
-export type { DashboardStats } from './types/dashboard.types';
+export { useShipperDashboardStats, shipperDashboardKeys } from './hooks/useShipperDashboardStats';
+export type { DashboardStats, ShipperDashboardStats } from './types/dashboard.types';

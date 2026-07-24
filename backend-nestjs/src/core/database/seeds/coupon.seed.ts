@@ -58,10 +58,10 @@ export const CouponSeed: ISeed = {
     await qr.query(`
       SET IDENTITY_INSERT coupon_usages ON;
       INSERT INTO coupon_usages (id, coupon_id, user_id, order_id, discount_amount, status, created_at) VALUES
-        (1, 1, 14, 6,  100000, N'applied', '2026-03-25T08:30:00'),
+        (1, 1, 6,  6,  100000, N'applied', '2026-03-25T08:30:00'),
         (2, 5, 2,  12, 30000,  N'applied', '2026-04-22T14:20:00'),
-        (3, 2, 15, 14, 95800,  N'applied', '2026-05-02T16:30:00'),
-        (4, 4, 14, 20, 33000,  N'applied', '2026-05-28T08:15:00');
+        (3, 2, 7,  14, 95800,  N'applied', '2026-05-02T16:30:00'),
+        (4, 4, 6,  20, 33000,  N'applied', '2026-05-28T08:15:00');
       SET IDENTITY_INSERT coupon_usages OFF;
     `);
     console.log('  + coupon_usages: 4 rows');

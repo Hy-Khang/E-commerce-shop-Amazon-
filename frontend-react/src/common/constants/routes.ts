@@ -58,6 +58,7 @@ export const ROUTES = {
 
   SHIPPER_DASHBOARD: '/shipper/dashboard',
   SHIPPER_DELIVERIES: '/shipper/deliveries',
+  SHIPPER_DELIVERY_DETAIL: (id: number) => `/shipper/deliveries/${id}`,
   SHIPPER_NOTIFICATIONS: '/shipper/notifications',
 } as const;
 

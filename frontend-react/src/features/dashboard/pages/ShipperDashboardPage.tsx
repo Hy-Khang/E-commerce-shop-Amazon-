@@ -1,36 +1,68 @@
-import { Truck, BarChart3 } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+import { CheckCircle, Truck, Package, Clock } from 'lucide-react';
+import { useShipperDashboardStats } from '../hooks/useShipperDashboardStats';
+import { StatCard } from '../components/StatCard';
+import { ShipperRecentDeliveriesTable } from '../components/ShipperRecentDeliveriesTable';
+import { DashboardSkeleton } from '../components/DashboardSkeleton';
+import { SectionError } from '../components/SectionError';
+
+const DeliveryChart = lazy(() => import('../components/DeliveryChart'));
+
+function ChartFallback() {
+  return <div className="h-80 animate-pulse rounded-xl bg-slate-200" />;
+}
 
 export default function ShipperDashboardPage() {
+  const { data: stats, isLoading, refetch } = useShipperDashboardStats();
+
+  if (isLoading || !stats) return <DashboardSkeleton />;
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">Shipper Dashboard</h1>
-      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6">
-        <div className="flex items-start gap-4">
-          <BarChart3 className="mt-0.5 h-6 w-6 text-emerald-600" />
-          <div>
-            <h2 className="text-lg font-semibold text-emerald-900">Welcome to Shipper Portal</h2>
-            <p className="mt-1 text-sm text-emerald-700">
-              Your delivery dashboard is coming soon. You&apos;ll be able to track delivery stats, earnings, and performance here.
-            </p>
-          </div>
+    <div className="space-y-8">
+      <h1 className="font-jakarta text-3xl font-extrabold tracking-tight text-slate-900">
+        Shipper Dashboard
+      </h1>
+
+      {stats.summary ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Total Delivered"
+            value={stats.summary.totalDelivered.toLocaleString()}
+            icon={CheckCircle}
+            color="emerald"
+            index={0}
+          />
+          <StatCard
+            title="Active Deliveries"
+            value={stats.summary.activeDeliveries.toLocaleString()}
+            icon={Truck}
+            color="blue"
+            index={1}
+          />
+          <StatCard
+            title="Available for Pickup"
+            value={stats.summary.availableForPickup.toLocaleString()}
+            icon={Package}
+            color="amber"
+            index={2}
+          />
+          <StatCard
+            title="Delivered Today"
+            value={stats.summary.deliveredToday.toLocaleString()}
+            icon={Clock}
+            color="teal"
+            index={3}
+          />
         </div>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex items-center gap-3 rounded-lg border p-4 opacity-50">
-          <Truck className="h-5 w-5 text-slate-400" />
-          <div>
-            <div className="text-sm font-medium text-slate-900">Deliveries</div>
-            <div className="text-xs text-slate-500">Coming soon</div>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 rounded-lg border p-4 opacity-50">
-          <BarChart3 className="h-5 w-5 text-slate-400" />
-          <div>
-            <div className="text-sm font-medium text-slate-900">Analytics</div>
-            <div className="text-xs text-slate-500">Coming soon</div>
-          </div>
-        </div>
-      </div>
+      ) : (
+        <SectionError title="Summary" onRetry={refetch} />
+      )}
+
+      <Suspense fallback={<ChartFallback />}>
+        <DeliveryChart data={stats.deliveriesOverTime} />
+      </Suspense>
+
+      <ShipperRecentDeliveriesTable deliveries={stats.recentDeliveries} />
     </div>
   );
 }

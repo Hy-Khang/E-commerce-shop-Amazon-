@@ -35,6 +35,7 @@ import {
   DEFAULT_SHIPPING_FEE,
   IShippingAddressSnapshot,
 } from './types/order.types';
+import { ShipperOrderQueryDto } from './dto/shipper-order-query.dto';
 import {
   toOrderResponse,
   toOrderListItemResponse,
@@ -676,6 +677,144 @@ export class OrderService {
     );
 
     return toSellerOrderResponse(order, shop.id);
+  }
+
+  // ─── Shipper endpoints ───
+
+  async findShipperOrders(
+    userId: number,
+    query: ShipperOrderQueryDto,
+  ): Promise<IPaginatedResult<OrderListItemResponseDto>> {
+    const result =
+      query.filter === 'my_deliveries'
+        ? await this.orderRepository.findByShipperIdPaginated(userId, query)
+        : await this.orderRepository.findAvailableForShipperPaginated(query);
+
+    return {
+      data: result.data.map(toOrderListItemResponse),
+      meta: result.meta,
+    };
+  }
+
+  async findShipperOrderById(
+    userId: number,
+    orderId: number,
+  ): Promise<AdminOrderResponseDto> {
+    const order = await this.orderRepository.findByIdWithItemsAndUser(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    const isAssigned = order.shipper_id === userId;
+    const isAvailable =
+      order.status === OrderStatus.Confirmed && order.shipper_id === null;
+
+    if (!isAssigned && !isAvailable) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    return toAdminOrderResponse(order);
+  }
+
+  async acceptOrder(
+    userId: number,
+    orderId: number,
+  ): Promise<AdminOrderResponseDto> {
+    const result = await this.orderRepository.atomicAssignShipper(
+      orderId,
+      userId,
+    );
+
+    if (result.affected === 0) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message:
+          'Order already assigned to another shipper or not in confirmed status',
+      });
+    }
+
+    const order = await this.orderRepository.findByIdWithItemsAndUser(orderId);
+
+    this.eventEmitter.emit('order.status_updated', {
+      orderId: order!.id,
+      userId: order!.user_id,
+      notifyUserIds: [order!.user_id],
+      oldStatus: OrderStatus.Confirmed,
+      newStatus: OrderStatus.Shipping,
+      actorType: ActorType.Shipper,
+    });
+
+    this.logger.log(
+      `Order #${orderId} accepted by shipper ${userId}`,
+    );
+
+    return toAdminOrderResponse(order!);
+  }
+
+  async markDelivered(
+    userId: number,
+    orderId: number,
+  ): Promise<AdminOrderResponseDto> {
+    const order = await this.orderRepository.findByIdWithItemsAndUser(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    if (order.shipper_id !== userId) {
+      throw new ForbiddenException({
+        code: 'ORDER_004',
+        message: 'Order does not belong to user',
+      });
+    }
+
+    if (order.status !== OrderStatus.Shipping) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message: 'Invalid status transition',
+      });
+    }
+
+    if (
+      order.payment_method !== PaymentMethod.Cod &&
+      order.payment_status === PaymentStatus.Unpaid
+    ) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message: 'Order must be paid before marking as delivered',
+      });
+    }
+
+    const oldStatus = order.status;
+    await this.orderRepository.updateStatusWithDeliveredAt(
+      orderId,
+      OrderStatus.Delivered,
+      new Date(),
+    );
+    order.status = OrderStatus.Delivered;
+
+    this.eventEmitter.emit('order.status_updated', {
+      orderId: order.id,
+      userId: order.user_id,
+      notifyUserIds: [order.user_id],
+      oldStatus,
+      newStatus: OrderStatus.Delivered,
+      actorType: ActorType.Shipper,
+    });
+
+    this.logger.log(
+      `Order #${orderId} marked as delivered by shipper ${userId}`,
+    );
+
+    return toAdminOrderResponse(order);
   }
 
   // ─── Cross-feature: consumed by review ───

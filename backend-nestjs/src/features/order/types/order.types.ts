@@ -21,6 +21,11 @@ export const SELLER_STATUS_TRANSITIONS: Record<string, string[]> = {
   [OrderStatus.Shipping]: [OrderStatus.Delivered],
 };
 
+export const SHIPPER_STATUS_TRANSITIONS: Record<string, string[]> = {
+  [OrderStatus.Confirmed]: [OrderStatus.Shipping],
+  [OrderStatus.Shipping]: [OrderStatus.Delivered],
+};
+
 export const DEFAULT_SHIPPING_FEE = 30000;
 
 export interface IShippingAddressSnapshot {
