@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
   UnauthorizedException,
@@ -83,7 +84,7 @@ export class AuthService {
     const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    await this.userRepository.create({
+    const user = await this.userRepository.create({
       email: dto.email,
       password_hash: passwordHash,
       full_name: dto.full_name,
@@ -95,7 +96,18 @@ export class AuthService {
       email_verify_count_reset: new Date(),
     });
 
-    await this.mailService.sendVerificationEmail(dto.email, dto.full_name, otp);
+    try {
+      await this.mailService.sendVerificationEmail(dto.email, dto.full_name, otp);
+    } catch {
+      user.email_verify_token = null;
+      user.email_verify_expires = null;
+      user.email_verify_count = 0;
+      await this.userRepository.save(user);
+      throw new InternalServerErrorException({
+        code: 'AUTH_012',
+        message: 'Account created but failed to send verification email. Please use resend.',
+      });
+    }
 
     this.logger.log(`User registered: ${dto.email}`);
 

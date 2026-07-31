@@ -259,6 +259,9 @@
 |-------|------|-------------|
 | id | INT | PK, auto-increment |
 | user_id | INT | FK → `users.id`, NOT NULL |
+| shop_id | INT | FK → `shops.id`, NOT NULL — each order belongs to exactly one shop |
+| shop_name | NVARCHAR(100) | NOT NULL — **snapshot** of shop name at order time (immutable) |
+| order_group_id | NVARCHAR(36) | NOT NULL — UUID linking orders from the same checkout |
 | status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `pending` / `confirmed` / `shipping` / `delivered` / `completed` / `return_requested` / `cancelled` |
 | payment_method | NVARCHAR(20) | NOT NULL — `cod` / `vnpay` / `momo` |
 | payment_status | NVARCHAR(20) | NOT NULL, DEFAULT `'unpaid'` — `unpaid` / `paid` |
@@ -272,14 +275,17 @@
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
 > **Key decisions:**
+> - **Multi-shop order splitting:** 1 checkout → N orders (1 per shop), linked by `order_group_id` (UUID v4). Each order has `shop_id` + `shop_name` denormalized directly, avoiding joins through `order_items` for seller queries.
+> - `shop_name` is an immutable snapshot — not updated when shop changes name.
 > - `shipping_address` is a JSON snapshot — preserves the address at order time even if the user edits/deletes their address later.
 > - `payment_status` is independent from `status` — a paid order can still be cancelled (triggers refund flow).
-> - `coupon_code` and `discount_amount` are snapshots — immune to coupon edits/deletions after checkout.
-> - **Formula:** `total_amount = itemsTotal - discount_amount + shipping_fee`
+> - `coupon_code` and `discount_amount` are snapshots — immune to coupon edits/deletions after checkout. Discount is proportionally distributed across sub-orders: `shopDiscount = (shopItemsTotal / totalItemsAmount) × discountAmount`.
+> - **Formula:** `total_amount = shopItemsTotal - discount_amount + shipping_fee` (per sub-order)
 > - Enums stored as string columns for readability and easy migration.
 > - **Order completion flow:** `delivered` is no longer terminal. Customer can confirm receipt (`completed`) or request return (`return_requested`). Orders auto-complete 7 days after `delivered_at` via hourly cron. Revenue (dashboard) and review eligibility require `completed` status.
 > - **`delivered_at`** is set when order transitions to `delivered` (admin, seller, or shipper). Used by auto-complete cron to find orders past the 7-day window.
 > - **`shipper_id`** is assigned when a shipper accepts the order (first-come-first-served). Atomic conditional UPDATE prevents race conditions. `ON DELETE SET NULL` preserves order history if shipper account is deleted.
+> - **Coupon reversal:** Only reversed when ALL orders in the same `order_group_id` are cancelled — cancelling one sub-order does not reverse the coupon.
 
 #### `order_items` — Immutable Snapshots
 
@@ -437,6 +443,7 @@
 |-------|------|-------------|
 | id | INT | PK, auto-increment |
 | order_id | INT | FK → `orders.id`, NOT NULL |
+| order_group_id | NVARCHAR(36) | NULL — links transaction to an order group for group payments |
 | transaction_ref | NVARCHAR(100) | NOT NULL, UNIQUE — reference sent to payment gateway |
 | gateway | NVARCHAR(20) | NOT NULL — `'vnpay'` / `'momo'` |
 | amount | DECIMAL(10,2) | NOT NULL |
@@ -448,6 +455,7 @@
 
 > **Design decisions:**
 > - **One order → many transactions** — each payment attempt (including retries) creates a new record. Supports retry after failure/timeout.
+> - **Group payments** — when paying for an order group, `order_group_id` links the transaction to all orders in the group. `order_id` is set to the first active order (keeps `generateTransactionRef` format). On IPN success, `payment.completed` event includes `orderGroupId` → `OrderPaymentListener` sets ALL orders in the group to `payment_status = 'paid'` in a single DB transaction.
 > - **Timeout cron** — transactions pending for 15+ minutes are automatically marked `failed` (every 5 minutes). Order `payment_status` stays `unpaid` — user can retry.
 > - **Idempotency** — IPN callbacks check `status !== 'pending'` before updating. Duplicate callbacks are no-ops.
 > - **Event-driven** — on successful payment, `payment.completed` event is emitted → `OrderPaymentListener` sets `orders.payment_status = 'paid'`.
@@ -475,6 +483,7 @@ erDiagram
     users ||--o{ notifications : "has notifications"
 
     shops ||--o{ products : "sells"
+    shops ||--o{ orders : "has orders"
 
     categories ||--o{ categories : "parent → children"
     categories ||--o{ products : "contains"
@@ -544,6 +553,8 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | order_items | `idx_order_items_order_id` | order_id | Load items for an order |
 | order_items | `idx_order_items_shop_id` | shop_id | Filter order items by shop |
 | orders | `idx_orders_user_id` | user_id | User's order history |
+| orders | `idx_orders_shop_id` | shop_id | Filter orders by shop (seller queries) |
+| orders | `idx_orders_order_group_id` | order_group_id | Lookup all orders in a checkout group |
 | orders | `idx_orders_shipper_id` | shipper_id | Filter orders by shipper |
 | orders | `idx_orders_delivered_at` | delivered_at | Auto-complete cron: find delivered orders past 7-day window |
 | reviews | `idx_reviews_product_id` | product_id | Product review listing |
@@ -559,5 +570,6 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | notifications | `idx_notifications_user_id_is_read` | user_id, is_read | Paginated listing + unread count |
 | notifications | `idx_notifications_created_at` | created_at | Sort by newest first |
 | payment_transactions | `idx_payment_transactions_order_id` | order_id | List transactions for an order |
+| payment_transactions | `idx_payment_transactions_order_group_id` | order_group_id | Lookup transactions by order group |
 | payment_transactions | `idx_payment_transactions_status` | status | Timeout cron: find pending transactions |
 | payment_transactions | `uq_payment_transactions_transaction_ref` | transaction_ref | UNIQUE — IPN lookup by gateway ref |

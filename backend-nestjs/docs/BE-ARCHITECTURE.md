@@ -137,7 +137,7 @@ graph LR
 
 ### Concrete Example — POST /api/v1/orders (Checkout)
 
-The most complex cross-feature flow:
+The most complex cross-feature flow — creates N orders (1 per shop) from a single cart:
 
 ```
 Request (JWT + CreateOrderDto)
@@ -148,13 +148,18 @@ Request (JWT + CreateOrderDto)
   → OrderController.checkout()
     → OrderService.checkout(userId, dto)
       ├── CartService.getCartWithItems(userId)          — [DI] read cart
+      ├── Group cart items by shop_id                   — Map<shopId, items[]>
       ├── ProductService.validateAndSnapshotItems()     — [DI] check stock, snapshot name/sku/price
-      ├── OrderRepository.createOrder()                 — persist order + order_items
+      ├── Generate order_group_id (UUID v4)             — links all sub-orders
+      ├── For each shop group:
+      │   ├── Calculate shopItemsTotal, proportional discount
+      │   ├── OrderRepository.createOrder()             — persist per-shop order + order_items
+      │   └── CouponService.recordUsage()               — increment once for entire group
       ├── CartService.clearCart(userId)                  — [DI] clear cart after success
-      └── EventEmitter2.emit('order.created', payload)  — [async] fire-and-forget
+      └── EventEmitter2.emit('order.created', payload)  — [async] per order
           → ProductService.onOrderCreated()             — deducts stock (optimistic lock)
-  → TransformInterceptor          — wraps: { success: true, data: OrderResponseDto }
-  ← 201 Created
+  → TransformInterceptor          — wraps: { success: true, data: CheckoutResponseDto }
+  ← 201 Created { order_group_id, orders[], total_amount }
 ```
 
 ---
@@ -174,6 +179,7 @@ graph TD
     Order["order"] --> Auth
     Order --> Cart
     Order --> Product
+    Order --> Shop
     Review["review"] --> Auth
     Review --> Order
     Review --> Product
@@ -218,14 +224,14 @@ graph TD
 | shop | *(via global AuthModule)* | — |
 | product | ShopModule | `order.created`, `order.cancelled` |
 | cart | ProductModule | — |
-| order | CartModule, ProductModule, ShopModule, ScheduleModule | `payment.completed` (emits `order.status_updated`, has `OrderScheduler` cron) |
+| order | CartModule, ProductModule, ShopModule, CouponModule, ScheduleModule | `payment.completed` (emits `order.status_updated`, has `OrderScheduler` cron). Controllers: `OrderController` (customer), `SellerOrderController` (seller), admin order endpoints |
 | review | OrderModule, ProductModule | — |
 | wishlist | ProductModule | — |
 | coupon | — | — |
 | upload | — | — |
 | notification | — | `order.placed`, `order.status_updated` |
 | payment | OrderModule | — (emits `payment.completed`, has timeout cron) |
-| dashboard | TypeOrmModule (Order entity), ShopModule | — |
+| dashboard | TypeOrmModule (Order entity), ShopModule | — (controllers: `AdminDashboardController`, `SellerDashboardController`, `ShipperDashboardController`) |
 
 > **AuthModule is global** — registered via `AuthModule.forRoot()` in AppModule with `global: true`. All features receive AuthService, JwtAuthGuard, PermissionsGuard automatically without explicit imports.
 

@@ -34,7 +34,7 @@
 Admin endpoints use **permission-based access control** via `@Permissions()` decorator (not `@Roles()`). Each role has a set of permissions assigned via the `role_permissions` junction table. Permissions follow the `resource:action` format (e.g. `products:create`, `orders:read`, `dashboard:read`).
 
 - **Admin** — all permissions
-- **Seller** — `products:*`, `categories:read`, `orders:read`, `uploads:create`, `dashboard:read`, `shops:create`, `shops:read`, `shops:update`
+- **Seller** — `products:*`, `categories:read`, `orders:read`, `orders:update`, `uploads:create`, `dashboard:read`, `shops:create`, `shops:read`, `shops:update`
 - **Shipper** — `orders:read`, `orders:update`, `dashboard:read`
 - **Customer** — no admin permissions (customer actions use JWT auth only)
 
@@ -210,12 +210,17 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| POST | `/orders` | Checkout — create order from cart | Customer |
+| POST | `/orders` | Checkout — create orders from cart (1 per shop, linked by `order_group_id`) | Customer |
 | GET | `/orders` | List my orders (paginated) | Customer |
+| GET | `/orders/group/:groupId` | Get all orders in a group (own only) | Customer |
 | GET | `/orders/:id` | Get order detail + order_items (own only) | Customer |
 | PATCH | `/orders/:id/cancel` | Cancel order (if status = pending) | Customer |
 | PATCH | `/orders/:id/confirm-receipt` | Confirm receipt — delivered → completed | Customer |
 | PATCH | `/orders/:id/return-request` | Request return/refund — delivered → return_requested | Customer |
+
+> **Multi-shop checkout:** `POST /orders` splits the cart into N orders (1 per shop), all sharing the same `order_group_id` (UUID v4). Returns `CheckoutResponseDto { order_group_id, orders[], total_amount }`. Coupon discount is proportionally distributed across sub-orders. Each order has its own `shop_id`, `shop_name` (snapshot), `shipping_fee`, and `total_amount`.
+>
+> **Coupon reversal:** Cancelling one sub-order does NOT reverse the coupon. Only when ALL orders in the group are cancelled is the coupon usage reversed and `current_uses` decremented by 1.
 
 ### Review — `/api/v1/reviews`
 
@@ -257,16 +262,20 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| POST | `/payments/create` | Create payment URL for an order (VNPay/MoMo) | Customer |
+| POST | `/payments/create` | Create payment URL for an order or order group (VNPay/MoMo) | Customer |
 | GET | `/payments/vnpay/ipn` | VNPay IPN callback (verify HMAC-SHA512 + update) | Public |
 | GET | `/payments/vnpay/return` | VNPay return → redirect to FE result page | Public |
 | POST | `/payments/momo/ipn` | MoMo IPN callback (verify HMAC-SHA256 + update) | Public |
 | GET | `/payments/momo/return` | MoMo return → redirect to FE result page | Public |
-| GET | `/payments/order/:orderId` | Get payment transactions for an order | Customer |
+| GET | `/payments/order/:orderId` | Get payment transactions for an order (includes group transactions) | Customer |
 
-> **Payment flow:** Customer selects VNPay/MoMo at checkout → `POST /orders` creates order (payment_status=unpaid) → `POST /payments/create` returns `{ payment_url }` → frontend redirects to gateway → user pays → gateway calls IPN endpoint → backend verifies signature + updates `payment_transactions.status` + emits `payment.completed` event → `OrderPaymentListener` sets `orders.payment_status = paid` → gateway redirects user to return URL → backend redirects to frontend `/checkout/payment-result`.
+> **Payment flow:** Customer selects VNPay/MoMo at checkout → `POST /orders` creates N orders (1 per shop, all `payment_status=unpaid`, linked by `order_group_id`) → `POST /payments/create` with `{ order_group_id }` sums all non-cancelled orders' `total_amount` into one gateway transaction → returns `{ payment_url }` → frontend redirects to gateway → user pays → gateway calls IPN endpoint → backend verifies signature + updates `payment_transactions.status` + emits `payment.completed` event with `orderGroupId` → `OrderPaymentListener` sets ALL orders in the group to `payment_status = paid` (single DB transaction) → gateway redirects user to return URL → backend redirects to frontend `/checkout/payment-result?orderGroupId=xxx&status=success`.
 >
-> **Retry:** If payment fails or times out, customer can call `POST /payments/create` again — creates a new `payment_transactions` record. Each order can have multiple transactions.
+> **`POST /payments/create` accepts:** `{ order_id?: number, order_group_id?: string }` — at least one required. `order_group_id` creates a single payment covering all active orders in the group. `order_id` pays for a single order (legacy/fallback).
+>
+> **`GET /payments/order/:orderId`:** Returns transactions for the order itself PLUS any group transactions (via `order_group_id`), merged and deduplicated.
+>
+> **Retry:** If payment fails or times out, customer can call `POST /payments/create` again — creates a new `payment_transactions` record. Each order/group can have multiple transactions.
 >
 > **Timeout cron:** Every 5 minutes, transactions pending for 15+ minutes are marked as `failed`. Order `payment_status` stays `unpaid` (user can retry).
 >
@@ -411,7 +420,36 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 
 ---
 
-## 8. Shipper Endpoints
+## 8. Seller Endpoints
+
+All seller endpoints use **permission-based access control** via `@Permissions()` decorator. Seller role has `products:*`, `categories:read`, `orders:read`, `orders:update`, `uploads:create`, `dashboard:read`, `shops:create`, `shops:read`, `shops:update` permissions.
+
+### Seller: Orders — `/api/v1/seller/orders`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/seller/orders` | List orders for seller's shop (paginated, filterable by status/payment_status) | `orders:read` |
+| GET | `/seller/orders/:id` | Get order detail (seller's shop only) | `orders:read` |
+| PATCH | `/seller/orders/:id/status` | Update order status (seller transitions: pending→confirmed) | `orders:update` |
+| PATCH | `/seller/orders/:id/payment-status` | Update payment status (unpaid → paid) | `orders:update` |
+
+> **Shop-scoped access:** Each order has a `shop_id` — seller endpoints filter directly by `orders.shop_id` matching the seller's shop. No subquery through `order_items` needed.
+>
+> **Status transitions (seller):** `pending → confirmed`. Other transitions (shipping, delivered) are handled by shipper or admin.
+>
+> **Notifications:** Status updates emit `order.status_updated` event → customer receives notification.
+
+### Seller: Dashboard — `/api/v1/seller/dashboard`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/seller/dashboard` | Dashboard analytics: summary stats, revenue trend, order status breakdown, top products, recent orders | `dashboard:read` |
+
+> **Partial failure tolerance:** Uses `Promise.allSettled()` — same pattern as Admin dashboard. Revenue counts `completed` orders only, filtered by seller's `shop_id`.
+
+---
+
+## 9. Shipper Endpoints
 
 All shipper endpoints use **permission-based access control** via `@Permissions()` decorator. Shipper role has `orders:read`, `orders:update`, `dashboard:read` permissions.
 

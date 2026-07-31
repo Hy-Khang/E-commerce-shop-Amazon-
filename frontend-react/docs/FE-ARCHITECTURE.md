@@ -158,6 +158,7 @@ graph TD
     Order --> Cart
     Order --> UP
     Order --> Product
+    Order --> Shop
     Review["review"] --> Auth
     Review --> Product
     Wishlist["wishlist"] --> Auth
@@ -230,7 +231,7 @@ features/[x]/components/[X].tsx          — calls hooks, renders data/loading/e
 
 | Trigger | Invalidate |
 |---------|------------|
-| Checkout success | `cartKeys.current()` + `orderKeys.list()` |
+| Checkout success | `cartKeys.current()` + `orderKeys.list()` (checkout returns `{ order_group_id, orders[], total_amount }`) |
 | Cart item add/update/remove | `cartKeys.current()` → update `useCartStore.itemCount` |
 | Review created | `reviewKeys.list(productId)` + `productKeys.detail(slug)` |
 | Login + cart merge | `cartKeys.current()` |
@@ -238,8 +239,8 @@ features/[x]/components/[X].tsx          — calls hooks, renders data/loading/e
 | Admin coupon create/update/deactivate | `adminCouponKeys.all` |
 | Seller shop create/update | `['seller', 'shop']` |
 | Checkout success / cancel order | `notificationKeys.all` (new notifications may exist) |
-| Payment created (VNPay/MoMo) | Redirects to gateway — no cache change (page unloads) |
-| Payment result page loads | `orderKeys.detail(id)` + `paymentKeys.byOrder(id)` (fresh data after redirect) |
+| Payment created (VNPay/MoMo) | Redirects to gateway via `{ order_group_id }` — no cache change (page unloads) |
+| Payment result page loads | `orderKeys.group(groupId)` or `orderKeys.detail(id)` + `paymentKeys.byOrder(id)` (fresh data after redirect) |
 | Mark read / mark all read | `notificationKeys.all` + `notificationKeys.unreadCount()` → update `useNotificationStore.unreadCount` |
 
 ---

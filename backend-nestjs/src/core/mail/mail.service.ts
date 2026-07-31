@@ -26,6 +26,7 @@ export class MailService {
       this.logger.log(`Verification email sent to ${email}`);
     } catch (error) {
       this.logger.error(`Failed to send verification email to ${email}`, error.stack);
+      throw error;
     }
   }
 
