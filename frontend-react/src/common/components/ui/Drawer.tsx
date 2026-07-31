@@ -4,11 +4,13 @@ import { X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 type DrawerSide = 'left' | 'right';
+type DrawerVariant = 'drawer' | 'modal';
 
 type DrawerProps = {
   open: boolean;
   onClose: () => void;
   side?: DrawerSide;
+  variant?: DrawerVariant;
   title: string;
   children: ReactNode;
   className?: string;
@@ -25,6 +27,12 @@ const slideVariants = {
     visible: { x: 0 },
     exit: { x: '100%' },
   },
+} as const;
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.95 },
 } as const;
 
 let lockCount = 0;
@@ -48,6 +56,7 @@ export function Drawer({
   open,
   onClose,
   side = 'right',
+  variant = 'drawer',
   title,
   children,
   className = '',
@@ -108,14 +117,22 @@ export function Drawer({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
 
-  const variants = slideVariants[side];
+  const isModal = variant === 'modal';
+  const variants = isModal ? modalVariants : slideVariants[side];
+  const transition = isModal
+    ? { duration: 0.2, ease: 'easeOut' }
+    : { type: 'spring' as const, damping: 30, stiffness: 300 };
+
+  const panelClassName = isModal
+    ? `relative flex w-full max-w-md max-h-[90vh] flex-col rounded-xl bg-surface shadow-xl outline-none ${className}`
+    : `absolute top-0 ${side === 'left' ? 'left-0' : 'right-0'} flex h-full w-full max-w-sm flex-col bg-surface shadow-xl outline-none ${className}`;
 
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-60">
+        <div className={`fixed inset-0 z-60 ${isModal ? 'flex items-center justify-center p-4' : ''}`}>
           <motion.div
-            className="absolute inset-0 bg-black/50"
+            className={`${isModal ? 'fixed' : 'absolute'} inset-0 bg-black/50`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -128,11 +145,11 @@ export function Drawer({
             aria-modal="true"
             aria-label={title}
             tabIndex={-1}
-            className={`absolute top-0 ${side === 'left' ? 'left-0' : 'right-0'} flex h-full w-full max-w-sm flex-col bg-surface shadow-xl outline-none ${className}`}
+            className={panelClassName}
             initial={variants.hidden}
             animate={variants.visible}
             exit={variants.exit}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            transition={transition}
           >
             <div className="flex items-center justify-between border-b border-border-default px-4 py-3">
               <h2 className="text-lg font-semibold text-text-primary">{title}</h2>

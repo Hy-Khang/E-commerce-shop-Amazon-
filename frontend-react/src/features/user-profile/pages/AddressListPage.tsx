@@ -137,6 +137,7 @@ export default function AddressListPage() {
         open={showForm}
         onClose={() => setShowForm(false)}
         title="Add New Address"
+        variant="modal"
       >
         <AddressForm
           onSubmit={handleCreate}
@@ -151,6 +152,7 @@ export default function AddressListPage() {
         open={!!editingAddress}
         onClose={() => setEditingAddress(undefined)}
         title="Edit Address"
+        variant="modal"
       >
         {editingAddress && (
           <AddressForm

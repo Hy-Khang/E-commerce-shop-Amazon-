@@ -83,27 +83,27 @@ export const AuthSeed: ISeed = {
 
     await qr.query(`
       SET IDENTITY_INSERT users ON;
-      INSERT INTO users (id, role_id, email, password_hash, full_name, phone, is_active) VALUES
+      INSERT INTO users (id, role_id, email, password_hash, full_name, phone, is_active, email_verified) VALUES
         -- Admin
-        (1,  2, N'admin@example.com',      N'${hash}', N'Admin',              N'0901000000', 1),
+        (1,  2, N'admin@example.com',      N'${hash}', N'Admin',              N'0901000000', 1, 1),
         -- Customers (2-8)
-        (2,  1, N'customer1@example.com',   N'${hash}', N'Nguyễn Văn An',      N'0901000001', 1),
-        (3,  1, N'customer2@example.com',   N'${hash}', N'Trần Thị Bình',      N'0901000002', 1),
-        (4,  1, N'customer3@example.com',   N'${hash}', N'Lê Hoàng Cường',     N'0901000003', 1),
-        (5,  1, N'customer4@example.com',   N'${hash}', N'Phạm Minh Đức',      N'0901000004', 1),
-        (6,  1, N'customer5@example.com',   N'${hash}', N'Hoàng Thị Nga',      N'0901000005', 1),
-        (7,  1, N'customer6@example.com',   N'${hash}', N'Đỗ Văn Khoa',        N'0901000006', 1),
-        (8,  1, N'customer7@example.com',   N'${hash}', N'Bùi Minh Tâm',       N'0901000007', 1),
+        (2,  1, N'customer1@example.com',   N'${hash}', N'Nguyễn Văn An',      N'0901000001', 1, 1),
+        (3,  1, N'customer2@example.com',   N'${hash}', N'Trần Thị Bình',      N'0901000002', 1, 1),
+        (4,  1, N'customer3@example.com',   N'${hash}', N'Lê Hoàng Cường',     N'0901000003', 1, 1),
+        (5,  1, N'customer4@example.com',   N'${hash}', N'Phạm Minh Đức',      N'0901000004', 1, 1),
+        (6,  1, N'customer5@example.com',   N'${hash}', N'Hoàng Thị Nga',      N'0901000005', 1, 1),
+        (7,  1, N'customer6@example.com',   N'${hash}', N'Đỗ Văn Khoa',        N'0901000006', 1, 1),
+        (8,  1, N'customer7@example.com',   N'${hash}', N'Bùi Minh Tâm',       N'0901000007', 1, 1),
         -- Sellers (9-15)
-        (9,  3, N'seller1@example.com',     N'${hash}', N'Nguyễn Thị Hằng',    N'0901000008', 1),
-        (10, 3, N'seller2@example.com',     N'${hash}', N'Trần Minh Tuấn',     N'0901000009', 1),
-        (11, 3, N'seller3@example.com',     N'${hash}', N'Lê Thị Mai',         N'0901000010', 1),
-        (12, 3, N'seller4@example.com',     N'${hash}', N'Phạm Quốc Bảo',     N'0901000011', 1),
-        (13, 3, N'seller5@example.com',     N'${hash}', N'Võ Thanh Hùng',      N'0901000012', 1),
-        (14, 3, N'seller6@example.com',     N'${hash}', N'Đặng Thị Lan',       N'0901000013', 1),
-        (15, 3, N'seller7@example.com',     N'${hash}', N'Ngô Thanh Sơn',      N'0901000014', 1),
+        (9,  3, N'seller1@example.com',     N'${hash}', N'Nguyễn Thị Hằng',    N'0901000008', 1, 1),
+        (10, 3, N'seller2@example.com',     N'${hash}', N'Trần Minh Tuấn',     N'0901000009', 1, 1),
+        (11, 3, N'seller3@example.com',     N'${hash}', N'Lê Thị Mai',         N'0901000010', 1, 1),
+        (12, 3, N'seller4@example.com',     N'${hash}', N'Phạm Quốc Bảo',     N'0901000011', 1, 1),
+        (13, 3, N'seller5@example.com',     N'${hash}', N'Võ Thanh Hùng',      N'0901000012', 1, 1),
+        (14, 3, N'seller6@example.com',     N'${hash}', N'Đặng Thị Lan',       N'0901000013', 1, 1),
+        (15, 3, N'seller7@example.com',     N'${hash}', N'Ngô Thanh Sơn',      N'0901000014', 1, 1),
         -- Shipper (16)
-        (16, 4, N'shipper@example.com',     N'${hash}', N'Trần Văn Giang',     N'0901000015', 1);
+        (16, 4, N'shipper@example.com',     N'${hash}', N'Trần Văn Giang',     N'0901000015', 1, 1);
       SET IDENTITY_INSERT users OFF;
     `);
     console.log('  + users: 16 rows');
