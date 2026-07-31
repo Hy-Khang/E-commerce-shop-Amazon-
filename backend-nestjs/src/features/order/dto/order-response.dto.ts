@@ -69,6 +69,15 @@ export class OrderResponseDto {
   id: number;
 
   @ApiProperty()
+  shop_id: number;
+
+  @ApiProperty()
+  shop_name: string;
+
+  @ApiProperty()
+  order_group_id: string;
+
+  @ApiProperty()
   status: string;
 
   @ApiProperty()
@@ -105,6 +114,15 @@ export class OrderResponseDto {
 export class OrderListItemResponseDto {
   @ApiProperty()
   id: number;
+
+  @ApiProperty()
+  shop_id: number;
+
+  @ApiProperty()
+  shop_name: string;
+
+  @ApiProperty()
+  order_group_id: string;
 
   @ApiProperty()
   status: string;
@@ -165,4 +183,15 @@ export class SellerOrderResponseDto extends OrderResponseDto {
 
   @ApiProperty({ description: 'Total revenue from seller items only' })
   seller_items_total: number;
+}
+
+export class CheckoutResponseDto {
+  @ApiProperty()
+  order_group_id: string;
+
+  @ApiProperty({ type: [OrderResponseDto] })
+  orders: OrderResponseDto[];
+
+  @ApiProperty()
+  total_amount: number;
 }

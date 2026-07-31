@@ -267,6 +267,7 @@
 | shipping_address | NVARCHAR(MAX) | NOT NULL — **JSON snapshot**, NOT FK to addresses |
 | coupon_code | NVARCHAR(50) | NULL — **snapshot** of applied coupon code |
 | discount_amount | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
+| shipper_id | INT | FK → `users.id` ON DELETE SET NULL, NULL — assigned shipper for delivery |
 | delivered_at | DATETIME2 | NULL — set when order transitions to `delivered`, used by auto-complete cron |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
@@ -277,7 +278,8 @@
 > - **Formula:** `total_amount = itemsTotal - discount_amount + shipping_fee`
 > - Enums stored as string columns for readability and easy migration.
 > - **Order completion flow:** `delivered` is no longer terminal. Customer can confirm receipt (`completed`) or request return (`return_requested`). Orders auto-complete 7 days after `delivered_at` via hourly cron. Revenue (dashboard) and review eligibility require `completed` status.
-> - **`delivered_at`** is set when order transitions to `delivered` (admin or seller). Used by auto-complete cron to find orders past the 7-day window.
+> - **`delivered_at`** is set when order transitions to `delivered` (admin, seller, or shipper). Used by auto-complete cron to find orders past the 7-day window.
+> - **`shipper_id`** is assigned when a shipper accepts the order (first-come-first-served). Atomic conditional UPDATE prevents race conditions. `ON DELETE SET NULL` preserves order history if shipper account is deleted.
 
 #### `order_items` — Immutable Snapshots
 
@@ -542,6 +544,7 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | order_items | `idx_order_items_order_id` | order_id | Load items for an order |
 | order_items | `idx_order_items_shop_id` | shop_id | Filter order items by shop |
 | orders | `idx_orders_user_id` | user_id | User's order history |
+| orders | `idx_orders_shipper_id` | shipper_id | Filter orders by shipper |
 | orders | `idx_orders_delivered_at` | delivered_at | Auto-complete cron: find delivered orders past 7-day window |
 | reviews | `idx_reviews_product_id` | product_id | Product review listing |
 | cart_items | `idx_cart_items_cart_id` | cart_id | Load cart contents |

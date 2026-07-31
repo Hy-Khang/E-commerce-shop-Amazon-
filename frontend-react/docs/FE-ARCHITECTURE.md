@@ -75,7 +75,7 @@ src/
 │   ├── coupon/                        — coupon validation, admin CRUD, usage tracking
 │   ├── notification/                  — notification bell, dropdown, polling, notification page
 │   ├── payment/                       — VNPay/MoMo gateway redirect, payment result, transaction list
-│   └── dashboard/                     — admin analytics dashboard (charts, stats, alerts)
+│   └── dashboard/                     — admin, seller & shipper analytics dashboards (charts, stats, alerts)
 │
 ├── assets/                            — static images, fonts
 └── styles/

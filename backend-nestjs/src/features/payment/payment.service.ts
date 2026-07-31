@@ -46,13 +46,29 @@ export class PaymentService {
 
   async createPayment(
     userId: number,
+    dto: { order_id?: number; order_group_id?: string },
+    ipAddress: string,
+  ): Promise<{ payment_url: string }> {
+    if (dto.order_group_id) {
+      return this.createGroupPayment(userId, dto.order_group_id, ipAddress);
+    }
+
+    if (!dto.order_id) {
+      throw new BadRequestException({
+        code: 'PAYMENT_001',
+        message: 'Either order_id or order_group_id is required',
+      });
+    }
+
+    return this.createSingleOrderPayment(userId, dto.order_id, ipAddress);
+  }
+
+  private async createSingleOrderPayment(
+    userId: number,
     orderId: number,
     ipAddress: string,
   ): Promise<{ payment_url: string }> {
-    const order = await this.orderService.findOrderForPayment(
-      orderId,
-      userId,
-    );
+    const order = await this.orderService.findOrderForPayment(orderId, userId);
 
     if (!order) {
       throw new NotFoundException({
@@ -101,6 +117,7 @@ export class PaymentService {
 
     const transaction = await this.paymentTransactionRepository.create({
       order_id: orderId,
+      order_group_id: order.order_group_id,
       transaction_ref: transactionRef,
       gateway,
       amount,
@@ -111,6 +128,102 @@ export class PaymentService {
       `Payment transaction #${transaction.id} created for order #${orderId}, gateway: ${gateway}`,
     );
 
+    return this.buildPaymentUrl(gateway, transactionRef, amount, orderInfo, ipAddress, transaction.id);
+  }
+
+  private async createGroupPayment(
+    userId: number,
+    orderGroupId: string,
+    ipAddress: string,
+  ): Promise<{ payment_url: string }> {
+    const orders = await this.orderService.findOrdersByGroupIdForPayment(
+      orderGroupId,
+      userId,
+    );
+
+    if (orders.length === 0) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order group not found',
+      });
+    }
+
+    const activeOrders = orders.filter(
+      (o) => o.status !== OrderStatus.Cancelled,
+    );
+
+    if (activeOrders.length === 0) {
+      throw new BadRequestException({
+        code: 'PAYMENT_001',
+        message: 'All orders in this group are cancelled',
+      });
+    }
+
+    const firstOrder = activeOrders[0];
+
+    if (firstOrder.payment_method === PaymentMethod.Cod) {
+      throw new BadRequestException({
+        code: 'PAYMENT_001',
+        message: 'COD orders do not require online payment',
+      });
+    }
+
+    const alreadyPaid = activeOrders.some(
+      (o) => o.payment_status === PaymentStatus.Paid,
+    );
+    if (alreadyPaid) {
+      throw new BadRequestException({
+        code: 'PAYMENT_001',
+        message: 'Orders in this group have already been paid',
+      });
+    }
+
+    const existingPending =
+      await this.paymentTransactionRepository.findPendingByGroupId(
+        orderGroupId,
+      );
+    if (existingPending) {
+      throw new BadRequestException({
+        code: 'PAYMENT_002',
+        message: 'A pending payment already exists for this order group',
+      });
+    }
+
+    const amount = activeOrders.reduce(
+      (sum, o) => sum + Number(o.total_amount),
+      0,
+    );
+    const gateway =
+      firstOrder.payment_method === PaymentMethod.VnPay
+        ? PaymentGateway.VnPay
+        : PaymentGateway.Momo;
+    const transactionRef = generateTransactionRef(firstOrder.id);
+    const orderInfo = `Thanh toan nhom don hang ${orderGroupId.substring(0, 8)}`;
+
+    const transaction = await this.paymentTransactionRepository.create({
+      order_id: firstOrder.id,
+      order_group_id: orderGroupId,
+      transaction_ref: transactionRef,
+      gateway,
+      amount,
+      status: TransactionStatus.Pending,
+    });
+
+    this.logger.log(
+      `Group payment transaction #${transaction.id} created for group ${orderGroupId}, orders: ${activeOrders.map((o) => o.id).join(',')}, gateway: ${gateway}`,
+    );
+
+    return this.buildPaymentUrl(gateway, transactionRef, amount, orderInfo, ipAddress, transaction.id);
+  }
+
+  private async buildPaymentUrl(
+    gateway: string,
+    transactionRef: string,
+    amount: number,
+    orderInfo: string,
+    ipAddress: string,
+    transactionId: number,
+  ): Promise<{ payment_url: string }> {
     let paymentUrl: string;
 
     if (gateway === PaymentGateway.VnPay) {
@@ -128,7 +241,7 @@ export class PaymentService {
       );
       if (momoResponse.resultCode !== 0) {
         await this.paymentTransactionRepository.updateStatus(
-          transaction.id,
+          transactionId,
           TransactionStatus.Failed,
           undefined,
           JSON.stringify(momoResponse),
@@ -189,6 +302,7 @@ export class PaymentService {
 
       this.eventEmitter.emit('payment.completed', {
         orderId: transaction.order_id,
+        orderGroupId: transaction.order_group_id,
         transactionRef,
       });
 
@@ -210,12 +324,21 @@ export class PaymentService {
     return { RspCode: '00', Message: 'Confirm Success' };
   }
 
-  buildVnpayReturnRedirect(query: Record<string, string>): string {
+  async buildVnpayReturnRedirect(
+    query: Record<string, string>,
+  ): Promise<string> {
     const txnRef = query['vnp_TxnRef'] || '';
     const match = txnRef.match(/^ORD(\d+)/);
     const orderId = match ? match[1] : '';
     const responseCode = query['vnp_ResponseCode'];
     const status = responseCode === '00' ? 'success' : 'failed';
+
+    const transaction =
+      await this.paymentTransactionRepository.findByTransactionRef(txnRef);
+    if (transaction?.order_group_id) {
+      return `${this.frontendUrl}/checkout/payment-result?orderGroupId=${transaction.order_group_id}&status=${status}`;
+    }
+
     return `${this.frontendUrl}/checkout/payment-result?orderId=${orderId}&status=${status}`;
   }
 
@@ -252,6 +375,7 @@ export class PaymentService {
 
       this.eventEmitter.emit('payment.completed', {
         orderId: transaction.order_id,
+        orderGroupId: transaction.order_group_id,
         transactionRef,
       });
 
@@ -271,12 +395,23 @@ export class PaymentService {
     }
   }
 
-  buildMomoReturnRedirect(query: Record<string, string>): string {
+  async buildMomoReturnRedirect(
+    query: Record<string, string>,
+  ): Promise<string> {
     const transactionRef = query['orderId'] || '';
     const match = transactionRef.match(/^ORD(\d+)/);
     const orderId = match ? match[1] : '';
     const resultCode = query['resultCode'];
     const status = resultCode === '0' ? 'success' : 'failed';
+
+    const transaction =
+      await this.paymentTransactionRepository.findByTransactionRef(
+        transactionRef,
+      );
+    if (transaction?.order_group_id) {
+      return `${this.frontendUrl}/checkout/payment-result?orderGroupId=${transaction.order_group_id}&status=${status}`;
+    }
+
     return `${this.frontendUrl}/checkout/payment-result?orderId=${orderId}&status=${status}`;
   }
 
@@ -295,9 +430,27 @@ export class PaymentService {
       });
     }
 
-    const transactions =
+    const orderTransactions =
       await this.paymentTransactionRepository.findByOrderId(orderId);
-    return transactions.map(toPaymentTransactionResponse);
+
+    const groupTransactions =
+      await this.paymentTransactionRepository.findByGroupId(
+        order.order_group_id,
+      );
+
+    const seenIds = new Set(orderTransactions.map((t) => t.id));
+    const merged = [...orderTransactions];
+    for (const t of groupTransactions) {
+      if (!seenIds.has(t.id)) {
+        merged.push(t);
+      }
+    }
+
+    merged.sort(
+      (a, b) => b.created_at.getTime() - a.created_at.getTime(),
+    );
+
+    return merged.map(toPaymentTransactionResponse);
   }
 
   @Cron('*/5 * * * *')

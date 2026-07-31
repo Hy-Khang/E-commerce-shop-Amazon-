@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { OrderRepository } from './repositories/order.repository';
 import { OrderItemRepository } from './repositories/order-item.repository';
 import { CartService } from '../cart/cart.service';
@@ -21,6 +22,7 @@ import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
 import {
   OrderResponseDto,
+  CheckoutResponseDto,
   AdminOrderResponseDto,
   SellerOrderResponseDto,
   OrderListItemResponseDto,
@@ -70,7 +72,7 @@ export class OrderService {
   async checkout(
     userId: number,
     dto: CreateOrderDto,
-  ): Promise<OrderResponseDto> {
+  ): Promise<CheckoutResponseDto> {
     // ── Reads (outside transaction — no locks needed) ──
 
     const cart = await this.cartService.getCartWithItems(userId);
@@ -106,7 +108,6 @@ export class OrderService {
       city: address.city,
     };
 
-    const shippingFee = DEFAULT_SHIPPING_FEE;
     let itemsTotal = 0;
 
     const orderItemsData = cart.items.map((item) => {
@@ -135,6 +136,28 @@ export class OrderService {
       };
     });
 
+    // ── Validate shop assignment ──
+
+    for (const item of orderItemsData) {
+      if (!item.shop_id || !item.shop_name) {
+        throw new BadRequestException({
+          code: 'ORDER_002',
+          message: `Product "${item.product_name}" is not assigned to any shop`,
+        });
+      }
+    }
+
+    // ── Group items by shop ──
+
+    const shopGroups = new Map<number, { shopName: string; items: typeof orderItemsData }>();
+    for (const item of orderItemsData) {
+      const shopId = item.shop_id!;
+      if (!shopGroups.has(shopId)) {
+        shopGroups.set(shopId, { shopName: item.shop_name!, items: [] });
+      }
+      shopGroups.get(shopId)!.items.push(item);
+    }
+
     // ── Coupon validation (if provided) ──
 
     let couponData: IDiscountCalculation | null = null;
@@ -147,45 +170,91 @@ export class OrderService {
     }
 
     const discountAmount = couponData?.discount_amount ?? 0;
-    const totalAmount = itemsTotal - discountAmount + shippingFee;
 
-    // ── Transaction: create order + items, clear cart ──
+    // ── Proportional discount distribution across shops ──
+
+    const shopEntries = [...shopGroups.entries()];
+    const shopDiscounts = new Map<number, number>();
+    let distributedDiscount = 0;
+
+    for (let i = 0; i < shopEntries.length; i++) {
+      const [shopId, { items }] = shopEntries[i];
+      const shopItemsTotal = items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0,
+      );
+
+      let shopDiscount: number;
+      if (i === shopEntries.length - 1) {
+        shopDiscount = discountAmount - distributedDiscount;
+      } else {
+        shopDiscount =
+          Math.round(((shopItemsTotal / itemsTotal) * discountAmount) * 100) / 100;
+      }
+      shopDiscount = Math.min(shopDiscount, shopItemsTotal);
+      distributedDiscount += shopDiscount;
+      shopDiscounts.set(shopId, shopDiscount);
+    }
+
+    // ── Transaction: create N orders (1 per shop) + items, clear cart ──
+
+    const orderGroupId = randomUUID();
+    const shippingFee = DEFAULT_SHIPPING_FEE;
+    const createdOrders: Order[] = [];
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      const order = await queryRunner.manager.save(
-        queryRunner.manager.create(Order, {
-          user_id: userId,
-          status: OrderStatus.Pending,
-          payment_method: dto.payment_method,
-          payment_status: PaymentStatus.Unpaid,
-          shipping_fee: shippingFee,
-          coupon_code: couponData?.coupon_code ?? null,
-          discount_amount: discountAmount,
-          total_amount: totalAmount,
-          shipping_address: JSON.stringify(shippingSnapshot),
-        }),
-      );
+      let isFirstShop = true;
 
-      const orderItems = await queryRunner.manager.save(
-        queryRunner.manager.create(
-          OrderItem,
-          orderItemsData.map((item) => ({ ...item, order_id: order.id })),
-        ),
-      );
-      order.order_items = orderItems;
-
-      if (couponData) {
-        await this.couponService.recordUsage(
-          couponData.coupon_id,
-          userId,
-          order.id,
-          discountAmount,
-          queryRunner.manager,
+      for (const [shopId, { shopName, items }] of shopGroups) {
+        const shopItemsTotal = items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
         );
+        const shopDiscount = shopDiscounts.get(shopId)!;
+        const shopTotal = shopItemsTotal - shopDiscount + shippingFee;
+
+        const order = await queryRunner.manager.save(
+          queryRunner.manager.create(Order, {
+            user_id: userId,
+            shop_id: shopId,
+            shop_name: shopName,
+            order_group_id: orderGroupId,
+            status: OrderStatus.Pending,
+            payment_method: dto.payment_method,
+            payment_status: PaymentStatus.Unpaid,
+            shipping_fee: shippingFee,
+            coupon_code: couponData?.coupon_code ?? null,
+            discount_amount: shopDiscount,
+            total_amount: shopTotal,
+            shipping_address: JSON.stringify(shippingSnapshot),
+          }),
+        );
+
+        const orderItems = await queryRunner.manager.save(
+          queryRunner.manager.create(
+            OrderItem,
+            items.map((item) => ({ ...item, order_id: order.id })),
+          ),
+        );
+        order.order_items = orderItems;
+
+        if (couponData) {
+          await this.couponService.recordUsage(
+            couponData.coupon_id,
+            userId,
+            order.id,
+            shopDiscount,
+            queryRunner.manager,
+            isFirstShop,
+          );
+          isFirstShop = false;
+        }
+
+        createdOrders.push(order);
       }
 
       await this.cartService.clearCart(userId, queryRunner.manager);
@@ -194,32 +263,46 @@ export class OrderService {
 
       // ── Side effects (after commit) ──
 
-      this.eventEmitter.emit('order.created', {
-        orderId: order.id,
-        items: cart.items.map((item) => ({
-          productVariantId: item.product_variant_id,
-          quantity: item.quantity,
-        })),
-      });
-
-      const sellerUserIds = await this.resolveSellerUserIdsFromShopIds(
-        [...new Set(orderItemsData.map((i) => i.shop_id).filter((id): id is number => id != null))],
-      );
-      if (sellerUserIds.length > 0) {
-        this.eventEmitter.emit('order.placed', {
+      for (const order of createdOrders) {
+        this.eventEmitter.emit('order.created', {
           orderId: order.id,
-          customerId: userId,
-          sellerUserIds,
-          totalAmount,
-          itemCount: orderItemsData.reduce((sum, i) => sum + i.quantity, 0),
+          items: order.order_items.map((item) => ({
+            productVariantId: item.product_variant_id,
+            quantity: item.quantity,
+          })),
         });
+
+        const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([
+          order.shop_id,
+        ]);
+        if (sellerUserIds.length > 0) {
+          this.eventEmitter.emit('order.placed', {
+            orderId: order.id,
+            customerId: userId,
+            sellerUserIds,
+            totalAmount: Number(order.total_amount),
+            itemCount: order.order_items.reduce(
+              (sum, i) => sum + i.quantity,
+              0,
+            ),
+          });
+        }
       }
 
-      this.logger.log(
-        `Order #${order.id} created for user ${userId}, payment: ${dto.payment_method}${couponData ? `, coupon: ${couponData.coupon_code}, discount: ${discountAmount}` : ''}`,
+      const grandTotal = createdOrders.reduce(
+        (sum, o) => sum + Number(o.total_amount),
+        0,
       );
 
-      return toOrderResponse(order);
+      this.logger.log(
+        `Checkout: ${createdOrders.length} orders created for user ${userId}, group=${orderGroupId}, payment: ${dto.payment_method}${couponData ? `, coupon: ${couponData.coupon_code}, discount: ${discountAmount}` : ''}`,
+      );
+
+      return {
+        order_group_id: orderGroupId,
+        orders: createdOrders.map(toOrderResponse),
+        total_amount: grandTotal,
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -269,6 +352,23 @@ export class OrderService {
     return toOrderResponse(order);
   }
 
+  async findMyOrdersByGroupId(
+    userId: number,
+    groupId: string,
+  ): Promise<OrderResponseDto[]> {
+    const orders = await this.orderRepository.findByGroupIdAndUserId(
+      groupId,
+      userId,
+    );
+    if (orders.length === 0) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order group not found',
+      });
+    }
+    return orders.map(toOrderResponse);
+  }
+
   async confirmReceipt(
     userId: number,
     orderId: number,
@@ -299,7 +399,7 @@ export class OrderService {
     const oldStatus = order.status;
     order.status = OrderStatus.Completed;
 
-    const sellerUserIds = await this.resolveSellerUserIds(order.order_items);
+    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
 
     this.eventEmitter.emit('order.status_updated', {
       orderId: order.id,
@@ -345,7 +445,7 @@ export class OrderService {
     const oldStatus = order.status;
     order.status = OrderStatus.ReturnRequested;
 
-    const sellerUserIds = await this.resolveSellerUserIds(order.order_items);
+    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
 
     this.eventEmitter.emit('order.status_updated', {
       orderId: order.id,
@@ -391,7 +491,7 @@ export class OrderService {
     await this.orderRepository.updateStatus(orderId, OrderStatus.Cancelled);
     order.status = OrderStatus.Cancelled;
 
-    await this.couponService.reverseCouponUsage(orderId);
+    await this.handleCouponReversalOnCancel(order);
 
     this.eventEmitter.emit('order.cancelled', {
       orderId: order.id,
@@ -401,7 +501,7 @@ export class OrderService {
       })),
     });
 
-    const sellerUserIds = await this.resolveSellerUserIds(order.order_items);
+    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
     if (sellerUserIds.length > 0) {
       this.eventEmitter.emit('order.status_updated', {
         orderId: order.id,
@@ -487,7 +587,7 @@ export class OrderService {
     order.status = dto.status;
 
     if (dto.status === OrderStatus.Cancelled) {
-      await this.couponService.reverseCouponUsage(orderId);
+      await this.handleCouponReversalOnCancel(order);
 
       this.eventEmitter.emit('order.cancelled', {
         orderId: order.id,
@@ -582,7 +682,7 @@ export class OrderService {
       });
     }
 
-    return toSellerOrderResponse(order, shop.id);
+    return toSellerOrderResponse(order);
   }
 
   async updateSellerOrderStatus(
@@ -632,7 +732,7 @@ export class OrderService {
       `Order #${orderId} status updated to ${dto.status} by seller ${userId}`,
     );
 
-    return toSellerOrderResponse(order, shop.id);
+    return toSellerOrderResponse(order);
   }
 
   async updateSellerPaymentStatus(
@@ -676,7 +776,7 @@ export class OrderService {
       `Order #${orderId} payment status updated to ${dto.payment_status} by seller ${userId}`,
     );
 
-    return toSellerOrderResponse(order, shop.id);
+    return toSellerOrderResponse(order);
   }
 
   // ─── Shipper endpoints ───
@@ -830,20 +930,46 @@ export class OrderService {
     return this.orderRepository.findByIdAndUserId(orderId, userId);
   }
 
+  async findOrdersByGroupIdForPayment(
+    groupId: string,
+    userId: number,
+  ): Promise<Order[]> {
+    return this.orderRepository.findByGroupIdAndUserId(groupId, userId);
+  }
+
   async markOrderAsPaid(orderId: number): Promise<void> {
     await this.orderRepository.updatePaymentStatus(orderId, PaymentStatus.Paid);
     this.logger.log(`Order #${orderId} marked as paid via payment gateway`);
   }
 
+  async markOrderGroupAsPaid(orderGroupId: string): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      const orders = await manager.find(Order, {
+        where: { order_group_id: orderGroupId },
+      });
+
+      for (const order of orders) {
+        if (order.status !== OrderStatus.Cancelled) {
+          await manager.update(Order, order.id, {
+            payment_status: PaymentStatus.Paid,
+          });
+        }
+      }
+    });
+    this.logger.log(
+      `Order group ${orderGroupId} marked as paid via payment gateway`,
+    );
+  }
+
   // ─── Private helpers ───
 
-  private async resolveSellerUserIds(orderItems: OrderItem[]): Promise<number[]> {
-    const shopIds = [
-      ...new Set(
-        orderItems.map((i) => i.shop_id).filter((id): id is number => id != null),
-      ),
-    ];
-    return this.resolveSellerUserIdsFromShopIds(shopIds);
+  private async handleCouponReversalOnCancel(order: Order): Promise<void> {
+    const allCancelled = await this.orderRepository.areAllGroupOrdersCancelled(
+      order.order_group_id,
+    );
+    if (allCancelled) {
+      await this.couponService.reverseGroupCouponUsage(order.order_group_id);
+    }
   }
 
   private async resolveSellerUserIdsFromShopIds(shopIds: number[]): Promise<number[]> {

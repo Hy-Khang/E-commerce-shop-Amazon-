@@ -39,6 +39,9 @@ export const mockOrderItem = (overrides: Partial<OrderItem> = {}): OrderItem => 
 export const mockOrder = (overrides: Partial<Order> = {}): Order => ({
   id: 1,
   user_id: 1,
+  shop_id: 1,
+  shop_name: 'Test Shop',
+  order_group_id: 'test-0000-0000-0000-000000000000',
   status: OrderStatus.Pending,
   payment_method: PaymentMethod.Cod,
   payment_status: PaymentStatus.Unpaid,
@@ -51,6 +54,7 @@ export const mockOrder = (overrides: Partial<Order> = {}): Order => ({
   delivered_at: null,
   shipper_id: null,
   user: null as any,
+  shop: null as any,
   shipper: null as any,
   order_items: [mockOrderItem()],
   ...overrides,

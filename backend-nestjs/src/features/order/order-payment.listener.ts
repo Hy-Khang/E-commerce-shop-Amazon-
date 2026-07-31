@@ -4,6 +4,7 @@ import { OrderService } from './order.service';
 
 interface PaymentCompletedEvent {
   orderId: number;
+  orderGroupId?: string | null;
   transactionRef: string;
 }
 
@@ -16,13 +17,20 @@ export class OrderPaymentListener {
   @OnEvent('payment.completed')
   async handlePaymentCompleted(payload: PaymentCompletedEvent): Promise<void> {
     try {
-      await this.orderService.markOrderAsPaid(payload.orderId);
-      this.logger.log(
-        `Order #${payload.orderId} payment confirmed via ${payload.transactionRef}`,
-      );
+      if (payload.orderGroupId) {
+        await this.orderService.markOrderGroupAsPaid(payload.orderGroupId);
+        this.logger.log(
+          `Order group ${payload.orderGroupId} payment confirmed via ${payload.transactionRef}`,
+        );
+      } else {
+        await this.orderService.markOrderAsPaid(payload.orderId);
+        this.logger.log(
+          `Order #${payload.orderId} payment confirmed via ${payload.transactionRef}`,
+        );
+      }
     } catch (error) {
       this.logger.error(
-        `Failed to mark order #${payload.orderId} as paid: ${error.message}`,
+        `Failed to mark payment as paid: ${error.message}`,
       );
     }
   }

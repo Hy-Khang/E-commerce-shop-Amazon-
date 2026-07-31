@@ -59,17 +59,14 @@ export default function OrderDetailPage() {
   const canRetryPayment = isOnlinePayment && order.payment_status === 'unpaid' && order.status === 'pending';
 
   function handleRetryPayment() {
-    createPayment.mutate(
-      { order_id: orderId },
-      {
-        onSuccess: (data) => {
-          window.location.href = data.payment_url;
-        },
-        onError: (error) => {
-          showErrorToast(error);
-        },
+    createPayment.mutate({ order_group_id: order!.order_group_id! }, {
+      onSuccess: (data) => {
+        window.location.href = data.payment_url;
       },
-    );
+      onError: (error) => {
+        showErrorToast(error);
+      },
+    });
   }
 
   return (

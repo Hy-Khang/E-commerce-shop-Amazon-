@@ -55,6 +55,9 @@ function toOrderItemResponse(item: {
 export function toOrderResponse(order: Order): OrderResponseDto {
   return {
     id: order.id,
+    shop_id: order.shop_id,
+    shop_name: order.shop_name,
+    order_group_id: order.order_group_id,
     status: order.status,
     payment_method: order.payment_method,
     payment_status: order.payment_status,
@@ -72,6 +75,9 @@ export function toOrderResponse(order: Order): OrderResponseDto {
 export function toOrderListItemResponse(order: Order): OrderListItemResponseDto {
   return {
     id: order.id,
+    shop_id: order.shop_id,
+    shop_name: order.shop_name,
+    order_group_id: order.order_group_id,
     status: order.status,
     payment_method: order.payment_method,
     payment_status: order.payment_status,
@@ -104,12 +110,9 @@ export function toAdminOrderResponse(order: Order): AdminOrderResponseDto {
 
 export function toSellerOrderResponse(
   order: Order,
-  shopId: number,
 ): SellerOrderResponseDto {
-  const sellerItems = (order.order_items || []).filter(
-    (item) => item.shop_id === shopId,
-  );
-  const sellerItemsTotal = sellerItems.reduce(
+  const items = order.order_items || [];
+  const sellerItemsTotal = items.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,
     0,
   );
@@ -117,11 +120,10 @@ export function toSellerOrderResponse(
   const base = toOrderResponse(order);
   return {
     ...base,
-    order_items: sellerItems.map(toOrderItemResponse),
     user_id: order.user_id,
     user_email: order.user?.email,
     user_full_name: order.user?.full_name,
-    seller_items_count: sellerItems.length,
+    seller_items_count: items.length,
     seller_items_total: sellerItemsTotal,
   };
 }

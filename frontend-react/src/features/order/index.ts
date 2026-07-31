@@ -3,6 +3,7 @@ export { OrderItemRow } from './components/OrderItemRow';
 export { OrderListSkeleton } from './components/OrderListSkeleton';
 export { useOrders, orderKeys } from './hooks/useOrders';
 export { useOrder } from './hooks/useOrder';
+export { useOrderGroup } from './hooks/useOrderGroup';
 export { useCheckout } from './hooks/useCheckout';
 export { useCancelOrder } from './hooks/useCancelOrder';
 export { useConfirmReceipt } from './hooks/useConfirmReceipt';
@@ -22,6 +23,7 @@ export type {
   OrderItem,
   OrderListItem,
   OrderListItemWithItems,
+  CheckoutResponse,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,

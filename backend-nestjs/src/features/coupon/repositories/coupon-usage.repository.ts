@@ -17,13 +17,32 @@ export class CouponUsageRepository {
     userId: number,
     couponId: number,
   ): Promise<number> {
-    return this.repo.count({
-      where: {
-        user_id: userId,
-        coupon_id: couponId,
+    const result = await this.repo
+      .createQueryBuilder('usage')
+      .innerJoin('usage.order', 'order')
+      .select(
+        "COUNT(DISTINCT COALESCE(order.order_group_id, CAST(order.id AS NVARCHAR(36))))",
+        'count',
+      )
+      .where('usage.user_id = :userId', { userId })
+      .andWhere('usage.coupon_id = :couponId', { couponId })
+      .andWhere('usage.status = :status', {
         status: CouponUsageStatus.Applied,
-      },
-    });
+      })
+      .getRawOne();
+
+    return parseInt(result?.count ?? '0', 10);
+  }
+
+  async findActiveByGroupId(orderGroupId: string): Promise<CouponUsage[]> {
+    return this.repo
+      .createQueryBuilder('usage')
+      .innerJoin('usage.order', 'order')
+      .where('order.order_group_id = :orderGroupId', { orderGroupId })
+      .andWhere('usage.status = :status', {
+        status: CouponUsageStatus.Applied,
+      })
+      .getMany();
   }
 
   async createUsage(

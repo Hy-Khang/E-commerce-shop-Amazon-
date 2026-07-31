@@ -117,15 +117,9 @@ export class OrderRepository {
     const sort = query.sort || 'created_at';
     const order = (query.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
 
-    const subQuery = this.repo
-      .createQueryBuilder('o')
-      .select('DISTINCT o.id')
-      .innerJoin('o.order_items', 'oi', 'oi.shop_id = :shopId');
-
     const qb = this.repo
       .createQueryBuilder('order')
-      .where(`order.id IN (${subQuery.getQuery()})`)
-      .setParameters({ shopId });
+      .where('order.shop_id = :shopId', { shopId });
 
     if (query.status) {
       qb.andWhere('order.status = :status', { status: query.status });
@@ -152,16 +146,46 @@ export class OrderRepository {
     orderId: number,
     shopId: number,
   ): Promise<Order | null> {
-    const order = await this.repo.findOne({
-      where: { id: orderId },
+    return this.repo.findOne({
+      where: { id: orderId, shop_id: shopId },
       relations: ['order_items', 'order_items.product_variant', 'user'],
     });
-    if (!order) return null;
+  }
 
-    const hasShopItems = order.order_items.some((i) => i.shop_id === shopId);
-    if (!hasShopItems) return null;
+  async findByGroupIdAndUserId(
+    orderGroupId: string,
+    userId: number,
+  ): Promise<Order[]> {
+    return this.repo
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.order_items', 'items')
+      .leftJoinAndSelect('items.product_variant', 'variant')
+      .leftJoin('variant.product', 'product')
+      .addSelect(['product.id', 'product.slug'])
+      .leftJoin('product.shop', 'shop')
+      .addSelect(['shop.id', 'shop.slug'])
+      .where('order.order_group_id = :orderGroupId', { orderGroupId })
+      .andWhere('order.user_id = :userId', { userId })
+      .orderBy('order.id', 'ASC')
+      .getMany();
+  }
 
-    return order;
+  async areAllGroupOrdersCancelled(orderGroupId: string): Promise<boolean> {
+    const result = await this.repo
+      .createQueryBuilder('order')
+      .select('COUNT(*)', 'total')
+      .addSelect(
+        `SUM(CASE WHEN order.status = :cancelled THEN 1 ELSE 0 END)`,
+        'cancelledCount',
+      )
+      .where('order.order_group_id = :orderGroupId', { orderGroupId })
+      .setParameter('cancelled', OrderStatus.Cancelled)
+      .getRawOne();
+
+    const total = parseInt(result?.total ?? '0', 10);
+    const cancelledCount = parseInt(result?.cancelledCount ?? '0', 10);
+
+    return total > 0 && total === cancelledCount;
   }
 
   async findByIdAndUserId(

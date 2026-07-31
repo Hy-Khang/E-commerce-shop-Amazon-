@@ -17,7 +17,7 @@ import {
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
-import { OrderResponseDto, OrderListItemWithItemsResponseDto } from './dto/order-response.dto';
+import { OrderResponseDto, CheckoutResponseDto, OrderListItemWithItemsResponseDto } from './dto/order-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { ICurrentUser } from '../../common/interfaces/current-user.interface';
 
@@ -28,8 +28,8 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Checkout — create order from cart' })
-  @ApiResponse({ status: 201, description: 'Order created', type: OrderResponseDto })
+  @ApiOperation({ summary: 'Checkout — create orders from cart (1 per shop)' })
+  @ApiResponse({ status: 201, description: 'Orders created', type: CheckoutResponseDto })
   @ApiResponse({ status: 400, description: 'CART_002: Cart empty / ORDER_002: Insufficient stock' })
   @ApiResponse({ status: 404, description: 'COMMON_001: Address not found' })
   async checkout(
@@ -47,6 +47,17 @@ export class OrderController {
     @Query() query: OrderQueryDto,
   ) {
     return this.orderService.findMyOrders(user.id, query);
+  }
+
+  @Get('group/:groupId')
+  @ApiOperation({ summary: 'Get all orders in a group (own only)' })
+  @ApiResponse({ status: 200, description: 'Returns orders in group', type: [OrderResponseDto] })
+  @ApiResponse({ status: 404, description: 'ORDER_001: Order group not found' })
+  async findOrderGroup(
+    @CurrentUser() user: ICurrentUser,
+    @Param('groupId') groupId: string,
+  ) {
+    return this.orderService.findMyOrdersByGroupId(user.id, groupId);
   }
 
   @Get(':id')

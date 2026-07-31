@@ -1,6 +1,6 @@
 # Project Status — E-Commerce Platform
 
-> **Cập nhật:** 2026-07-23
+> **Cập nhật:** 2026-07-25
 > **Tổng quan:** 22 modules theo PROJECT_MODULES.md
 
 ---
@@ -23,7 +23,7 @@
 | 12 | Search & Filter | 4 | 95% | 95% | **95%** | Hoàn chỉnh search/filter/sort/suggestions/visual search. Visual search chờ API key hoạt động |
 | 13 | Admin Panel | 5 | 100% | 100% | **100%** | Hoàn chỉnh (distributed across modules) |
 | 14 | Seller Dashboard & Analytics | 5 | 100% | 100% | **100%** | Hoàn chỉnh (Recharts) |
-| 15 | Shipper Dashboard | 5 | 5% | 5% | **5%** | Chỉ có role/permission seed + stub pages "Coming Soon" |
+| 15 | Shipper Dashboard | 5 | 100% | 100% | **100%** | Hoàn chỉnh (order accept/deliver, dashboard stats, seed data) |
 | 16 | Order Tracking | 5 | 0% | 0% | **0%** | Chưa làm |
 | 17 | Flash Sale | 6 | 0% | 0% | **0%** | Chưa làm |
 | 18 | Recently Viewed | 6 | 0% | 0% | **0%** | Chưa làm |
@@ -38,12 +38,11 @@
 
 | Trạng thái | Số module | Danh sách |
 |------------|:---------:|-----------|
-| Hoàn chỉnh (100%) | **12** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Admin Panel, Seller Dashboard |
+| Hoàn chỉnh (100%) | **13** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Admin Panel, Seller Dashboard, Shipper Dashboard |
 | Gần hoàn chỉnh (80-99%) | **2** | Search & Filter (95%), Notifications (90%) |
-| Đang làm dở / Thiếu nhiều | **1** | Shipper Dashboard (5%) |
 | Chưa làm (0%) | **7** | Order Tracking, Flash Sale, Recently Viewed, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
 
-**Tổng tiến độ ước tính: ~68% (14/22 modules hoạt động)**
+**Tổng tiến độ ước tính: ~72% (15/22 modules hoạt động)**
 
 ---
 
@@ -142,18 +141,9 @@ Hoàn chỉnh. Dashboard stats (7 sections với Promise.allSettled), User/Role/
 
 Hoàn chỉnh. Revenue over time, top products, recent orders, low stock alerts — all scoped to seller's shop. FE dùng Recharts.
 
-#### Module 15: Shipper Dashboard — 5%
+#### Module 15: Shipper Dashboard — 100% ✅
 
-**Đã làm:**
-- Role `shipper` + permissions đã seed (`orders:read`, `orders:update`, `dashboard:read`)
-- FE: ShipperLayout + 2 stub pages "Coming Soon"
-- Route `/shipper/dashboard`, `/shipper/deliveries`
-
-**Chưa làm:**
-- **Backend endpoints** — không có shipper-specific controller/service
-- **Danh sách đơn giao** — không có endpoint lấy đơn assigned cho shipper
-- **Cập nhật trạng thái giao** — shipper không có dedicated endpoint
-- **FE pages** — cả 2 page đều placeholder trống
+Hoàn chỉnh. Shipper order management: list available orders (confirmed, no shipper), accept order (atomic assign + confirmed→shipping), mark delivered (shipping→delivered with COD/paid payment guard). Dashboard stats: totalDelivered, activeDeliveries, availableForPickup, deliveredToday, deliveries over time (30d chart), recent deliveries table. BE: ShipperOrderController (4 endpoints), ShipperDashboardController, `shipper_id` column on orders (migration + index), atomic race-condition-safe assignment. FE: ShipperDeliveryListPage (2 tabs: Available/My Deliveries), ShipperDeliveryDetailPage, ShipperDashboardPage (StatCards + chart + table). Notifications emitted on accept/deliver. Seed data includes shipper user + assigned orders.
 
 #### Module 16: Order Tracking — 0% ❌
 
@@ -208,8 +198,7 @@ Dựa trên dependency map, thứ tự hoàn thành hợp lý cho các module c�
 1. **Notifications (Socket.IO)** — cần cho Chat Realtime (Module 20)
 
 ### Ưu tiên 2 — Phase 5 còn thiếu
-3. **Shipper Dashboard** — cần trước Order Tracking
-4. **Order Tracking** — phụ thuộc Shipper Dashboard
+3. **Order Tracking** — phụ thuộc Shipper Dashboard (đã hoàn thành)
 
 ### Ưu tiên 4 — Phase 6 (độc lập, làm song song được)
 7. **Flash Sale** — cần BE + FE

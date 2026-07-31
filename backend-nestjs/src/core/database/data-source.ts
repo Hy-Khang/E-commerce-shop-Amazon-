@@ -64,6 +64,7 @@ export const AppDataSource = new DataSource({
     Notification,
     PaymentTransaction,
   ],
+  migrations: [__dirname + '/migrations/*{.ts,.js}'],
   options: {
     trustServerCertificate: true,
     useUTC: true,

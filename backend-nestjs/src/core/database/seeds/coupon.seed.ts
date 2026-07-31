@@ -54,17 +54,23 @@ export const CouponSeed: ISeed = {
     `);
     console.log('  + coupon_products: 3 rows');
 
-    // Coupon usage audit trail matching seeded orders
+    // Coupon usage audit trail matching seeded orders (multi-shop splits = 1 usage per sub-order)
+    // Group E (orders 7-8): WELCOME10 discount 100000 split proportionally (24000 + 76000)
+    // Order 14: FREESHIP discount 30000 (single-shop order)
+    // Group F (orders 16-17): FASHION20 discount 95800 split proportionally (44600 + 51200)
+    // Group I (order 25 only): BOOK30 discount 33000 (only books shop gets coupon, shirt shop gets none)
     await qr.query(`
       SET IDENTITY_INSERT coupon_usages ON;
       INSERT INTO coupon_usages (id, coupon_id, user_id, order_id, discount_amount, status, created_at) VALUES
-        (1, 1, 6,  6,  100000, N'applied', '2026-03-25T08:30:00'),
-        (2, 5, 2,  12, 30000,  N'applied', '2026-04-22T14:20:00'),
-        (3, 2, 7,  14, 95800,  N'applied', '2026-05-02T16:30:00'),
-        (4, 4, 6,  20, 33000,  N'applied', '2026-05-28T08:15:00');
+        (1, 1, 6,  7,  24000,  N'applied', '2026-03-25T08:30:00'),
+        (2, 1, 6,  8,  76000,  N'applied', '2026-03-25T08:30:00'),
+        (3, 5, 2,  14, 30000,  N'applied', '2026-04-22T14:20:00'),
+        (4, 2, 7,  16, 44600,  N'applied', '2026-05-02T16:30:00'),
+        (5, 2, 7,  17, 51200,  N'applied', '2026-05-02T16:30:00'),
+        (6, 4, 6,  25, 33000,  N'applied', '2026-05-28T08:15:00');
       SET IDENTITY_INSERT coupon_usages OFF;
     `);
-    console.log('  + coupon_usages: 4 rows');
+    console.log('  + coupon_usages: 6 rows');
 
     await qr.release();
   },

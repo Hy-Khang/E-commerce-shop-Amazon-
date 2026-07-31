@@ -236,7 +236,7 @@ export class DashboardRepository {
         .select('COALESCE(SUM(oi.price * oi.quantity), 0)', 'grossRevenue')
         .from('order_items', 'oi')
         .innerJoin('orders', 'o', 'oi.order_id = o.id')
-        .where('oi.shop_id = :shopId', { shopId })
+        .where('o.shop_id = :shopId', { shopId })
         .andWhere("o.status = 'completed'")
         .getRawOne(),
       mgr
@@ -247,16 +247,15 @@ export class DashboardRepository {
         )
         .from('order_items', 'oi')
         .innerJoin('orders', 'o', 'oi.order_id = o.id')
-        .where('oi.shop_id = :shopId', { shopId })
+        .where('o.shop_id = :shopId', { shopId })
         .andWhere("o.payment_status = 'paid'")
         .andWhere("o.status = 'completed'")
         .getRawOne(),
       mgr
         .createQueryBuilder()
-        .select('COUNT(DISTINCT oi.order_id)', 'totalOrders')
-        .from('order_items', 'oi')
-        .innerJoin('orders', 'o', 'oi.order_id = o.id')
-        .where('oi.shop_id = :shopId', { shopId })
+        .select('COUNT(*)', 'totalOrders')
+        .from('orders', 'o')
+        .where('o.shop_id = :shopId', { shopId })
         .andWhere("o.status != 'cancelled'")
         .getRawOne(),
       mgr
@@ -297,7 +296,7 @@ export class DashboardRepository {
       .addSelect('COALESCE(SUM(oi.price * oi.quantity), 0)', 'revenue')
       .from('order_items', 'oi')
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
-      .where('oi.shop_id = :shopId', { shopId })
+      .where('o.shop_id = :shopId', { shopId })
       .andWhere("o.payment_status = 'paid'")
       .andWhere("o.status = 'completed'")
       .andWhere('o.created_at >= DATEADD(DAY, :days, GETUTCDATE())', {
@@ -333,7 +332,7 @@ export class DashboardRepository {
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
       .innerJoin('product_variants', 'pv', 'oi.product_variant_id = pv.id')
       .innerJoin('products', 'p', 'pv.product_id = p.id')
-      .where('oi.shop_id = :shopId', { shopId })
+      .where('o.shop_id = :shopId', { shopId })
       .andWhere("o.payment_status = 'paid'")
       .andWhere("o.status = 'completed'")
       .groupBy('p.id')
@@ -369,7 +368,7 @@ export class DashboardRepository {
       .from('order_items', 'oi')
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
       .innerJoin('users', 'u', 'o.user_id = u.id')
-      .where('oi.shop_id = :shopId', { shopId })
+      .where('o.shop_id = :shopId', { shopId })
       .groupBy('o.id')
       .addGroupBy('u.full_name')
       .addGroupBy('o.status')

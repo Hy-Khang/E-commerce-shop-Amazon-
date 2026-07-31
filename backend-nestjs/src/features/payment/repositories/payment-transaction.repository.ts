@@ -59,6 +59,22 @@ export class PaymentTransactionRepository {
     await this.repo.update(id, updateData);
   }
 
+  async findPendingByGroupId(
+    groupId: string,
+  ): Promise<PaymentTransaction | null> {
+    return this.repo.findOne({
+      where: { order_group_id: groupId, status: TransactionStatus.Pending },
+      order: { created_at: 'DESC' },
+    });
+  }
+
+  async findByGroupId(groupId: string): Promise<PaymentTransaction[]> {
+    return this.repo.find({
+      where: { order_group_id: groupId },
+      order: { created_at: 'DESC' },
+    });
+  }
+
   async findExpiredPending(cutoffDate: Date): Promise<PaymentTransaction[]> {
     return this.repo.find({
       where: {

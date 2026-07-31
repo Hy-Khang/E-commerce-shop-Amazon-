@@ -1,16 +1,17 @@
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { CheckCircle2, ArrowRight, ShoppingBag, Loader2 } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ShoppingBag, Loader2, Store } from 'lucide-react';
 import { formatPrice } from '@/common/utils/format.util';
 import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
-import { useOrder } from '../hooks/useOrder';
+import { useOrderGroup } from '../hooks/useOrderGroup';
+import { OrderStatusBadge } from '../components/OrderStatusBadge';
 
 export default function CheckoutSuccessPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const orderId = Number(searchParams.get('orderId'));
+  const orderGroupId = searchParams.get('orderGroupId');
 
-  const { data: order, isLoading, isError } = useOrder(orderId);
+  const { data: orders = [], isLoading, isError } = useOrderGroup(orderGroupId);
 
   if (isLoading) {
     return (
@@ -21,7 +22,7 @@ export default function CheckoutSuccessPage() {
     );
   }
 
-  if (isError || !order || !orderId) {
+  if (isError || orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <p className="text-text-secondary">Order not found.</p>
@@ -31,6 +32,9 @@ export default function CheckoutSuccessPage() {
       </div>
     );
   }
+
+  const totalAmount = orders.reduce((sum, o) => sum + o.total_amount, 0);
+  const firstOrder = orders[0];
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 py-4 animate-in">
@@ -63,36 +67,68 @@ export default function CheckoutSuccessPage() {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight text-text-primary">Thank You for Your Purchase!</h1>
           <p className="text-sm text-text-secondary">
-            Your order has been placed successfully and is now being processed.
+            {orders.length > 1
+              ? `Your checkout created ${orders.length} orders (one per shop) and they are now being processed.`
+              : 'Your order has been placed successfully and is now being processed.'}
           </p>
         </div>
 
-        {/* Order Details Brief Summary */}
-        <div className="rounded-xl border border-border-default bg-neutral-50/50 p-6 text-left space-y-4">
-          <div className="flex justify-between border-b border-border-default pb-3 text-sm">
-            <span className="text-text-secondary">Order ID</span>
-            <span className="font-semibold text-text-primary">#{order.id}</span>
-          </div>
+        {/* Sub-orders Summary */}
+        <div className="space-y-3 text-left">
+          {orders.map((order) => (
+            <div
+              key={order.id}
+              className="rounded-xl border border-border-default bg-neutral-50/50 p-4 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Store className="h-4 w-4 text-text-muted" />
+                  <span className="text-sm font-semibold text-text-primary">{order.shop_name}</span>
+                </div>
+                <OrderStatusBadge status={order.status} />
+              </div>
 
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Order #{order.id}</span>
+                <span className="font-semibold text-text-primary">{formatPrice(order.total_amount)}</span>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Items</span>
+                <span className="text-text-primary">{order.order_items.length} item(s)</span>
+              </div>
+
+              <button
+                onClick={() => navigate(ROUTES.ORDER_DETAIL(order.id))}
+                className="text-xs font-semibold text-text-brand hover:text-primary-700 transition-colors"
+              >
+                View Details
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Shared Info */}
+        <div className="rounded-xl border border-border-default bg-neutral-50/50 p-6 text-left space-y-4">
           <div className="flex justify-between border-b border-border-default pb-3 text-sm">
             <span className="text-text-secondary">Payment Method</span>
             <span className="font-semibold text-text-primary">
-              {PAYMENT_METHOD_LABELS[order.payment_method]}
+              {PAYMENT_METHOD_LABELS[firstOrder.payment_method]}
             </span>
           </div>
 
           <div className="border-b border-border-default pb-3 text-sm space-y-1">
             <span className="text-text-secondary block">Shipping Address</span>
-            <span className="font-medium text-text-primary block">{order.shipping_address.full_name}</span>
+            <span className="font-medium text-text-primary block">{firstOrder.shipping_address.full_name}</span>
             <span className="text-text-secondary block text-xs">
-              {order.shipping_address.phone} <br />
-              {order.shipping_address.address_line}, {order.shipping_address.city}
+              {firstOrder.shipping_address.phone} <br />
+              {firstOrder.shipping_address.address_line}, {firstOrder.shipping_address.city}
             </span>
           </div>
 
           <div className="flex justify-between pt-1 text-base font-bold text-text-primary">
             <span>Total Amount</span>
-            <span className="text-text-price">{formatPrice(order.total_amount)}</span>
+            <span className="text-text-price">{formatPrice(totalAmount)}</span>
           </div>
         </div>
 
@@ -110,11 +146,11 @@ export default function CheckoutSuccessPage() {
           <Button
             type="button"
             variant="brand"
-            onClick={() => navigate(ROUTES.ORDER_DETAIL(order.id))}
+            onClick={() => navigate(ROUTES.ORDERS)}
             className="flex-1 py-3"
             icon={ArrowRight}
           >
-            View Order Details
+            View My Orders
           </Button>
         </div>
       </div>

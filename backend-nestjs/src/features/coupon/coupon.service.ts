@@ -99,17 +99,20 @@ export class CouponService {
     orderId: number,
     discountAmount: number,
     manager: EntityManager,
+    incrementGlobalCount: boolean = true,
   ): Promise<void> {
-    const success = await this.couponRepository.incrementUsage(
-      couponId,
-      manager,
-    );
+    if (incrementGlobalCount) {
+      const success = await this.couponRepository.incrementUsage(
+        couponId,
+        manager,
+      );
 
-    if (!success) {
-      throw new BadRequestException({
-        code: 'COUPON_003',
-        message: 'Coupon usage limit has been exceeded',
-      });
+      if (!success) {
+        throw new BadRequestException({
+          code: 'COUPON_003',
+          message: 'Coupon usage limit has been exceeded',
+        });
+      }
     }
 
     await this.couponUsageRepository.createUsage(
@@ -141,6 +144,28 @@ export class CouponService {
 
     this.logger.log(
       `Coupon usage reversed: usage=${usage.id}, coupon=${usage.coupon_id}, order=${orderId}`,
+    );
+  }
+
+  async reverseGroupCouponUsage(orderGroupId: string): Promise<void> {
+    const usages =
+      await this.couponUsageRepository.findActiveByGroupId(orderGroupId);
+
+    if (usages.length === 0) return;
+
+    const couponId = usages[0].coupon_id;
+
+    for (const usage of usages) {
+      await this.couponUsageRepository.updateStatus(
+        usage.id,
+        CouponUsageStatus.Reversed,
+      );
+    }
+
+    await this.couponRepository.decrementUsage(couponId);
+
+    this.logger.log(
+      `Group coupon usage reversed: group=${orderGroupId}, coupon=${couponId}, usages=${usages.length}`,
     );
   }
 

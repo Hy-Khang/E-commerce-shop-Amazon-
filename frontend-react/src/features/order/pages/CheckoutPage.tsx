@@ -49,20 +49,20 @@ export default function CheckoutPage() {
       coupon_code: appliedCoupon?.code,
     };
     checkout.mutate(request, {
-      onSuccess: (order) => {
+      onSuccess: (result) => {
         if (data.payment_method === 'cod') {
-          navigate(`/checkout/success?orderId=${order.id}`);
+          navigate(`/checkout/success?orderGroupId=${result.order_group_id}`);
           return;
         }
         createPayment.mutate(
-          { order_id: order.id },
+          { order_group_id: result.order_group_id },
           {
             onSuccess: (paymentData) => {
               window.location.href = paymentData.payment_url;
             },
             onError: (error) => {
               showErrorToast(error);
-              navigate(ROUTES.ORDER_DETAIL(order.id));
+              navigate(`/checkout/success?orderGroupId=${result.order_group_id}`);
             },
           },
         );

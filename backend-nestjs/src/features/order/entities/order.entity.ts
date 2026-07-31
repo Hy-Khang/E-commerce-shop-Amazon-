@@ -8,18 +8,30 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
+import { Shop } from '../../shop/entities/shop.entity';
 import { OrderItem } from './order-item.entity';
 
 @Entity('orders')
 @Index('idx_orders_user_id', ['user_id'])
 @Index('idx_orders_delivered_at', ['delivered_at'])
 @Index('idx_orders_shipper_id', ['shipper_id'])
+@Index('idx_orders_shop_id', ['shop_id'])
+@Index('idx_orders_order_group_id', ['order_group_id'])
 export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   user_id: number;
+
+  @Column()
+  shop_id: number;
+
+  @Column({ type: 'nvarchar', length: 100 })
+  shop_name: string;
+
+  @Column({ type: 'nvarchar', length: 36 })
+  order_group_id: string;
 
   @Column({ type: 'nvarchar', length: 20, default: 'pending' })
   status: string;
@@ -57,6 +69,10 @@ export class Order {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @ManyToOne(() => Shop)
+  @JoinColumn({ name: 'shop_id' })
+  shop: Shop;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'shipper_id' })

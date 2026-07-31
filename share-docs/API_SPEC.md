@@ -409,3 +409,34 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 
 > **Partial failure tolerance:** Uses `Promise.allSettled()` — if one query fails, other sections still return. Failed sections return `null` or `[]`. Response includes 7 data sections: `summary`, `revenueOverTime`, `ordersByStatus`, `recentOrders`, `usersByRole`, `topProducts`, `lowStockAlerts`.
 
+---
+
+## 8. Shipper Endpoints
+
+All shipper endpoints use **permission-based access control** via `@Permissions()` decorator. Shipper role has `orders:read`, `orders:update`, `dashboard:read` permissions.
+
+### Shipper: Orders — `/api/v1/shipper/orders`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/shipper/orders` | List orders (filter: `available` or `my_deliveries`) | `orders:read` |
+| GET | `/shipper/orders/:id` | Get order detail (available orders + own deliveries) | `orders:read` |
+| PATCH | `/shipper/orders/:id/accept` | Accept order — assigns shipper + confirmed → shipping | `orders:update` |
+| PATCH | `/shipper/orders/:id/deliver` | Mark delivered — shipping → delivered | `orders:update` |
+
+> **Order assignment model:** First-come-first-served. Shipper calls `/accept` on a `confirmed` order with no shipper assigned. Atomic conditional UPDATE prevents race conditions — if two shippers accept simultaneously, only one succeeds; the other receives `ORDER_003 (400)`.
+>
+> **Filter param:** `?filter=available` (default) returns orders with `status = 'confirmed' AND shipper_id IS NULL`. `?filter=my_deliveries` returns orders assigned to the current shipper, with optional `?status=` sub-filter.
+>
+> **Payment guard on deliver:** COD orders can always be marked delivered. VNPay/MoMo orders must have `payment_status = 'paid'` before marking as delivered — otherwise returns `ORDER_003 (400)`.
+>
+> **Notifications:** Accept and deliver both emit `order.status_updated` event → customer receives notification.
+
+### Shipper: Dashboard — `/api/v1/shipper/dashboard`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/shipper/dashboard` | Dashboard stats: summary, deliveries over time (30d), recent deliveries | `dashboard:read` |
+
+> **Partial failure tolerance:** Uses `Promise.allSettled()` — same pattern as Admin/Seller dashboards. Response includes 3 data sections: `summary` (totalDelivered, activeDeliveries, availableForPickup, deliveredToday), `deliveriesOverTime` (last 30 days), `recentDeliveries` (last 10).
+

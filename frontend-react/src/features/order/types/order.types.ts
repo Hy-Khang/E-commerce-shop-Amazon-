@@ -49,6 +49,9 @@ export interface OrderItem {
 export interface Order {
   id: number;
   user_id: number;
+  shop_id: number;
+  shop_name: string;
+  order_group_id: string;
   status: OrderStatus;
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
@@ -64,11 +67,24 @@ export interface Order {
 
 export interface OrderListItem {
   id: number;
+  shop_id: number;
+  shop_name: string;
+  order_group_id: string;
   status: OrderStatus;
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
+  shipping_fee: number;
+  coupon_code: string | null;
+  discount_amount: number;
   total_amount: number;
+  delivered_at: string | null;
   created_at: string;
+}
+
+export interface CheckoutResponse {
+  order_group_id: string;
+  orders: Order[];
+  total_amount: number;
 }
 
 export interface OrderListItemWithItems extends OrderListItem {

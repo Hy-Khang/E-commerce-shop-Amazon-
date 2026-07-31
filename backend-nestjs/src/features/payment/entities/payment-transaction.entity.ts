@@ -11,12 +11,16 @@ import { Order } from '../../order/entities/order.entity';
 @Entity('payment_transactions')
 @Index('idx_payment_transactions_order_id', ['order_id'])
 @Index('idx_payment_transactions_status', ['status'])
+@Index('idx_payment_transactions_order_group_id', ['order_group_id'])
 export class PaymentTransaction {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   order_id: number;
+
+  @Column({ type: 'nvarchar', length: 36, nullable: true })
+  order_group_id: string | null;
 
   @Column({ type: 'nvarchar', length: 100, unique: true })
   transaction_ref: string;

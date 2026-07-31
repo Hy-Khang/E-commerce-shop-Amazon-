@@ -24,7 +24,7 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post('create')
-  @ApiOperation({ summary: 'Create payment URL for an order' })
+  @ApiOperation({ summary: 'Create payment URL for an order or order group' })
   @ApiResponse({ status: 201, description: 'Returns payment_url to redirect' })
   @ApiResponse({ status: 400, description: 'PAYMENT_001-006' })
   async createPayment(
@@ -36,7 +36,7 @@ export class PaymentController {
       (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
       req.socket.remoteAddress ||
       '127.0.0.1';
-    return this.paymentService.createPayment(user.id, dto.order_id, ipAddress);
+    return this.paymentService.createPayment(user.id, dto, ipAddress);
   }
 
   @Get('vnpay/ipn')
@@ -53,7 +53,8 @@ export class PaymentController {
     @Query() query: Record<string, string>,
     @Res() res: Response,
   ) {
-    const redirectUrl = this.paymentService.buildVnpayReturnRedirect(query);
+    const redirectUrl =
+      await this.paymentService.buildVnpayReturnRedirect(query);
     res.redirect(redirectUrl);
   }
 
@@ -72,7 +73,8 @@ export class PaymentController {
     @Query() query: Record<string, string>,
     @Res() res: Response,
   ) {
-    const redirectUrl = this.paymentService.buildMomoReturnRedirect(query);
+    const redirectUrl =
+      await this.paymentService.buildMomoReturnRedirect(query);
     res.redirect(redirectUrl);
   }
 

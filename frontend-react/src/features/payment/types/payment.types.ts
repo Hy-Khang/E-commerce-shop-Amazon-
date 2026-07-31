@@ -14,7 +14,8 @@ export interface PaymentTransaction {
 }
 
 export interface CreatePaymentRequest {
-  order_id: number;
+  order_id?: number;
+  order_group_id?: string;
 }
 
 export interface CreatePaymentResponse {

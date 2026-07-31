@@ -12,6 +12,8 @@ import { OrderItemRepository } from '../repositories/order-item.repository';
 import { CartService } from '../../cart/cart.service';
 import { ProductService } from '../../product/product.service';
 import { UserProfileService } from '../../user-profile/user-profile.service';
+import { CouponService } from '../../coupon/coupon.service';
+import { ShopService } from '../../shop/shop.service';
 import { PaymentMethod, OrderStatus, PaymentStatus } from '../../../common/constants';
 import { InsufficientStockException } from '../../../common/exceptions/insufficient-stock.exception';
 import {
@@ -84,6 +86,21 @@ describe('OrderService', () => {
           useValue: { emit: jest.fn() },
         },
         {
+          provide: CouponService,
+          useValue: {
+            validateAndCalculateDiscount: jest.fn(),
+            recordUsage: jest.fn(),
+            reverseCouponUsage: jest.fn(),
+          },
+        },
+        {
+          provide: ShopService,
+          useValue: {
+            resolveShopByUserId: jest.fn(),
+            findShopById: jest.fn(),
+          },
+        },
+        {
           provide: DataSource,
           useValue: { createQueryRunner: jest.fn(() => mockQueryRunner) },
         },
@@ -138,8 +155,10 @@ describe('OrderService', () => {
         items: [{ productVariantId: cart.items[0].product_variant_id, quantity: 1 }],
       });
 
-      expect(result.id).toBe(42);
-      expect(result.status).toBe('pending');
+      expect(result.order_group_id).toBeDefined();
+      expect(result.orders).toHaveLength(1);
+      expect(result.orders[0].id).toBe(42);
+      expect(result.orders[0].status).toBe('pending');
     });
 
     it('should calculate total correctly with multiple cart items', async () => {

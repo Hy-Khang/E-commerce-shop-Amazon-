@@ -90,7 +90,7 @@ src/
     ├── upload/                          — file upload (images)
     ├── notification/                   — in-app notifications (order status changes)
     ├── payment/                         — VNPay/MoMo gateway integration, payment_transactions
-    └── dashboard/                       — admin analytics (read-only, no owned entities)
+    └── dashboard/                       — admin, seller & shipper analytics (read-only, no owned entities)
 ```
 
 ---
