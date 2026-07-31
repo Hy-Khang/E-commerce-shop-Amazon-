@@ -1,6 +1,6 @@
 # Project Status — E-Commerce Platform
 
-> **Cập nhật:** 2026-07-25
+> **Cập nhật:** 2026-08-01
 > **Tổng quan:** 22 modules theo PROJECT_MODULES.md
 
 ---
@@ -19,7 +19,7 @@
 | 8 | Payment Gateway | 3 | 100% | 100% | **100%** | Hoàn chỉnh (VNPay + MoMo sandbox) |
 | 9 | Coupons | 3 | 100% | 100% | **100%** | Hoàn chỉnh (cả auto-reversal) |
 | 10 | Wishlist & Reviews | 4 | 100% | 100% | **100%** | Hoàn chỉnh |
-| 11 | Notifications | 4 | 85% | 100% | **90%** | Polling-based. Chưa có Socket.IO realtime push |
+| 11 | Notifications | 4 | 100% | 100% | **100%** | Hoàn chỉnh (Polling + Socket.IO realtime push) |
 | 12 | Search & Filter | 4 | 95% | 95% | **95%** | Hoàn chỉnh search/filter/sort/suggestions/visual search. Visual search chờ API key hoạt động |
 | 13 | Admin Panel | 5 | 100% | 100% | **100%** | Hoàn chỉnh (distributed across modules) |
 | 14 | Seller Dashboard & Analytics | 5 | 100% | 100% | **100%** | Hoàn chỉnh (Recharts) |
@@ -38,11 +38,11 @@
 
 | Trạng thái | Số module | Danh sách |
 |------------|:---------:|-----------|
-| Hoàn chỉnh (100%) | **13** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Admin Panel, Seller Dashboard, Shipper Dashboard |
-| Gần hoàn chỉnh (80-99%) | **2** | Search & Filter (95%), Notifications (90%) |
+| Hoàn chỉnh (100%) | **14** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard |
+| Gần hoàn chỉnh (80-99%) | **1** | Search & Filter (95%) |
 | Chưa làm (0%) | **7** | Order Tracking, Flash Sale, Recently Viewed, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
 
-**Tổng tiến độ ước tính: ~72% (15/22 modules hoạt động)**
+**Tổng tiến độ ước tính: ~73% (15/22 modules hoạt động)**
 
 ---
 
@@ -102,17 +102,9 @@ Hoàn chỉnh. Scope-based (all/categories/products), junction tables, usage tra
 
 Hoàn chỉnh. Wishlist CRUD + bulk check. Reviews với purchase verification (3-way link user × product × order). Admin moderation.
 
-#### Module 11: Notifications — 90%
+#### Module 11: Notifications — 100% ✅
 
-**Đã làm:**
-- Event-driven notification creation (`@OnEvent('order.status_updated')`, `@OnEvent('order.placed')`)
-- REST API: list notifications (paginated), unread count, mark read, mark all read
-- FE: NotificationBell + dropdown + page + store (Zustand) + polling
-- Multi-target notifications (notify customer on status change, notify seller on confirm/return)
-
-**Chưa làm:**
-- **Socket.IO Gateway** — hiện tại chỉ polling, chưa có WebSocket realtime push
-- Theo API_SPEC, polling là design hiện tại. Nhưng PROJECT_MODULES.md yêu cầu Socket.IO
+Hoàn chỉnh. Event-driven notification creation (`@OnEvent('order.status_updated')`, `@OnEvent('order.placed')`). REST API: list notifications (paginated), unread count, mark read, mark all read. FE: NotificationBell + dropdown + page + store (Zustand) + polling fallback. Multi-target notifications (notify customer on status change, notify seller on confirm/return). **Socket.IO Gateway**: realtime push via WebSocket — `NotificationGateway` with JWT auth in handshake, room-based targeting (`user:{id}`), `sendToUser()` emits `new_notification` event. FE: `useRealtimeNotifications` hook (socket.io-client singleton, toast via Sonner, TanStack Query cache invalidation). Gateway exported for reuse by Module 20 (Chat Realtime).
 
 #### Module 12: Search & Filter — 95%
 
@@ -214,8 +206,8 @@ Dựa trên dependency map, thứ tự hoàn thành hợp lý cho các module c�
 
 | Package | Cho module | Side |
 |---------|-----------|------|
-| `socket.io` + `@nestjs/websockets` + `@nestjs/platform-socket.io` | Notifications, Chat | BE |
-| `socket.io-client` | Notifications, Chat | FE |
+| `socket.io` + `@nestjs/websockets` + `@nestjs/platform-socket.io` | ~~Notifications~~, Chat | BE ✅ |
+| `socket.io-client` | ~~Notifications~~, Chat | FE ✅ |
 | `leaflet` + `react-leaflet` + `@types/leaflet` | Order Tracking | FE |
 | OpenRouter / vision API key | AI Chatbox, Visual Search | BE (đã có code, cần API key) |
 | `@nestjs/cache-manager` + `cache-manager-redis-store` | Flash Sale, Recommendations | BE |

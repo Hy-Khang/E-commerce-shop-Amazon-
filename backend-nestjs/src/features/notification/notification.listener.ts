@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { NotificationRepository } from './repositories/notification.repository';
+import { NotificationService } from './notification.service';
 import {
   NotificationContext,
   NotificationType,
@@ -19,7 +19,7 @@ export class NotificationListener {
   private readonly logger = new Logger(NotificationListener.name);
 
   constructor(
-    private readonly notificationRepository: NotificationRepository,
+    private readonly notificationService: NotificationService,
   ) {}
 
   @OnEvent('order.placed')
@@ -32,7 +32,7 @@ export class NotificationListener {
           payload.itemCount,
         );
 
-        await this.notificationRepository.create({
+        await this.notificationService.createNotification({
           user_id: sellerUserId,
           type: NotificationType.NEW_ORDER,
           title,
@@ -87,7 +87,7 @@ export class NotificationListener {
           actorType: payload.actorType,
         });
 
-        await this.notificationRepository.create({
+        await this.notificationService.createNotification({
           user_id: userId,
           type: NotificationType.ORDER_STATUS_CHANGED,
           title,

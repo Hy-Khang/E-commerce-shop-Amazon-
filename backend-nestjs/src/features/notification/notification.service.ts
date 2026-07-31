@@ -1,15 +1,27 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { NotificationRepository } from './repositories/notification.repository';
+import { NotificationGateway } from './notification.gateway';
 import { NotificationQueryDto } from './dto/notification-query.dto';
 import { NotificationResponseDto } from './dto/notification-response.dto';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { toNotificationResponse } from './utils/notification.util';
+import type { Notification } from './entities/notification.entity';
 
 @Injectable()
 export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
+
+  async createNotification(
+    data: Partial<Notification>,
+  ): Promise<NotificationResponseDto> {
+    const entity = await this.notificationRepository.create(data);
+    const dto = toNotificationResponse(entity);
+    this.notificationGateway.sendToUser(entity.user_id, dto);
+    return dto;
+  }
 
   async getMyNotifications(
     userId: number,

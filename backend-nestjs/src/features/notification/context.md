@@ -26,12 +26,14 @@ In-app notifications for customers and sellers. Notifications are created automa
 | Auto-complete (cron) | System | Customer — `ORDER_STATUS_CHANGED` |
 
 ## Design Decisions
-- **Polling-based delivery** — frontend polls `GET /notifications/unread-count` every 30s. No WebSocket infrastructure needed.
+- **Dual delivery: Socket.IO + polling fallback** — primary delivery via Socket.IO WebSocket (`new_notification` event). Polling `GET /notifications/unread-count` every 30s as fallback when socket is disconnected.
+- **Socket.IO Gateway** — `NotificationGateway` (`@WebSocketGateway`) with JWT auth in handshake. Clients join `user:{userId}` rooms. `sendToUser(userId, dto)` emits to the user's room. Exported from `NotificationModule` for reuse by Module 20 (Chat Realtime).
+- **Notification creation pipeline** — `NotificationListener` → `NotificationService.createNotification()` → persist to DB + emit via gateway. All notification creation goes through the service to ensure both persistence and realtime delivery.
 - **Best-effort async** — notification listener is wrapped in try/catch. Failures are logged but never break the order flow.
-- **Separate listener from service** — `notification.listener.ts` handles events, `notification.service.ts` handles CRUD for the controller. Clean separation of concerns.
 - **Multi-target notifications** — events include arrays of user IDs. The listener creates one notification per user, determining context based on whether the recipient is the order owner (customer) or a shop owner (seller).
 - **Context-based filtering** — API supports `?context=seller` to filter notifications by portal. Each portal (customer/seller/admin) only sees its own notifications.
 - **JSON data field** — stored as NVARCHAR(MAX), parsed safely on read. Both `NEW_ORDER` and `ORDER_STATUS_CHANGED` include `orderId` for order detail navigation.
+- **Frontend socket** — singleton `socket.io-client` instance in `core/socket/socket.service.ts`. `useRealtimeNotifications` hook listens for `new_notification`, updates Zustand unread count, invalidates TanStack Query cache, shows Sonner toast.
 - **Future consideration** — cleanup cron for notifications older than 90 days.
 
 ## API Endpoints
