@@ -21,6 +21,7 @@ import {
   SellerOrderResponseDto,
   OrderListItemResponseDto,
 } from './dto/order-response.dto';
+import { OrderTrackingResponseDto } from './dto/order-tracking-response.dto';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { PERMISSIONS } from '../../common/constants/permissions.constant';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -38,6 +39,15 @@ export class SellerOrderController {
   @ApiResponse({ status: 200, description: 'Returns paginated order list', type: [OrderListItemResponseDto] })
   async findAll(@CurrentUser() user: ICurrentUser, @Query() query: OrderQueryDto) {
     return this.orderService.findSellerOrders(user.id, query);
+  }
+
+  @Get(':id/tracking')
+  @Permissions(PERMISSIONS.ORDERS_READ)
+  @ApiOperation({ summary: 'Get order tracking (timeline + shipper location)' })
+  @ApiResponse({ status: 200, description: 'Returns tracking data', type: OrderTrackingResponseDto })
+  @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
+  async getTracking(@Param('id', ParseIntPipe) id: number) {
+    return this.orderService.getOrderTrackingForRole(id);
   }
 
   @Get(':id')

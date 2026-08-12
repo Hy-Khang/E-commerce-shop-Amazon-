@@ -18,6 +18,7 @@ import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { OrderResponseDto, CheckoutResponseDto, OrderListItemWithItemsResponseDto } from './dto/order-response.dto';
+import { OrderTrackingResponseDto } from './dto/order-tracking-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { ICurrentUser } from '../../common/interfaces/current-user.interface';
 
@@ -58,6 +59,18 @@ export class OrderController {
     @Param('groupId') groupId: string,
   ) {
     return this.orderService.findMyOrdersByGroupId(user.id, groupId);
+  }
+
+  @Get(':id/tracking')
+  @ApiOperation({ summary: 'Get order tracking timeline + shipper location' })
+  @ApiResponse({ status: 200, description: 'Returns tracking data', type: OrderTrackingResponseDto })
+  @ApiResponse({ status: 403, description: 'ORDER_004: Order does not belong to user' })
+  @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
+  async getTracking(
+    @CurrentUser() user: ICurrentUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.orderService.getOrderTracking(user.id, id);
   }
 
   @Get(':id')

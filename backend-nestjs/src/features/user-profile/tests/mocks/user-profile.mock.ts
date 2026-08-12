@@ -8,6 +8,8 @@ export const mockAddress = (overrides: Partial<Address> = {}): Address => ({
   phone: '0901234567',
   address_line: '123 Le Loi, Quan 1',
   city: 'Ho Chi Minh',
+  latitude: null,
+  longitude: null,
   is_default: false,
   user: {} as any,
   ...overrides,

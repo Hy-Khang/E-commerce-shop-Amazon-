@@ -9,6 +9,8 @@ import {
 import { OrderService } from '../order.service';
 import { OrderRepository } from '../repositories/order.repository';
 import { OrderItemRepository } from '../repositories/order-item.repository';
+import { OrderStatusHistoryRepository } from '../repositories/order-status-history.repository';
+import { OrderTrackingLocationRepository } from '../repositories/order-tracking-location.repository';
 import { CartService } from '../../cart/cart.service';
 import { ProductService } from '../../product/product.service';
 import { UserProfileService } from '../../user-profile/user-profile.service';
@@ -68,6 +70,14 @@ describe('OrderService', () => {
         {
           provide: OrderItemRepository,
           useValue: { createMany: jest.fn() },
+        },
+        {
+          provide: OrderStatusHistoryRepository,
+          useValue: { createEntry: jest.fn(), findByOrderId: jest.fn() },
+        },
+        {
+          provide: OrderTrackingLocationRepository,
+          useValue: { insertLocation: jest.fn(), findLatestByOrderId: jest.fn(), findAllByOrderId: jest.fn() },
         },
         {
           provide: CartService,

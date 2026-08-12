@@ -24,6 +24,7 @@ export interface OrderStatusUpdatedEvent {
   oldStatus: string;
   newStatus: string;
   actorType: ActorType;
+  actorId?: number;
 }
 
 export interface OrderPlacedEvent {
