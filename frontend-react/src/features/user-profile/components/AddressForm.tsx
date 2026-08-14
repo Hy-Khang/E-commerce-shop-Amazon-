@@ -5,6 +5,7 @@ import { addressSchema, type AddressFormData, type Address } from '../types/user
 import { ApiError } from '@/core/api/api.types';
 import { FormInput } from '@/common/components/form/FormInput';
 import { Button } from '@/common/components/ui/Button';
+import { AddressMapPicker } from './AddressMapPicker';
 
 interface Props {
   address?: Address;
@@ -19,6 +20,8 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
@@ -27,6 +30,8 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
       phone: address?.phone ?? '',
       address_line: address?.address_line ?? '',
       city: address?.city ?? '',
+      latitude: address?.latitude ?? undefined,
+      longitude: address?.longitude ?? undefined,
     },
   });
 
@@ -37,9 +42,17 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
         phone: address.phone,
         address_line: address.address_line,
         city: address.city,
+        latitude: address.latitude ?? undefined,
+        longitude: address.longitude ?? undefined,
       });
     }
   }, [address, reset]);
+
+  const addressLine = watch('address_line');
+  const city = watch('city');
+  const lat = watch('latitude');
+  const lng = watch('longitude');
+  const addressText = [addressLine, city].filter(Boolean).join(', ');
 
   return (
     <div className="flex flex-col h-full justify-between">
@@ -82,6 +95,16 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
             error={errors.city?.message}
             placeholder="e.g. Ho Chi Minh City"
           />
+
+          <AddressMapPicker
+            latitude={lat ?? null}
+            longitude={lng ?? null}
+            addressText={addressText}
+            onChange={(newLat, newLng) => {
+              setValue('latitude', newLat, { shouldDirty: true });
+              setValue('longitude', newLng, { shouldDirty: true });
+            }}
+          />
         </form>
       </div>
 
@@ -108,4 +131,3 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
     </div>
   );
 }
-

@@ -33,4 +33,6 @@ export interface IShippingAddressSnapshot {
   phone: string;
   address_line: string;
   city: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }

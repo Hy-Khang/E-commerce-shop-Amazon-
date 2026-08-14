@@ -7,14 +7,18 @@ import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { Button } from '@/common/components/ui/Button';
 import { useShipperOrder } from '../hooks/useShipperOrders';
 import { useAcceptOrder, useMarkDelivered } from '../hooks/useShipperOrderActions';
+import { useShipperOrderTracking } from '../hooks/useOrderTracking';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderItemRow } from '../components/OrderItemRow';
+import { OrderTimeline } from '../components/OrderTimeline';
+import { ShipperLocationUpdater } from '../components/ShipperLocationUpdater';
 import { getPaymentStatusColor } from '../utils/order.util';
 
 export default function ShipperDeliveryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const orderId = Number(id);
   const { data: order, isLoading, isError } = useShipperOrder(orderId);
+  const { data: tracking } = useShipperOrderTracking(orderId, order?.status);
   const acceptOrder = useAcceptOrder();
   const markDelivered = useMarkDelivered();
   const [confirmModal, setConfirmModal] = useState<{
@@ -127,6 +131,24 @@ export default function ShipperDeliveryDetailPage() {
                   </div>
                 )}
               </dl>
+            </div>
+          )}
+
+          {tracking && tracking.timeline.length > 0 && (
+            <div className="admin-card p-6">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">Order Timeline</h2>
+              <OrderTimeline timeline={tracking.timeline} />
+            </div>
+          )}
+
+          {isMyShipping && (
+            <div className="admin-card p-6">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">Update Location</h2>
+              <ShipperLocationUpdater
+                orderId={orderId}
+                currentLocation={tracking?.shipperLocation}
+                deliveryLocation={tracking?.deliveryLocation}
+              />
             </div>
           )}
         </div>

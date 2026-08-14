@@ -18,3 +18,4 @@ export { useSetDefaultAddress } from './hooks/useSetDefaultAddress';
 export { ProfileForm } from './components/ProfileForm';
 export { AddressCard } from './components/AddressCard';
 export { AddressForm } from './components/AddressForm';
+export { AddressMapPicker } from './components/AddressMapPicker';
