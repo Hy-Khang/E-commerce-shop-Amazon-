@@ -138,6 +138,7 @@ export default function AddressListPage() {
         onClose={() => setShowForm(false)}
         title="Add New Address"
         variant="modal"
+        size="xl"
       >
         <AddressForm
           onSubmit={handleCreate}
@@ -153,6 +154,7 @@ export default function AddressListPage() {
         onClose={() => setEditingAddress(undefined)}
         title="Edit Address"
         variant="modal"
+        size="xl"
       >
         {editingAddress && (
           <AddressForm

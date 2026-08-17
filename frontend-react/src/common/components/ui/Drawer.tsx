@@ -5,12 +5,14 @@ import { AnimatePresence, motion } from 'motion/react';
 
 type DrawerSide = 'left' | 'right';
 type DrawerVariant = 'drawer' | 'modal';
+type DrawerSize = 'md' | 'lg' | 'xl';
 
 type DrawerProps = {
   open: boolean;
   onClose: () => void;
   side?: DrawerSide;
   variant?: DrawerVariant;
+  size?: DrawerSize;
   title: string;
   children: ReactNode;
   className?: string;
@@ -52,11 +54,18 @@ function unlockScroll() {
   }
 }
 
+const modalSizeMap: Record<DrawerSize, string> = {
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-xl',
+};
+
 export function Drawer({
   open,
   onClose,
   side = 'right',
   variant = 'drawer',
+  size = 'md',
   title,
   children,
   className = '',
@@ -124,7 +133,7 @@ export function Drawer({
     : { type: 'spring' as const, damping: 30, stiffness: 300 };
 
   const panelClassName = isModal
-    ? `relative flex w-full max-w-md max-h-[90vh] flex-col rounded-xl bg-surface shadow-xl outline-none ${className}`
+    ? `relative flex w-full ${modalSizeMap[size]} max-h-[90vh] flex-col rounded-xl bg-surface shadow-xl outline-none ${className}`
     : `absolute top-0 ${side === 'left' ? 'left-0' : 'right-0'} flex h-full w-full max-w-sm flex-col bg-surface shadow-xl outline-none ${className}`;
 
   return createPortal(

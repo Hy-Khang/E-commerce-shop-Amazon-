@@ -50,6 +50,19 @@ export interface UpdateAddressRequest {
   longitude?: number;
 }
 
+// --- Location types (Vietnam provinces API) ---
+
+export interface LocationItem {
+  code: number;
+  name: string;
+}
+
+export interface LocationValue {
+  province: LocationItem | null;
+  district: LocationItem | null;
+  ward: LocationItem | null;
+}
+
 // --- Zod schemas (forms) ---
 
 export const updateProfileSchema = z.object({

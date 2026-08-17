@@ -48,11 +48,15 @@ export const OrderTrackingSeed: ISeed = {
         (25, N'pending',  N'confirmed', NULL, N'SYSTEM', '2026-06-15T11:00:00'),
         (25, N'confirmed',N'shipping',  16, N'SHIPPER',  '2026-06-16T08:30:00'),
 
+        (26, NULL,        N'pending',   6,  N'CUSTOMER', '2026-05-28T08:15:00'),
+        (26, N'pending',  N'confirmed', NULL, N'SYSTEM', '2026-05-28T09:00:00'),
+        (26, N'confirmed',N'shipping',  16, N'SHIPPER',  '2026-05-29T08:00:00'),
+
         (33, NULL,        N'pending',   2,  N'CUSTOMER', '2026-07-20T10:00:00'),
         (33, N'pending',  N'confirmed', NULL, N'SYSTEM', '2026-07-20T11:00:00'),
         (33, N'confirmed',N'shipping',  16, N'SHIPPER',  '2026-07-21T08:00:00');
     `);
-    console.log('  + order_status_history: 27 rows');
+    console.log('  + order_status_history: 30 rows');
 
     // Tracking locations for shipping orders (shipper location updates)
     await qr.query(`
@@ -66,18 +70,21 @@ export const OrderTrackingSeed: ISeed = {
         (20, 10.7769, 106.7009, '2026-05-26T08:15:00'),
         (20, 10.7730, 106.6920, '2026-05-26T09:30:00'),
 
-        -- Order 23: shipper in Hanoi
-        (23, 21.0285, 105.8542, '2026-06-11T09:30:00'),
-        (23, 21.0250, 105.8500, '2026-06-11T10:15:00'),
+        -- Order 23: shipper moving toward Q1, HCMC (delivery: 123 Lê Lợi, Q1)
+        (23, 10.7800, 106.7050, '2026-06-11T09:30:00'),
+        (23, 10.7760, 106.7010, '2026-06-11T10:15:00'),
 
-        -- Order 25: shipper in Da Nang
-        (25, 16.0544, 108.2022, '2026-06-16T09:00:00'),
+        -- Order 25: shipper in Hanoi (delivery: 56 Bà Triệu, Hai Bà Trưng)
+        (25, 21.0180, 105.8530, '2026-06-16T09:00:00'),
 
-        -- Order 33: shipper in HCMC
+        -- Order 26: shipper in Hanoi (delivery: 56 Bà Triệu, Hai Bà Trưng)
+        (26, 21.0200, 105.8550, '2026-05-29T08:30:00'),
+
+        -- Order 33: shipper in HCMC (delivery: 123 Lê Lợi, Q1)
         (33, 10.7626, 106.6602, '2026-07-21T08:30:00'),
         (33, 10.7700, 106.6700, '2026-07-21T09:15:00');
     `);
-    console.log('  + order_tracking_locations: 10 rows');
+    console.log('  + order_tracking_locations: 12 rows');
 
     await qr.release();
   },

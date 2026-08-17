@@ -18,7 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed": "ts-node -P src/core/database/tsconfig.seed.json src/core/database/seed-runner.ts"
+    "seed": "ts-node -P src/core/database/tsconfig.seed.json src/core/database/seed-runner.ts",
+    "migration:run": "ts-node -P src/core/database/tsconfig.seed.json -r tsconfig-paths/register node_modules/typeorm/cli.js migration:run -d src/core/database/data-source.ts",
+    "migration:revert": "ts-node -P src/core/database/tsconfig.seed.json -r tsconfig-paths/register node_modules/typeorm/cli.js migration:revert -d src/core/database/data-source.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.3.7",

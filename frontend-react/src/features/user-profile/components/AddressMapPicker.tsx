@@ -1,7 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import { MapPin, Search, Loader2 } from 'lucide-react';
 import '@/common/components/map/leaflet-setup';
+import { addressPinIcon, VIETNAM_BOUNDS, VIETNAM_MIN_ZOOM } from '@/common/components/map/map-icons';
+import { VietnamMask } from '@/common/components/map/VietnamMask';
 import { Button } from '@/common/components/ui/Button';
 
 function ClickHandler({ onSelect }: { onSelect: (lat: number, lng: number) => void }) {
@@ -15,9 +17,16 @@ function ClickHandler({ onSelect }: { onSelect: (lat: number, lng: number) => vo
 
 function FlyTo({ position }: { position: [number, number] | null }) {
   const map = useMap();
-  if (position) {
+  const lastKey = useRef('');
+
+  useEffect(() => {
+    if (!position) return;
+    const key = `${position[0].toFixed(6)},${position[1].toFixed(6)}`;
+    if (key === lastKey.current) return;
+    lastKey.current = key;
     map.flyTo(position, 16, { duration: 1 });
-  }
+  }, [map, position]);
+
   return null;
 }
 
@@ -26,11 +35,23 @@ interface Props {
   longitude: number | null;
   addressText?: string;
   onChange: (lat: number, lng: number) => void;
+  externalFlyTo?: [number, number] | null;
 }
 
-export function AddressMapPicker({ latitude, longitude, addressText, onChange }: Props) {
+export function AddressMapPicker({ latitude, longitude, addressText, onChange, externalFlyTo }: Props) {
   const [searching, setSearching] = useState(false);
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
+
+  const prevExternal = useRef<string>('');
+  useEffect(() => {
+    if (externalFlyTo) {
+      const key = `${externalFlyTo[0]},${externalFlyTo[1]}`;
+      if (key !== prevExternal.current) {
+        prevExternal.current = key;
+        setFlyTarget(externalFlyTo);
+      }
+    }
+  }, [externalFlyTo]);
 
   const position: [number, number] | null =
     latitude != null && longitude != null ? [latitude, longitude] : null;
@@ -89,15 +110,16 @@ export function AddressMapPicker({ latitude, longitude, addressText, onChange }:
         </Button>
       </div>
 
-      <div className="h-[220px] w-full overflow-hidden rounded-lg ring-1 ring-border-default">
-        <MapContainer center={center} zoom={position ? 16 : 12} scrollWheelZoom className="h-full w-full">
+      <div className="relative z-0 h-[220px] w-full overflow-hidden rounded-lg ring-1 ring-border-default">
+        <MapContainer center={center} zoom={position ? 16 : 12} scrollWheelZoom minZoom={VIETNAM_MIN_ZOOM} maxBounds={VIETNAM_BOUNDS} maxBoundsViscosity={1.0} className="h-full w-full">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          <VietnamMask />
           <ClickHandler onSelect={handleSelect} />
           <FlyTo position={flyTarget} />
-          {position && <Marker position={position} />}
+          {position && <Marker position={position} icon={addressPinIcon} />}
         </MapContainer>
       </div>
 

@@ -1,21 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { MapPin } from 'lucide-react';
 import '@/common/components/map/leaflet-setup';
-import L from 'leaflet';
+import { shipperMapIcon, deliveryMapIcon, VIETNAM_BOUNDS, VIETNAM_MIN_ZOOM } from '@/common/components/map/map-icons';
+import { VietnamMask } from '@/common/components/map/VietnamMask';
 import { Button } from '@/common/components/ui/Button';
-import { showErrorToast } from '@/common/components/feedback/toast';
+import { showErrorToast, showSuccessToast } from '@/common/components/feedback/toast';
 import { useUpdateShipperLocation } from '../hooks/useOrderTracking';
 import type { ShipperLocation, DeliveryLocation } from '../types/order-tracking.types';
-
-const deliveryIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
 
 function ClickHandler({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -38,6 +30,12 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
   );
   const updateLocation = useUpdateShipperLocation();
 
+  useEffect(() => {
+    if (currentLocation && !selectedPosition) {
+      setSelectedPosition([currentLocation.latitude, currentLocation.longitude]);
+    }
+  }, [currentLocation, selectedPosition]);
+
   const center: [number, number] = selectedPosition
     ?? (deliveryLocation ? [deliveryLocation.latitude, deliveryLocation.longitude] : [10.762622, 106.660172]);
 
@@ -46,6 +44,7 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
     updateLocation.mutate(
       { orderId, data: { latitude: selectedPosition[0], longitude: selectedPosition[1] } },
       {
+        onSuccess: () => showSuccessToast('Location updated successfully'),
         onError: (error) => showErrorToast(error),
       },
     );
@@ -60,16 +59,29 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
   return (
     <div className="space-y-3">
       <p className="text-xs text-slate-500">Click on the map to set your current location.</p>
+      <div className="flex items-center gap-4 text-xs text-slate-500">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-full bg-blue-600" />
+          Your Location
+        </span>
+        {deliveryLocation && (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-full bg-red-600" />
+            Delivery Address
+          </span>
+        )}
+      </div>
       <div className="h-[300px] w-full overflow-hidden rounded-lg ring-1 ring-slate-200">
-        <MapContainer center={center} zoom={14} scrollWheelZoom className="h-full w-full">
+        <MapContainer center={center} zoom={14} scrollWheelZoom minZoom={VIETNAM_MIN_ZOOM} maxBounds={VIETNAM_BOUNDS} maxBoundsViscosity={1.0} className="h-full w-full">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          <VietnamMask />
           <ClickHandler onLocationSelect={(lat, lng) => setSelectedPosition([lat, lng])} />
 
           {selectedPosition && (
-            <Marker position={selectedPosition}>
+            <Marker position={selectedPosition} icon={shipperMapIcon}>
               <Popup>Your location</Popup>
             </Marker>
           )}
@@ -77,9 +89,13 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
           {deliveryLocation && (
             <Marker
               position={[deliveryLocation.latitude, deliveryLocation.longitude]}
-              icon={deliveryIcon}
+              icon={deliveryMapIcon}
             >
-              <Popup>{deliveryLocation.label}</Popup>
+              <Popup>
+                <strong>Delivery Address</strong>
+                <br />
+                {deliveryLocation.label}
+              </Popup>
             </Marker>
           )}
         </MapContainer>
