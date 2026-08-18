@@ -247,6 +247,15 @@ export default function CheckoutPage() {
                     price: item.variant.sale_price ?? item.variant.price,
                     quantity: item.quantity,
                     thumbnail_url: item.variant.thumbnail_url,
+                    product_id: null,
+                    variant_option1_label: null,
+                    variant_option1_value: null,
+                    variant_option2_label: null,
+                    variant_option2_value: null,
+                    shop_id: null,
+                    shop_name: null,
+                    product_slug: null,
+                    shop_slug: null,
                   }}
                 />
               ))}

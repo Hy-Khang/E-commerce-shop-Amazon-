@@ -6,7 +6,7 @@ import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { useSellerProduct } from '../hooks/useSellerProduct';
 import { useSellerUpdateProduct } from '../hooks/useSellerUpdateProduct';
 import { useCategories } from '../hooks/useCategories';
-import { useSellerAddVariant, useSellerUpdateVariant, useSellerDeleteVariant } from '../hooks/useSellerVariants';
+import { useSellerAddVariant, useSellerDeleteVariant } from '../hooks/useSellerVariants';
 import { useSellerAddImage, useSellerDeleteImage } from '../hooks/useSellerImages';
 import { useSellerToggleProductActive } from '../hooks/useSellerToggleProductActive';
 import { createProductSchema, createVariantSchema, type CreateProductFormData, type CreateVariantFormData, type ProductVariant } from '../types/product.types';

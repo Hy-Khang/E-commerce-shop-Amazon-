@@ -8,7 +8,7 @@ import { Button } from '@/common/components/ui/Button';
 import { useAdminProduct } from '../hooks/useAdminProduct';
 import { useUpdateProduct } from '../hooks/useUpdateProduct';
 import { useCategories } from '../hooks/useCategories';
-import { useAddVariant, useUpdateVariant, useDeleteVariant } from '../hooks/useAdminVariants';
+import { useAddVariant, useDeleteVariant } from '../hooks/useAdminVariants';
 import { useAddImage, useDeleteImage } from '../hooks/useAdminImages';
 import { useToggleProductActive } from '../hooks/useToggleProductActive';
 import { createProductSchema, createVariantSchema, type CreateProductFormData, type CreateVariantFormData, type ProductVariant } from '../types/product.types';
@@ -134,7 +134,6 @@ export default function AdminProductEditPage() {
   const { data: categories } = useCategories();
   const updateProduct = useUpdateProduct(productId);
   const toggleActive = useToggleProductActive();
-  const _updateVariant = useUpdateVariant(productId);
   const deleteVariant = useDeleteVariant(productId);
   const deleteImage = useDeleteImage(productId);
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Shield, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { Shield, ChevronDown, ChevronRight } from 'lucide-react';
 import type { Permission, PermissionsByResource, RoleWithUserCount } from '../types/admin.types';
 
 const ACTION_COLORS: Record<string, { bg: string; text: string; dot: string }> = {

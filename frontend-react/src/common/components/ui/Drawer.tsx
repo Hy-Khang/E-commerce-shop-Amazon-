@@ -129,7 +129,7 @@ export function Drawer({
   const isModal = variant === 'modal';
   const variants = isModal ? modalVariants : slideVariants[side];
   const transition = isModal
-    ? { duration: 0.2, ease: 'easeOut' }
+    ? { duration: 0.2, ease: 'easeOut' as const }
     : { type: 'spring' as const, damping: 30, stiffness: 300 };
 
   const panelClassName = isModal

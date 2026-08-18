@@ -1,7 +1,4 @@
-export enum NotificationType {
-  ORDER_STATUS_CHANGED = 'ORDER_STATUS_CHANGED',
-  NEW_ORDER = 'NEW_ORDER',
-}
+export type NotificationType = 'ORDER_STATUS_CHANGED' | 'NEW_ORDER';
 
 export interface OrderStatusChangedData {
   orderId: number;
