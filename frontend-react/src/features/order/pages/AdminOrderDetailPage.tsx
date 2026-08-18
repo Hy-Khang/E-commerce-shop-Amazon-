@@ -13,6 +13,7 @@ import { useAdminOrderTracking } from '../hooks/useOrderTracking';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderItemRow } from '../components/OrderItemRow';
 import { OrderTimeline } from '../components/OrderTimeline';
+import { OrderTrackingMap } from '../components/OrderTrackingMap';
 import { getValidNextStatuses, getPaymentStatusColor, canMarkAsPaid, groupItemsByShop } from '../utils/order.util';
 import type { OrderStatus, PaymentStatus } from '../types/order.types';
 
@@ -176,6 +177,18 @@ export default function AdminOrderDetailPage() {
             <div className="admin-card p-6">
               <h2 className="mb-4 text-lg font-semibold text-slate-900">Order Timeline</h2>
               <OrderTimeline timeline={tracking.timeline} />
+            </div>
+          )}
+
+          {tracking?.shipperLocation && (
+            <div className="admin-card p-6">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">
+                {order.status === 'shipping' ? 'Live Tracking' : 'Last Known Shipper Location'}
+              </h2>
+              <OrderTrackingMap
+                shipperLocation={tracking.shipperLocation}
+                deliveryLocation={tracking.deliveryLocation}
+              />
             </div>
           )}
         </div>

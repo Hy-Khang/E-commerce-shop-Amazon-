@@ -1,14 +1,8 @@
-import { Polygon } from 'react-leaflet';
-import type { LatLngExpression } from 'leaflet';
-
-const WORLD: LatLngExpression[] = [
-  [-90, -180],
-  [90, -180],
-  [90, 180],
-  [-90, 180],
-];
-
-const VIETNAM: LatLngExpression[] = [
+// Rough hand-traced Vietnam boundary (land borders + offshore sea line).
+// The gray country mask was removed; this polygon is now used only by RouteLine's
+// point-in-polygon check to validate that a routed path stays within Vietnam.
+// (The visible land-border highlight uses accurate data in ./vietnam-land-border.)
+export const VIETNAM_BORDER: [number, number][] = [
   [23.39, 105.33],
   [23.32, 104.87],
   [23.08, 104.68],
@@ -52,41 +46,26 @@ const VIETNAM: LatLngExpression[] = [
   [10.43, 104.82],
   [10.30, 104.48],
   [10.11, 104.33],
-  [9.92, 104.73],
-  [9.45, 104.87],
-  [9.10, 104.88],
-  [8.58, 104.68],
-  [8.38, 104.43],
-  [8.58, 104.83],
-  [9.20, 105.58],
-  [9.65, 106.50],
-  [10.10, 107.05],
-  [10.35, 107.40],
-  [10.43, 107.96],
-  [10.60, 108.30],
-  [10.97, 108.81],
-  [11.58, 109.05],
-  [12.37, 109.22],
-  [13.00, 109.38],
-  [13.58, 109.30],
-  [14.10, 109.13],
-  [14.60, 109.00],
-  [15.32, 108.68],
-  [15.88, 108.28],
-  [16.11, 108.03],
-  [16.32, 107.60],
-  [16.55, 107.22],
-  [16.75, 107.03],
-  [17.07, 106.45],
-  [17.38, 106.50],
-  [17.83, 106.47],
-  [18.17, 106.16],
-  [18.65, 105.88],
-  [19.37, 105.87],
-  [19.77, 106.16],
-  [20.10, 106.57],
-  [20.45, 106.78],
-  [20.83, 107.05],
+  // --- Ranh giới ngoài khơi: giữ vùng biển Việt Nam (Biển Đông + Vịnh Thái Lan) không bị che ---
+  // Vòng ra ngoài khơi từ Hà Tiên, quanh mũi Cà Mau, ngược lên Biển Đông rồi về Vịnh Bắc Bộ.
+  [9.60, 103.90], // ngoài khơi Tây Nam Kiên Giang
+  [8.60, 103.90], // phía Tây bán đảo Cà Mau
+  [8.00, 104.30], // Tây Nam mũi Cà Mau
+  [7.80, 105.20], // phía Nam mũi Cà Mau
+  [8.10, 106.20], // Đông Nam Cà Mau, ra Biển Đông
+  [8.90, 107.20], // ngoài khơi Đông Nam ĐBSCL
+  [9.70, 108.10],
+  [10.50, 108.90], // ngoài khơi Vũng Tàu / Bình Thuận
+  [11.50, 109.70],
+  [12.60, 110.10], // ngoài khơi Nha Trang
+  [13.80, 110.30],
+  [15.00, 110.35], // điểm vươn xa nhất về phía Đông (Biển Đông)
+  [16.20, 110.20], // ngoài khơi Đà Nẵng / Quảng Ngãi
+  [17.20, 109.20], // vòng trở lại phía Tây, phía Nam đảo Hải Nam
+  [18.30, 108.30], // phía Tây Hải Nam (Vịnh Bắc Bộ) — không khoét trúng Hải Nam
+  [19.40, 107.90],
+  [20.40, 107.75],
+  [21.00, 107.90], // Đông Bắc Vịnh Bắc Bộ, tiến về biên giới đất liền
   [21.27, 107.95],
   [21.60, 107.99],
   [21.50, 107.35],
@@ -97,17 +76,3 @@ const VIETNAM: LatLngExpression[] = [
   [22.93, 105.53],
   [23.39, 105.33],
 ];
-
-export function VietnamMask() {
-  return (
-    <Polygon
-      positions={[WORLD, VIETNAM]}
-      pathOptions={{
-        fillColor: '#f1f5f9',
-        fillOpacity: 1,
-        color: '#94a3b8',
-        weight: 1.5,
-      }}
-    />
-  );
-}

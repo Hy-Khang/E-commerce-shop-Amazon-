@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import { MapPin, Search, Loader2 } from 'lucide-react';
 import '@/common/components/map/leaflet-setup';
 import { addressPinIcon, VIETNAM_BOUNDS, VIETNAM_MIN_ZOOM } from '@/common/components/map/map-icons';
-import { VietnamMask } from '@/common/components/map/VietnamMask';
+import { BaseTileLayer } from '@/common/components/map/BaseTileLayer';
 import { Button } from '@/common/components/ui/Button';
 
 function ClickHandler({ onSelect }: { onSelect: (lat: number, lng: number) => void }) {
@@ -112,11 +112,7 @@ export function AddressMapPicker({ latitude, longitude, addressText, onChange, e
 
       <div className="relative z-0 h-[220px] w-full overflow-hidden rounded-lg ring-1 ring-border-default">
         <MapContainer center={center} zoom={position ? 16 : 12} scrollWheelZoom minZoom={VIETNAM_MIN_ZOOM} maxBounds={VIETNAM_BOUNDS} maxBoundsViscosity={1.0} className="h-full w-full">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <VietnamMask />
+          <BaseTileLayer />
           <ClickHandler onSelect={handleSelect} />
           <FlyTo position={flyTarget} />
           {position && <Marker position={position} icon={addressPinIcon} />}

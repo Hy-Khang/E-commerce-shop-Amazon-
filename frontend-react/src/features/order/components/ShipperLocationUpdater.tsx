@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { MapPin } from 'lucide-react';
 import '@/common/components/map/leaflet-setup';
 import { shipperMapIcon, deliveryMapIcon, VIETNAM_BOUNDS, VIETNAM_MIN_ZOOM } from '@/common/components/map/map-icons';
-import { VietnamMask } from '@/common/components/map/VietnamMask';
+import { BaseTileLayer } from '@/common/components/map/BaseTileLayer';
+import { VietnamBorderHighlight } from '@/common/components/map/vietnam-land-border';
+import { MapFullscreenControl, useMapFullscreen } from '@/common/components/map/MapFullscreenControl';
+import { RouteLine } from '@/common/components/map/RouteLine';
 import { Button } from '@/common/components/ui/Button';
 import { showErrorToast, showSuccessToast } from '@/common/components/feedback/toast';
 import { useUpdateShipperLocation } from '../hooks/useOrderTracking';
@@ -29,6 +32,7 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
     currentLocation ? [currentLocation.latitude, currentLocation.longitude] : null,
   );
   const updateLocation = useUpdateShipperLocation();
+  const { isFullscreen, toggle } = useMapFullscreen();
 
   useEffect(() => {
     if (currentLocation && !selectedPosition) {
@@ -57,7 +61,7 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
   );
 
   return (
-    <div className="space-y-3">
+    <div className={isFullscreen ? 'fixed inset-0 z-[9999] flex flex-col gap-3 bg-white p-4' : 'space-y-3'}>
       <p className="text-xs text-slate-500">Click on the map to set your current location.</p>
       <div className="flex items-center gap-4 text-xs text-slate-500">
         <span className="inline-flex items-center gap-1.5">
@@ -70,15 +74,26 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
             Delivery Address
           </span>
         )}
+        {selectedPosition && deliveryLocation && (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-0.5 border-t-2 border-dashed border-blue-500 bg-transparent" style={{ width: 12 }} />
+            Route
+          </span>
+        )}
       </div>
-      <div className="h-[300px] w-full overflow-hidden rounded-lg ring-1 ring-slate-200">
+      <div className={`w-full overflow-hidden rounded-lg ring-1 ring-slate-200 ${isFullscreen ? 'flex-1' : 'h-[300px]'}`}>
         <MapContainer center={center} zoom={14} scrollWheelZoom minZoom={VIETNAM_MIN_ZOOM} maxBounds={VIETNAM_BOUNDS} maxBoundsViscosity={1.0} className="h-full w-full">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <VietnamMask />
+          <BaseTileLayer />
+          <VietnamBorderHighlight />
+          <MapFullscreenControl isFullscreen={isFullscreen} onToggle={toggle} />
           <ClickHandler onLocationSelect={(lat, lng) => setSelectedPosition([lat, lng])} />
+
+          {selectedPosition && deliveryLocation && (
+            <RouteLine
+              from={selectedPosition}
+              to={[deliveryLocation.latitude, deliveryLocation.longitude]}
+            />
+          )}
 
           {selectedPosition && (
             <Marker position={selectedPosition} icon={shipperMapIcon}>

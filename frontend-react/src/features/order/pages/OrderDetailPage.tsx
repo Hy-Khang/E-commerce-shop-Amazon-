@@ -204,9 +204,11 @@ export default function OrderDetailPage() {
             </div>
           )}
 
-          {order.status === 'shipping' && tracking?.shipperLocation && (
+          {tracking?.shipperLocation && (
             <div className="shop-card p-6">
-              <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">Live Tracking</h2>
+              <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">
+                {order.status === 'shipping' ? 'Live Tracking' : 'Last Known Shipper Location'}
+              </h2>
               <OrderTrackingMap
                 shipperLocation={tracking.shipperLocation}
                 deliveryLocation={tracking.deliveryLocation}

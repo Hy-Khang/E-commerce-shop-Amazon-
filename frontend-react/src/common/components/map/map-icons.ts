@@ -7,26 +7,6 @@ export const VIETNAM_BOUNDS: L.LatLngBoundsExpression = [
 export const VIETNAM_CENTER: [number, number] = [14.5, 107.5];
 export const VIETNAM_MIN_ZOOM = 5;
 
-function createSvgIcon(color: string, label: string): L.DivIcon {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
-      <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 26 16 26s16-14 16-26C32 7.16 24.84 0 16 0z" fill="${color}" stroke="#fff" stroke-width="1.5"/>
-      <circle cx="16" cy="16" r="7" fill="#fff"/>
-      <text x="16" y="20" text-anchor="middle" font-size="12" font-weight="bold" fill="${color}">${label}</text>
-    </svg>`;
-
-  return new L.DivIcon({
-    html: svg,
-    className: '',
-    iconSize: [32, 42],
-    iconAnchor: [16, 42],
-    popupAnchor: [0, -42],
-  });
-}
-
-export const shipperIcon = createSvgIcon('#2563eb', '🚚'.length ? '' : '');
-export const deliveryIcon = createSvgIcon('#dc2626', '');
-
 const shipperSvg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="36" height="46" viewBox="0 0 36 46">
     <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 28 18 28s18-14.5 18-28C36 8.06 27.94 0 18 0z" fill="#2563eb" stroke="#fff" stroke-width="2"/>

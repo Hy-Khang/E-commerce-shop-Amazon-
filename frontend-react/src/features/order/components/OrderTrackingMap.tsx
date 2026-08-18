@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import '@/common/components/map/leaflet-setup';
 import L from 'leaflet';
 import { shipperMapIcon, deliveryMapIcon, VIETNAM_BOUNDS, VIETNAM_MIN_ZOOM } from '@/common/components/map/map-icons';
-import { VietnamMask } from '@/common/components/map/VietnamMask';
+import { BaseTileLayer } from '@/common/components/map/BaseTileLayer';
+import { VietnamBorderHighlight } from '@/common/components/map/vietnam-land-border';
+import { MapFullscreenControl, useMapFullscreen } from '@/common/components/map/MapFullscreenControl';
+import { RouteLine } from '@/common/components/map/RouteLine';
 import type { ShipperLocation, DeliveryLocation } from '../types/order-tracking.types';
 
 function FitBounds({ points }: { points: [number, number][] }) {
@@ -31,6 +34,8 @@ interface Props {
 }
 
 export function OrderTrackingMap({ shipperLocation, deliveryLocation }: Props) {
+  const { isFullscreen, toggle } = useMapFullscreen();
+
   const points: [number, number][] = [];
   if (shipperLocation) points.push([shipperLocation.latitude, shipperLocation.longitude]);
   if (deliveryLocation) points.push([deliveryLocation.latitude, deliveryLocation.longitude]);
@@ -40,7 +45,7 @@ export function OrderTrackingMap({ shipperLocation, deliveryLocation }: Props) {
     : [10.762622, 106.660172];
 
   return (
-    <div className="space-y-3">
+    <div className={isFullscreen ? 'fixed inset-0 z-[9999] flex flex-col gap-3 bg-white p-4' : 'space-y-3'}>
       <div className="flex items-center gap-4 text-xs text-slate-500">
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full bg-blue-600" />
@@ -50,8 +55,14 @@ export function OrderTrackingMap({ shipperLocation, deliveryLocation }: Props) {
           <span className="inline-block h-3 w-3 rounded-full bg-red-600" />
           Delivery Address
         </span>
+        {shipperLocation && deliveryLocation && (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-0.5 border-t-2 border-dashed border-blue-500 bg-transparent" style={{ width: 12 }} />
+            Route
+          </span>
+        )}
       </div>
-      <div className="h-[350px] w-full overflow-hidden rounded-lg ring-1 ring-slate-200">
+      <div className={`w-full overflow-hidden rounded-lg ring-1 ring-slate-200 ${isFullscreen ? 'flex-1' : 'h-[350px]'}`}>
         <MapContainer
           center={center}
           zoom={13}
@@ -61,12 +72,17 @@ export function OrderTrackingMap({ shipperLocation, deliveryLocation }: Props) {
           maxBoundsViscosity={1.0}
           className="h-full w-full"
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <VietnamMask />
+          <BaseTileLayer />
+          <VietnamBorderHighlight />
+          <MapFullscreenControl isFullscreen={isFullscreen} onToggle={toggle} />
           <FitBounds points={points} />
+
+          {shipperLocation && deliveryLocation && (
+            <RouteLine
+              from={[shipperLocation.latitude, shipperLocation.longitude]}
+              to={[deliveryLocation.latitude, deliveryLocation.longitude]}
+            />
+          )}
 
           {shipperLocation && (
             <Marker

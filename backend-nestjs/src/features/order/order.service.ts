@@ -1114,7 +1114,13 @@ export class OrderService {
     status: string,
     orderId: number,
   ): Promise<ShipperLocationDto | null> {
-    if (status !== OrderStatus.Shipping) return null;
+    const statusesWithLocation = [
+      OrderStatus.Shipping,
+      OrderStatus.Delivered,
+      OrderStatus.Completed,
+      OrderStatus.ReturnRequested,
+    ];
+    if (!statusesWithLocation.includes(status as OrderStatus)) return null;
 
     const latest =
       await this.trackingLocationRepository.findLatestByOrderId(orderId);
