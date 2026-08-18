@@ -5,19 +5,21 @@ Coupon/discount code system for the e-commerce platform. Customers enter coupon 
 
 ## Pages
 - **CheckoutPage** (order feature) — CouponInput component integrated into checkout flow
-- **AdminCouponListPage** — List all coupons with search, filter by scope/status, pagination
-- **AdminCouponCreatePage** — Create new coupon with scope selection and date range
-- **AdminCouponEditPage** — Edit coupon details (code is immutable), view recent usages
+- **AdminCouponListPage** — List all coupons (platform + shop); Owner column + filter; edit only platform coupons, deactivate any
+- **AdminCouponCreatePage** — Create platform coupon with scope selection and date range
+- **AdminCouponEditPage** — Edit platform coupon details (code immutable), view recent usages
+- **SellerCouponListPage** — List the seller's own shop coupons (amber portal)
+- **SellerCouponCreatePage** — Create shop coupon (scope all/products, code auto-prefixed with shop slug, own-shop product picker)
+- **SellerCouponEditPage** — Edit shop coupon (code immutable), view recent usages
+
+## Shared components
+- **CouponForm** — reused by admin & seller; props `hideCategoryScope`, `codePrefix`, `productSource` ('admin' | 'seller')
+- **MultiItemPicker** — `source` prop switches products between `useAdminProducts` and `useSellerProducts`
 
 ## API Dependencies
-- `POST /coupons/validate` — Customer validates coupon code, returns discount info + scope
-- `GET /admin/coupons` — Admin list coupons (paginated, filterable)
-- `GET /admin/coupons/:id` — Admin coupon detail
-- `POST /admin/coupons` — Admin create coupon
-- `PATCH /admin/coupons/:id` — Admin update coupon (code immutable)
-- `DELETE /admin/coupons/:id` — Admin soft-delete (set is_active = false)
-- `GET /admin/coupons/usages` — Admin list all coupon usages
-- `GET /admin/coupons/:id/usages` — Admin list usages for specific coupon
+- `POST /coupons/validate` — Customer validates coupon code, returns discount info + scope + `shop_id`
+- `GET|POST /admin/coupons`, `GET|PATCH|DELETE /admin/coupons/:id`, `GET /admin/coupons/(:id/)usages` — admin (list supports `owner`/`shop_id` filters; platform coupons only for create/edit)
+- `GET|POST /seller/coupons`, `GET|PATCH|DELETE /seller/coupons/:id`, `GET /seller/coupons/:id/usages` — seller (shop-scoped, ownership-enforced)
 
 ## State Decisions
 - **Server state** — TanStack Query for all coupon data (admin CRUD, validation)

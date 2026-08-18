@@ -100,7 +100,8 @@ describe('OrderService', () => {
           useValue: {
             validateAndCalculateDiscount: jest.fn(),
             recordUsage: jest.fn(),
-            reverseCouponUsage: jest.fn(),
+            reverseOrderShopCoupons: jest.fn(),
+            reverseGroupPlatformCoupon: jest.fn(),
           },
         },
         {

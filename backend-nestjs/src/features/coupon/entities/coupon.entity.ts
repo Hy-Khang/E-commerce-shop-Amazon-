@@ -2,22 +2,30 @@ import {
   Column,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { CouponCategory } from './coupon-category.entity';
 import { CouponProduct } from './coupon-product.entity';
 import { CouponUsage } from './coupon-usage.entity';
+import { Shop } from '../../shop/entities/shop.entity';
 
 @Entity('coupons')
 @Index('idx_coupons_is_active', ['is_active'])
 @Index('idx_coupons_expires_at', ['expires_at'])
+@Index('idx_coupons_shop_id', ['shop_id'])
 export class Coupon {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: 'nvarchar', length: 50, unique: true })
   code: string;
+
+  // NULL = platform-wide coupon (admin). NOT NULL = shop coupon (seller-owned).
+  @Column({ type: 'int', nullable: true })
+  shop_id: number | null;
 
   @Column({ type: 'nvarchar', length: 255, nullable: true })
   description: string;
@@ -60,6 +68,10 @@ export class Coupon {
 
   @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
   updated_at: Date;
+
+  @ManyToOne(() => Shop, { onDelete: 'NO ACTION' })
+  @JoinColumn({ name: 'shop_id' })
+  shop: Shop | null;
 
   @OneToMany(() => CouponCategory, (cc) => cc.coupon, { cascade: true })
   coupon_categories: CouponCategory[];

@@ -66,6 +66,9 @@ const SellerOrderDetailPage = lazy(() => import('@/features/order/pages/SellerOr
 
 const ShopProfilePage = lazy(() => import('@/features/shop/pages/ShopProfilePage'));
 const SellerShopSettingsPage = lazy(() => import('@/features/shop/pages/SellerShopSettingsPage'));
+const SellerCouponListPage = lazy(() => import('@/features/coupon/pages/SellerCouponListPage'));
+const SellerCouponCreatePage = lazy(() => import('@/features/coupon/pages/SellerCouponCreatePage'));
+const SellerCouponEditPage = lazy(() => import('@/features/coupon/pages/SellerCouponEditPage'));
 const AdminShopListPage = lazy(() => import('@/features/shop/pages/AdminShopListPage'));
 const AdminShopDetailPage = lazy(() => import('@/features/shop/pages/AdminShopDetailPage'));
 
@@ -184,6 +187,9 @@ export const router = createBrowserRouter([
               { path: 'seller/orders', element: <SuspenseWrapper><SellerOrderListPage /></SuspenseWrapper> },
               { path: 'seller/orders/:id', element: <SuspenseWrapper><SellerOrderDetailPage /></SuspenseWrapper> },
               { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
+              { path: 'seller/coupons', element: <SuspenseWrapper><SellerCouponListPage /></SuspenseWrapper> },
+              { path: 'seller/coupons/new', element: <SuspenseWrapper><SellerCouponCreatePage /></SuspenseWrapper> },
+              { path: 'seller/coupons/:id/edit', element: <SuspenseWrapper><SellerCouponEditPage /></SuspenseWrapper> },
               { path: 'seller/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },

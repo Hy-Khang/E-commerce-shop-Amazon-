@@ -27,6 +27,17 @@ export class CouponValidationResponseDto {
 
   @ApiPropertyOptional({ type: [Number] })
   applicable_product_ids: number[] | null;
+
+  @ApiPropertyOptional({ description: 'NULL = platform coupon; otherwise the owning shop id' })
+  shop_id: number | null;
+}
+
+export class CouponShopSummaryDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  name: string;
 }
 
 export class CouponResponseDto {
@@ -35,6 +46,12 @@ export class CouponResponseDto {
 
   @ApiProperty()
   code: string;
+
+  @ApiPropertyOptional({ description: 'NULL = platform coupon; otherwise the owning shop id' })
+  shop_id: number | null;
+
+  @ApiPropertyOptional({ type: CouponShopSummaryDto, description: 'Owning shop (NULL for platform coupons)' })
+  shop: CouponShopSummaryDto | null;
 
   @ApiPropertyOptional()
   description: string | null;

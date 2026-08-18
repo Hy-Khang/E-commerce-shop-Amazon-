@@ -1,6 +1,6 @@
 import { useWatch, type UseFormReturn } from 'react-hook-form';
 import type { CreateCouponFormData } from '../types/coupon.types';
-import { MultiItemPicker } from './MultiItemPicker';
+import { MultiItemPicker, type ProductPickerSource } from './MultiItemPicker';
 import { Button } from '@/common/components/ui/Button';
 
 interface Props {
@@ -9,9 +9,24 @@ interface Props {
   isPending: boolean;
   submitLabel: string;
   isEdit?: boolean;
+  /** Hide the `categories` scope option (shop coupons only support all/products). */
+  hideCategoryScope?: boolean;
+  /** Read-only shop-slug prefix shown before the code (e.g. `MY-SHOP`). */
+  codePrefix?: string;
+  /** Source for the products picker — 'admin' (all) or 'seller' (own shop). */
+  productSource?: ProductPickerSource;
 }
 
-export function CouponForm({ form, onSubmit, isPending, submitLabel, isEdit }: Props) {
+export function CouponForm({
+  form,
+  onSubmit,
+  isPending,
+  submitLabel,
+  isEdit,
+  hideCategoryScope,
+  codePrefix,
+  productSource = 'admin',
+}: Props) {
   const {
     register,
     handleSubmit,
@@ -23,6 +38,7 @@ export function CouponForm({ form, onSubmit, isPending, submitLabel, isEdit }: P
   const discountType = useWatch({ control: form.control, name: 'discount_type' });
   const categoryIds = useWatch({ control: form.control, name: 'category_ids' });
   const productIds = useWatch({ control: form.control, name: 'product_ids' });
+  const codeValue = useWatch({ control: form.control, name: 'code' });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -31,13 +47,35 @@ export function CouponForm({ form, onSubmit, isPending, submitLabel, isEdit }: P
           <label htmlFor="code" className="block text-sm font-medium text-slate-700">
             Code {isEdit && <span className="text-xs text-slate-400">(immutable)</span>}
           </label>
-          <input
-            id="code"
-            {...register('code')}
-            readOnly={isEdit}
-            placeholder="e.g. SUMMER2026"
-            className={`admin-input mt-1 uppercase ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500' : ''}`}
-          />
+          {codePrefix && !isEdit ? (
+            <div className="mt-1 flex items-stretch">
+              <span className="inline-flex items-center rounded-l-md border border-r-0 border-slate-300 bg-slate-100 px-2.5 font-mono text-sm text-slate-500">
+                {codePrefix}-
+              </span>
+              <input
+                id="code"
+                {...register('code')}
+                placeholder="e.g. SALE10"
+                className="admin-input mt-0 rounded-l-none uppercase"
+              />
+            </div>
+          ) : (
+            <input
+              id="code"
+              {...register('code')}
+              readOnly={isEdit}
+              placeholder="e.g. SUMMER2026"
+              className={`admin-input mt-1 uppercase ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500' : ''}`}
+            />
+          )}
+          {codePrefix && !isEdit && (
+            <p className="mt-1 text-xs text-slate-400">
+              Final code:{' '}
+              <span className="font-mono font-medium text-slate-600">
+                {codePrefix}-{(codeValue || '').toUpperCase()}
+              </span>
+            </p>
+          )}
           {errors.code && <p className="mt-1 text-xs text-rose-600">{errors.code.message}</p>}
         </div>
 
@@ -87,7 +125,7 @@ export function CouponForm({ form, onSubmit, isPending, submitLabel, isEdit }: P
             className="admin-input mt-1"
           >
             <option value="all">All (entire order)</option>
-            <option value="categories">Categories</option>
+            {!hideCategoryScope && <option value="categories">Categories</option>}
             <option value="products">Products</option>
           </select>
         </div>
@@ -113,6 +151,7 @@ export function CouponForm({ form, onSubmit, isPending, submitLabel, isEdit }: P
           <div className="mt-1">
             <MultiItemPicker
               type="products"
+              source={productSource}
               selectedIds={productIds ?? []}
               onChange={(ids) => setValue('product_ids', ids)}
             />

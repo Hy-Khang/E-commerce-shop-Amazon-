@@ -55,6 +55,9 @@ export const ROUTES = {
   SELLER_ORDERS: '/seller/orders',
   SELLER_ORDER_DETAIL: (id: number) => `/seller/orders/${id}`,
   SELLER_SHOP: '/seller/shop',
+  SELLER_COUPONS: '/seller/coupons',
+  SELLER_COUPON_CREATE: '/seller/coupons/new',
+  SELLER_COUPON_EDIT: (id: number) => `/seller/coupons/${id}/edit`,
 
   SHIPPER_DASHBOARD: '/shipper/dashboard',
   SHIPPER_DELIVERIES: '/shipper/deliveries',

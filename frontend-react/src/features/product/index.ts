@@ -5,6 +5,7 @@ export { categoryKeys, useCategories, useCategoryBySlug } from './hooks/useCateg
 export { usePrefetchProduct } from './hooks/usePrefetchProduct';
 export { homepageKeys, useHomepage } from './hooks/useHomepage';
 export { adminProductKeys, useAdminProducts } from './hooks/useAdminProducts';
+export { sellerProductKeys, useSellerProducts } from './hooks/useSellerProducts';
 export { useAdminProduct } from './hooks/useAdminProduct';
 export { useCreateProduct } from './hooks/useCreateProduct';
 export { useUpdateProduct } from './hooks/useUpdateProduct';

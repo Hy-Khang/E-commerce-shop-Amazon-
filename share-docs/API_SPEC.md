@@ -111,8 +111,11 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | COUPON_004 | 400 | User has used this coupon the maximum number of times |
 | COUPON_005 | 400 | Applicable items total below minimum order amount |
 | COUPON_006 | 400 | Coupon is not currently active |
-| COUPON_007 | 409 | Coupon code already exists (admin create duplicate) |
+| COUPON_007 | 409 | Coupon code already exists (create duplicate) |
 | COUPON_008 | 400 | No items in cart are applicable for this coupon |
+| COUPON_009 | 400 | One or more products do not belong to the seller's shop |
+| COUPON_010 | 403 | Coupon is not owned by the seller's shop (ownership boundary) |
+| COUPON_012 | 400 | Generated shop coupon code exceeds 50 characters |
 | ROLE_001 | 409 | Role name already exists |
 | ROLE_002 | 400 | Cannot delete system role or role with assigned users |
 | PERMISSION_001 | 409 | Permission `resource:action` already exists |
@@ -382,7 +385,7 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 
 | Method | Path | Description | Filter/Sort |
 |--------|------|-------------|-------------|
-| GET | `/admin/coupons` | List all coupons (paginated) | `?search=keyword&scope=categories&discount_type=percentage&is_active=true&sort=created_at&order=desc` |
+| GET | `/admin/coupons` | List all coupons — platform + shop (paginated) | `?search=keyword&scope=categories&discount_type=percentage&is_active=true&owner=platform\|shop&shop_id=5&sort=created_at&order=desc` |
 | GET | `/admin/coupons/usages` | List all coupon usages (paginated) | `?coupon_id=5&user_id=123` |
 | GET | `/admin/coupons/:id` | Get coupon detail (includes applicable categories/products) | — |
 | POST | `/admin/coupons` | Create coupon (code, scope, category_ids/product_ids) | — |
@@ -391,6 +394,8 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 | GET | `/admin/coupons/:id/usages` | List usages for a specific coupon (paginated) | — |
 
 > **Scope types:** `all` (entire order), `categories` (specific categories + sub-categories), `products` (specific products). Junction tables `coupon_categories` and `coupon_products` are managed automatically on create/update. Code is stored uppercase and immutable after creation.
+>
+> **Platform vs shop coupons:** Admin `POST /admin/coupons` always creates a **platform** coupon (`shop_id = NULL`). The admin list shows both platform and shop coupons — filter with `?owner=platform|shop` or `?shop_id=`, and each row exposes `shop_id` + `shop {id, name}` (`null` = platform). Admin may **deactivate** shop coupons (moderation via `DELETE`) but cannot edit their content or reassign their shop.
 
 ### Admin: Upload — `/api/v1/upload`
 
@@ -446,6 +451,27 @@ All seller endpoints use **permission-based access control** via `@Permissions()
 | GET | `/seller/dashboard` | Dashboard analytics: summary stats, revenue trend, order status breakdown, top products, recent orders | `dashboard:read` |
 
 > **Partial failure tolerance:** Uses `Promise.allSettled()` — same pattern as Admin dashboard. Revenue counts `completed` orders only, filtered by seller's `shop_id`.
+
+### Seller: Coupons — `/api/v1/seller/coupons`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/seller/coupons` | List the seller's own shop coupons (paginated, searchable) | `coupons:read` |
+| GET | `/seller/coupons/:id` | Get shop coupon detail (own shop only) | `coupons:read` |
+| POST | `/seller/coupons` | Create shop coupon (scope `all`/`products`; code auto-prefixed with shop slug) | `coupons:create` |
+| PATCH | `/seller/coupons/:id` | Update shop coupon (code & shop immutable, own shop only) | `coupons:update` |
+| DELETE | `/seller/coupons/:id` | Deactivate shop coupon (soft delete, own shop only) | `coupons:delete` |
+| GET | `/seller/coupons/:id/usages` | List usages for a shop coupon (own shop only) | `coupons:read` |
+
+> **Shop coupons:** Every seller endpoint resolves the caller's shop (`SHOP_004` if none) and hard-scopes to `coupons.shop_id = shop.id`. Ownership is enforced on every read/mutation — touching a platform coupon or another shop's coupon returns `COUPON_010 (403)`.
+>
+> **Scope:** Limited to `all` (whole shop) or `products` (specific products **of that shop** — validated on create and update, else `COUPON_009 (400)`). `categories` is not available to sellers.
+>
+> **Code namespace:** The final stored code is `<shop-slug>-<CODE>`, uppercased, globally UNIQUE (`COUPON_007` on duplicate). Seller-supplied `code` is capped at 30 chars; if the prefixed code would exceed 50 chars → `COUPON_012 (400)`.
+>
+> **Validity:** A shop coupon only validates while its owning shop is `active` (suspended/banned → `COUPON_006`).
+>
+> **Checkout (Phase 1 — one coupon per order):** A shop coupon discounts **only its own shop's items**; its whole discount lands on that shop's sub-order. A platform coupon is split across shops by each shop's applicable subtotal (largest-remainder rounding so parts sum exactly). Per-user usage counts distinct `order_group_id`. On cancel: a shop coupon is reversed as soon as its sub-order is cancelled; a platform coupon only when all group orders are cancelled (both idempotent).
 
 ---
 

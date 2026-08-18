@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsPositive,
@@ -15,6 +16,21 @@ export class CouponQueryDto extends PaginationDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    enum: ['platform', 'shop'],
+    description: 'Filter by ownership: platform (shop_id NULL) or shop (any shop coupon)',
+  })
+  @IsOptional()
+  @IsIn(['platform', 'shop'])
+  owner?: 'platform' | 'shop';
+
+  @ApiPropertyOptional({ description: 'Filter by owning shop id' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
+  shop_id?: number;
 
   @ApiPropertyOptional({ enum: CouponScope })
   @IsOptional()

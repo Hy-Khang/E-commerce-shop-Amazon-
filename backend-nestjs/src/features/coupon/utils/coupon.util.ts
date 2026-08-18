@@ -31,6 +31,10 @@ export function toCouponResponse(coupon: Coupon): CouponResponseDto {
   return {
     id: coupon.id,
     code: coupon.code,
+    shop_id: coupon.shop_id ?? null,
+    shop: coupon.shop
+      ? { id: coupon.shop.id, name: coupon.shop.name }
+      : null,
     description: coupon.description ?? null,
     discount_type: coupon.discount_type,
     discount_value: Number(coupon.discount_value),
@@ -87,6 +91,7 @@ export function toCouponValidationResponse(
       coupon.scope === CouponScope.Products && coupon.coupon_products
         ? coupon.coupon_products.map((cp) => cp.product_id)
         : null,
+    shop_id: coupon.shop_id ?? null,
   };
 }
 

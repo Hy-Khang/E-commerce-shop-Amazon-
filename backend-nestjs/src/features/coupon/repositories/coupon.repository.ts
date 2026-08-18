@@ -22,17 +22,35 @@ export class CouponRepository {
   async findById(id: number): Promise<Coupon | null> {
     return this.repo.findOne({
       where: { id },
-      relations: ['coupon_categories', 'coupon_products'],
+      relations: ['coupon_categories', 'coupon_products', 'shop'],
     });
   }
 
   async findAllPaginated(
     query: CouponQueryDto,
+    options?: { forceShopId?: number },
   ): Promise<IPaginatedResult<Coupon>> {
     const qb = this.repo
       .createQueryBuilder('coupon')
       .leftJoinAndSelect('coupon.coupon_categories', 'cc')
-      .leftJoinAndSelect('coupon.coupon_products', 'cp');
+      .leftJoinAndSelect('coupon.coupon_products', 'cp')
+      .leftJoinAndSelect('coupon.shop', 'shop');
+
+    // Seller listing: hard-scope to the seller's own shop; ignore ownership filters.
+    if (options?.forceShopId != null) {
+      qb.andWhere('coupon.shop_id = :forceShopId', {
+        forceShopId: options.forceShopId,
+      });
+    } else {
+      if (query.owner === 'platform') {
+        qb.andWhere('coupon.shop_id IS NULL');
+      } else if (query.owner === 'shop') {
+        qb.andWhere('coupon.shop_id IS NOT NULL');
+      }
+      if (query.shop_id) {
+        qb.andWhere('coupon.shop_id = :shopId', { shopId: query.shop_id });
+      }
+    }
 
     if (query.search) {
       qb.andWhere('coupon.code LIKE :search', {

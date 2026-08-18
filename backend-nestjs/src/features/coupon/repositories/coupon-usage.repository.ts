@@ -59,6 +59,47 @@ export class CouponUsageRepository {
     });
   }
 
+  /** Applied usages for an order, with the coupon loaded (to inspect shop_id). */
+  async findAppliedByOrderIdWithCoupon(
+    orderId: number,
+  ): Promise<CouponUsage[]> {
+    return this.repo.find({
+      where: { order_id: orderId, status: CouponUsageStatus.Applied },
+      relations: ['coupon'],
+    });
+  }
+
+  /** Active usages in a group, with the coupon loaded (to inspect shop_id). */
+  async findActiveByGroupIdWithCoupon(
+    orderGroupId: string,
+  ): Promise<CouponUsage[]> {
+    return this.repo
+      .createQueryBuilder('usage')
+      .innerJoin('usage.order', 'order')
+      .leftJoinAndSelect('usage.coupon', 'coupon')
+      .where('order.order_group_id = :orderGroupId', { orderGroupId })
+      .andWhere('usage.status = :status', {
+        status: CouponUsageStatus.Applied,
+      })
+      .getMany();
+  }
+
+  /**
+   * Idempotent reversal: flips a single usage applied → reversed only if it is
+   * still `applied`. Returns true when a row was actually flipped.
+   */
+  async reverseIfApplied(id: number): Promise<boolean> {
+    const result = await this.repo
+      .createQueryBuilder()
+      .update(CouponUsage)
+      .set({ status: CouponUsageStatus.Reversed })
+      .where('id = :id', { id })
+      .andWhere('status = :applied', { applied: CouponUsageStatus.Applied })
+      .execute();
+
+    return (result.affected ?? 0) > 0;
+  }
+
   async updateStatus(id: number, status: string): Promise<void> {
     await this.repo.update(id, { status });
   }

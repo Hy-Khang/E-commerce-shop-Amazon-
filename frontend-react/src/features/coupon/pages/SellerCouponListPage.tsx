@@ -7,23 +7,21 @@ import { ROUTES } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
 import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
-import { useAdminCoupons } from '../hooks/useAdminCoupons';
-import { useDeactivateCoupon } from '../hooks/useDeactivateCoupon';
+import { useSellerCoupons } from '../hooks/useSellerCoupons';
+import { useDeactivateSellerCoupon } from '../hooks/useSellerCouponMutations';
 import type { CouponListParams, CouponScope, DiscountType, Coupon } from '../types/coupon.types';
 
 const SCOPE_LABELS: Record<CouponScope, string> = {
-  all: 'All',
+  all: 'Whole shop',
   categories: 'Categories',
   products: 'Products',
 };
 
 function DiscountDisplay({ type, value }: { type: DiscountType; value: number }) {
-  return type === 'percentage'
-    ? <span>{value}%</span>
-    : <span>{formatPrice(value)}</span>;
+  return type === 'percentage' ? <span>{value}%</span> : <span>{formatPrice(value)}</span>;
 }
 
-export default function AdminCouponListPage() {
+export default function SellerCouponListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { params, setPage } = usePagination({ limit: 20, sort: 'created_at', order: 'desc' });
 
@@ -31,12 +29,11 @@ export default function AdminCouponListPage() {
     ...params,
     search: searchParams.get('search') || undefined,
     scope: (searchParams.get('scope') as CouponScope) || undefined,
-    owner: (searchParams.get('owner') as 'platform' | 'shop') || undefined,
     is_active: searchParams.get('is_active') !== null ? searchParams.get('is_active') === 'true' : undefined,
   };
 
-  const { data, isLoading } = useAdminCoupons(filters);
-  const deactivate = useDeactivateCoupon();
+  const { data, isLoading } = useSellerCoupons(filters);
+  const deactivate = useDeactivateSellerCoupon();
   const [deactivateTarget, setDeactivateTarget] = useState<number | null>(null);
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
@@ -65,25 +62,9 @@ export default function AdminCouponListPage() {
       render: (coupon) => (
         <div>
           <span className="font-mono text-sm font-medium text-slate-900">{coupon.code}</span>
-          {coupon.description && (
-            <p className="mt-0.5 text-xs text-slate-500">{coupon.description}</p>
-          )}
+          {coupon.description && <p className="mt-0.5 text-xs text-slate-500">{coupon.description}</p>}
         </div>
       ),
-    },
-    {
-      key: 'owner',
-      header: 'Owner',
-      render: (coupon) =>
-        coupon.shop ? (
-          <span className="inline-flex rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-            {coupon.shop.name}
-          </span>
-        ) : (
-          <span className="inline-flex rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">
-            Platform
-          </span>
-        ),
     },
     {
       key: 'discount',
@@ -140,16 +121,13 @@ export default function AdminCouponListPage() {
       className: 'text-right',
       render: (coupon) => (
         <div className="flex items-center justify-end gap-1">
-          {/* Shop coupons are seller-owned — admins may only deactivate them. */}
-          {coupon.shop_id == null && (
-            <Link
-              to={ROUTES.ADMIN_COUPON_EDIT(coupon.id)}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-              aria-label="Edit coupon"
-            >
-              <Pencil className="h-4 w-4" />
-            </Link>
-          )}
+          <Link
+            to={ROUTES.SELLER_COUPON_EDIT(coupon.id)}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            aria-label="Edit coupon"
+          >
+            <Pencil className="h-4 w-4" />
+          </Link>
           {coupon.is_active && (
             <Button
               variant="ghost"
@@ -171,11 +149,11 @@ export default function AdminCouponListPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Coupons</h1>
-          <p className="mt-1 text-sm text-slate-500">Manage discount codes and promotions</p>
+          <p className="mt-1 text-sm text-slate-500">Discount codes for your shop's products</p>
         </div>
         <Link
-          to={ROUTES.ADMIN_COUPON_CREATE}
-          className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 transition-colors"
+          to={ROUTES.SELLER_COUPON_CREATE}
+          className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Create Coupon
@@ -189,8 +167,8 @@ export default function AdminCouponListPage() {
         meta={data?.meta}
         onPageChange={setPage}
         emptyIcon={Tag}
-        emptyTitle="No coupons found"
-        emptyDescription="Create a coupon to start offering discounts."
+        emptyTitle="No coupons yet"
+        emptyDescription="Create a shop coupon to offer discounts on your products."
         toolbar={
           <div className="admin-card p-4">
             <div className="flex flex-wrap gap-3">
@@ -208,20 +186,6 @@ export default function AdminCouponListPage() {
                 <Button type="submit" variant="secondary">Search</Button>
               </form>
               <select
-                value={searchParams.get('owner') || ''}
-                onChange={(e) => setSearchParams((prev) => {
-                  if (e.target.value) prev.set('owner', e.target.value);
-                  else prev.delete('owner');
-                  prev.set('page', '1');
-                  return prev;
-                })}
-                className="admin-input w-auto"
-              >
-                <option value="">All owners</option>
-                <option value="platform">Platform</option>
-                <option value="shop">Shop</option>
-              </select>
-              <select
                 value={searchParams.get('scope') || ''}
                 onChange={(e) => setSearchParams((prev) => {
                   if (e.target.value) prev.set('scope', e.target.value);
@@ -232,8 +196,7 @@ export default function AdminCouponListPage() {
                 className="admin-input w-auto"
               >
                 <option value="">All scopes</option>
-                <option value="all">All (order-wide)</option>
-                <option value="categories">Categories</option>
+                <option value="all">Whole shop</option>
                 <option value="products">Products</option>
               </select>
               <select
