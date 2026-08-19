@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Lock } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import { ApiError } from '@/core/api/api.types';
@@ -85,40 +85,61 @@ export default function SellerCouponEditPage() {
       </Link>
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Edit: {coupon.code}</h1>
-        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-          coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
-        }`}>
-          <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-          {coupon.is_active ? 'Active' : 'Inactive'}
-        </span>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          {coupon.admin_disabled ? 'View' : 'Edit'}: {coupon.code}
+        </h1>
+        {coupon.admin_disabled ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700">
+            <Lock className="h-3 w-3" />
+            Locked by admin
+          </span>
+        ) : (
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+            coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
+          }`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+            {coupon.is_active ? 'Active' : 'Inactive'}
+          </span>
+        )}
       </div>
 
-      {updateCoupon.isError && (
-        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
-          {updateCoupon.error instanceof ApiError
-            ? updateCoupon.error.message
-            : 'Failed to update coupon'}
+      {coupon.admin_disabled ? (
+        <div className="flex items-start gap-2 rounded-lg bg-rose-50 p-4 text-sm text-rose-700">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            This coupon has been deactivated by an administrator and cannot be edited
+            or re-enabled. Contact support if you believe this is a mistake.
+          </p>
         </div>
-      )}
+      ) : (
+        <>
+          {updateCoupon.isError && (
+            <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
+              {updateCoupon.error instanceof ApiError
+                ? updateCoupon.error.message
+                : 'Failed to update coupon'}
+            </div>
+          )}
 
-      {updateCoupon.isSuccess && (
-        <div className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">
-          Coupon updated successfully.
-        </div>
-      )}
+          {updateCoupon.isSuccess && (
+            <div className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">
+              Coupon updated successfully.
+            </div>
+          )}
 
-      <div className="admin-card p-6">
-        <CouponForm
-          form={form}
-          onSubmit={onSubmit}
-          isPending={updateCoupon.isPending}
-          submitLabel="Save Changes"
-          isEdit
-          hideCategoryScope
-          productSource="seller"
-        />
-      </div>
+          <div className="admin-card p-6">
+            <CouponForm
+              form={form}
+              onSubmit={onSubmit}
+              isPending={updateCoupon.isPending}
+              submitLabel="Save Changes"
+              isEdit
+              hideCategoryScope
+              productSource="seller"
+            />
+          </div>
+        </>
+      )}
 
       {usages && usages.data.length > 0 && (
         <section className="space-y-3">

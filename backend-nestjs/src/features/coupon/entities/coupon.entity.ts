@@ -63,6 +63,12 @@ export class Coupon {
   @Column({ type: 'bit', default: true })
   is_active: boolean;
 
+  // Sticky admin moderation lock (shop coupons only). When 1, the coupon is
+  // treated as inactive and the owning seller cannot re-enable it — only an
+  // admin can unlock it.
+  @Column({ type: 'bit', default: false })
+  admin_disabled: boolean;
+
   @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
   created_at: Date;
 

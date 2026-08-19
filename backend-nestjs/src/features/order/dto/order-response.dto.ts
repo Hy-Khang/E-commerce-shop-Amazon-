@@ -50,6 +50,14 @@ export class OrderItemResponseDto {
   shop_slug: string | null;
 }
 
+export class AppliedCouponResponseDto {
+  @ApiProperty()
+  code: string;
+
+  @ApiProperty()
+  discount_amount: number;
+}
+
 export class ShippingAddressResponseDto {
   @ApiProperty()
   full_name: string;
@@ -94,6 +102,12 @@ export class OrderResponseDto {
 
   @ApiProperty()
   discount_amount: number;
+
+  @ApiPropertyOptional({
+    type: [AppliedCouponResponseDto],
+    description: 'All coupons applied to this order (platform + shop breakdown)',
+  })
+  applied_coupons?: AppliedCouponResponseDto[];
 
   @ApiProperty()
   total_amount: number;

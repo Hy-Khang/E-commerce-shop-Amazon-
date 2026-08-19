@@ -95,6 +95,9 @@ export class CouponResponseDto {
   @ApiProperty()
   is_active: boolean;
 
+  @ApiProperty({ description: 'Sticky admin lock (shop coupons); seller cannot re-enable' })
+  admin_disabled: boolean;
+
   @ApiProperty()
   created_at: Date;
 

@@ -46,9 +46,17 @@ export interface Coupon {
   starts_at: string;
   expires_at: string;
   is_active: boolean;
+  // Sticky admin moderation lock (shop coupons) — seller cannot re-enable.
+  admin_disabled?: boolean;
   category_ids: number[] | null;
   product_ids: number[] | null;
   created_at: string;
+}
+
+/** A coupon the customer has applied at checkout (multi-coupon). */
+export interface AppliedCouponEntry {
+  code: string;
+  validation: CouponValidationResult;
 }
 
 export interface CouponUsage {

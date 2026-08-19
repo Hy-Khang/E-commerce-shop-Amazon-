@@ -50,6 +50,11 @@ export interface OrderItem {
   shop_slug: string | null;
 }
 
+export interface AppliedCoupon {
+  code: string;
+  discount_amount: number;
+}
+
 export interface Order {
   id: number;
   user_id: number;
@@ -62,6 +67,8 @@ export interface Order {
   shipping_fee: number;
   coupon_code: string | null;
   discount_amount: number;
+  // Full breakdown of coupons applied to this order (platform + shop).
+  applied_coupons?: AppliedCoupon[];
   total_amount: number;
   shipping_address: ShippingAddress;
   order_items: OrderItem[];
@@ -139,7 +146,10 @@ export interface ShipperOrderListParams extends PaginationParams {
 export interface CreateOrderRequest {
   payment_method: PaymentMethod;
   address_id: number;
+  /** Legacy single coupon — prefer coupon_codes. */
   coupon_code?: string;
+  /** Multi-coupon: ≤1 platform + ≤1 per shop. */
+  coupon_codes?: string[];
 }
 
 export interface UpdateOrderStatusRequest {

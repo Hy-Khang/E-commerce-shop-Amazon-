@@ -31,7 +31,8 @@ import {
 import {
   CouponScope,
   CouponUsageStatus,
-  IDiscountCalculation,
+  IAppliedCoupon,
+  ICouponCalculationItem,
 } from './types/coupon.types';
 import {
   calculateDiscount,
@@ -68,48 +69,94 @@ export class CouponService {
 
   // ─── Cross-feature: consumed by OrderService ───
 
-  async validateAndCalculateDiscount(
+  /**
+   * Validates multiple coupon codes for a single checkout and calculates each
+   * one's discount independently on the original cart subtotal. Enforces the
+   * multi-coupon rule: at most one platform coupon and at most one coupon per
+   * shop (else COUPON_011). Returns one calculation item per coupon.
+   */
+  async validateAndCalculateDiscounts(
     userId: number,
-    code: string,
+    codes: string[],
     cartItems: CartItem[],
-  ): Promise<IDiscountCalculation> {
-    const coupon = await this.validateCoupon(userId, code);
+  ): Promise<ICouponCalculationItem[]> {
+    const uniqueCodes = [
+      ...new Set(codes.map((c) => c.toUpperCase().trim()).filter(Boolean)),
+    ];
+    if (uniqueCodes.length === 0) return [];
 
-    const applicableByShop = await this.getApplicableTotalsByShop(
-      coupon,
-      cartItems,
-    );
-    const applicableTotal = [...applicableByShop.values()].reduce(
-      (sum, v) => sum + v,
-      0,
-    );
+    const results: ICouponCalculationItem[] = [];
+    let platformSeen = false;
+    const shopSeen = new Set<number>();
 
-    if (applicableTotal === 0) {
-      throw new BadRequestException({
-        code: 'COUPON_008',
-        message: 'No items in cart are applicable for this coupon',
+    for (const code of uniqueCodes) {
+      const coupon = await this.validateCoupon(userId, code);
+
+      // Multi-coupon constraint: ≤1 platform, ≤1 per shop.
+      if (coupon.shop_id == null) {
+        if (platformSeen) {
+          throw new BadRequestException({
+            code: 'COUPON_011',
+            message: 'Only one platform coupon can be applied per order',
+          });
+        }
+        platformSeen = true;
+      } else {
+        if (shopSeen.has(coupon.shop_id)) {
+          throw new BadRequestException({
+            code: 'COUPON_011',
+            message: 'Only one coupon per shop can be applied per order',
+          });
+        }
+        shopSeen.add(coupon.shop_id);
+      }
+
+      const applicableByShop = await this.getApplicableTotalsByShop(
+        coupon,
+        cartItems,
+      );
+      const applicableTotal = [...applicableByShop.values()].reduce(
+        (sum, v) => sum + v,
+        0,
+      );
+
+      if (applicableTotal === 0) {
+        throw new BadRequestException({
+          code: 'COUPON_008',
+          message: `No items in cart are applicable for coupon ${coupon.code}`,
+        });
+      }
+
+      if (
+        coupon.min_order_amount != null &&
+        applicableTotal < Number(coupon.min_order_amount)
+      ) {
+        throw new BadRequestException({
+          code: 'COUPON_005',
+          message: `Applicable items total for ${coupon.code} must be at least ${Number(coupon.min_order_amount)} VND`,
+        });
+      }
+
+      results.push({
+        coupon_id: coupon.id,
+        coupon_code: coupon.code,
+        coupon_shop_id: coupon.shop_id ?? null,
+        discount_amount: calculateDiscount(coupon, applicableTotal),
+        applicable_by_shop: Object.fromEntries(applicableByShop),
       });
     }
 
-    if (
-      coupon.min_order_amount != null &&
-      applicableTotal < Number(coupon.min_order_amount)
-    ) {
-      throw new BadRequestException({
-        code: 'COUPON_005',
-        message: `Applicable items total must be at least ${Number(coupon.min_order_amount)} VND`,
-      });
-    }
+    return results;
+  }
 
-    const discountAmount = calculateDiscount(coupon, applicableTotal);
-
-    return {
-      coupon_id: coupon.id,
-      coupon_code: coupon.code,
-      discount_amount: discountAmount,
-      coupon_shop_id: coupon.shop_id ?? null,
-      applicable_by_shop: Object.fromEntries(applicableByShop),
-    };
+  /** Applied coupons for an order (code + discount), for order detail display. */
+  async getUsagesForOrder(orderId: number): Promise<IAppliedCoupon[]> {
+    const usages =
+      await this.couponUsageRepository.findAppliedByOrderIdWithCoupon(orderId);
+    return usages.map((u) => ({
+      code: u.coupon?.code ?? '',
+      discount_amount: Number(u.discount_amount),
+    }));
   }
 
   async recordUsage(
@@ -355,12 +402,45 @@ export class CouponService {
       });
     }
 
+    // For shop coupons, admin deactivation is a *sticky* moderation lock:
+    // set admin_disabled so the owning seller cannot silently re-enable it.
+    // Platform coupons keep the plain is_active toggle.
+    const patch: Partial<Coupon> = { is_active: false, updated_at: new Date() };
+    if (coupon.shop_id != null) {
+      patch.admin_disabled = true;
+    }
+
+    await this.couponRepository.update(id, patch);
+
+    this.logger.log(
+      `Coupon deactivated: ${coupon.code} (id=${id}${coupon.shop_id != null ? ', admin-locked' : ''})`,
+    );
+  }
+
+  /**
+   * Admin unlock — clears the sticky moderation lock on a shop coupon and
+   * restores it to active. No-op semantics for platform coupons (they have no
+   * lock) but still reactivates them.
+   */
+  async unlockCoupon(id: number): Promise<CouponResponseDto> {
+    const coupon = await this.couponRepository.findById(id);
+    if (!coupon) {
+      throw new NotFoundException({
+        code: 'COUPON_001',
+        message: 'Coupon not found',
+      });
+    }
+
     await this.couponRepository.update(id, {
-      is_active: false,
+      admin_disabled: false,
+      is_active: true,
       updated_at: new Date(),
     });
 
-    this.logger.log(`Coupon deactivated: ${coupon.code} (id=${id})`);
+    const updated = await this.couponRepository.findById(id);
+    this.logger.log(`Coupon unlocked/reactivated by admin: id=${id}`);
+
+    return toCouponResponse(updated!);
   }
 
   async findCouponUsages(
@@ -497,6 +577,14 @@ export class CouponService {
   ): Promise<CouponResponseDto> {
     const { shop, coupon } = await this.assertSellerOwnsCoupon(userId, id);
 
+    // A coupon locked by admin cannot be modified or re-enabled by the seller.
+    if (coupon.admin_disabled) {
+      throw new ForbiddenException({
+        code: 'COUPON_013',
+        message: 'This coupon has been locked by an administrator',
+      });
+    }
+
     const newScope = dto.scope ?? coupon.scope;
     if (
       newScope === CouponScope.Products &&
@@ -624,7 +712,7 @@ export class CouponService {
       });
     }
 
-    if (!coupon.is_active) {
+    if (!coupon.is_active || coupon.admin_disabled) {
       throw new BadRequestException({
         code: 'COUPON_006',
         message: 'Coupon is not currently active',

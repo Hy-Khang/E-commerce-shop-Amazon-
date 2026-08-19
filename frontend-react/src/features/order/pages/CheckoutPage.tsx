@@ -7,7 +7,7 @@ import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
 import { showErrorToast } from '@/common/components/feedback/toast';
 import { useCart } from '@/features/cart';
-import { CouponInput, type CouponValidationResult } from '@/features/coupon';
+import { CouponInput, type CouponValidationResult, type AppliedCouponEntry } from '@/features/coupon';
 import { useCreatePayment } from '@/features/payment';
 import { useCheckout } from '../hooks/useCheckout';
 import { useAddresses } from '../hooks/useAddresses';
@@ -22,7 +22,7 @@ export default function CheckoutPage() {
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
   const checkout = useCheckout();
   const createPayment = useCreatePayment();
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; validation: CouponValidationResult } | null>(null);
+  const [appliedCoupons, setAppliedCoupons] = useState<AppliedCouponEntry[]>([]);
 
   const defaultAddress = addresses?.find((a) => a.is_default);
 
@@ -46,7 +46,7 @@ export default function CheckoutPage() {
   function onSubmit(data: CheckoutFormData) {
     const request = {
       ...data,
-      coupon_code: appliedCoupon?.code,
+      coupon_codes: appliedCoupons.map((c) => c.code),
     };
     checkout.mutate(request, {
       onSuccess: (result) => {
@@ -101,8 +101,24 @@ export default function CheckoutPage() {
     return sum + price * item.quantity;
   }, 0);
 
-  const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon.validation, subtotal) : 0;
+  // Estimate only — the server computes exact per-shop distribution at checkout.
+  const couponBreakdown = appliedCoupons.map((c) => ({
+    code: c.code,
+    amount: calculateDiscount(c.validation, subtotal),
+  }));
+  const discountAmount = Math.min(
+    couponBreakdown.reduce((sum, c) => sum + c.amount, 0),
+    subtotal,
+  );
   const estimatedTotal = subtotal - discountAmount;
+
+  function handleApplyCoupon(code: string, validation: CouponValidationResult) {
+    setAppliedCoupons((prev) => [...prev, { code, validation }]);
+  }
+
+  function handleRemoveCoupon(code: string) {
+    setAppliedCoupons((prev) => prev.filter((c) => c.code !== code));
+  }
 
   return (
     <div className="space-y-6">
@@ -224,9 +240,9 @@ export default function CheckoutPage() {
                 <h2 className="text-lg font-semibold text-text-primary">Coupon Code</h2>
               </div>
               <CouponInput
-                appliedCode={appliedCoupon?.code ?? null}
-                onApply={(code, validation) => setAppliedCoupon({ code, validation })}
-                onRemove={() => setAppliedCoupon(null)}
+                appliedCoupons={appliedCoupons}
+                onApply={handleApplyCoupon}
+                onRemove={handleRemoveCoupon}
               />
             </div>
 
@@ -272,12 +288,12 @@ export default function CheckoutPage() {
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
-                {appliedCoupon && (
-                  <div className="flex justify-between text-sm text-emerald-700">
-                    <span>Coupon ({appliedCoupon.code})</span>
-                    <span>-{formatPrice(discountAmount)}</span>
+                {couponBreakdown.map((c) => (
+                  <div key={c.code} className="flex justify-between text-sm text-emerald-700">
+                    <span>Coupon ({c.code})</span>
+                    <span>-{formatPrice(c.amount)}</span>
                   </div>
-                )}
+                ))}
                 <div className="flex justify-between text-sm text-text-secondary">
                   <span>Shipping</span>
                   <span className="text-text-muted">Calculated after order</span>
@@ -289,9 +305,9 @@ export default function CheckoutPage() {
                   <span>Estimated Total</span>
                   <span>{formatPrice(estimatedTotal)}</span>
                 </div>
-                {appliedCoupon && (
+                {appliedCoupons.length > 0 && (
                   <p className="mt-1 text-xs text-emerald-700">
-                    You save {formatPrice(discountAmount)} with this coupon
+                    You save ~{formatPrice(discountAmount)} — final discount confirmed at checkout
                   </p>
                 )}
               </div>

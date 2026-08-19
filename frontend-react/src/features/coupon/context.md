@@ -27,5 +27,10 @@ Coupon/discount code system for the e-commerce platform. Customers enter coupon 
 - **No global store** — Coupon validation result is local to checkout page, passed via props
 
 ## Cross-Feature Integration
-- **Order feature** — CouponInput component rendered in CheckoutPage; coupon_code sent in checkout request
-- **Order display** — Order detail pages show coupon_code and discount_amount from order response
+- **Order feature** — CouponInput (multi-coupon) rendered in CheckoutPage; the page holds an `AppliedCouponEntry[]` and sends `coupon_codes[]`. CouponInput enforces ≤1 platform + ≤1 per shop client-side (grouped by returned `shop_id`).
+- **Order display** — customer OrderDetailPage renders the `applied_coupons[]` breakdown (falls back to `coupon_code`/`discount_amount` for older orders).
+
+## Phase 2 additions
+- **Multi-coupon checkout** — stack one platform coupon with one coupon per shop; server computes exact per-shop distribution (FE total is an estimate).
+- **Admin lock** — AdminCouponListPage shows a "Locked" badge for `admin_disabled` shop coupons and an Unlock action (`useUnlockCoupon` → `PATCH /admin/coupons/:id/unlock`).
+- **Seller lock** — SellerCouponListPage shows "Locked by admin" (no edit/deactivate); SellerCouponEditPage renders a read-only locked notice instead of the form.

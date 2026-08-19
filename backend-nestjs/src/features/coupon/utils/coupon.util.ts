@@ -61,6 +61,7 @@ export function toCouponResponse(coupon: Coupon): CouponResponseDto {
     starts_at: coupon.starts_at,
     expires_at: coupon.expires_at,
     is_active: coupon.is_active,
+    admin_disabled: coupon.admin_disabled ?? false,
     created_at: coupon.created_at,
     updated_at: coupon.updated_at,
   };

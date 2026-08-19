@@ -27,6 +27,7 @@ export const vi = {
       created: 'Đã tạo mã giảm giá',
       updated: 'Đã cập nhật mã giảm giá',
       deactivated: 'Đã vô hiệu hóa mã giảm giá',
+      unlocked: 'Đã mở khóa và kích hoạt lại mã giảm giá',
     },
     product: {
       created: 'Đã tạo sản phẩm',

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Power, Plus, Search, Tag } from 'lucide-react';
+import { Pencil, Power, Plus, Search, Tag, Lock } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
@@ -106,14 +106,20 @@ export default function SellerCouponListPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (coupon) => (
-        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-          coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
-        }`}>
-          <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-          {coupon.is_active ? 'Active' : 'Inactive'}
-        </span>
-      ),
+      render: (coupon) =>
+        coupon.admin_disabled ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700">
+            <Lock className="h-3 w-3" />
+            Locked by admin
+          </span>
+        ) : (
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+            coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
+          }`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+            {coupon.is_active ? 'Active' : 'Inactive'}
+          </span>
+        ),
     },
     {
       key: 'actions',
@@ -124,11 +130,12 @@ export default function SellerCouponListPage() {
           <Link
             to={ROUTES.SELLER_COUPON_EDIT(coupon.id)}
             className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-            aria-label="Edit coupon"
+            aria-label={coupon.admin_disabled ? 'View coupon' : 'Edit coupon'}
           >
             <Pencil className="h-4 w-4" />
           </Link>
-          {coupon.is_active && (
+          {/* A coupon locked by admin cannot be deactivated/reactivated by the seller. */}
+          {!coupon.admin_disabled && coupon.is_active && (
             <Button
               variant="ghost"
               iconOnly

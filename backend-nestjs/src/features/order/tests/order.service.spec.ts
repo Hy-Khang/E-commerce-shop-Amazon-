@@ -25,6 +25,10 @@ import {
   mockAddress,
   mockPaginatedOrders,
 } from './mocks/order.mock';
+import {
+  mockProduct,
+  mockProductVariant,
+} from '../../product/tests/mocks/product.mock';
 
 const mockQueryRunner = {
   connect: jest.fn(),
@@ -48,6 +52,7 @@ describe('OrderService', () => {
   let productService: jest.Mocked<ProductService>;
   let userProfileService: jest.Mocked<UserProfileService>;
   let eventEmitter: jest.Mocked<EventEmitter2>;
+  let couponService: jest.Mocked<CouponService>;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -64,7 +69,9 @@ describe('OrderService', () => {
             findAllPaginated: jest.fn(),
             create: jest.fn(),
             updateStatus: jest.fn(),
+            updateStatusWithDeliveredAt: jest.fn(),
             updatePaymentStatus: jest.fn(),
+            areAllGroupOrdersCancelled: jest.fn().mockResolvedValue(false),
           },
         },
         {
@@ -98,7 +105,8 @@ describe('OrderService', () => {
         {
           provide: CouponService,
           useValue: {
-            validateAndCalculateDiscount: jest.fn(),
+            validateAndCalculateDiscounts: jest.fn().mockResolvedValue([]),
+            getUsagesForOrder: jest.fn().mockResolvedValue([]),
             recordUsage: jest.fn(),
             reverseOrderShopCoupons: jest.fn(),
             reverseGroupPlatformCoupon: jest.fn(),
@@ -125,6 +133,7 @@ describe('OrderService', () => {
     productService = module.get(ProductService);
     userProfileService = module.get(UserProfileService);
     eventEmitter = module.get(EventEmitter2);
+    couponService = module.get(CouponService);
   });
 
   // ─── checkout ───
@@ -275,6 +284,152 @@ describe('OrderService', () => {
       await expect(service.checkout(userId, dto as any)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  // ─── checkout: multi-coupon distribution (Phase 2) ───
+
+  describe('checkout — multi-coupon distribution', () => {
+    const userId = 1;
+
+    // Cart with two shops: shop 1 = 100k, shop 2 = 300k.
+    function twoShopCart() {
+      const p1 = mockProduct({
+        id: 1,
+        shop_id: 1,
+        shop: { id: 1, name: 'Shop One', slug: 'shop-one' } as any,
+      });
+      const v1 = mockProductVariant({
+        id: 10,
+        sku: 'S1',
+        price: 100000,
+        sale_price: null as any,
+        stock_quantity: 100,
+        product: p1,
+        product_id: 1,
+      });
+      const p2 = mockProduct({
+        id: 2,
+        shop_id: 2,
+        shop: { id: 2, name: 'Shop Two', slug: 'shop-two' } as any,
+      });
+      const v2 = mockProductVariant({
+        id: 20,
+        sku: 'S2',
+        price: 300000,
+        sale_price: null as any,
+        stock_quantity: 100,
+        product: p2,
+        product_id: 2,
+      });
+      return {
+        id: 1,
+        items: [
+          { id: 1, product_variant_id: 10, quantity: 1, product_variant: v1 },
+          { id: 2, product_variant_id: 20, quantity: 1, product_variant: v2 },
+        ],
+      };
+    }
+
+    function arrangeCart(cart: ReturnType<typeof twoShopCart>) {
+      cartService.getCartWithItems.mockResolvedValue(cart as any);
+      productService.findVariantById.mockImplementation((id: number) =>
+        Promise.resolve(
+          cart.items.find((i) => i.product_variant_id === id)!
+            .product_variant as any,
+        ),
+      );
+      userProfileService.findAddressById.mockResolvedValue(mockAddress() as any);
+    }
+
+    function orderFor(result: any, shopId: number) {
+      return result.orders.find((o: any) => o.shop_id === shopId);
+    }
+
+    it('routes a shop coupon entirely onto its own sub-order', async () => {
+      arrangeCart(twoShopCart());
+      couponService.validateAndCalculateDiscounts.mockResolvedValue([
+        {
+          coupon_id: 5,
+          coupon_code: 'SHOP1',
+          coupon_shop_id: 1,
+          discount_amount: 20000,
+          applicable_by_shop: { 1: 100000 },
+        },
+      ] as any);
+
+      const result = await service.checkout(userId, {
+        payment_method: PaymentMethod.Cod,
+        address_id: 5,
+        coupon_codes: ['SHOP1'],
+      } as any);
+
+      expect(orderFor(result, 1).discount_amount).toBe(20000);
+      expect(orderFor(result, 1).coupon_code).toBe('SHOP1');
+      expect(orderFor(result, 2).discount_amount).toBe(0);
+      expect(orderFor(result, 2).coupon_code).toBeNull();
+    });
+
+    it('splits a platform coupon across shops by applicable subtotal (sums exactly)', async () => {
+      arrangeCart(twoShopCart());
+      couponService.validateAndCalculateDiscounts.mockResolvedValue([
+        {
+          coupon_id: 6,
+          coupon_code: 'PLAT',
+          coupon_shop_id: null,
+          discount_amount: 40000,
+          applicable_by_shop: { 1: 100000, 2: 300000 },
+        },
+      ] as any);
+
+      const result = await service.checkout(userId, {
+        payment_method: PaymentMethod.Cod,
+        address_id: 5,
+        coupon_codes: ['PLAT'],
+      } as any);
+
+      // 40000 split 100k:300k → 10000 / 30000
+      expect(orderFor(result, 1).discount_amount).toBe(10000);
+      expect(orderFor(result, 2).discount_amount).toBe(30000);
+      const sum =
+        orderFor(result, 1).discount_amount + orderFor(result, 2).discount_amount;
+      expect(sum).toBe(40000);
+    });
+
+    it('applies a shop coupon first, then fills headroom with the platform share', async () => {
+      arrangeCart(twoShopCart());
+      couponService.validateAndCalculateDiscounts.mockResolvedValue([
+        {
+          coupon_id: 6,
+          coupon_code: 'PLAT',
+          coupon_shop_id: null,
+          discount_amount: 40000,
+          applicable_by_shop: { 1: 100000, 2: 300000 },
+        },
+        {
+          coupon_id: 5,
+          coupon_code: 'SHOP1',
+          coupon_shop_id: 1,
+          discount_amount: 90000,
+          applicable_by_shop: { 1: 100000 },
+        },
+      ] as any);
+
+      const result = await service.checkout(userId, {
+        payment_method: PaymentMethod.Cod,
+        address_id: 5,
+        coupon_codes: ['PLAT', 'SHOP1'],
+      } as any);
+
+      // shop1: 90000 shop coupon + min(platformShare 10000, headroom 10000) = 100000 (capped at items total)
+      expect(orderFor(result, 1).discount_amount).toBe(100000);
+      // shop2: platform share only = 30000
+      expect(orderFor(result, 2).discount_amount).toBe(30000);
+
+      // both coupons recorded as usages
+      const recordedCoupons = couponService.recordUsage.mock.calls.map((c) => c[0]);
+      expect(recordedCoupons).toContain(5);
+      expect(recordedCoupons).toContain(6);
     });
   });
 

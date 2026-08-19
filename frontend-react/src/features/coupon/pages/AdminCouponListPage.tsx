@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Power, Plus, Search, Tag } from 'lucide-react';
+import { Pencil, Power, Plus, Search, Tag, Lock, LockOpen } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
@@ -9,6 +9,7 @@ import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminCoupons } from '../hooks/useAdminCoupons';
 import { useDeactivateCoupon } from '../hooks/useDeactivateCoupon';
+import { useUnlockCoupon } from '../hooks/useUnlockCoupon';
 import type { CouponListParams, CouponScope, DiscountType, Coupon } from '../types/coupon.types';
 
 const SCOPE_LABELS: Record<CouponScope, string> = {
@@ -37,6 +38,7 @@ export default function AdminCouponListPage() {
 
   const { data, isLoading } = useAdminCoupons(filters);
   const deactivate = useDeactivateCoupon();
+  const unlock = useUnlockCoupon();
   const [deactivateTarget, setDeactivateTarget] = useState<number | null>(null);
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
@@ -125,14 +127,20 @@ export default function AdminCouponListPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (coupon) => (
-        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-          coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
-        }`}>
-          <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-          {coupon.is_active ? 'Active' : 'Inactive'}
-        </span>
-      ),
+      render: (coupon) =>
+        coupon.admin_disabled ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700">
+            <Lock className="h-3 w-3" />
+            Locked
+          </span>
+        ) : (
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+            coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
+          }`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+            {coupon.is_active ? 'Active' : 'Inactive'}
+          </span>
+        ),
     },
     {
       key: 'actions',
@@ -140,7 +148,7 @@ export default function AdminCouponListPage() {
       className: 'text-right',
       render: (coupon) => (
         <div className="flex items-center justify-end gap-1">
-          {/* Shop coupons are seller-owned — admins may only deactivate them. */}
+          {/* Shop coupons are seller-owned — admins may only deactivate/unlock them. */}
           {coupon.shop_id == null && (
             <Link
               to={ROUTES.ADMIN_COUPON_EDIT(coupon.id)}
@@ -150,16 +158,28 @@ export default function AdminCouponListPage() {
               <Pencil className="h-4 w-4" />
             </Link>
           )}
-          {coupon.is_active && (
+          {coupon.admin_disabled ? (
             <Button
               variant="ghost"
               iconOnly
-              icon={Power}
-              aria-label="Deactivate coupon"
-              onClick={() => setDeactivateTarget(coupon.id)}
-              disabled={deactivate.isPending}
-              className="hover:!text-rose-600"
+              icon={LockOpen}
+              aria-label="Unlock coupon"
+              onClick={() => unlock.mutate(coupon.id)}
+              disabled={unlock.isPending}
+              className="hover:!text-emerald-600"
             />
+          ) : (
+            coupon.is_active && (
+              <Button
+                variant="ghost"
+                iconOnly
+                icon={Power}
+                aria-label="Deactivate coupon"
+                onClick={() => setDeactivateTarget(coupon.id)}
+                disabled={deactivate.isPending}
+                className="hover:!text-rose-600"
+              />
+            )
           )}
         </div>
       ),
