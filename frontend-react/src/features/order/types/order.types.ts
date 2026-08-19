@@ -98,6 +98,32 @@ export interface CheckoutResponse {
   total_amount: number;
 }
 
+// --- Checkout preview (advisory estimate; POST /orders is source of truth) ---
+
+export interface CheckoutPreviewShop {
+  shop_id: number;
+  shop_name: string;
+  items_total: number;
+  discount_amount: number;
+  shipping_fee: number;
+  total: number;
+  coupons: AppliedCoupon[];
+}
+
+export interface CheckoutPreview {
+  subtotal: number;
+  discount_total: number;
+  shipping_total: number;
+  grand_total: number;
+  shops: CheckoutPreviewShop[];
+  applied_coupons: AppliedCoupon[];
+}
+
+export interface PreviewOrderRequest {
+  coupon_code?: string;
+  coupon_codes?: string[];
+}
+
 export interface OrderListItemWithItems extends OrderListItem {
   order_items: OrderItem[];
 }

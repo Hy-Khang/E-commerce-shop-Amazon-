@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,13 +6,16 @@ import { MapPin, CreditCard, Tag, Loader2 } from 'lucide-react';
 import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
 import { showErrorToast } from '@/common/components/feedback/toast';
+import { ApiError } from '@/core/api/api.types';
 import { useCart } from '@/features/cart';
 import { CouponInput, type CouponValidationResult, type AppliedCouponEntry } from '@/features/coupon';
 import { useCreatePayment } from '@/features/payment';
 import { useCheckout } from '../hooks/useCheckout';
+import { usePreviewCheckout } from '../hooks/usePreviewCheckout';
 import { useAddresses } from '../hooks/useAddresses';
 import { checkoutSchema, type CheckoutFormData, type PaymentMethod } from '../types/order.types';
 import { OrderItemRow } from '../components/OrderItemRow';
+import { CheckoutShopBreakdown } from '../components/CheckoutShopBreakdown';
 
 const PAYMENT_METHODS: PaymentMethod[] = ['cod', 'vnpay', 'momo'];
 
@@ -42,6 +45,24 @@ export default function CheckoutPage() {
   const selectedAddressId = watch('address_id');
 
   const isProcessing = checkout.isPending || createPayment.isPending;
+
+  // Exact totals from the server (advisory): per-shop shipping, discount split
+  // and grand total. Keyed on codes + a cart signature so it refetches when items
+  // or quantities change. Runs whenever the cart is non-empty — even with no
+  // coupon — so shipping shows exactly instead of "calculated after order".
+  const couponCodes = appliedCoupons.map((c) => c.code);
+  const cartSig = useMemo(
+    () =>
+      (cart?.items ?? [])
+        .map(
+          (i) =>
+            `${i.product_variant_id}:${i.quantity}:${i.variant.sale_price ?? i.variant.price}`,
+        )
+        .join('|'),
+    [cart],
+  );
+  const hasCartItems = !!cart && cart.items.length > 0;
+  const preview = usePreviewCheckout(couponCodes, cartSig, hasCartItems);
 
   function onSubmit(data: CheckoutFormData) {
     const request = {
@@ -101,16 +122,49 @@ export default function CheckoutPage() {
     return sum + price * item.quantity;
   }, 0);
 
-  // Estimate only — the server computes exact per-shop distribution at checkout.
-  const couponBreakdown = appliedCoupons.map((c) => ({
-    code: c.code,
-    amount: calculateDiscount(c.validation, subtotal),
-  }));
-  const discountAmount = Math.min(
-    couponBreakdown.reduce((sum, c) => sum + c.amount, 0),
-    subtotal,
-  );
-  const estimatedTotal = subtotal - discountAmount;
+  // Prefer the server preview (exact). Fall back to a local estimate only while
+  // the preview is loading. If the preview rejected a coupon, show no discount
+  // (the error under the coupon input tells the user to remove it) rather than a
+  // phantom saving the server won't honour.
+  // Trust the preview only when it resolved to at least one shop order. An empty
+  // `shops` (every cart item lacks a shop_id → nothing orderable) returns all
+  // zeros; falling back to the local subtotal avoids showing a "0" grand total
+  // next to a non-zero subtotal.
+  const usingPreview = !!preview.data && preview.data.shops.length > 0;
+  const previewErrored = couponCodes.length > 0 && preview.isError;
+  // A coupon-level rejection (COUPON_0xx, 400) is deterministic — block submit.
+  // A transient/network error is not: leave the button enabled and let checkout
+  // re-validate (it's the source of truth).
+  const couponRejected =
+    previewErrored &&
+    preview.error instanceof ApiError &&
+    preview.error.code.startsWith('COUPON_');
+  const couponBreakdown = usingPreview
+    ? preview.data!.applied_coupons.map((c) => ({
+        code: c.code,
+        amount: c.discount_amount,
+      }))
+    : previewErrored
+      ? []
+      : appliedCoupons.map((c) => ({
+          code: c.code,
+          amount: calculateDiscount(c.validation, subtotal),
+        }));
+  const discountAmount = usingPreview
+    ? preview.data!.discount_total
+    : previewErrored
+      ? 0
+      : Math.min(
+          couponBreakdown.reduce((sum, c) => sum + c.amount, 0),
+          subtotal,
+        );
+  // When the preview is authoritative, drive every summary line from it (subtotal
+  // included) so the numbers can never disagree with each other or with checkout.
+  const displaySubtotal = usingPreview ? preview.data!.subtotal : subtotal;
+  const shippingTotal = usingPreview ? preview.data!.shipping_total : null;
+  const estimatedTotal = usingPreview
+    ? preview.data!.grand_total
+    : subtotal - discountAmount;
 
   function handleApplyCoupon(code: string, validation: CouponValidationResult) {
     setAppliedCoupons((prev) => [...prev, { code, validation }]);
@@ -244,6 +298,14 @@ export default function CheckoutPage() {
                 onApply={handleApplyCoupon}
                 onRemove={handleRemoveCoupon}
               />
+              {couponCodes.length > 0 && preview.isError && (
+                <p className="mt-3 text-sm text-error-600">
+                  {preview.error instanceof Error
+                    ? preview.error.message
+                    : 'One or more coupons could not be applied'}
+                  {' — '}please remove the invalid coupon.
+                </p>
+              )}
             </div>
 
             {/* Order Items Preview */}
@@ -286,7 +348,7 @@ export default function CheckoutPage() {
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm text-text-secondary">
                   <span>Subtotal</span>
-                  <span>{formatPrice(subtotal)}</span>
+                  <span>{formatPrice(displaySubtotal)}</span>
                 </div>
                 {couponBreakdown.map((c) => (
                   <div key={c.code} className="flex justify-between text-sm text-emerald-700">
@@ -296,25 +358,38 @@ export default function CheckoutPage() {
                 ))}
                 <div className="flex justify-between text-sm text-text-secondary">
                   <span>Shipping</span>
-                  <span className="text-text-muted">Calculated after order</span>
+                  {shippingTotal !== null ? (
+                    <span>{formatPrice(shippingTotal)}</span>
+                  ) : (
+                    <span className="text-text-muted">Calculated after order</span>
+                  )}
                 </div>
               </div>
+
+              {usingPreview && <CheckoutShopBreakdown shops={preview.data!.shops} />}
 
               <div className="mt-4 border-t border-border-default pt-4">
                 <div className="flex justify-between text-base font-bold text-text-primary">
                   <span>Estimated Total</span>
                   <span>{formatPrice(estimatedTotal)}</span>
                 </div>
-                {appliedCoupons.length > 0 && (
+                {appliedCoupons.length > 0 && discountAmount > 0 && (
                   <p className="mt-1 text-xs text-emerald-700">
-                    You save ~{formatPrice(discountAmount)} — final discount confirmed at checkout
+                    {usingPreview
+                      ? `You save ${formatPrice(discountAmount)}`
+                      : `You save ~${formatPrice(discountAmount)} — final discount confirmed at checkout`}
                   </p>
                 )}
               </div>
 
               <button
                 type="submit"
-                disabled={isProcessing || !addresses || addresses.length === 0}
+                disabled={
+                  isProcessing ||
+                  !addresses ||
+                  addresses.length === 0 ||
+                  couponRejected
+                }
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300 shadow-xs"
               >
                 {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -322,7 +397,9 @@ export default function CheckoutPage() {
                   ? 'Redirecting to payment...'
                   : checkout.isPending
                     ? 'Placing Order...'
-                    : 'Place Order'}
+                    : couponRejected
+                      ? 'Remove invalid coupon to continue'
+                      : 'Place Order'}
               </button>
 
               {(checkout.isError || createPayment.isError) && (

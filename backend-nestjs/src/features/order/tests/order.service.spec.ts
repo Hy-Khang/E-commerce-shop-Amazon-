@@ -65,6 +65,7 @@ describe('OrderService', () => {
           useValue: {
             findByIdWithItems: jest.fn(),
             findByIdWithItemsAndUser: jest.fn(),
+            findByIdWithItemsForShop: jest.fn(),
             findByUserIdPaginated: jest.fn(),
             findAllPaginated: jest.fn(),
             create: jest.fn(),
@@ -431,6 +432,167 @@ describe('OrderService', () => {
       expect(recordedCoupons).toContain(5);
       expect(recordedCoupons).toContain(6);
     });
+
+    it('waterfalls a capped shop’s platform share to another shop (no discount lost)', async () => {
+      arrangeCart(twoShopCart());
+      couponService.validateAndCalculateDiscounts.mockResolvedValue([
+        {
+          coupon_id: 6,
+          coupon_code: 'PLAT',
+          coupon_shop_id: null,
+          discount_amount: 60000,
+          applicable_by_shop: { 1: 100000, 2: 300000 },
+        },
+        {
+          coupon_id: 5,
+          coupon_code: 'SHOP1',
+          coupon_shop_id: 1,
+          discount_amount: 98000, // leaves only 2k headroom on shop 1
+          applicable_by_shop: { 1: 100000 },
+        },
+      ] as any);
+
+      const result = await service.checkout(userId, {
+        payment_method: PaymentMethod.Cod,
+        address_id: 5,
+        coupon_codes: ['PLAT', 'SHOP1'],
+      } as any);
+
+      // shop1 fully discounted (98k shop + 2k platform); shop2 absorbs the
+      // 13k leftover the naive clamp would have lost (45k + 13k = 58k).
+      expect(orderFor(result, 1).discount_amount).toBe(100000);
+      expect(orderFor(result, 2).discount_amount).toBe(58000);
+      // platform total preserved: 2k + 58k = 60k
+      expect(
+        orderFor(result, 1).discount_amount +
+          orderFor(result, 2).discount_amount,
+      ).toBe(158000); // 98k shop + 60k platform
+    });
+
+    it('rolls back checkout when a coupon runs out mid-transaction (COUPON_003)', async () => {
+      arrangeCart(twoShopCart());
+      couponService.validateAndCalculateDiscounts.mockResolvedValue([
+        {
+          coupon_id: 5,
+          coupon_code: 'SHOP1',
+          coupon_shop_id: 1,
+          discount_amount: 20000,
+          applicable_by_shop: { 1: 100000 },
+        },
+      ] as any);
+      couponService.recordUsage.mockRejectedValueOnce(
+        new BadRequestException({
+          code: 'COUPON_003',
+          message: 'Coupon usage limit has been exceeded',
+        }),
+      );
+
+      await expect(
+        service.checkout(userId, {
+          payment_method: PaymentMethod.Cod,
+          address_id: 5,
+          coupon_codes: ['SHOP1'],
+        } as any),
+      ).rejects.toMatchObject({ response: { code: 'COUPON_003' } });
+
+      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+      expect(mockQueryRunner.commitTransaction).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── previewCheckout ───
+
+  describe('previewCheckout', () => {
+    const userId = 1;
+
+    function twoShopCart() {
+      const p1 = mockProduct({
+        id: 1,
+        shop_id: 1,
+        shop: { id: 1, name: 'Shop One', slug: 'shop-one' } as any,
+      });
+      const v1 = mockProductVariant({
+        id: 10,
+        sku: 'S1',
+        price: 100000,
+        sale_price: null as any,
+        stock_quantity: 100,
+        product: p1,
+        product_id: 1,
+      });
+      const p2 = mockProduct({
+        id: 2,
+        shop_id: 2,
+        shop: { id: 2, name: 'Shop Two', slug: 'shop-two' } as any,
+      });
+      const v2 = mockProductVariant({
+        id: 20,
+        sku: 'S2',
+        price: 300000,
+        sale_price: null as any,
+        stock_quantity: 100,
+        product: p2,
+        product_id: 2,
+      });
+      return {
+        id: 1,
+        items: [
+          { id: 1, product_variant_id: 10, quantity: 1, product_variant: v1 },
+          { id: 2, product_variant_id: 20, quantity: 1, product_variant: v2 },
+        ],
+      };
+    }
+
+    it('returns zeros for an empty cart and never records usage', async () => {
+      cartService.getCartWithItems.mockResolvedValue({ id: 1, items: [] } as any);
+
+      const result = await service.previewCheckout(userId, {});
+
+      expect(result.subtotal).toBe(0);
+      expect(result.grand_total).toBe(0);
+      expect(result.shops).toHaveLength(0);
+      expect(couponService.recordUsage).not.toHaveBeenCalled();
+    });
+
+    it('builds an exact per-shop breakdown without writing anything', async () => {
+      cartService.getCartWithItems.mockResolvedValue(twoShopCart() as any);
+      couponService.validateAndCalculateDiscounts.mockResolvedValue([
+        {
+          coupon_id: 6,
+          coupon_code: 'PLAT',
+          coupon_shop_id: null,
+          discount_amount: 40000,
+          applicable_by_shop: { 1: 100000, 2: 300000 },
+        },
+      ] as any);
+
+      const result = await service.previewCheckout(userId, {
+        coupon_codes: ['PLAT'],
+      });
+
+      expect(result.subtotal).toBe(400000);
+      expect(result.discount_total).toBe(40000);
+      const shop1 = result.shops.find((s) => s.shop_id === 1)!;
+      const shop2 = result.shops.find((s) => s.shop_id === 2)!;
+      expect(shop1.discount_amount).toBe(10000);
+      expect(shop2.discount_amount).toBe(30000);
+      expect(result.applied_coupons).toEqual([
+        { code: 'PLAT', discount_amount: 40000 },
+      ]);
+      // read-only: no usage recorded
+      expect(couponService.recordUsage).not.toHaveBeenCalled();
+      expect(mockQueryRunner.startTransaction).not.toHaveBeenCalled();
+    });
+
+    it('skips coupon calc when no codes are supplied', async () => {
+      cartService.getCartWithItems.mockResolvedValue(twoShopCart() as any);
+
+      const result = await service.previewCheckout(userId, {});
+
+      expect(couponService.validateAndCalculateDiscounts).not.toHaveBeenCalled();
+      expect(result.discount_total).toBe(0);
+      expect(result.subtotal).toBe(400000);
+    });
   });
 
   // ─── findMyOrders ───
@@ -545,6 +707,32 @@ describe('OrderService', () => {
       );
     });
 
+    it('reverses both shop and platform coupons for a single-order group', async () => {
+      // A 1-shop checkout still has an order_group_id, and its lone order is the
+      // whole group — cancelling it must reverse the platform coupon too.
+      const order = mockOrder({ user_id: 1, status: OrderStatus.Pending });
+      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+      orderRepository.areAllGroupOrdersCancelled.mockResolvedValue(true);
+
+      await service.cancelOrder(1, 1);
+
+      expect(couponService.reverseOrderShopCoupons).toHaveBeenCalledWith(order.id);
+      expect(couponService.reverseGroupPlatformCoupon).toHaveBeenCalledWith(
+        order.order_group_id,
+      );
+    });
+
+    it('does not reverse the platform coupon while other group orders remain', async () => {
+      const order = mockOrder({ user_id: 1, status: OrderStatus.Pending });
+      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+      orderRepository.areAllGroupOrdersCancelled.mockResolvedValue(false);
+
+      await service.cancelOrder(1, 1);
+
+      expect(couponService.reverseOrderShopCoupons).toHaveBeenCalledWith(order.id);
+      expect(couponService.reverseGroupPlatformCoupon).not.toHaveBeenCalled();
+    });
+
     it('should throw NotFoundException when order does not exist', async () => {
       // Arrange
       orderRepository.findByIdWithItems.mockResolvedValue(null);
@@ -615,6 +803,24 @@ describe('OrderService', () => {
       expect(result.user_email).toBe('test@test.com');
     });
 
+    it('attaches the applied_coupons breakdown', async () => {
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(
+        mockOrderWithUser() as any,
+      );
+      couponService.getUsagesForOrder.mockResolvedValue([
+        { code: 'PLAT', discount_amount: 10000 },
+        { code: 'SHOP1', discount_amount: 5000 },
+      ]);
+
+      const result = await service.findOrderById(1);
+
+      expect(couponService.getUsagesForOrder).toHaveBeenCalledWith(
+        mockOrderWithUser().id,
+      );
+      expect(result.applied_coupons).toHaveLength(2);
+      expect(result.applied_coupons![0].code).toBe('PLAT');
+    });
+
     it('should throw NotFoundException when order does not exist', async () => {
       // Arrange
       orderRepository.findByIdWithItemsAndUser.mockResolvedValue(null);
@@ -623,6 +829,29 @@ describe('OrderService', () => {
       await expect(service.findOrderById(999)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  // ─── findSellerOrderById ───
+
+  describe('findSellerOrderById', () => {
+    it('attaches the applied_coupons breakdown for the seller', async () => {
+      (service as any).shopService.resolveShopByUserId.mockResolvedValue({
+        id: 7,
+      });
+      orderRepository.findByIdWithItemsForShop.mockResolvedValue(
+        mockOrderWithUser() as any,
+      );
+      couponService.getUsagesForOrder.mockResolvedValue([
+        { code: 'SHOP1', discount_amount: 5000 },
+      ]);
+
+      const result = await service.findSellerOrderById(9, 1);
+
+      expect(couponService.getUsagesForOrder).toHaveBeenCalled();
+      expect(result.applied_coupons).toEqual([
+        { code: 'SHOP1', discount_amount: 5000 },
+      ]);
     });
   });
 

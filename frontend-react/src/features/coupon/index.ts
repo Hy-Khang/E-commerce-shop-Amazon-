@@ -16,6 +16,7 @@ export {
   useCreateSellerCoupon,
   useUpdateSellerCoupon,
   useDeactivateSellerCoupon,
+  useReactivateSellerCoupon,
 } from './hooks/useSellerCouponMutations';
 export { useUnlockCoupon } from './hooks/useUnlockCoupon';
 export type {

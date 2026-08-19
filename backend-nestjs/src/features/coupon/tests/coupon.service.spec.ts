@@ -397,6 +397,22 @@ describe('CouponService', () => {
         service.updateSellerCoupon(9, 3, { is_active: true } as any),
       ).rejects.toMatchObject({ response: { code: 'COUPON_013' } });
     });
+
+    it('rejects clearing all products on a products-scoped coupon (dead coupon)', async () => {
+      shopService.resolveShopByUserId.mockResolvedValue({ id: 7, slug: 'my-shop' });
+      couponRepo.findById.mockResolvedValue(
+        buildCoupon({
+          id: 3,
+          shop_id: 7,
+          scope: CouponScope.Products,
+          coupon_products: [{ product_id: 1 }],
+        }),
+      );
+      await expect(
+        service.updateSellerCoupon(9, 3, { product_ids: [] } as any),
+      ).rejects.toMatchObject({ response: { code: 'VALIDATION_001' } });
+      expect(couponRepo.update).not.toHaveBeenCalled();
+    });
   });
 
   // ─── Admin lock ───
@@ -421,15 +437,18 @@ describe('CouponService', () => {
   });
 
   describe('unlockCoupon', () => {
-    it('clears the lock and reactivates', async () => {
+    it('clears only the lock, leaving is_active untouched (unlock ≠ activate)', async () => {
       couponRepo.findById
-        .mockResolvedValueOnce(buildCoupon({ id: 3, shop_id: 7, admin_disabled: true }))
-        .mockResolvedValueOnce(buildCoupon({ id: 3, shop_id: 7, admin_disabled: false }));
+        .mockResolvedValueOnce(
+          buildCoupon({ id: 3, shop_id: 7, admin_disabled: true, is_active: false }),
+        )
+        .mockResolvedValueOnce(
+          buildCoupon({ id: 3, shop_id: 7, admin_disabled: false, is_active: false }),
+        );
       await service.unlockCoupon(3);
-      expect(couponRepo.update).toHaveBeenCalledWith(
-        3,
-        expect.objectContaining({ admin_disabled: false, is_active: true }),
-      );
+      const patch = couponRepo.update.mock.calls[0][1];
+      expect(patch.admin_disabled).toBe(false);
+      expect(patch.is_active).toBeUndefined(); // stays inactive; seller re-enables
     });
   });
 

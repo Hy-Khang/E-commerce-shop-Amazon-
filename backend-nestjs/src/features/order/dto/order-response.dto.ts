@@ -209,3 +209,57 @@ export class CheckoutResponseDto {
   @ApiProperty()
   total_amount: number;
 }
+
+export class CheckoutPreviewShopDto {
+  @ApiProperty()
+  shop_id: number;
+
+  @ApiProperty()
+  shop_name: string;
+
+  @ApiProperty({ description: 'Gross items subtotal for this shop' })
+  items_total: number;
+
+  @ApiProperty({ description: 'Total discount applied to this shop' })
+  discount_amount: number;
+
+  @ApiProperty()
+  shipping_fee: number;
+
+  @ApiProperty({ description: 'items_total − discount_amount + shipping_fee' })
+  total: number;
+
+  @ApiProperty({
+    type: [AppliedCouponResponseDto],
+    description: 'Coupons discounting this shop (shop coupon + platform share)',
+  })
+  coupons: AppliedCouponResponseDto[];
+}
+
+/**
+ * Advisory checkout estimate returned by `POST /orders/preview`. Exact at the
+ * time of the call but NOT a reservation — `POST /orders` re-validates and is
+ * the only source of truth (a coupon may run out or expire in between).
+ */
+export class CheckoutPreviewResponseDto {
+  @ApiProperty({ description: 'Gross items subtotal across all shops' })
+  subtotal: number;
+
+  @ApiProperty({ description: 'Total discount across all coupons' })
+  discount_total: number;
+
+  @ApiProperty({ description: 'Total shipping across all shops' })
+  shipping_total: number;
+
+  @ApiProperty({ description: 'subtotal − discount_total + shipping_total' })
+  grand_total: number;
+
+  @ApiProperty({ type: [CheckoutPreviewShopDto] })
+  shops: CheckoutPreviewShopDto[];
+
+  @ApiProperty({
+    type: [AppliedCouponResponseDto],
+    description: 'Per-coupon discount totals across the whole cart',
+  })
+  applied_coupons: AppliedCouponResponseDto[];
+}

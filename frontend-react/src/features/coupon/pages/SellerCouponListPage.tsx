@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Power, Plus, Search, Tag, Lock } from 'lucide-react';
+import { Pencil, Power, PowerOff, Plus, Search, Tag, Lock } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
@@ -8,7 +8,10 @@ import { AdminDataTable, type Column } from '@/common/components/data/AdminDataT
 import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useSellerCoupons } from '../hooks/useSellerCoupons';
-import { useDeactivateSellerCoupon } from '../hooks/useSellerCouponMutations';
+import {
+  useDeactivateSellerCoupon,
+  useReactivateSellerCoupon,
+} from '../hooks/useSellerCouponMutations';
 import type { CouponListParams, CouponScope, DiscountType, Coupon } from '../types/coupon.types';
 
 const SCOPE_LABELS: Record<CouponScope, string> = {
@@ -34,6 +37,7 @@ export default function SellerCouponListPage() {
 
   const { data, isLoading } = useSellerCoupons(filters);
   const deactivate = useDeactivateSellerCoupon();
+  const reactivate = useReactivateSellerCoupon();
   const [deactivateTarget, setDeactivateTarget] = useState<number | null>(null);
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
@@ -135,17 +139,28 @@ export default function SellerCouponListPage() {
             <Pencil className="h-4 w-4" />
           </Link>
           {/* A coupon locked by admin cannot be deactivated/reactivated by the seller. */}
-          {!coupon.admin_disabled && coupon.is_active && (
-            <Button
-              variant="ghost"
-              iconOnly
-              icon={Power}
-              aria-label="Deactivate coupon"
-              onClick={() => setDeactivateTarget(coupon.id)}
-              disabled={deactivate.isPending}
-              className="hover:!text-rose-600"
-            />
-          )}
+          {!coupon.admin_disabled &&
+            (coupon.is_active ? (
+              <Button
+                variant="ghost"
+                iconOnly
+                icon={Power}
+                aria-label="Deactivate coupon"
+                onClick={() => setDeactivateTarget(coupon.id)}
+                disabled={deactivate.isPending}
+                className="hover:!text-rose-600"
+              />
+            ) : (
+              <Button
+                variant="ghost"
+                iconOnly
+                icon={PowerOff}
+                aria-label="Reactivate coupon"
+                onClick={() => reactivate.mutate(coupon.id)}
+                disabled={reactivate.isPending}
+                className="hover:!text-emerald-600"
+              />
+            ))}
         </div>
       ),
     },

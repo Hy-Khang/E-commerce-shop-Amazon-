@@ -29,7 +29,8 @@ export const en: TranslationSchema = {
       created: 'Coupon created',
       updated: 'Coupon updated',
       deactivated: 'Coupon deactivated',
-      unlocked: 'Coupon unlocked and reactivated',
+      reactivated: 'Coupon reactivated',
+      unlocked: 'Coupon unlocked — the seller can now re-enable it',
     },
     product: {
       created: 'Product created',

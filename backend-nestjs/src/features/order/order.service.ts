@@ -16,7 +16,7 @@ import { CartService } from '../cart/cart.service';
 import { ProductService } from '../product/product.service';
 import { UserProfileService } from '../user-profile/user-profile.service';
 import { CouponService } from '../coupon/coupon.service';
-import { ICouponCalculationItem } from '../coupon/types/coupon.types';
+import { distributeCheckoutDiscounts } from './utils/coupon-distribution.util';
 import { pickVariantThumbnail } from '../cart/utils/cart.util';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -25,11 +25,14 @@ import { OrderQueryDto } from './dto/order-query.dto';
 import {
   OrderResponseDto,
   CheckoutResponseDto,
+  CheckoutPreviewResponseDto,
+  CheckoutPreviewShopDto,
   AdminOrderResponseDto,
   SellerOrderResponseDto,
   OrderListItemResponseDto,
   OrderListItemWithItemsResponseDto,
 } from './dto/order-response.dto';
+import { PreviewOrderDto } from './dto/preview-order.dto';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { OrderStatusHistory } from './entities/order-status-history.entity';
@@ -172,7 +175,7 @@ export class OrderService {
       shopGroups.get(shopId)!.items.push(item);
     }
 
-    // ── Coupon validation (multi-coupon: ≤1 platform + ≤1 per shop) ──
+    // ── Coupon validation + distribution (multi-coupon: ≤1 platform + ≤1/shop) ──
 
     const couponCodes = this.resolveCouponCodes(dto);
     const couponItems = couponCodes.length
@@ -183,31 +186,25 @@ export class OrderService {
         )
       : [];
 
-    const platformItem =
-      couponItems.find((c) => c.coupon_shop_id == null) ?? null;
-    const shopCouponMap = new Map<number, ICouponCalculationItem>();
-    for (const c of couponItems) {
-      if (c.coupon_shop_id != null) shopCouponMap.set(c.coupon_shop_id, c);
-    }
-
-    // Platform coupon → split across shops by each shop's applicable subtotal
-    // (largest-remainder on VND minor units so parts sum exactly). Shop coupons
-    // land entirely on their own shop's sub-order.
-    let platformShareByShop = new Map<number, number>();
-    if (platformItem && platformItem.discount_amount > 0) {
-      platformShareByShop = this.distributeDiscountByApplicable(
-        platformItem.discount_amount,
-        new Map(
-          Object.entries(platformItem.applicable_by_shop).map(([k, v]) => [
-            Number(k),
-            Number(v),
-          ]),
-        ),
+    // Gross items subtotal per shop — the input to the discount distributor.
+    const shopItemsTotals = new Map<number, number>();
+    for (const [shopId, { items }] of shopGroups) {
+      shopItemsTotals.set(
+        shopId,
+        items.reduce((sum, item) => sum + item.price * item.quantity, 0),
       );
     }
 
-    const totalDiscount = couponItems.reduce(
-      (sum, c) => sum + c.discount_amount,
+    // Shared pure distributor: a shop coupon lands on its own sub-order first,
+    // then the platform coupon's share fills each shop's remaining headroom,
+    // waterfalling leftover from capped shops to shops that still have room.
+    const discountByShop = distributeCheckoutDiscounts(
+      shopItemsTotals,
+      couponItems,
+    );
+
+    const totalDiscount = [...discountByShop.values()].reduce(
+      (sum, d) => sum + d.discount,
       0,
     );
 
@@ -227,32 +224,10 @@ export class OrderService {
       const globalIncremented = new Set<number>();
 
       for (const [shopId, { shopName, items }] of shopGroups) {
-        const shopItemsTotal = items.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0,
-        );
-
-        // Shop coupon lands first; platform share fills the remaining headroom.
-        const shopCoupon = shopCouponMap.get(shopId) ?? null;
-        const shopCouponDiscount = Math.min(
-          shopCoupon?.discount_amount ?? 0,
-          shopItemsTotal,
-        );
-        const platformShareAdj = Math.min(
-          platformShareByShop.get(shopId) ?? 0,
-          Math.max(0, shopItemsTotal - shopCouponDiscount),
-        );
-        const shopDiscount = shopCouponDiscount + platformShareAdj;
+        const shopItemsTotal = shopItemsTotals.get(shopId)!;
+        const { discount: shopDiscount, couponCode: snapshotCode, usages } =
+          discountByShop.get(shopId)!;
         const shopTotal = shopItemsTotal - shopDiscount + shippingFee;
-
-        // Snapshot a single code (legacy column): prefer the shop coupon, else
-        // the platform coupon. Full breakdown lives in coupon_usages.
-        const snapshotCode =
-          shopCoupon && shopCouponDiscount > 0
-            ? shopCoupon.coupon_code
-            : platformItem && platformShareAdj > 0
-              ? platformItem.coupon_code
-              : null;
 
         const order = await queryRunner.manager.save(
           queryRunner.manager.create(Order, {
@@ -279,29 +254,18 @@ export class OrderService {
         );
         order.order_items = orderItems;
 
-        // Record one usage row per coupon that actually discounted this
-        // sub-order. Global count is incremented once per coupon per checkout.
-        if (shopCoupon && shopCouponDiscount > 0) {
+        // One usage row per coupon that actually discounted this sub-order.
+        // Global count is incremented once per coupon per checkout.
+        for (const usage of usages) {
           await this.couponService.recordUsage(
-            shopCoupon.coupon_id,
+            usage.couponId,
             userId,
             order.id,
-            shopCouponDiscount,
+            usage.amount,
             queryRunner.manager,
-            !globalIncremented.has(shopCoupon.coupon_id),
+            !globalIncremented.has(usage.couponId),
           );
-          globalIncremented.add(shopCoupon.coupon_id);
-        }
-        if (platformItem && platformShareAdj > 0) {
-          await this.couponService.recordUsage(
-            platformItem.coupon_id,
-            userId,
-            order.id,
-            platformShareAdj,
-            queryRunner.manager,
-            !globalIncremented.has(platformItem.coupon_id),
-          );
-          globalIncremented.add(platformItem.coupon_id);
+          globalIncremented.add(usage.couponId);
         }
 
         createdOrders.push(order);
@@ -359,6 +323,114 @@ export class OrderService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  /**
+   * Advisory checkout estimate — exact discount breakdown at the time of the
+   * call, computed with the SAME distributor as `checkout` so the numbers match.
+   * Read-only: it never writes `coupon_usages`, reserves nothing, and is not a
+   * guarantee — `POST /orders` re-validates and is the source of truth.
+   */
+  async previewCheckout(
+    userId: number,
+    dto: PreviewOrderDto,
+  ): Promise<CheckoutPreviewResponseDto> {
+    const cart = await this.cartService.getCartWithItems(userId);
+
+    const empty: CheckoutPreviewResponseDto = {
+      subtotal: 0,
+      discount_total: 0,
+      shipping_total: 0,
+      grand_total: 0,
+      shops: [],
+      applied_coupons: [],
+    };
+    if (!cart.items || cart.items.length === 0) return empty;
+
+    // Group by shop (skip items with no shop — they can't form a valid order).
+    const shopGroups = new Map<number, { shopName: string; itemsTotal: number }>();
+    for (const item of cart.items) {
+      const variant = item.product_variant;
+      const product = variant.product;
+      const shopId = product?.shop_id;
+      if (shopId == null) continue;
+      const line = Number(variant.sale_price ?? variant.price) * item.quantity;
+      const group = shopGroups.get(shopId);
+      if (group) {
+        group.itemsTotal += line;
+      } else {
+        shopGroups.set(shopId, {
+          shopName: product?.shop?.name ?? '',
+          itemsTotal: line,
+        });
+      }
+    }
+    if (shopGroups.size === 0) return empty;
+
+    const couponCodes = this.resolveCouponCodes(dto);
+    const couponItems = couponCodes.length
+      ? await this.couponService.validateAndCalculateDiscounts(
+          userId,
+          couponCodes,
+          cart.items,
+        )
+      : [];
+
+    const shopItemsTotals = new Map<number, number>();
+    for (const [shopId, group] of shopGroups) {
+      shopItemsTotals.set(shopId, group.itemsTotal);
+    }
+
+    const discountByShop = distributeCheckoutDiscounts(
+      shopItemsTotals,
+      couponItems,
+    );
+
+    const shippingFee = DEFAULT_SHIPPING_FEE;
+    const shops: CheckoutPreviewShopDto[] = [];
+    let subtotal = 0;
+    let discountTotal = 0;
+    let shippingTotal = 0;
+
+    for (const [shopId, group] of shopGroups) {
+      const d = discountByShop.get(shopId)!;
+      const total = group.itemsTotal - d.discount + shippingFee;
+      subtotal += group.itemsTotal;
+      discountTotal += d.discount;
+      shippingTotal += shippingFee;
+      shops.push({
+        shop_id: shopId,
+        shop_name: group.shopName,
+        items_total: group.itemsTotal,
+        discount_amount: d.discount,
+        shipping_fee: shippingFee,
+        total,
+        coupons: d.usages.map((u) => ({
+          code: u.couponCode,
+          discount_amount: u.amount,
+        })),
+      });
+    }
+
+    // Per-coupon totals across the whole cart.
+    const perCoupon = new Map<string, number>();
+    for (const [, d] of discountByShop) {
+      for (const u of d.usages) {
+        perCoupon.set(u.couponCode, (perCoupon.get(u.couponCode) ?? 0) + u.amount);
+      }
+    }
+
+    return {
+      subtotal,
+      discount_total: discountTotal,
+      shipping_total: shippingTotal,
+      grand_total: subtotal - discountTotal + shippingTotal,
+      shops,
+      applied_coupons: [...perCoupon.entries()].map(([code, discount_amount]) => ({
+        code,
+        discount_amount,
+      })),
+    };
   }
 
   async findMyOrders(
@@ -603,7 +675,9 @@ export class OrderService {
       });
     }
 
-    return toAdminOrderResponse(order);
+    const dto = toAdminOrderResponse(order);
+    dto.applied_coupons = await this.couponService.getUsagesForOrder(order.id);
+    return dto;
   }
 
   async updateOrderStatus(
@@ -747,7 +821,9 @@ export class OrderService {
       });
     }
 
-    return toSellerOrderResponse(order);
+    const dto = toSellerOrderResponse(order);
+    dto.applied_coupons = await this.couponService.getUsagesForOrder(order.id);
+    return dto;
   }
 
   async updateSellerOrderStatus(
@@ -1138,7 +1214,10 @@ export class OrderService {
    * Accepts the new `coupon_codes[]` and falls back to the legacy single
    * `coupon_code` for backward compatibility.
    */
-  private resolveCouponCodes(dto: CreateOrderDto): string[] {
+  private resolveCouponCodes(dto: {
+    coupon_code?: string;
+    coupon_codes?: string[];
+  }): string[] {
     const raw =
       dto.coupon_codes && dto.coupon_codes.length
         ? dto.coupon_codes
@@ -1161,51 +1240,6 @@ export class OrderService {
     if (allCancelled) {
       await this.couponService.reverseGroupPlatformCoupon(order.order_group_id);
     }
-  }
-
-  /**
-   * Distributes a platform discount across shops proportionally to each shop's
-   * applicable subtotal. Works in VND minor units (×100) with largest-remainder
-   * rounding so the returned per-shop amounts sum exactly to `totalDiscount`.
-   */
-  private distributeDiscountByApplicable(
-    totalDiscount: number,
-    applicableByShop: Map<number, number>,
-  ): Map<number, number> {
-    const result = new Map<number, number>();
-
-    const totalApplicable = [...applicableByShop.values()].reduce(
-      (sum, v) => sum + v,
-      0,
-    );
-    if (totalApplicable <= 0 || totalDiscount <= 0) {
-      for (const shopId of applicableByShop.keys()) result.set(shopId, 0);
-      return result;
-    }
-
-    const totalMinor = Math.round(totalDiscount * 100);
-    const entries = [...applicableByShop.entries()].filter(([, w]) => w > 0);
-
-    const parts = entries.map(([shopId, weight]) => {
-      const exact = (totalMinor * weight) / totalApplicable;
-      const floorMinor = Math.floor(exact);
-      return { shopId, floorMinor, frac: exact - floorMinor };
-    });
-
-    let remainder = totalMinor - parts.reduce((s, p) => s + p.floorMinor, 0);
-    parts.sort((a, b) => b.frac - a.frac);
-    for (let i = 0; i < parts.length && remainder > 0; i++) {
-      parts[i].floorMinor += 1;
-      remainder--;
-    }
-
-    for (const p of parts) result.set(p.shopId, p.floorMinor / 100);
-    // shops with zero applicable subtotal receive nothing
-    for (const [shopId, weight] of applicableByShop.entries()) {
-      if (weight <= 0 && !result.has(shopId)) result.set(shopId, 0);
-    }
-
-    return result;
   }
 
   private mapHistoryToTimeline(

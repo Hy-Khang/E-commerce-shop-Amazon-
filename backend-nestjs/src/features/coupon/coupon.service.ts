@@ -320,6 +320,35 @@ export class CouponService {
       });
     }
 
+    // Guard the update path against a scoped coupon being stripped to zero
+    // targets (the DTO's @ArrayMinSize only fires when `scope` is in the body,
+    // so `{ product_ids: [] }` / `{ category_ids: [] }` alone would slip through).
+    const effectiveScope = dto.scope ?? coupon.scope;
+    if (effectiveScope === CouponScope.Products) {
+      const effectiveProducts =
+        dto.product_ids !== undefined
+          ? dto.product_ids
+          : (coupon.coupon_products ?? []).map((cp) => cp.product_id);
+      if (effectiveProducts.length === 0) {
+        throw new BadRequestException({
+          code: 'VALIDATION_001',
+          message: 'A products-scoped coupon must target at least one product',
+        });
+      }
+    }
+    if (effectiveScope === CouponScope.Categories) {
+      const effectiveCategories =
+        dto.category_ids !== undefined
+          ? dto.category_ids
+          : (coupon.coupon_categories ?? []).map((cc) => cc.category_id);
+      if (effectiveCategories.length === 0) {
+        throw new BadRequestException({
+          code: 'VALIDATION_001',
+          message: 'A categories-scoped coupon must target at least one category',
+        });
+      }
+    }
+
     const updateData: Partial<Coupon> = {};
     if (dto.description !== undefined) updateData.description = dto.description;
     if (dto.discount_type !== undefined)
@@ -418,9 +447,10 @@ export class CouponService {
   }
 
   /**
-   * Admin unlock — clears the sticky moderation lock on a shop coupon and
-   * restores it to active. No-op semantics for platform coupons (they have no
-   * lock) but still reactivates them.
+   * Admin unlock — clears ONLY the sticky moderation lock (`admin_disabled`).
+   * It does not reactivate the coupon: `is_active` is left untouched, so an
+   * unlocked coupon stays inactive until its owning seller turns it back on.
+   * Unlocking is "stop moderating", not "activate on the seller's behalf".
    */
   async unlockCoupon(id: number): Promise<CouponResponseDto> {
     const coupon = await this.couponRepository.findById(id);
@@ -433,12 +463,11 @@ export class CouponService {
 
     await this.couponRepository.update(id, {
       admin_disabled: false,
-      is_active: true,
       updated_at: new Date(),
     });
 
     const updated = await this.couponRepository.findById(id);
-    this.logger.log(`Coupon unlocked/reactivated by admin: id=${id}`);
+    this.logger.log(`Coupon unlocked by admin (lock cleared): id=${id}`);
 
     return toCouponResponse(updated!);
   }
@@ -586,6 +615,21 @@ export class CouponService {
     }
 
     const newScope = dto.scope ?? coupon.scope;
+
+    // Guard the update path: the DTO's @ArrayMinSize only fires when `scope` is
+    // present in the body, so `{ product_ids: [] }` alone would slip through and
+    // strip a products-coupon down to zero targets → a permanently dead coupon.
+    const effectiveProducts =
+      dto.product_ids !== undefined
+        ? dto.product_ids
+        : (coupon.coupon_products ?? []).map((cp) => cp.product_id);
+    if (newScope === CouponScope.Products && effectiveProducts.length === 0) {
+      throw new BadRequestException({
+        code: 'VALIDATION_001',
+        message: 'A products-scoped coupon must target at least one product',
+      });
+    }
+
     if (
       newScope === CouponScope.Products &&
       dto.product_ids !== undefined &&

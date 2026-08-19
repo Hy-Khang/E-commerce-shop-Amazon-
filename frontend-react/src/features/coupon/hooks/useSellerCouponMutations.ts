@@ -56,3 +56,23 @@ export function useDeactivateSellerCoupon() {
     },
   });
 }
+
+/**
+ * Re-enable a previously-deactivated shop coupon (e.g. after an admin cleared
+ * their moderation lock, which no longer auto-reactivates). Admin-locked
+ * coupons are rejected server-side (COUPON_013).
+ */
+export function useReactivateSellerCoupon() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: (id: number) =>
+      sellerCouponService.update(id, { is_active: true }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sellerCouponKeys.all });
+      showSuccessToast(t((m) => m.toast.coupon.reactivated));
+    },
+  });
+}
