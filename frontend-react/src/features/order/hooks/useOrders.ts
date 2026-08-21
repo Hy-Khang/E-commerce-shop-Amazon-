@@ -6,6 +6,10 @@ export const orderKeys = {
   all: ['orders'] as const,
   list: (params: OrderListParams) => ['orders', 'list', params] as const,
   detail: (id: number) => ['orders', 'detail', id] as const,
+  // Preview depends on both the applied codes AND the cart contents — the key
+  // must change when either changes, or a stale estimate would be served.
+  preview: (codes: string[], cartSig: string) =>
+    ['orders', 'preview', codes, cartSig] as const,
 };
 
 export function useOrders(params: OrderListParams) {

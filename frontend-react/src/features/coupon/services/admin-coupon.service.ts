@@ -25,6 +25,9 @@ export const adminCouponService = {
   deactivate: (id: number) =>
     api.delete(`/admin/coupons/${id}`),
 
+  unlock: (id: number) =>
+    api.patch<SuccessResponse<Coupon>>(`/admin/coupons/${id}/unlock`),
+
   getUsages: (params: CouponUsageListParams) =>
     api.get<PaginatedResponse<CouponUsage>>('/admin/coupons/usages', { params }),
 

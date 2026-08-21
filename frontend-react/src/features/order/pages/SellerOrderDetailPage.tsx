@@ -219,11 +219,20 @@ export default function SellerOrderDetailPage() {
                 <span>Order Total</span>
                 <span>{formatPrice(order.total_amount)}</span>
               </div>
-              {order.coupon_code && (
-                <div className="flex justify-between text-emerald-600">
-                  <span>Coupon ({order.coupon_code})</span>
-                  <span>-{formatPrice(order.discount_amount)}</span>
-                </div>
+              {order.applied_coupons && order.applied_coupons.length > 0 ? (
+                order.applied_coupons.map((c) => (
+                  <div key={c.code} className="flex justify-between text-emerald-600">
+                    <span>Coupon ({c.code})</span>
+                    <span>-{formatPrice(c.discount_amount)}</span>
+                  </div>
+                ))
+              ) : (
+                order.coupon_code && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Coupon ({order.coupon_code})</span>
+                    <span>-{formatPrice(order.discount_amount)}</span>
+                  </div>
+                )
               )}
               <div className="flex justify-between border-t border-slate-100 pt-2 font-semibold text-slate-900">
                 <span>Your Revenue</span>

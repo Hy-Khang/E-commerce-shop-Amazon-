@@ -1,7 +1,12 @@
 import { Coupon } from '../entities/coupon.entity';
 import { CouponUsage } from '../entities/coupon-usage.entity';
-import { DiscountType, CouponScope } from '../types/coupon.types';
 import {
+  DiscountType,
+  CouponScope,
+  CouponIneligibleReason,
+} from '../types/coupon.types';
+import {
+  CouponOptionDto,
   CouponResponseDto,
   CouponUsageResponseDto,
   CouponValidationResponseDto,
@@ -31,6 +36,10 @@ export function toCouponResponse(coupon: Coupon): CouponResponseDto {
   return {
     id: coupon.id,
     code: coupon.code,
+    shop_id: coupon.shop_id ?? null,
+    shop: coupon.shop
+      ? { id: coupon.shop.id, name: coupon.shop.name }
+      : null,
     description: coupon.description ?? null,
     discount_type: coupon.discount_type,
     discount_value: Number(coupon.discount_value),
@@ -57,6 +66,7 @@ export function toCouponResponse(coupon: Coupon): CouponResponseDto {
     starts_at: coupon.starts_at,
     expires_at: coupon.expires_at,
     is_active: coupon.is_active,
+    admin_disabled: coupon.admin_disabled ?? false,
     created_at: coupon.created_at,
     updated_at: coupon.updated_at,
   };
@@ -87,6 +97,42 @@ export function toCouponValidationResponse(
       coupon.scope === CouponScope.Products && coupon.coupon_products
         ? coupon.coupon_products.map((cp) => cp.product_id)
         : null,
+    shop_id: coupon.shop_id ?? null,
+  };
+}
+
+export function toCouponOption(
+  coupon: Coupon,
+  eligibility: {
+    applicableTotal: number;
+    eligible: boolean;
+    reason?: CouponIneligibleReason;
+    shortOfMin?: number;
+    discountPreview: number;
+  },
+): CouponOptionDto {
+  return {
+    code: coupon.code,
+    description: coupon.description ?? null,
+    discount_type: coupon.discount_type,
+    discount_value: Number(coupon.discount_value),
+    scope: coupon.scope,
+    shop_id: coupon.shop_id ?? null,
+    min_order_amount:
+      coupon.min_order_amount != null ? Number(coupon.min_order_amount) : null,
+    max_discount_amount:
+      coupon.max_discount_amount != null
+        ? Number(coupon.max_discount_amount)
+        : null,
+    applicable_total: eligibility.applicableTotal,
+    discount_preview: eligibility.discountPreview,
+    eligible: eligibility.eligible,
+    ...(eligibility.reason ? { reason: eligibility.reason } : {}),
+    ...(eligibility.shortOfMin != null
+      ? { short_of_min: eligibility.shortOfMin }
+      : {}),
+    starts_at: coupon.starts_at,
+    expires_at: coupon.expires_at,
   };
 }
 

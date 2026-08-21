@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,13 +6,24 @@ import { MapPin, CreditCard, Tag, Loader2 } from 'lucide-react';
 import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
 import { showErrorToast } from '@/common/components/feedback/toast';
-import { useCart } from '@/features/cart';
-import { CouponInput, type CouponValidationResult } from '@/features/coupon';
+import { ApiError } from '@/core/api/api.types';
+import { useCart, cartSignature, groupItemsByShop } from '@/features/cart';
+import {
+  CouponSelectorModal,
+  VoucherRow,
+  estimateCouponDiscount,
+  useAppliedCouponsStore,
+} from '@/features/coupon';
 import { useCreatePayment } from '@/features/payment';
 import { useCheckout } from '../hooks/useCheckout';
+import { usePreviewCheckout } from '../hooks/usePreviewCheckout';
 import { useAddresses } from '../hooks/useAddresses';
 import { checkoutSchema, type CheckoutFormData, type PaymentMethod } from '../types/order.types';
-import { OrderItemRow } from '../components/OrderItemRow';
+import { CheckoutShopGroup } from '../components/CheckoutShopGroup';
+import { CheckoutShopBreakdown } from '../components/CheckoutShopBreakdown';
+
+/** Which coupon group the voucher modal is scoped to. */
+type VoucherScope = 'platform' | number;
 
 const PAYMENT_METHODS: PaymentMethod[] = ['cod', 'vnpay', 'momo'];
 
@@ -22,7 +33,25 @@ export default function CheckoutPage() {
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
   const checkout = useCheckout();
   const createPayment = useCreatePayment();
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; validation: CouponValidationResult } | null>(null);
+  // Voucher selection is shared with the Cart page via a store, so choices made
+  // in the cart carry over here (and stay editable).
+  const appliedCoupons = useAppliedCouponsStore((s) => s.appliedCoupons);
+  const applyCoupon = useAppliedCouponsStore((s) => s.apply);
+  const removeCoupon = useAppliedCouponsStore((s) => s.remove);
+  const clearCoupons = useAppliedCouponsStore((s) => s.clear);
+
+  // One scoped voucher picker shared by the platform row + every shop group,
+  // mirroring the Cart page.
+  const [voucher, setVoucher] = useState<{ open: boolean; scope: VoucherScope }>({
+    open: false,
+    scope: 'platform',
+  });
+
+  const platformCoupon = appliedCoupons.find((c) => c.validation.shop_id == null);
+  const shopCouponFor = (shopId: number | null) =>
+    shopId == null
+      ? undefined
+      : appliedCoupons.find((c) => c.validation.shop_id === shopId);
 
   const defaultAddress = addresses?.find((a) => a.is_default);
 
@@ -43,13 +72,27 @@ export default function CheckoutPage() {
 
   const isProcessing = checkout.isPending || createPayment.isPending;
 
+  // Exact totals from the server (advisory): per-shop shipping, discount split
+  // and grand total. Keyed on codes + a cart signature so it refetches when items
+  // or quantities change. Runs whenever the cart is non-empty — even with no
+  // coupon — so shipping shows exactly instead of "calculated after order".
+  const couponCodes = appliedCoupons.map((c) => c.code);
+  // Shared with the Cart page's availability query so both refetch in lockstep
+  // on any add/remove/quantity/price change.
+  const cartSig = useMemo(() => cartSignature(cart?.items ?? []), [cart]);
+  const hasCartItems = !!cart && cart.items.length > 0;
+  const preview = usePreviewCheckout(couponCodes, cartSig, hasCartItems);
+
   function onSubmit(data: CheckoutFormData) {
     const request = {
       ...data,
-      coupon_code: appliedCoupon?.code,
+      coupon_codes: appliedCoupons.map((c) => c.code),
     };
     checkout.mutate(request, {
       onSuccess: (result) => {
+        // Order placed — the selection has been consumed; clear it so returning
+        // to the cart doesn't re-show stale vouchers.
+        clearCoupons();
         if (data.payment_method === 'cod') {
           navigate(`/checkout/success?orderGroupId=${result.order_group_id}`);
           return;
@@ -101,8 +144,49 @@ export default function CheckoutPage() {
     return sum + price * item.quantity;
   }, 0);
 
-  const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon.validation, subtotal) : 0;
-  const estimatedTotal = subtotal - discountAmount;
+  // Prefer the server preview (exact). Fall back to a local estimate only while
+  // the preview is loading. If the preview rejected a coupon, show no discount
+  // (the error under the coupon input tells the user to remove it) rather than a
+  // phantom saving the server won't honour.
+  // Trust the preview only when it resolved to at least one shop order. An empty
+  // `shops` (every cart item lacks a shop_id → nothing orderable) returns all
+  // zeros; falling back to the local subtotal avoids showing a "0" grand total
+  // next to a non-zero subtotal.
+  const usingPreview = !!preview.data && preview.data.shops.length > 0;
+  const previewErrored = couponCodes.length > 0 && preview.isError;
+  // A coupon-level rejection (COUPON_0xx, 400) is deterministic — block submit.
+  // A transient/network error is not: leave the button enabled and let checkout
+  // re-validate (it's the source of truth).
+  const couponRejected =
+    previewErrored &&
+    preview.error instanceof ApiError &&
+    preview.error.code.startsWith('COUPON_');
+  const couponBreakdown = usingPreview
+    ? preview.data!.applied_coupons.map((c) => ({
+        code: c.code,
+        amount: c.discount_amount,
+      }))
+    : previewErrored
+      ? []
+      : appliedCoupons.map((c) => ({
+          code: c.code,
+          amount: estimateCouponDiscount(c.validation, subtotal),
+        }));
+  const discountAmount = usingPreview
+    ? preview.data!.discount_total
+    : previewErrored
+      ? 0
+      : Math.min(
+          couponBreakdown.reduce((sum, c) => sum + c.amount, 0),
+          subtotal,
+        );
+  // When the preview is authoritative, drive every summary line from it (subtotal
+  // included) so the numbers can never disagree with each other or with checkout.
+  const displaySubtotal = usingPreview ? preview.data!.subtotal : subtotal;
+  const shippingTotal = usingPreview ? preview.data!.shipping_total : null;
+  const estimatedTotal = usingPreview
+    ? preview.data!.grand_total
+    : subtotal - discountAmount;
 
   return (
     <div className="space-y-6">
@@ -217,46 +301,41 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* Coupon Code */}
+            {/* Platform Voucher */}
             <div className="rounded-xl border border-border-default bg-elevated p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Tag className="h-5 w-5 text-text-secondary" />
-                <h2 className="text-lg font-semibold text-text-primary">Coupon Code</h2>
+                <h2 className="text-lg font-semibold text-text-primary">Platform Voucher</h2>
               </div>
-              <CouponInput
-                appliedCode={appliedCoupon?.code ?? null}
-                onApply={(code, validation) => setAppliedCoupon({ code, validation })}
-                onRemove={() => setAppliedCoupon(null)}
+              <VoucherRow
+                applied={platformCoupon}
+                selectLabel="Select platform voucher"
+                onOpen={() => setVoucher({ open: true, scope: 'platform' })}
+                onRemove={removeCoupon}
               />
+              <p className="mt-3 text-xs text-text-muted">
+                You can stack one platform coupon with one coupon per shop.
+              </p>
+              {couponCodes.length > 0 && preview.isError && (
+                <p className="mt-3 text-sm text-error-600">
+                  {preview.error instanceof Error
+                    ? preview.error.message
+                    : 'One or more coupons could not be applied'}
+                  {' — '}please remove the invalid coupon.
+                </p>
+              )}
             </div>
 
-            {/* Order Items Preview */}
-            <div className="rounded-xl border border-border-default bg-elevated p-6">
-              <h2 className="mb-4 text-lg font-semibold text-text-primary">
-                Items ({cart.items.length})
-              </h2>
-              {cart.items.map((item) => (
-                <OrderItemRow
-                  key={item.id}
-                  item={{
-                    id: item.id,
-                    order_id: 0,
-                    product_variant_id: item.product_variant_id,
-                    product_name: item.variant.product_name,
-                    sku: item.variant.sku,
-                    price: item.variant.sale_price ?? item.variant.price,
-                    quantity: item.quantity,
-                    thumbnail_url: item.variant.thumbnail_url,
-                    product_id: null,
-                    variant_option1_label: null,
-                    variant_option1_value: null,
-                    variant_option2_label: null,
-                    variant_option2_value: null,
-                    shop_id: null,
-                    shop_name: null,
-                    product_slug: null,
-                    shop_slug: null,
-                  }}
+            {/* Order Items Preview — grouped by shop, each with its shop voucher */}
+            <div className="space-y-4">
+              {groupItemsByShop(cart.items).map((group) => (
+                <CheckoutShopGroup
+                  key={group.shop_id ?? 'none'}
+                  group={group}
+                  appliedShopCoupon={shopCouponFor(group.shop_id)}
+                  showVoucher
+                  onOpenVoucher={(shopId) => setVoucher({ open: true, scope: shopId })}
+                  onRemoveCoupon={removeCoupon}
                 />
               ))}
             </div>
@@ -270,35 +349,48 @@ export default function CheckoutPage() {
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm text-text-secondary">
                   <span>Subtotal</span>
-                  <span>{formatPrice(subtotal)}</span>
+                  <span>{formatPrice(displaySubtotal)}</span>
                 </div>
-                {appliedCoupon && (
-                  <div className="flex justify-between text-sm text-emerald-700">
-                    <span>Coupon ({appliedCoupon.code})</span>
-                    <span>-{formatPrice(discountAmount)}</span>
+                {couponBreakdown.map((c) => (
+                  <div key={c.code} className="flex justify-between text-sm text-emerald-700">
+                    <span>Coupon ({c.code})</span>
+                    <span>-{formatPrice(c.amount)}</span>
                   </div>
-                )}
+                ))}
                 <div className="flex justify-between text-sm text-text-secondary">
                   <span>Shipping</span>
-                  <span className="text-text-muted">Calculated after order</span>
+                  {shippingTotal !== null ? (
+                    <span>{formatPrice(shippingTotal)}</span>
+                  ) : (
+                    <span className="text-text-muted">Calculated after order</span>
+                  )}
                 </div>
               </div>
+
+              {usingPreview && <CheckoutShopBreakdown shops={preview.data!.shops} />}
 
               <div className="mt-4 border-t border-border-default pt-4">
                 <div className="flex justify-between text-base font-bold text-text-primary">
                   <span>Estimated Total</span>
                   <span>{formatPrice(estimatedTotal)}</span>
                 </div>
-                {appliedCoupon && (
+                {appliedCoupons.length > 0 && discountAmount > 0 && (
                   <p className="mt-1 text-xs text-emerald-700">
-                    You save {formatPrice(discountAmount)} with this coupon
+                    {usingPreview
+                      ? `You save ${formatPrice(discountAmount)}`
+                      : `You save ~${formatPrice(discountAmount)} — final discount confirmed at checkout`}
                   </p>
                 )}
               </div>
 
               <button
                 type="submit"
-                disabled={isProcessing || !addresses || addresses.length === 0}
+                disabled={
+                  isProcessing ||
+                  !addresses ||
+                  addresses.length === 0 ||
+                  couponRejected
+                }
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300 shadow-xs"
               >
                 {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -306,7 +398,9 @@ export default function CheckoutPage() {
                   ? 'Redirecting to payment...'
                   : checkout.isPending
                     ? 'Placing Order...'
-                    : 'Place Order'}
+                    : couponRejected
+                      ? 'Remove invalid coupon to continue'
+                      : 'Place Order'}
               </button>
 
               {(checkout.isError || createPayment.isError) && (
@@ -320,22 +414,17 @@ export default function CheckoutPage() {
           </div>
         </div>
       </form>
+
+      <CouponSelectorModal
+        open={voucher.open}
+        onClose={() => setVoucher((v) => ({ ...v, open: false }))}
+        appliedCoupons={appliedCoupons}
+        onApply={applyCoupon}
+        onRemove={removeCoupon}
+        cartSig={cartSig}
+        scope={voucher.scope}
+        title={voucher.scope === 'platform' ? 'Platform voucher' : 'Shop voucher'}
+      />
     </div>
   );
-}
-
-function calculateDiscount(coupon: CouponValidationResult, subtotal: number): number {
-  if (coupon.min_order_amount && subtotal < coupon.min_order_amount) return 0;
-
-  let discount: number;
-  if (coupon.discount_type === 'percentage') {
-    discount = subtotal * coupon.discount_value / 100;
-    if (coupon.max_discount_amount) {
-      discount = Math.min(discount, coupon.max_discount_amount);
-    }
-  } else {
-    discount = coupon.discount_value;
-  }
-
-  return Math.min(discount, subtotal);
 }

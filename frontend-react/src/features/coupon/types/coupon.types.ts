@@ -9,6 +9,11 @@ export type CouponUsageStatus = 'applied' | 'reversed';
 
 // --- Response types ---
 
+export interface CouponShopSummary {
+  id: number;
+  name: string;
+}
+
 export interface CouponValidationResult {
   valid: boolean;
   code: string;
@@ -19,11 +24,16 @@ export interface CouponValidationResult {
   scope: CouponScope;
   applicable_category_ids: number[] | null;
   applicable_product_ids: number[] | null;
+  // NULL = platform coupon; otherwise the owning shop id (used to group coupons at checkout).
+  shop_id?: number | null;
 }
 
 export interface Coupon {
   id: number;
   code: string;
+  // NULL = platform coupon; otherwise the owning shop.
+  shop_id: number | null;
+  shop: CouponShopSummary | null;
   description: string | null;
   discount_type: DiscountType;
   discount_value: number;
@@ -36,9 +46,59 @@ export interface Coupon {
   starts_at: string;
   expires_at: string;
   is_active: boolean;
+  // Sticky admin moderation lock (shop coupons) — seller cannot re-enable.
+  admin_disabled?: boolean;
   category_ids: number[] | null;
   product_ids: number[] | null;
   created_at: string;
+}
+
+/** A coupon the customer has applied at checkout (multi-coupon). */
+export interface AppliedCouponEntry {
+  code: string;
+  validation: CouponValidationResult;
+}
+
+// --- Voucher availability catalog (GET /coupons/available) ---
+
+/**
+ * Why a listed voucher is not selectable for the current cart. Only these three
+ * ever surface — expired / inactive / exhausted / shop-inactive coupons are
+ * hidden by the server, never listed.
+ */
+export type CouponIneligibleReason =
+  | 'below_min'
+  | 'no_applicable_items'
+  | 'user_limit';
+
+/** One selectable voucher in the picker, with its eligibility for the cart. */
+export interface CouponOption {
+  code: string;
+  description: string | null;
+  discount_type: DiscountType;
+  discount_value: number;
+  scope: CouponScope;
+  shop_id: number | null;
+  min_order_amount: number | null;
+  max_discount_amount: number | null;
+  applicable_total: number;
+  discount_preview: number;
+  eligible: boolean;
+  reason?: CouponIneligibleReason;
+  short_of_min?: number;
+  starts_at: string;
+  expires_at: string;
+}
+
+export interface CouponAvailabilityShop {
+  shop_id: number;
+  shop_name: string;
+  coupons: CouponOption[];
+}
+
+export interface CouponAvailability {
+  platform: CouponOption[];
+  shops: CouponAvailabilityShop[];
 }
 
 export interface CouponUsage {
@@ -59,6 +119,41 @@ export interface CouponListParams extends PaginationParams {
   search?: string;
   scope?: CouponScope;
   discount_type?: DiscountType;
+  is_active?: boolean;
+  // Admin-only ownership filters (ignored by the shop-scoped seller endpoint).
+  owner?: 'platform' | 'shop';
+  shop_id?: number;
+}
+
+// --- Seller request types (no category scope, no shop_id — resolved server-side) ---
+
+export interface CreateSellerCouponRequest {
+  code: string;
+  description?: string;
+  discount_type: DiscountType;
+  discount_value: number;
+  scope: 'all' | 'products';
+  product_ids?: number[];
+  min_order_amount?: number | null;
+  max_discount_amount?: number | null;
+  max_uses?: number | null;
+  max_uses_per_user?: number;
+  starts_at: string;
+  expires_at: string;
+}
+
+export interface UpdateSellerCouponRequest {
+  description?: string;
+  discount_type?: DiscountType;
+  discount_value?: number;
+  scope?: 'all' | 'products';
+  product_ids?: number[];
+  min_order_amount?: number | null;
+  max_discount_amount?: number | null;
+  max_uses?: number | null;
+  max_uses_per_user?: number;
+  starts_at?: string;
+  expires_at?: string;
   is_active?: boolean;
 }
 

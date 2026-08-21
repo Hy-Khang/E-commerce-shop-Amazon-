@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -16,8 +17,14 @@ import {
 } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { PreviewOrderDto } from './dto/preview-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
-import { OrderResponseDto, CheckoutResponseDto, OrderListItemWithItemsResponseDto } from './dto/order-response.dto';
+import {
+  OrderResponseDto,
+  CheckoutResponseDto,
+  CheckoutPreviewResponseDto,
+  OrderListItemWithItemsResponseDto,
+} from './dto/order-response.dto';
 import { OrderTrackingResponseDto } from './dto/order-tracking-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { ICurrentUser } from '../../common/interfaces/current-user.interface';
@@ -38,6 +45,20 @@ export class OrderController {
     @Body() dto: CreateOrderDto,
   ) {
     return this.orderService.checkout(user.id, dto);
+  }
+
+  @Post('preview')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Preview checkout totals + coupon breakdown (advisory, no writes)',
+  })
+  @ApiResponse({ status: 200, description: 'Checkout estimate', type: CheckoutPreviewResponseDto })
+  @ApiResponse({ status: 400, description: 'COUPON_0xx: Invalid coupon' })
+  async preview(
+    @CurrentUser() user: ICurrentUser,
+    @Body() dto: PreviewOrderDto,
+  ) {
+    return this.orderService.previewCheckout(user.id, dto);
   }
 
   @Get()

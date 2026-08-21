@@ -43,3 +43,8 @@ pending → confirmed → shipping → delivered
 - ReviewModule — verifies purchase for review eligibility (requires `completed` status)
 - PaymentModule — reads order data for payment validation, updates payment_status via event
 - DashboardModule — revenue queries use `completed` status
+
+## Coupon distribution (Phase 3)
+- `utils/coupon-distribution.util.ts` holds the **pure** distributor `distributeCheckoutDiscounts(shopItemsTotals, couponItems)`, shared by `checkout` and `previewCheckout` so the two can never drift. A shop coupon lands on its own sub-order first; the platform coupon fills each shop's remaining headroom, capped at `min(applicable, headroom)`, with `allocateWithCaps` **waterfalling** any leftover from a capped shop to shops that still have room (largest-remainder on `MONEY_MINOR = 100` cents). The platform discount is never lost — total given = `min(nominal, Σ caps)`.
+- `previewCheckout(userId, dto)` (`POST /orders/preview`) reuses the distributor read-only: no `coupon_usages`, no stock/usage hold. **Advisory, exact-at-the-time, not a reservation** — `POST /orders` re-validates and is the source of truth. Empty cart → all-zero response.
+- `findOrderById` (admin) and `findSellerOrderById` (seller) both attach `applied_coupons` via `CouponService.getUsagesForOrder` — same breakdown the customer sees.

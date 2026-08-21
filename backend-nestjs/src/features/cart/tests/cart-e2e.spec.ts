@@ -105,6 +105,8 @@ describe('Cart (e2e)', () => {
             id: 10,
             product_variant_id: 5,
             quantity: 1,
+            shop_id: 1,
+            shop_name: 'Test Shop',
             variant: {
               sku: 'SKU-1',
               price: 250000,

@@ -4,6 +4,7 @@ import { Brackets, EntityManager, Repository } from 'typeorm';
 import { Coupon } from '../entities/coupon.entity';
 import { CouponQueryDto } from '../dto/coupon-query.dto';
 import { IPaginatedResult } from '../../../common/interfaces/paginated-result.interface';
+import { ShopStatus } from '../../../common/constants';
 
 @Injectable()
 export class CouponRepository {
@@ -22,17 +23,35 @@ export class CouponRepository {
   async findById(id: number): Promise<Coupon | null> {
     return this.repo.findOne({
       where: { id },
-      relations: ['coupon_categories', 'coupon_products'],
+      relations: ['coupon_categories', 'coupon_products', 'shop'],
     });
   }
 
   async findAllPaginated(
     query: CouponQueryDto,
+    options?: { forceShopId?: number },
   ): Promise<IPaginatedResult<Coupon>> {
     const qb = this.repo
       .createQueryBuilder('coupon')
       .leftJoinAndSelect('coupon.coupon_categories', 'cc')
-      .leftJoinAndSelect('coupon.coupon_products', 'cp');
+      .leftJoinAndSelect('coupon.coupon_products', 'cp')
+      .leftJoinAndSelect('coupon.shop', 'shop');
+
+    // Seller listing: hard-scope to the seller's own shop; ignore ownership filters.
+    if (options?.forceShopId != null) {
+      qb.andWhere('coupon.shop_id = :forceShopId', {
+        forceShopId: options.forceShopId,
+      });
+    } else {
+      if (query.owner === 'platform') {
+        qb.andWhere('coupon.shop_id IS NULL');
+      } else if (query.owner === 'shop') {
+        qb.andWhere('coupon.shop_id IS NOT NULL');
+      }
+      if (query.shop_id) {
+        qb.andWhere('coupon.shop_id = :shopId', { shopId: query.shop_id });
+      }
+    }
 
     if (query.search) {
       qb.andWhere('coupon.code LIKE :search', {
@@ -74,6 +93,64 @@ export class CouponRepository {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  /**
+   * Coupons a customer can pick for the current cart: platform coupons plus
+   * shop coupons owned by shops present in the cart (and still active). Only
+   * returns coupons that would pass `validateCoupon`'s hard gates — so
+   * eligibility computed on top of this can never surface a coupon that
+   * checkout would reject for an *invisible* reason (expired, exhausted,
+   * locked, shop suspended). The cart-dependent gates (applicable total,
+   * min-order, per-user limit) are evaluated in the service.
+   *
+   * `now` mirrors `validateCoupon`'s inclusive window (`starts_at <= now <=
+   * expires_at`). Empty `shopIds` (cart of null-shop items) → platform only,
+   * avoiding an `IN ()` that SQL Server rejects.
+   */
+  async findAvailableForCart(
+    shopIds: number[],
+    now: Date,
+  ): Promise<Coupon[]> {
+    const qb = this.repo
+      .createQueryBuilder('coupon')
+      .leftJoinAndSelect('coupon.coupon_categories', 'cc')
+      .leftJoinAndSelect('coupon.coupon_products', 'cp')
+      .leftJoinAndSelect('coupon.shop', 'shop')
+      .where('coupon.is_active = :active', { active: true })
+      .andWhere('coupon.admin_disabled = :disabled', { disabled: false })
+      .andWhere('coupon.starts_at <= :now', { now })
+      .andWhere('coupon.expires_at >= :now', { now })
+      .andWhere(
+        new Brackets((b) => {
+          b.where('coupon.max_uses IS NULL').orWhere(
+            'coupon.current_uses < coupon.max_uses',
+          );
+        }),
+      );
+
+    if (shopIds.length > 0) {
+      // Platform (shop_id NULL) always eligible; shop coupons only for a cart
+      // shop that is currently active. shop-active must NOT gate platform ones.
+      qb.andWhere(
+        new Brackets((b) => {
+          b.where('coupon.shop_id IS NULL').orWhere(
+            new Brackets((sb) => {
+              sb.where('coupon.shop_id IN (:...shopIds)', { shopIds }).andWhere(
+                'shop.status = :activeStatus',
+                { activeStatus: ShopStatus.Active },
+              );
+            }),
+          );
+        }),
+      );
+    } else {
+      qb.andWhere('coupon.shop_id IS NULL');
+    }
+
+    qb.orderBy('coupon.created_at', 'DESC');
+
+    return qb.getMany();
   }
 
   async create(data: Partial<Coupon>): Promise<Coupon> {

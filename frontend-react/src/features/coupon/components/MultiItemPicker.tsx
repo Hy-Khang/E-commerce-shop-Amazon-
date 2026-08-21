@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
 import { useDebounce } from '@/common/hooks/useDebounce';
-import { useAdminCategories, useAdminProducts } from '@/features/product';
+import {
+  useAdminCategories,
+  useAdminProducts,
+  useSellerProducts,
+} from '@/features/product';
 import type { AdminCategory, ProductListItem } from '@/features/product';
 
 interface PickerItem {
@@ -10,10 +14,15 @@ interface PickerItem {
   sublabel?: string;
 }
 
+/** Where the products picker pulls its list from. Sellers see only their shop. */
+export type ProductPickerSource = 'admin' | 'seller';
+
 interface Props {
   type: 'categories' | 'products';
   selectedIds: number[];
   onChange: (ids: number[]) => void;
+  /** Products source — 'admin' (all products) or 'seller' (own shop). Default 'admin'. */
+  source?: ProductPickerSource;
 }
 
 interface InternalProps {
@@ -160,7 +169,7 @@ function CategoryPicker({ selectedIds, onChange }: Omit<Props, 'type'>) {
   );
 }
 
-function ProductPicker({ selectedIds, onChange }: Omit<Props, 'type'>) {
+function AdminProductPicker({ selectedIds, onChange }: Omit<Props, 'type' | 'source'>) {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const { data, isLoading } = useAdminProducts({ page: 1, limit: 50, search: debouncedSearch || undefined });
@@ -180,9 +189,32 @@ function ProductPicker({ selectedIds, onChange }: Omit<Props, 'type'>) {
   );
 }
 
-export function MultiItemPicker({ type, selectedIds, onChange }: Props) {
+function SellerProductPicker({ selectedIds, onChange }: Omit<Props, 'type' | 'source'>) {
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
+  const { data, isLoading } = useSellerProducts({ page: 1, limit: 50, search: debouncedSearch || undefined });
+  const items = (data?.data ?? []).map(toProductItem);
+
+  return (
+    <PickerDropdown
+      items={items}
+      isLoading={isLoading}
+      selectedIds={selectedIds}
+      onChange={onChange}
+      search={search}
+      setSearch={setSearch}
+      placeholder="Search your products..."
+      fallbackLabel="Product"
+    />
+  );
+}
+
+export function MultiItemPicker({ type, selectedIds, onChange, source = 'admin' }: Props) {
   if (type === 'categories') {
     return <CategoryPicker selectedIds={selectedIds} onChange={onChange} />;
   }
-  return <ProductPicker selectedIds={selectedIds} onChange={onChange} />;
+  if (source === 'seller') {
+    return <SellerProductPicker selectedIds={selectedIds} onChange={onChange} />;
+  }
+  return <AdminProductPicker selectedIds={selectedIds} onChange={onChange} />;
 }

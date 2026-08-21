@@ -76,9 +76,17 @@ export class AdminCouponController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Permissions(PERMISSIONS.COUPONS_DELETE)
-  @ApiOperation({ summary: 'Deactivate coupon (soft delete)' })
+  @ApiOperation({ summary: 'Deactivate coupon (soft delete; sticky lock for shop coupons)' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.couponService.deactivateCoupon(id);
+  }
+
+  @Patch(':id/unlock')
+  @Permissions(PERMISSIONS.COUPONS_UPDATE)
+  @ApiOperation({ summary: 'Unlock a shop coupon (clear admin lock + reactivate)' })
+  @ApiResponse({ status: 200, type: CouponResponseDto })
+  async unlock(@Param('id', ParseIntPipe) id: number) {
+    return this.couponService.unlockCoupon(id);
   }
 
   @Get(':id/usages')

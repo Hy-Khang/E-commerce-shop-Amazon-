@@ -257,11 +257,20 @@ export default function OrderDetailPage() {
                 <span>Subtotal</span>
                 <span>{formatPrice(order.total_amount + order.discount_amount - order.shipping_fee)}</span>
               </div>
-              {order.coupon_code && (
-                <div className="flex justify-between font-medium text-success-600">
-                  <span>Coupon ({order.coupon_code})</span>
-                  <span>-{formatPrice(order.discount_amount)}</span>
-                </div>
+              {order.applied_coupons && order.applied_coupons.length > 0 ? (
+                order.applied_coupons.map((c) => (
+                  <div key={c.code} className="flex justify-between font-medium text-success-600">
+                    <span>Coupon ({c.code})</span>
+                    <span>-{formatPrice(c.discount_amount)}</span>
+                  </div>
+                ))
+              ) : (
+                order.coupon_code && (
+                  <div className="flex justify-between font-medium text-success-600">
+                    <span>Coupon ({order.coupon_code})</span>
+                    <span>-{formatPrice(order.discount_amount)}</span>
+                  </div>
+                )
               )}
               <div className="flex justify-between text-text-secondary">
                 <span>Shipping</span>

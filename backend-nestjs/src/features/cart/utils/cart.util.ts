@@ -29,6 +29,8 @@ export function toCartResponse(cart: Cart): CartResponseDto {
       id: item.id,
       product_variant_id: item.product_variant_id,
       quantity: item.quantity,
+      shop_id: item.product_variant.product?.shop_id ?? null,
+      shop_name: item.product_variant.product?.shop?.name ?? null,
       variant: {
         sku: item.product_variant.sku,
         price: item.product_variant.price,

@@ -353,6 +353,7 @@
 |-------|------|-------------|
 | id | INT | PK, auto-increment |
 | code | NVARCHAR(50) | NOT NULL, UNIQUE — stored uppercase |
+| shop_id | INT | FK → `shops.id` ON DELETE NO ACTION, NULL — `NULL` = platform coupon (admin); NOT NULL = shop coupon (seller-owned) |
 | description | NVARCHAR(255) | NULL — internal description for admin |
 | discount_type | NVARCHAR(20) | NOT NULL — `'fixed'` / `'percentage'` |
 | discount_value | DECIMAL(10,2) | NOT NULL — VND if fixed, % (0-100) if percentage |
@@ -365,10 +366,17 @@
 | starts_at | DATETIME2 | NOT NULL |
 | expires_at | DATETIME2 | NOT NULL |
 | is_active | BIT | NOT NULL, DEFAULT `1` — soft deactivate |
+| admin_disabled | BIT | NOT NULL, DEFAULT `0` — sticky admin moderation lock (shop coupons); seller cannot re-enable |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 | updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
 > **Scope design:** `scope = 'all'` applies to entire order. `scope = 'categories'` uses `coupon_categories` junction table (includes sub-categories via recursive `parent_id` traversal). `scope = 'products'` uses `coupon_products` junction table. `min_order_amount` checks against applicable items total only, not entire cart.
+>
+> **Shop coupons (`shop_id` NOT NULL):** Created/managed by sellers via `/seller/coupons`, owned by one shop, and only discount that shop's items in a multi-shop cart. Seller scope is limited to `all` (whole shop) or `products` (specific products of that shop) — never `categories`. The stored `code` is prefixed with the shop slug (e.g. `MY-SHOP-SALE10`) but remains globally UNIQUE. Only valid while the owning shop is `active` (otherwise treated as inactive → `COUPON_006`). Admin can view and deactivate shop coupons but cannot edit their content or create them. Index `idx_coupons_shop_id`.
+>
+> **Admin lock (`admin_disabled`):** When an admin deactivates a shop coupon, `admin_disabled` is set to `1` (sticky) alongside `is_active = false`. A locked coupon validates as inactive (`COUPON_006`) and the owning seller cannot edit or re-enable it (`COUPON_013`). Only an admin can clear the lock (`PATCH /admin/coupons/:id/unlock`, which sets `admin_disabled = 0` **only** — it does not touch `is_active`; the owning seller re-enables the coupon afterward). Platform coupons never set this flag.
+>
+> **Multi-coupon checkout:** A cart may apply ≤1 platform coupon + ≤1 coupon per shop (`coupon_usages` records one row per coupon per sub-order it discounts). A shop coupon's discount stays on its own sub-order; a platform coupon's discount is split across shops by applicable subtotal and fills only the headroom left after any shop coupon.
 
 #### `coupon_categories` — Junction
 
@@ -484,6 +492,7 @@ erDiagram
 
     shops ||--o{ products : "sells"
     shops ||--o{ orders : "has orders"
+    shops ||--o{ coupons : "owns shop coupons"
 
     categories ||--o{ categories : "parent → children"
     categories ||--o{ products : "contains"
@@ -564,6 +573,7 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | wishlist_items | `idx_wishlist_items_product_id` | product_id | Admin analytics: count per product |
 | coupons | `idx_coupons_is_active` | is_active | Filter active coupons |
 | coupons | `idx_coupons_expires_at` | expires_at | Expiration queries / cleanup |
+| coupons | `idx_coupons_shop_id` | shop_id | Filter coupons by owning shop (seller listing / admin filter) |
 | coupon_usages | `idx_coupon_usages_coupon_id` | coupon_id | List usages per coupon |
 | coupon_usages | `idx_coupon_usages_user_id_coupon_id` | user_id, coupon_id | Per-user usage count check |
 | coupon_usages | `idx_coupon_usages_order_id` | order_id | Find usage by order (reversal) |

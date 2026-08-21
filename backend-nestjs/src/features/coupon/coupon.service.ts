@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -13,27 +14,41 @@ import { Coupon } from './entities/coupon.entity';
 import { CouponCategory } from './entities/coupon-category.entity';
 import { CouponProduct } from './entities/coupon-product.entity';
 import { Category } from '../product/entities/category.entity';
+import { Product } from '../product/entities/product.entity';
+import { ShopService } from '../shop/shop.service';
+import { Shop } from '../shop/entities/shop.entity';
+import { ShopStatus } from '../../common/constants';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
+import { CreateSellerCouponDto } from './dto/create-seller-coupon.dto';
+import { UpdateSellerCouponDto } from './dto/update-seller-coupon.dto';
 import { CouponQueryDto, CouponUsageQueryDto } from './dto/coupon-query.dto';
 import {
+  CouponAvailabilityResponseDto,
+  CouponAvailabilityShopDto,
+  CouponOptionDto,
   CouponResponseDto,
   CouponUsageResponseDto,
   CouponValidationResponseDto,
 } from './dto/coupon-response.dto';
 import {
+  CouponIneligibleReason,
   CouponScope,
   CouponUsageStatus,
-  IDiscountCalculation,
+  IAppliedCoupon,
+  ICouponCalculationItem,
 } from './types/coupon.types';
 import {
   calculateDiscount,
+  toCouponOption,
   toCouponResponse,
   toCouponUsageResponse,
   toCouponValidationResponse,
 } from './utils/coupon.util';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { CartItem } from '../cart/entities/cart-item.entity';
+import { CartService } from '../cart/cart.service';
+import { CartEmptyException } from '../../common/exceptions/cart-empty.exception';
 
 @Injectable()
 export class CouponService {
@@ -44,6 +59,10 @@ export class CouponService {
     private readonly couponUsageRepository: CouponUsageRepository,
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
+    @InjectRepository(Product)
+    private readonly productRepo: Repository<Product>,
+    private readonly shopService: ShopService,
+    private readonly cartService: CartService,
   ) {}
 
   // ─── Customer ───
@@ -56,41 +75,211 @@ export class CouponService {
     return toCouponValidationResponse(coupon);
   }
 
+  /**
+   * Selectable-voucher catalog for the current cart (Shopee-style picker):
+   * platform coupons + shop coupons for shops in the cart, each tagged with its
+   * eligibility for this cart. Read-only, no reservation — the real per-shop
+   * allocation is decided by `POST /orders/preview` / checkout, which re-validate.
+   *
+   * Every filter and eligibility check here mirrors `validateCoupon` +
+   * `validateAndCalculateDiscounts` exactly, so any coupon marked `eligible`
+   * here is guaranteed to pass checkout re-validation at the same instant
+   * (barring a race). Hard gates (expired/inactive/exhausted/shop-inactive) are
+   * applied in the repository → those coupons never appear at all; the
+   * cart-dependent gates surface as a `reason` on a greyed-out row.
+   */
+  async getAvailableCouponsForCart(
+    userId: number,
+  ): Promise<CouponAvailabilityResponseDto> {
+    let cartItems: CartItem[];
+    const shopNameById = new Map<number, string>();
+    try {
+      const cart = await this.cartService.getCartWithItems(userId);
+      cartItems = cart.items ?? [];
+    } catch (err) {
+      // Opening the picker with an empty cart must not 400.
+      if (err instanceof CartEmptyException) return { platform: [], shops: [] };
+      throw err;
+    }
+    if (cartItems.length === 0) return { platform: [], shops: [] };
+
+    for (const item of cartItems) {
+      const product = item.product_variant?.product;
+      const shopId = product?.shop_id;
+      if (shopId == null) continue;
+      if (!shopNameById.has(shopId)) {
+        shopNameById.set(shopId, product?.shop?.name ?? `Shop #${shopId}`);
+      }
+    }
+    const shopIds = [...shopNameById.keys()];
+
+    const candidates = await this.couponRepository.findAvailableForCart(
+      shopIds,
+      new Date(),
+    );
+
+    const platform: CouponOptionDto[] = [];
+    const shopOptions = new Map<number, CouponOptionDto[]>();
+
+    for (const candidate of candidates) {
+      const applicableByShop = await this.getApplicableTotalsByShop(
+        candidate,
+        cartItems,
+      );
+      const applicableTotal = [...applicableByShop.values()].reduce(
+        (sum, v) => sum + v,
+        0,
+      );
+
+      let eligible = true;
+      let reason: CouponIneligibleReason | undefined;
+      let shortOfMin: number | undefined;
+      let discountPreview = 0;
+
+      if (applicableTotal === 0) {
+        eligible = false;
+        reason = 'no_applicable_items';
+      } else if (
+        candidate.min_order_amount != null &&
+        applicableTotal < Number(candidate.min_order_amount)
+      ) {
+        eligible = false;
+        reason = 'below_min';
+        shortOfMin =
+          Math.round((Number(candidate.min_order_amount) - applicableTotal) *
+            100) / 100;
+      } else {
+        const userUsage =
+          await this.couponUsageRepository.countActiveByUserAndCoupon(
+            userId,
+            candidate.id,
+          );
+        if (userUsage >= candidate.max_uses_per_user) {
+          eligible = false;
+          reason = 'user_limit';
+        } else {
+          discountPreview = calculateDiscount(candidate, applicableTotal);
+        }
+      }
+
+      const option = toCouponOption(candidate, {
+        applicableTotal,
+        eligible,
+        reason,
+        shortOfMin,
+        discountPreview,
+      });
+
+      if (candidate.shop_id == null) {
+        platform.push(option);
+      } else {
+        const list = shopOptions.get(candidate.shop_id) ?? [];
+        list.push(option);
+        shopOptions.set(candidate.shop_id, list);
+      }
+    }
+
+    const shops: CouponAvailabilityShopDto[] = [...shopOptions.entries()].map(
+      ([shopId, coupons]) => ({
+        shop_id: shopId,
+        shop_name: shopNameById.get(shopId) ?? `Shop #${shopId}`,
+        coupons,
+      }),
+    );
+
+    return { platform, shops };
+  }
+
   // ─── Cross-feature: consumed by OrderService ───
 
-  async validateAndCalculateDiscount(
+  /**
+   * Validates multiple coupon codes for a single checkout and calculates each
+   * one's discount independently on the original cart subtotal. Enforces the
+   * multi-coupon rule: at most one platform coupon and at most one coupon per
+   * shop (else COUPON_011). Returns one calculation item per coupon.
+   */
+  async validateAndCalculateDiscounts(
     userId: number,
-    code: string,
+    codes: string[],
     cartItems: CartItem[],
-  ): Promise<IDiscountCalculation> {
-    const coupon = await this.validateCoupon(userId, code);
+  ): Promise<ICouponCalculationItem[]> {
+    const uniqueCodes = [
+      ...new Set(codes.map((c) => c.toUpperCase().trim()).filter(Boolean)),
+    ];
+    if (uniqueCodes.length === 0) return [];
 
-    const applicableTotal = await this.getApplicableTotal(coupon, cartItems);
+    const results: ICouponCalculationItem[] = [];
+    let platformSeen = false;
+    const shopSeen = new Set<number>();
 
-    if (applicableTotal === 0) {
-      throw new BadRequestException({
-        code: 'COUPON_008',
-        message: 'No items in cart are applicable for this coupon',
+    for (const code of uniqueCodes) {
+      const coupon = await this.validateCoupon(userId, code);
+
+      // Multi-coupon constraint: ≤1 platform, ≤1 per shop.
+      if (coupon.shop_id == null) {
+        if (platformSeen) {
+          throw new BadRequestException({
+            code: 'COUPON_011',
+            message: 'Only one platform coupon can be applied per order',
+          });
+        }
+        platformSeen = true;
+      } else {
+        if (shopSeen.has(coupon.shop_id)) {
+          throw new BadRequestException({
+            code: 'COUPON_011',
+            message: 'Only one coupon per shop can be applied per order',
+          });
+        }
+        shopSeen.add(coupon.shop_id);
+      }
+
+      const applicableByShop = await this.getApplicableTotalsByShop(
+        coupon,
+        cartItems,
+      );
+      const applicableTotal = [...applicableByShop.values()].reduce(
+        (sum, v) => sum + v,
+        0,
+      );
+
+      if (applicableTotal === 0) {
+        throw new BadRequestException({
+          code: 'COUPON_008',
+          message: `No items in cart are applicable for coupon ${coupon.code}`,
+        });
+      }
+
+      if (
+        coupon.min_order_amount != null &&
+        applicableTotal < Number(coupon.min_order_amount)
+      ) {
+        throw new BadRequestException({
+          code: 'COUPON_005',
+          message: `Applicable items total for ${coupon.code} must be at least ${Number(coupon.min_order_amount)} VND`,
+        });
+      }
+
+      results.push({
+        coupon_id: coupon.id,
+        coupon_code: coupon.code,
+        coupon_shop_id: coupon.shop_id ?? null,
+        discount_amount: calculateDiscount(coupon, applicableTotal),
+        applicable_by_shop: Object.fromEntries(applicableByShop),
       });
     }
 
-    if (
-      coupon.min_order_amount != null &&
-      applicableTotal < Number(coupon.min_order_amount)
-    ) {
-      throw new BadRequestException({
-        code: 'COUPON_005',
-        message: `Applicable items total must be at least ${Number(coupon.min_order_amount)} VND`,
-      });
-    }
+    return results;
+  }
 
-    const discountAmount = calculateDiscount(coupon, applicableTotal);
-
-    return {
-      coupon_id: coupon.id,
-      coupon_code: coupon.code,
-      discount_amount: discountAmount,
-    };
+  /** Applied coupons for an order (code + discount), for order detail display. */
+  async getUsagesForOrder(orderId: number): Promise<IAppliedCoupon[]> {
+    const usages =
+      await this.couponUsageRepository.findAppliedByOrderIdWithCoupon(orderId);
+    return usages.map((u) => ({
+      code: u.coupon?.code ?? '',
+      discount_amount: Number(u.discount_amount),
+    }));
   }
 
   async recordUsage(
@@ -131,42 +320,67 @@ export class CouponService {
     );
   }
 
-  async reverseCouponUsage(orderId: number): Promise<void> {
-    const usage = await this.couponUsageRepository.findByOrderId(orderId);
-
-    if (!usage) return;
-
-    await this.couponUsageRepository.updateStatus(
-      usage.id,
-      CouponUsageStatus.Reversed,
-    );
-    await this.couponRepository.decrementUsage(usage.coupon_id);
-
-    this.logger.log(
-      `Coupon usage reversed: usage=${usage.id}, coupon=${usage.coupon_id}, order=${orderId}`,
-    );
-  }
-
-  async reverseGroupCouponUsage(orderGroupId: string): Promise<void> {
+  /**
+   * Reverse shop-coupon usages tied to a single (cancelled) sub-order.
+   * A shop coupon only ever discounts its own shop's sub-order, so it can be
+   * reversed the moment that sub-order is cancelled. Idempotent: a usage is
+   * only flipped/decremented if it is still `applied`.
+   */
+  async reverseOrderShopCoupons(orderId: number): Promise<void> {
     const usages =
-      await this.couponUsageRepository.findActiveByGroupId(orderGroupId);
-
-    if (usages.length === 0) return;
-
-    const couponId = usages[0].coupon_id;
+      await this.couponUsageRepository.findAppliedByOrderIdWithCoupon(orderId);
 
     for (const usage of usages) {
-      await this.couponUsageRepository.updateStatus(
+      // platform-coupon usages are handled by reverseGroupPlatformCoupon
+      if (usage.coupon?.shop_id == null) continue;
+
+      const flipped = await this.couponUsageRepository.reverseIfApplied(
         usage.id,
-        CouponUsageStatus.Reversed,
       );
+      if (flipped) {
+        await this.couponRepository.decrementUsage(usage.coupon_id);
+        this.logger.log(
+          `Shop coupon usage reversed: usage=${usage.id}, coupon=${usage.coupon_id}, order=${orderId}`,
+        );
+      }
     }
+  }
 
-    await this.couponRepository.decrementUsage(couponId);
+  /**
+   * Reverse platform-coupon usage for a group. A platform coupon spans the
+   * whole checkout (one usage row per sub-order, one global count), so it is
+   * only reversed once ALL orders in the group are cancelled. Global count is
+   * decremented once per coupon, only if at least one row was actually flipped.
+   * Idempotent: calling again is a no-op.
+   */
+  async reverseGroupPlatformCoupon(orderGroupId: string): Promise<void> {
+    const usages =
+      await this.couponUsageRepository.findActiveByGroupIdWithCoupon(
+        orderGroupId,
+      );
 
-    this.logger.log(
-      `Group coupon usage reversed: group=${orderGroupId}, coupon=${couponId}, usages=${usages.length}`,
-    );
+    const platformUsages = usages.filter((u) => u.coupon?.shop_id == null);
+    if (platformUsages.length === 0) return;
+
+    const couponIds = new Set(platformUsages.map((u) => u.coupon_id));
+
+    for (const couponId of couponIds) {
+      let flippedAny = false;
+      for (const usage of platformUsages.filter(
+        (u) => u.coupon_id === couponId,
+      )) {
+        const flipped = await this.couponUsageRepository.reverseIfApplied(
+          usage.id,
+        );
+        if (flipped) flippedAny = true;
+      }
+      if (flippedAny) {
+        await this.couponRepository.decrementUsage(couponId);
+        this.logger.log(
+          `Platform coupon usage reversed: group=${orderGroupId}, coupon=${couponId}`,
+        );
+      }
+    }
   }
 
   // ─── Admin CRUD ───
@@ -218,6 +432,44 @@ export class CouponService {
         code: 'COUPON_001',
         message: 'Coupon not found',
       });
+    }
+
+    // Admins may view and deactivate shop coupons (moderation) but not edit
+    // their content — that is the owning seller's responsibility.
+    if (coupon.shop_id != null) {
+      throw new ForbiddenException({
+        code: 'COUPON_010',
+        message: 'Shop coupons can only be edited by their owning seller',
+      });
+    }
+
+    // Guard the update path against a scoped coupon being stripped to zero
+    // targets (the DTO's @ArrayMinSize only fires when `scope` is in the body,
+    // so `{ product_ids: [] }` / `{ category_ids: [] }` alone would slip through).
+    const effectiveScope = dto.scope ?? coupon.scope;
+    if (effectiveScope === CouponScope.Products) {
+      const effectiveProducts =
+        dto.product_ids !== undefined
+          ? dto.product_ids
+          : (coupon.coupon_products ?? []).map((cp) => cp.product_id);
+      if (effectiveProducts.length === 0) {
+        throw new BadRequestException({
+          code: 'VALIDATION_001',
+          message: 'A products-scoped coupon must target at least one product',
+        });
+      }
+    }
+    if (effectiveScope === CouponScope.Categories) {
+      const effectiveCategories =
+        dto.category_ids !== undefined
+          ? dto.category_ids
+          : (coupon.coupon_categories ?? []).map((cc) => cc.category_id);
+      if (effectiveCategories.length === 0) {
+        throw new BadRequestException({
+          code: 'VALIDATION_001',
+          message: 'A categories-scoped coupon must target at least one category',
+        });
+      }
     }
 
     const updateData: Partial<Coupon> = {};
@@ -302,12 +554,45 @@ export class CouponService {
       });
     }
 
+    // For shop coupons, admin deactivation is a *sticky* moderation lock:
+    // set admin_disabled so the owning seller cannot silently re-enable it.
+    // Platform coupons keep the plain is_active toggle.
+    const patch: Partial<Coupon> = { is_active: false, updated_at: new Date() };
+    if (coupon.shop_id != null) {
+      patch.admin_disabled = true;
+    }
+
+    await this.couponRepository.update(id, patch);
+
+    this.logger.log(
+      `Coupon deactivated: ${coupon.code} (id=${id}${coupon.shop_id != null ? ', admin-locked' : ''})`,
+    );
+  }
+
+  /**
+   * Admin unlock — clears ONLY the sticky moderation lock (`admin_disabled`).
+   * It does not reactivate the coupon: `is_active` is left untouched, so an
+   * unlocked coupon stays inactive until its owning seller turns it back on.
+   * Unlocking is "stop moderating", not "activate on the seller's behalf".
+   */
+  async unlockCoupon(id: number): Promise<CouponResponseDto> {
+    const coupon = await this.couponRepository.findById(id);
+    if (!coupon) {
+      throw new NotFoundException({
+        code: 'COUPON_001',
+        message: 'Coupon not found',
+      });
+    }
+
     await this.couponRepository.update(id, {
-      is_active: false,
+      admin_disabled: false,
       updated_at: new Date(),
     });
 
-    this.logger.log(`Coupon deactivated: ${coupon.code} (id=${id})`);
+    const updated = await this.couponRepository.findById(id);
+    this.logger.log(`Coupon unlocked by admin (lock cleared): id=${id}`);
+
+    return toCouponResponse(updated!);
   }
 
   async findCouponUsages(
@@ -346,7 +631,244 @@ export class CouponService {
     };
   }
 
+  // ─── Seller CRUD (shop-scoped) ───
+
+  async findSellerCoupons(
+    userId: number,
+    query: CouponQueryDto,
+  ): Promise<IPaginatedResult<CouponResponseDto>> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    const result = await this.couponRepository.findAllPaginated(query, {
+      forceShopId: shop.id,
+    });
+
+    return {
+      data: result.data.map(toCouponResponse),
+      meta: result.meta,
+    };
+  }
+
+  async findSellerCouponById(
+    userId: number,
+    id: number,
+  ): Promise<CouponResponseDto> {
+    const { coupon } = await this.assertSellerOwnsCoupon(userId, id);
+    return toCouponResponse(coupon);
+  }
+
+  async createSellerCoupon(
+    userId: number,
+    dto: CreateSellerCouponDto,
+  ): Promise<CouponResponseDto> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+
+    const code = `${shop.slug}-${dto.code}`.toUpperCase().trim();
+    if (code.length > 50) {
+      throw new BadRequestException({
+        code: 'COUPON_012',
+        message:
+          'Generated coupon code exceeds 50 characters; please use a shorter code',
+      });
+    }
+
+    const exists = await this.couponRepository.existsByCode(code);
+    if (exists) {
+      throw new ConflictException({
+        code: 'COUPON_007',
+        message: 'Coupon code already exists',
+      });
+    }
+
+    const scope = dto.scope || CouponScope.All;
+    if (scope === CouponScope.Products && dto.product_ids?.length) {
+      await this.assertProductsBelongToShop(dto.product_ids, shop.id);
+    }
+
+    let coupon: Coupon;
+    try {
+      coupon = await this.couponRepository.create({
+        code,
+        shop_id: shop.id,
+        description: dto.description,
+        discount_type: dto.discount_type,
+        discount_value: dto.discount_value,
+        scope,
+        min_order_amount: dto.min_order_amount,
+        max_discount_amount: dto.max_discount_amount,
+        max_uses: dto.max_uses,
+        max_uses_per_user: dto.max_uses_per_user ?? 1,
+        starts_at: new Date(dto.starts_at),
+        expires_at: new Date(dto.expires_at),
+      });
+    } catch (error: any) {
+      if (error?.number === 2627 || error?.number === 2601) {
+        throw new ConflictException({
+          code: 'COUPON_007',
+          message: 'Coupon code already exists',
+        });
+      }
+      throw error;
+    }
+
+    if (scope === CouponScope.Products && dto.product_ids?.length) {
+      await this.saveCouponProducts(coupon.id, dto.product_ids);
+    }
+
+    const saved = await this.couponRepository.findById(coupon.id);
+    this.logger.log(
+      `Shop coupon created: ${coupon.code} (id=${coupon.id}, shop=${shop.id})`,
+    );
+
+    return toCouponResponse(saved!);
+  }
+
+  async updateSellerCoupon(
+    userId: number,
+    id: number,
+    dto: UpdateSellerCouponDto,
+  ): Promise<CouponResponseDto> {
+    const { shop, coupon } = await this.assertSellerOwnsCoupon(userId, id);
+
+    // A coupon locked by admin cannot be modified or re-enabled by the seller.
+    if (coupon.admin_disabled) {
+      throw new ForbiddenException({
+        code: 'COUPON_013',
+        message: 'This coupon has been locked by an administrator',
+      });
+    }
+
+    const newScope = dto.scope ?? coupon.scope;
+
+    // Guard the update path: the DTO's @ArrayMinSize only fires when `scope` is
+    // present in the body, so `{ product_ids: [] }` alone would slip through and
+    // strip a products-coupon down to zero targets → a permanently dead coupon.
+    const effectiveProducts =
+      dto.product_ids !== undefined
+        ? dto.product_ids
+        : (coupon.coupon_products ?? []).map((cp) => cp.product_id);
+    if (newScope === CouponScope.Products && effectiveProducts.length === 0) {
+      throw new BadRequestException({
+        code: 'VALIDATION_001',
+        message: 'A products-scoped coupon must target at least one product',
+      });
+    }
+
+    if (
+      newScope === CouponScope.Products &&
+      dto.product_ids !== undefined &&
+      dto.product_ids.length
+    ) {
+      await this.assertProductsBelongToShop(dto.product_ids, shop.id);
+    }
+
+    const updateData: Partial<Coupon> = {};
+    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.discount_type !== undefined)
+      updateData.discount_type = dto.discount_type;
+    if (dto.discount_value !== undefined)
+      updateData.discount_value = dto.discount_value;
+    if (dto.scope !== undefined) updateData.scope = dto.scope;
+    if (dto.min_order_amount !== undefined)
+      updateData.min_order_amount = dto.min_order_amount;
+    if (dto.max_discount_amount !== undefined)
+      updateData.max_discount_amount = dto.max_discount_amount;
+    if (dto.max_uses !== undefined) updateData.max_uses = dto.max_uses;
+    if (dto.max_uses_per_user !== undefined)
+      updateData.max_uses_per_user = dto.max_uses_per_user;
+    if (dto.starts_at !== undefined)
+      updateData.starts_at = new Date(dto.starts_at);
+    if (dto.expires_at !== undefined)
+      updateData.expires_at = new Date(dto.expires_at);
+    if (dto.is_active !== undefined) updateData.is_active = dto.is_active;
+    updateData.updated_at = new Date();
+
+    await this.couponRepository.update(id, updateData);
+
+    if (dto.product_ids !== undefined) {
+      await this.replaceCouponProducts(id, dto.product_ids);
+    }
+    // scope changed away from products → clear product links
+    if (
+      dto.scope !== undefined &&
+      dto.scope !== coupon.scope &&
+      newScope !== CouponScope.Products
+    ) {
+      await this.replaceCouponProducts(id, []);
+    }
+
+    const updated = await this.couponRepository.findById(id);
+    this.logger.log(`Shop coupon updated: id=${id}, shop=${shop.id}`);
+
+    return toCouponResponse(updated!);
+  }
+
+  async deactivateSellerCoupon(userId: number, id: number): Promise<void> {
+    await this.assertSellerOwnsCoupon(userId, id);
+    await this.couponRepository.update(id, {
+      is_active: false,
+      updated_at: new Date(),
+    });
+    this.logger.log(`Shop coupon deactivated: id=${id}`);
+  }
+
+  async findSellerCouponUsages(
+    userId: number,
+    couponId: number,
+    page: number,
+    limit: number,
+  ): Promise<IPaginatedResult<CouponUsageResponseDto>> {
+    await this.assertSellerOwnsCoupon(userId, couponId);
+
+    const result = await this.couponUsageRepository.findByCouponIdPaginated(
+      couponId,
+      page,
+      limit,
+    );
+
+    return {
+      data: result.data.map(toCouponUsageResponse),
+      meta: result.meta,
+    };
+  }
+
   // ─── Private helpers ───
+
+  /**
+   * Resolves the caller's shop and asserts the coupon is owned by it.
+   * Rejects platform coupons and coupons of other shops with COUPON_010.
+   */
+  private async assertSellerOwnsCoupon(
+    userId: number,
+    couponId: number,
+  ): Promise<{ shop: Shop; coupon: Coupon }> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    const coupon = await this.couponRepository.findById(couponId);
+
+    if (!coupon || coupon.shop_id == null || coupon.shop_id !== shop.id) {
+      throw new ForbiddenException({
+        code: 'COUPON_010',
+        message: 'You do not have access to this coupon',
+      });
+    }
+
+    return { shop, coupon };
+  }
+
+  private async assertProductsBelongToShop(
+    productIds: number[],
+    shopId: number,
+  ): Promise<void> {
+    const uniqueIds = [...new Set(productIds)];
+    const count = await this.productRepo.count({
+      where: { id: In(uniqueIds), shop_id: shopId },
+    });
+    if (count !== uniqueIds.length) {
+      throw new BadRequestException({
+        code: 'COUPON_009',
+        message: 'One or more products do not belong to your shop',
+      });
+    }
+  }
 
   private async validateCoupon(userId: number, code: string): Promise<Coupon> {
     const coupon = await this.couponRepository.findByCode(code.toUpperCase());
@@ -357,11 +879,24 @@ export class CouponService {
       });
     }
 
-    if (!coupon.is_active) {
+    if (!coupon.is_active || coupon.admin_disabled) {
       throw new BadRequestException({
         code: 'COUPON_006',
         message: 'Coupon is not currently active',
       });
+    }
+
+    // Shop coupons are only usable while the owning shop is active.
+    if (coupon.shop_id != null) {
+      const shop = await this.shopService
+        .findShopById(coupon.shop_id)
+        .catch(() => null);
+      if (!shop || shop.status !== ShopStatus.Active) {
+        throw new BadRequestException({
+          code: 'COUPON_006',
+          message: 'Coupon is not currently active',
+        });
+      }
     }
 
     const now = new Date();
@@ -394,49 +929,59 @@ export class CouponService {
     return coupon;
   }
 
-  private async getApplicableTotal(
+  /**
+   * Applicable subtotal grouped by shop id, honouring both the coupon scope
+   * (all / products / categories) and — for shop coupons — the owning shop
+   * (only that shop's items count). Returns Map<shopId, applicableSubtotal>.
+   */
+  private async getApplicableTotalsByShop(
     coupon: Coupon,
     cartItems: CartItem[],
-  ): Promise<number> {
-    if (coupon.scope === CouponScope.All) {
-      return cartItems.reduce((sum, item) => {
-        const price = Number(item.product_variant.sale_price ?? item.product_variant.price);
-        return sum + price * item.quantity;
-      }, 0);
-    }
+  ): Promise<Map<number, number>> {
+    const productIdSet =
+      coupon.scope === CouponScope.Products
+        ? new Set((coupon.coupon_products || []).map((cp) => cp.product_id))
+        : null;
 
-    if (coupon.scope === CouponScope.Products) {
-      const productIds = new Set(
-        (coupon.coupon_products || []).map((cp) => cp.product_id),
-      );
-      return cartItems
-        .filter((item) => productIds.has(item.product_variant.product_id))
-        .reduce((sum, item) => {
-          const price = Number(item.product_variant.sale_price ?? item.product_variant.price);
-          return sum + price * item.quantity;
-        }, 0);
-    }
-
+    let categoryIdSet: Set<number> | null = null;
     if (coupon.scope === CouponScope.Categories) {
       const baseCategoryIds = (coupon.coupon_categories || []).map(
         (cc) => cc.category_id,
       );
-      const allCategoryIds =
-        await this.getDescendantCategoryIds(baseCategoryIds);
-      const categoryIdSet = new Set(allCategoryIds);
-
-      return cartItems
-        .filter((item) => {
-          const categoryId = item.product_variant.product?.category_id;
-          return categoryId != null && categoryIdSet.has(categoryId);
-        })
-        .reduce((sum, item) => {
-          const price = Number(item.product_variant.sale_price ?? item.product_variant.price);
-          return sum + price * item.quantity;
-        }, 0);
+      categoryIdSet = new Set(
+        await this.getDescendantCategoryIds(baseCategoryIds),
+      );
     }
 
-    return 0;
+    const totals = new Map<number, number>();
+
+    for (const item of cartItems) {
+      const variant = item.product_variant;
+      const product = variant.product;
+      const shopId = product?.shop_id;
+      if (shopId == null) continue;
+
+      // shop coupon: only its own shop's items are applicable
+      if (coupon.shop_id != null && shopId !== coupon.shop_id) continue;
+
+      // scope filter
+      if (
+        coupon.scope === CouponScope.Products &&
+        !productIdSet!.has(variant.product_id)
+      ) {
+        continue;
+      }
+      if (coupon.scope === CouponScope.Categories) {
+        const categoryId = product?.category_id;
+        if (categoryId == null || !categoryIdSet!.has(categoryId)) continue;
+      }
+
+      const price = Number(variant.sale_price ?? variant.price);
+      const line = price * item.quantity;
+      totals.set(shopId, (totals.get(shopId) ?? 0) + line);
+    }
+
+    return totals;
   }
 
   private async getDescendantCategoryIds(

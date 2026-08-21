@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Power, Plus, Search, Tag } from 'lucide-react';
+import { Pencil, Power, Plus, Search, Tag, Lock, LockOpen } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
@@ -9,6 +9,7 @@ import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminCoupons } from '../hooks/useAdminCoupons';
 import { useDeactivateCoupon } from '../hooks/useDeactivateCoupon';
+import { useUnlockCoupon } from '../hooks/useUnlockCoupon';
 import type { CouponListParams, CouponScope, DiscountType, Coupon } from '../types/coupon.types';
 
 const SCOPE_LABELS: Record<CouponScope, string> = {
@@ -31,11 +32,13 @@ export default function AdminCouponListPage() {
     ...params,
     search: searchParams.get('search') || undefined,
     scope: (searchParams.get('scope') as CouponScope) || undefined,
+    owner: (searchParams.get('owner') as 'platform' | 'shop') || undefined,
     is_active: searchParams.get('is_active') !== null ? searchParams.get('is_active') === 'true' : undefined,
   };
 
   const { data, isLoading } = useAdminCoupons(filters);
   const deactivate = useDeactivateCoupon();
+  const unlock = useUnlockCoupon();
   const [deactivateTarget, setDeactivateTarget] = useState<number | null>(null);
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
@@ -69,6 +72,20 @@ export default function AdminCouponListPage() {
           )}
         </div>
       ),
+    },
+    {
+      key: 'owner',
+      header: 'Owner',
+      render: (coupon) =>
+        coupon.shop ? (
+          <span className="inline-flex rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+            {coupon.shop.name}
+          </span>
+        ) : (
+          <span className="inline-flex rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">
+            Platform
+          </span>
+        ),
     },
     {
       key: 'discount',
@@ -110,14 +127,20 @@ export default function AdminCouponListPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (coupon) => (
-        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-          coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
-        }`}>
-          <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-          {coupon.is_active ? 'Active' : 'Inactive'}
-        </span>
-      ),
+      render: (coupon) =>
+        coupon.admin_disabled ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700">
+            <Lock className="h-3 w-3" />
+            Locked
+          </span>
+        ) : (
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+            coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
+          }`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+            {coupon.is_active ? 'Active' : 'Inactive'}
+          </span>
+        ),
     },
     {
       key: 'actions',
@@ -125,23 +148,38 @@ export default function AdminCouponListPage() {
       className: 'text-right',
       render: (coupon) => (
         <div className="flex items-center justify-end gap-1">
-          <Link
-            to={ROUTES.ADMIN_COUPON_EDIT(coupon.id)}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-            aria-label="Edit coupon"
-          >
-            <Pencil className="h-4 w-4" />
-          </Link>
-          {coupon.is_active && (
+          {/* Shop coupons are seller-owned — admins may only deactivate/unlock them. */}
+          {coupon.shop_id == null && (
+            <Link
+              to={ROUTES.ADMIN_COUPON_EDIT(coupon.id)}
+              className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              aria-label="Edit coupon"
+            >
+              <Pencil className="h-4 w-4" />
+            </Link>
+          )}
+          {coupon.admin_disabled ? (
             <Button
               variant="ghost"
               iconOnly
-              icon={Power}
-              aria-label="Deactivate coupon"
-              onClick={() => setDeactivateTarget(coupon.id)}
-              disabled={deactivate.isPending}
-              className="hover:!text-rose-600"
+              icon={LockOpen}
+              aria-label="Unlock coupon"
+              onClick={() => unlock.mutate(coupon.id)}
+              disabled={unlock.isPending}
+              className="hover:!text-emerald-600"
             />
+          ) : (
+            coupon.is_active && (
+              <Button
+                variant="ghost"
+                iconOnly
+                icon={Power}
+                aria-label="Deactivate coupon"
+                onClick={() => setDeactivateTarget(coupon.id)}
+                disabled={deactivate.isPending}
+                className="hover:!text-rose-600"
+              />
+            )
           )}
         </div>
       ),
@@ -189,6 +227,20 @@ export default function AdminCouponListPage() {
                 </div>
                 <Button type="submit" variant="secondary">Search</Button>
               </form>
+              <select
+                value={searchParams.get('owner') || ''}
+                onChange={(e) => setSearchParams((prev) => {
+                  if (e.target.value) prev.set('owner', e.target.value);
+                  else prev.delete('owner');
+                  prev.set('page', '1');
+                  return prev;
+                })}
+                className="admin-input w-auto"
+              >
+                <option value="">All owners</option>
+                <option value="platform">Platform</option>
+                <option value="shop">Shop</option>
+              </select>
               <select
                 value={searchParams.get('scope') || ''}
                 onChange={(e) => setSearchParams((prev) => {

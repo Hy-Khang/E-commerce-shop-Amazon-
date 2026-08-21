@@ -20,3 +20,4 @@ Shopping cart for authenticated users and guests (via session_id).
 - **Stock validation:** Checked on addItem and updateItem — CART_003 (out of stock), CART_004 (exceeds stock).
 - **Response mapping:** Raw entities mapped via `toCartResponse()` util to include variant + product details.
 - **Empty cart:** `getCart` returns `{ id: 0, items: [] }` instead of 404 when no cart exists.
+- **Shop exposed on cart items:** `CartItemResponseDto` includes `shop_id` + `shop_name` (from the already-loaded `product.shop` relation, `null` for legacy items). Powers per-shop grouping + shop-voucher rows on the frontend Cart page. Not detailed in API_SPEC (cart response shape is not listed there).

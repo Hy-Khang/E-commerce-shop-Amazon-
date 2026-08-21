@@ -7,12 +7,19 @@ Shopping cart: view items, add/update/remove items, guest cart via session_id, m
 - `CartPage` — cart items list, quantity controls, subtotal, checkout button
 
 ## Components
-- `CartItemList` — renders list of cart item rows
-- `CartItemRow` — single item: variant info, quantity +/-, remove button
-- `CartSummary` — subtotal, shipping note, checkout + continue shopping buttons
+- `CartShopGroup` — one shop's items as a card (shop header + item rows + a shop-voucher row for logged-in customers)
+- `CartItemRow` — single item: variant info, quantity +/-, remove button (self-contained; rendered inside `CartShopGroup`)
+- `CartSummary` — subtotal, platform-voucher row, advisory discount estimate, checkout + continue shopping buttons
 - `CartBadge` — header cart icon with item count badge (from Zustand store)
 - `AddToCartButton` — reusable button exported for product detail page
 - `CartPageSkeleton` — loading skeleton for cart page
+
+## Voucher selection on the Cart page (Shopee-inspired, own theme)
+- Cart items are grouped by shop (`groupItemsByShop`); each shop card carries a shop-voucher row, and the summary carries a platform-voucher row.
+- Selection lives in `useAppliedCouponsStore` (feature `coupon`) — shared with Checkout so choices carry over and stay editable. Cleared on successful order.
+- Voucher UI is gated on `useAuthStore().isAuthenticated` — the coupon APIs need a logged-in customer; guests still see the shop grouping.
+- The Cart shows only an **advisory** discount estimate (`estimateCouponDiscount`, per-coupon on the original subtotal). The exact figure (incl. the platform waterfall) is confirmed by `POST /orders/preview` / checkout — the Cart never imports order/preview.
+- `reconcile` (effect keyed on the cart signature) prunes shop coupons whose shop left the cart and clears all when empty.
 
 ## API Dependencies
 - `GET /cart` — current cart with items + variant details

@@ -111,8 +111,13 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | COUPON_004 | 400 | User has used this coupon the maximum number of times |
 | COUPON_005 | 400 | Applicable items total below minimum order amount |
 | COUPON_006 | 400 | Coupon is not currently active |
-| COUPON_007 | 409 | Coupon code already exists (admin create duplicate) |
+| COUPON_007 | 409 | Coupon code already exists (create duplicate) |
 | COUPON_008 | 400 | No items in cart are applicable for this coupon |
+| COUPON_009 | 400 | One or more products do not belong to the seller's shop |
+| COUPON_010 | 403 | Coupon is not owned by the seller's shop (ownership boundary) |
+| COUPON_011 | 400 | Invalid coupon combination (more than one platform coupon, or more than one coupon for the same shop) |
+| COUPON_012 | 400 | Generated shop coupon code exceeds 50 characters |
+| COUPON_013 | 403 | Coupon locked by admin (seller cannot edit or re-enable) |
 | ROLE_001 | 409 | Role name already exists |
 | ROLE_002 | 400 | Cannot delete system role or role with assigned users |
 | PERMISSION_001 | 409 | Permission `resource:action` already exists |
@@ -211,16 +216,23 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | POST | `/orders` | Checkout — create orders from cart (1 per shop, linked by `order_group_id`) | Customer |
+| POST | `/orders/preview` | Preview checkout totals + per-shop coupon breakdown (advisory, no writes) | Customer |
 | GET | `/orders` | List my orders (paginated) | Customer |
 | GET | `/orders/group/:groupId` | Get all orders in a group (own only) | Customer |
-| GET | `/orders/:id` | Get order detail + order_items (own only) | Customer |
+| GET | `/orders/:id` | Get order detail + order_items + `applied_coupons[]` (own only) | Customer |
 | PATCH | `/orders/:id/cancel` | Cancel order (if status = pending) | Customer |
 | PATCH | `/orders/:id/confirm-receipt` | Confirm receipt — delivered → completed | Customer |
 | PATCH | `/orders/:id/return-request` | Request return/refund — delivered → return_requested | Customer |
 
-> **Multi-shop checkout:** `POST /orders` splits the cart into N orders (1 per shop), all sharing the same `order_group_id` (UUID v4). Returns `CheckoutResponseDto { order_group_id, orders[], total_amount }`. Coupon discount is proportionally distributed across sub-orders. Each order has its own `shop_id`, `shop_name` (snapshot), `shipping_fee`, and `total_amount`.
+> **Multi-shop checkout:** `POST /orders` splits the cart into N orders (1 per shop), all sharing the same `order_group_id` (UUID v4). Returns `CheckoutResponseDto { order_group_id, orders[], total_amount }`. Coupon discount is distributed across sub-orders (see below). Each order has its own `shop_id`, `shop_name` (snapshot), `shipping_fee`, and `total_amount`.
 >
-> **Coupon reversal:** Cancelling one sub-order does NOT reverse the coupon. Only when ALL orders in the group are cancelled is the coupon usage reversed and `current_uses` decremented by 1.
+> **Multi-coupon (Phase 2):** `POST /orders` accepts `coupon_codes?: string[]` — at most **one platform coupon** plus **one coupon per shop** (violations → `COUPON_011 (400)`). The legacy single `coupon_code?: string` is still accepted and mapped into the array. Each coupon is validated and calculated independently on the original subtotal. Per sub-order the discount is `shopCouponDiscount + platformShareAdj`, where the shop coupon lands first and the platform coupon's share (split across shops by applicable subtotal, largest-remainder rounding) fills the remaining headroom (`platformShareAdj = min(platformShare, shopItemsTotal − shopCouponDiscount)`). `orders.coupon_code` snapshots a single code (shop coupon preferred, else platform); the full breakdown is returned on order detail as `applied_coupons: [{ code, discount_amount }]` and sourced from `coupon_usages`.
+>
+> **Coupon reversal:** A **shop coupon** is reversed as soon as its own sub-order is cancelled. A **platform coupon** is reversed only when ALL orders in the group are cancelled; `current_uses` is decremented once per coupon. Both are idempotent.
+>
+> **Platform-discount waterfall:** When a shop coupon consumes most of a shop's headroom, that shop's platform share is capped at `min(applicable, headroom)` and the **leftover is redistributed** to shops that still have room (largest-remainder rounding). The platform discount is never silently lost — the total given equals `min(nominal, Σ per-shop caps)`. `checkout` and `POST /orders/preview` share the same pure distributor, so the preview always matches what checkout charges.
+>
+> **`POST /orders/preview`** returns `CheckoutPreviewResponseDto { subtotal, discount_total, shipping_total, grand_total, shops[], applied_coupons[] }`. Body is `{ coupon_code?, coupon_codes? }` (same coupon fields as checkout). It is **advisory, exact-at-the-time — NOT a reservation**: it writes nothing (no `coupon_usages`, no stock/usage hold), and `POST /orders` re-validates and remains the sole source of truth (a coupon may run out or expire in between). Invalid coupons return the same `COUPON_0xx` errors as checkout.
 
 ### Review — `/api/v1/reviews`
 
@@ -246,6 +258,13 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | POST | `/coupons/validate` | Validate coupon code, returns discount info + applicable scope | Customer |
+| GET | `/coupons/available` | Selectable-voucher catalog for the current cart (platform + per-shop groups, per-coupon eligibility) | Customer |
+
+> **`GET /coupons/available`** powers the Shopee-style voucher picker. It reads the caller's cart server-side and returns `CouponAvailabilityResponseDto { platform: CouponOptionDto[], shops: [{ shop_id, shop_name, coupons: CouponOptionDto[] }] }`. Each `CouponOptionDto` carries `{ code, description, discount_type, discount_value, scope, shop_id, min_order_amount, max_discount_amount, applicable_total, discount_preview, eligible, reason?, short_of_min?, starts_at, expires_at }`.
+>
+> **Advisory catalog, not a reservation** (same contract as `POST /orders/preview`): eligibility is computed **per-coupon on the original cart subtotal**, independent of other selections; the real per-shop allocation is still decided by `POST /orders/preview` / checkout, which re-validate and remain the source of truth. Empty cart → `{ platform: [], shops: [] }` (never 400).
+>
+> **Hidden vs greyed:** Coupons that would fail checkout for an *invisible* reason are omitted entirely — expired / not-yet-started, inactive, `admin_disabled`, globally exhausted (`current_uses >= max_uses`), or belonging to a non-active shop. Cart-dependent failures surface as `eligible: false` with `reason ∈ { below_min, no_applicable_items, user_limit }` (`below_min` adds `short_of_min`). Only shops that have ≥1 available coupon appear in `shops[]`. Any coupon marked `eligible` is guaranteed to pass checkout re-validation at that instant (barring a race).
 
 ### Notification — `/api/v1/notifications`
 
@@ -355,7 +374,7 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 | Method | Path | Description | Filter/Sort |
 |--------|------|-------------|-------------|
 | GET | `/admin/orders` | List all orders (paginated) | `?status=pending&payment_status=unpaid&user_id=123&sort=created_at&order=desc` |
-| GET | `/admin/orders/:id` | Get order detail + order_items + user info | — |
+| GET | `/admin/orders/:id` | Get order detail + order_items + user info + `applied_coupons[]` | — |
 | PATCH | `/admin/orders/:id/status` | Update order status (valid transitions only) | — |
 | PATCH | `/admin/orders/:id/payment-status` | Update payment status (unpaid → paid) | — |
 
@@ -382,15 +401,20 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 
 | Method | Path | Description | Filter/Sort |
 |--------|------|-------------|-------------|
-| GET | `/admin/coupons` | List all coupons (paginated) | `?search=keyword&scope=categories&discount_type=percentage&is_active=true&sort=created_at&order=desc` |
+| GET | `/admin/coupons` | List all coupons — platform + shop (paginated) | `?search=keyword&scope=categories&discount_type=percentage&is_active=true&owner=platform\|shop&shop_id=5&sort=created_at&order=desc` |
 | GET | `/admin/coupons/usages` | List all coupon usages (paginated) | `?coupon_id=5&user_id=123` |
 | GET | `/admin/coupons/:id` | Get coupon detail (includes applicable categories/products) | — |
 | POST | `/admin/coupons` | Create coupon (code, scope, category_ids/product_ids) | — |
 | PATCH | `/admin/coupons/:id` | Update coupon (code is immutable) | — |
-| DELETE | `/admin/coupons/:id` | Soft-delete (set `is_active = false`) | — |
+| DELETE | `/admin/coupons/:id` | Soft-delete (set `is_active = false`; sticky `admin_disabled` lock for shop coupons) | — |
+| PATCH | `/admin/coupons/:id/unlock` | Clear the admin lock on a shop coupon (`admin_disabled = 0`); leaves `is_active` untouched | `coupons:update` |
 | GET | `/admin/coupons/:id/usages` | List usages for a specific coupon (paginated) | — |
 
 > **Scope types:** `all` (entire order), `categories` (specific categories + sub-categories), `products` (specific products). Junction tables `coupon_categories` and `coupon_products` are managed automatically on create/update. Code is stored uppercase and immutable after creation.
+>
+> **Platform vs shop coupons:** Admin `POST /admin/coupons` always creates a **platform** coupon (`shop_id = NULL`). The admin list shows both platform and shop coupons — filter with `?owner=platform|shop` or `?shop_id=`, and each row exposes `shop_id` + `shop {id, name}` (`null` = platform) and `admin_disabled`. Admin may **deactivate** shop coupons (moderation via `DELETE`) but cannot edit their content or reassign their shop.
+>
+> **Admin lock (sticky moderation):** Deactivating a **shop** coupon via `DELETE` sets `admin_disabled = 1` (in addition to `is_active = false`). While locked, the owning seller cannot edit or re-enable it (`COUPON_013`), and it validates as inactive (`COUPON_006`). `PATCH /admin/coupons/:id/unlock` clears **only** the lock (`admin_disabled = 0`) — it does **not** reactivate the coupon (`is_active` is left as-is). Unlocking means "stop moderating"; the owning seller then decides whether to turn the coupon back on. Platform coupons keep the plain `is_active` toggle (no lock).
 
 ### Admin: Upload — `/api/v1/upload`
 
@@ -429,7 +453,7 @@ All seller endpoints use **permission-based access control** via `@Permissions()
 | Method | Path | Description | Permission |
 |--------|------|-------------|------------|
 | GET | `/seller/orders` | List orders for seller's shop (paginated, filterable by status/payment_status) | `orders:read` |
-| GET | `/seller/orders/:id` | Get order detail (seller's shop only) | `orders:read` |
+| GET | `/seller/orders/:id` | Get order detail (seller's shop only) + `applied_coupons[]` | `orders:read` |
 | PATCH | `/seller/orders/:id/status` | Update order status (seller transitions: pending→confirmed) | `orders:update` |
 | PATCH | `/seller/orders/:id/payment-status` | Update payment status (unpaid → paid) | `orders:update` |
 
@@ -446,6 +470,27 @@ All seller endpoints use **permission-based access control** via `@Permissions()
 | GET | `/seller/dashboard` | Dashboard analytics: summary stats, revenue trend, order status breakdown, top products, recent orders | `dashboard:read` |
 
 > **Partial failure tolerance:** Uses `Promise.allSettled()` — same pattern as Admin dashboard. Revenue counts `completed` orders only, filtered by seller's `shop_id`.
+
+### Seller: Coupons — `/api/v1/seller/coupons`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/seller/coupons` | List the seller's own shop coupons (paginated, searchable) | `coupons:read` |
+| GET | `/seller/coupons/:id` | Get shop coupon detail (own shop only) | `coupons:read` |
+| POST | `/seller/coupons` | Create shop coupon (scope `all`/`products`; code auto-prefixed with shop slug) | `coupons:create` |
+| PATCH | `/seller/coupons/:id` | Update shop coupon (code & shop immutable, own shop only) | `coupons:update` |
+| DELETE | `/seller/coupons/:id` | Deactivate shop coupon (soft delete, own shop only) | `coupons:delete` |
+| GET | `/seller/coupons/:id/usages` | List usages for a shop coupon (own shop only) | `coupons:read` |
+
+> **Shop coupons:** Every seller endpoint resolves the caller's shop (`SHOP_004` if none) and hard-scopes to `coupons.shop_id = shop.id`. Ownership is enforced on every read/mutation — touching a platform coupon or another shop's coupon returns `COUPON_010 (403)`.
+>
+> **Scope:** Limited to `all` (whole shop) or `products` (specific products **of that shop** — validated on create and update, else `COUPON_009 (400)`). `categories` is not available to sellers.
+>
+> **Code namespace:** The final stored code is `<shop-slug>-<CODE>`, uppercased, globally UNIQUE (`COUPON_007` on duplicate). Seller-supplied `code` is capped at 30 chars; if the prefixed code would exceed 50 chars → `COUPON_012 (400)`.
+>
+> **Validity:** A shop coupon only validates while its owning shop is `active` (suspended/banned → `COUPON_006`). An admin-locked coupon (`admin_disabled = 1`) also validates as inactive (`COUPON_006`) and cannot be edited or re-enabled by the seller (`COUPON_013`).
+>
+> **Checkout (multi-coupon):** A customer may stack **one platform coupon + one coupon per shop** (`coupon_codes[]`; violations → `COUPON_011`). A shop coupon discounts **only its own shop's items**; its whole discount lands on that shop's sub-order. A platform coupon is split across shops by each shop's applicable subtotal (largest-remainder rounding so parts sum exactly), filling only the headroom left after any shop coupon. Per-user usage counts distinct `order_group_id`. On cancel: a shop coupon is reversed as soon as its sub-order is cancelled; a platform coupon only when all group orders are cancelled (both idempotent).
 
 ---
 

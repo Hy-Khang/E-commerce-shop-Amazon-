@@ -6,12 +6,17 @@ import type {
   OrderListParams,
   CreateOrderRequest,
   CheckoutResponse,
+  CheckoutPreview,
+  PreviewOrderRequest,
   Address,
 } from '../types/order.types';
 
 export const orderService = {
   checkout: (data: CreateOrderRequest) =>
     api.post<SuccessResponse<CheckoutResponse>>('/orders', data),
+
+  preview: (data: PreviewOrderRequest) =>
+    api.post<SuccessResponse<CheckoutPreview>>('/orders/preview', data),
 
   getList: (params: OrderListParams) =>
     api.get<PaginatedResponse<OrderListItemWithItems>>('/orders', { params }),

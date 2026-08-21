@@ -4,7 +4,10 @@
 Checkout from cart, order history, order detail, cancel pending orders, admin order management (status + payment updates).
 
 ## Pages
-- `CheckoutPage` — address selection, payment method, place order
+- `CheckoutPage` — address selection, payment method, place order. Items are **grouped by shop** (`CheckoutShopGroup`, mirroring the Cart page): each shop card carries a read-only item list + a shop-voucher row, and a platform-voucher row sits in the "Platform Voucher" card. One scoped `CouponSelectorModal` serves the platform row and every shop group; selection lives in the shared `useAppliedCouponsStore`, so choices made on the Cart page carry over and stay editable.
+
+## Components
+- `CheckoutShopGroup` — one shop's items on checkout (shop header + read-only `OrderItemRow`s + a `VoucherRow` for its shop coupon). Presentational mirror of the cart's `CartShopGroup` (no quantity controls). Reuses `groupItemsByShop` from `@/features/cart` and `VoucherRow` from `@/features/coupon`.
 - `OrderHistoryPage` — paginated list of user's orders
 - `OrderDetailPage` — order info + order items (with shop name snapshots) + cancel action
 - `AdminOrderListPage` — all orders with status/payment filters
@@ -14,6 +17,7 @@ Checkout from cart, order history, order detail, cancel pending orders, admin or
 
 ## API Dependencies
 - `POST /orders` — checkout (creates order from cart)
+- `POST /orders/preview` — advisory checkout estimate (exact coupon breakdown, no writes)
 - `GET /orders` — list my orders
 - `GET /orders/:id` — order detail
 - `PATCH /orders/:id/cancel` — cancel pending order
@@ -29,6 +33,7 @@ Checkout from cart, order history, order detail, cancel pending orders, admin or
 ## State
 - Server state via TanStack Query (staleTime: 1 min)
 - No Zustand store needed
+- **Checkout preview (Phase 3):** `usePreviewCheckout(codes, cartSig, enabled)` calls `POST /orders/preview`. It runs whenever the cart is non-empty (`enabled = hasCartItems`) — even with **no** coupon — so the summary shows the server's exact per-shop shipping instead of "calculated after order". Query key includes a cart signature (`variant:qty:price`) so changing items/quantities refetches. CheckoutPage prefers the server preview for discount/shipping/total; when the cart spans >1 shop it also renders `CheckoutShopBreakdown` (per-shop items/discount/shipping/subtotal, mirroring the N-orders split). A coupon rejected by preview surfaces an error; only a **coupon-level** rejection (`COUPON_0xx`, via `ApiError.code`) disables "Place Order" — a transient/network error does not (checkout re-validates). Preview is advisory — checkout re-validates and is the source of truth.
 
 ## Cross-Feature
 - Checkout success invalidates `['cart']` + `['orders', 'list']` cache

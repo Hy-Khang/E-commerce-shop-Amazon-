@@ -5,6 +5,7 @@ export { useOrders, orderKeys } from './hooks/useOrders';
 export { useOrder } from './hooks/useOrder';
 export { useOrderGroup } from './hooks/useOrderGroup';
 export { useCheckout } from './hooks/useCheckout';
+export { usePreviewCheckout } from './hooks/usePreviewCheckout';
 export { useCancelOrder } from './hooks/useCancelOrder';
 export { useConfirmReceipt } from './hooks/useConfirmReceipt';
 export { useRequestReturn } from './hooks/useRequestReturn';
@@ -35,6 +36,10 @@ export type {
   OrderListItem,
   OrderListItemWithItems,
   CheckoutResponse,
+  CheckoutPreview,
+  CheckoutPreviewShop,
+  PreviewOrderRequest,
+  AppliedCoupon,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
