@@ -20,10 +20,24 @@ interface Props {
   onApply: (code: string, validation: CouponValidationResult) => void;
   onRemove: (code: string) => void;
   cartSig: string;
+  /**
+   * Which coupon groups to show/allow. `'all'` (default) = platform + every
+   * shop (checkout behaviour). `'platform'` = platform vouchers only.
+   * A `shopId` number = only that shop's vouchers. The draft is always seeded
+   * from the FULL applied set, so coupons in hidden groups are preserved.
+   */
+  scope?: 'all' | 'platform' | number;
+  /** Optional heading override (e.g. "Shop voucher", "Platform voucher"). */
+  title?: string;
 }
 
 function groupKey(shopId: number | null | undefined): string {
   return shopId != null ? `shop:${shopId}` : 'platform';
+}
+
+/** The group a coupon belongs to, keyed the same way `scope` is expressed. */
+function scopeGroup(shopId: number | null | undefined): 'platform' | number {
+  return shopId != null ? shopId : 'platform';
 }
 
 /**
@@ -40,9 +54,15 @@ export function CouponSelectorModal({
   onApply,
   onRemove,
   cartSig,
+  scope = 'all',
+  title,
 }: Props) {
   const { data, isLoading, isError } = useAvailableCoupons(cartSig, open);
   const validate = useValidateCoupon();
+
+  // Whether a coupon's group is in scope for this modal instance.
+  const inScope = (shopId: number | null | undefined): boolean =>
+    scope === 'all' || scopeGroup(shopId) === scope;
 
   const [draft, setDraft] = useState<AppliedCouponEntry[]>([]);
   const [code, setCode] = useState('');
@@ -86,6 +106,11 @@ export function CouponSelectorModal({
     }
     validate.mutate(trimmed, {
       onSuccess: (result) => {
+        // Reject a code that belongs to a different group than this scoped modal.
+        if (!inScope(result.shop_id)) {
+          setLocalError('This code does not apply to the selected section.');
+          return;
+        }
         const key = groupKey(result.shop_id);
         setDraft((prev) => [
           ...prev.filter((c) => groupKey(c.validation.shop_id) !== key),
@@ -120,10 +145,19 @@ export function CouponSelectorModal({
     ...(data?.platform ?? []).map((o) => o.code),
     ...(data?.shops ?? []).flatMap((s) => s.coupons.map((o) => o.code)),
   ]);
-  const manualSelected = draft.filter((c) => !listedCodes.has(c.code));
+  // Only surface manual coupons that belong to this modal's scope.
+  const manualSelected = draft.filter(
+    (c) => !listedCodes.has(c.code) && inScope(c.validation.shop_id),
+  );
 
+  // Sections visible for the current scope.
+  const showPlatform = scope === 'all' || scope === 'platform';
+  const visibleShops = (data?.shops ?? []).filter(
+    (s) => scope === 'all' || scope === s.shop_id,
+  );
   const hasCatalog =
-    !!data && (data.platform.length > 0 || data.shops.length > 0);
+    (showPlatform && (data?.platform.length ?? 0) > 0) ||
+    visibleShops.length > 0;
 
   return createPortal(
     <AnimatePresence>
@@ -147,7 +181,7 @@ export function CouponSelectorModal({
               <div className="flex items-center gap-2.5">
                 <Tag className="h-5 w-5 text-brand" />
                 <h2 className="text-lg font-semibold text-text-primary">
-                  Select Vouchers
+                  {title ?? 'Select Vouchers'}
                 </h2>
               </div>
               <button
@@ -250,7 +284,7 @@ export function CouponSelectorModal({
 
               {!isLoading && !isError && data && (
                 <>
-                  {data.platform.length > 0 && (
+                  {showPlatform && data.platform.length > 0 && (
                     <section className="space-y-2">
                       <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">
                         Platform vouchers
@@ -266,7 +300,7 @@ export function CouponSelectorModal({
                     </section>
                   )}
 
-                  {data.shops.map((shop) => (
+                  {visibleShops.map((shop) => (
                     <section key={shop.shop_id} className="space-y-2">
                       <p className="truncate text-xs font-semibold uppercase tracking-wider text-text-muted">
                         {shop.shop_name}

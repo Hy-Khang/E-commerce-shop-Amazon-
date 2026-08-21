@@ -1,7 +1,10 @@
 export { CouponInput } from './components/CouponInput';
 export { CouponPicker } from './components/CouponPicker';
+export { CouponSelectorModal } from './components/CouponSelectorModal';
 export { useValidateCoupon } from './hooks/useValidateCoupon';
 export { useAvailableCoupons, couponKeys } from './hooks/useAvailableCoupons';
+export { useAppliedCouponsStore } from './stores/applied-coupons.store';
+export { optionToValidation, estimateCouponDiscount } from './utils/coupon.util';
 export { useAdminCoupons, adminCouponKeys } from './hooks/useAdminCoupons';
 export { useAdminCoupon } from './hooks/useAdminCoupon';
 export { useCreateCoupon } from './hooks/useCreateCoupon';

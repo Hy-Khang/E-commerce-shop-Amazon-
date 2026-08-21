@@ -154,6 +154,7 @@ graph TD
     Shop["shop"] --> Product
     Cart["cart"] --> Auth
     Cart --> Product
+    Cart --> Coupon
     Order["order"] --> Auth
     Order --> Cart
     Order --> UP
@@ -184,8 +185,9 @@ graph TD
 | **Zustand store** | Auth state consumed everywhere | `useAuthStore`: isAuthenticated, user, role → read by guards, header, cart merge |
 | **Zustand store** | Cart badge in header | `useCartStore`: itemCount → written by cart hooks, read by MainLayout |
 | **Zustand store** | Notification badge in header + sidebar | `useNotificationStore`: unreadCount → written by polling hook, read by bell + account sidebar |
+| **Zustand store** | Voucher selection shared Cart ↔ Checkout | `useAppliedCouponsStore` (feature `coupon`): applied vouchers → written by both the Cart page and Checkout, cleared on order/logout |
 | **TanStack cache invalidation** | Cross-feature side effects | Checkout success → invalidate `['cart']` + `['orders', 'list']` |
-| **Barrel exports** | Composing UI from multiple features | CheckoutPage imports `CartItemList` from `@/features/cart` |
+| **Barrel exports** | Composing UI from multiple features | CheckoutPage imports `useCart` + `cartSignature` from `@/features/cart`, `CouponPicker` from `@/features/coupon` |
 | **URL params** | Feature-to-feature navigation | ProductCard links to `/products/:slug`, OrderItemRow links back to product |
 | **Props at page level** | Page composes multiple features | ProductDetailPage renders `AddToCartButton` (cart) + `ReviewList` (review) + `WishlistButton` (wishlist) |
 
@@ -204,6 +206,7 @@ All routes defined in `core/router/router.tsx`. Each page lazy-loaded via `React
 | Server state | TanStack Query | feature hooks | Products, orders, cart items, reviews |
 | Auth state | Zustand | `features/auth/stores` | accessToken, user, role, isAuthenticated |
 | Cart badge | Zustand | `features/cart/stores` | itemCount — derived from TanStack Query cart data |
+| Voucher selection | Zustand | `features/coupon/stores` | `useAppliedCouponsStore` — user's picked vouchers, shared Cart ↔ Checkout; not persisted |
 | Notification badge | Zustand | `features/notification/stores` | unreadCount — synced from polling query every 30s |
 | URL state | React Router | searchParams | page, limit, category_id, sort, search |
 | Form state | React Hook Form | component-local | Checkout, review, login forms — Zod-validated |

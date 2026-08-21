@@ -16,7 +16,7 @@ Coupon/discount code system for the e-commerce platform. Customers enter coupon 
 - **CouponForm** — reused by admin & seller; props `hideCategoryScope`, `codePrefix`, `productSource` ('admin' | 'seller')
 - **MultiItemPicker** — `source` prop switches products between `useAdminProducts` and `useSellerProducts`
 - **CouponPicker** — checkout trigger (Shopee-style). Drop-in for `CouponInput` (same `appliedCoupons`/`onApply`/`onRemove`) plus `cartSig`. Shows applied coupons + a button that opens `CouponSelectorModal`.
-- **CouponSelectorModal** — voucher picker: manual-entry fallback (`useValidateCoupon`) + platform/per-shop sections of selectable vouchers (`useAvailableCoupons`). Edits a local draft seeded from the applied set; "Apply" commits the diff. ≤1 per group. `CouponOptionRow` renders each voucher with its eligibility/reason.
+- **CouponSelectorModal** — voucher picker: manual-entry fallback (`useValidateCoupon`) + platform/per-shop sections of selectable vouchers (`useAvailableCoupons`). Edits a local draft seeded from the applied set; "Apply" commits the diff. ≤1 per group. `CouponOptionRow` renders each voucher with its eligibility/reason. `scope` prop (`'all'` default | `'platform'` | `shopId`) filters which sections/manual codes are shown/allowed — the Cart page opens it scoped per shop or to platform; the draft is still seeded from the full applied set so hidden-group coupons are preserved.
 - **CouponInput** — legacy blind-entry input, kept for back-compat (no longer used by checkout).
 
 ## API Dependencies
@@ -28,11 +28,16 @@ Coupon/discount code system for the e-commerce platform. Customers enter coupon 
 ## State Decisions
 - **Server state** — TanStack Query for all coupon data (admin CRUD, validation)
 - **Form state** — React Hook Form + Zod for coupon creation/editing
-- **No global store** — Coupon validation result is local to checkout page, passed via props
+- **Applied-voucher selection** — `useAppliedCouponsStore` (Zustand, `stores/applied-coupons.store.ts`): the customer's picked vouchers (`AppliedCouponEntry[]`), shared between the Cart page and Checkout so choices carry over. Client UI state, not server data; ≤1 per group (`apply`), `reconcile` prunes to the current cart, `clear` on order success. Not persisted (reload drops it, matching the old `useState`).
 
 ## Cross-Feature Integration
 - **Order feature** — `CouponPicker` (multi-coupon) rendered in CheckoutPage; the page holds an `AppliedCouponEntry[]` and sends `coupon_codes[]`. The picker/modal enforce ≤1 platform + ≤1 per shop client-side (grouped by `shop_id`). `appliedCoupons` (page state) is the source of truth for what's applied — availability is only a catalog, so a manually-entered/hidden code stays applied even if it never appears in `GET /coupons/available`. Selected-then-expired vouchers are caught by the existing preview `COUPON_0xx` gating (no extra handling).
 - **Order display** — customer OrderDetailPage renders the `applied_coupons[]` breakdown (falls back to `coupon_code`/`discount_amount` for older orders).
+
+## Phase 5 additions (voucher on the Cart page)
+- **Shared selection store** — `useAppliedCouponsStore` replaces CheckoutPage's local `useState`; the Cart page (grouped by shop) writes it too, so the selection carries into Checkout and stays editable. Cleared on successful checkout.
+- **estimateCouponDiscount** (`utils/coupon.util.ts`) — extracted from CheckoutPage's old local `calculateDiscount`; advisory per-coupon estimate reused by the Cart summary. Exact numbers still come from `POST /orders/preview` / checkout.
+- **Scoped modal** — `CouponSelectorModal` gained a `scope` prop so the Cart can open a platform-only or single-shop picker while still committing against the whole applied set.
 
 ## Phase 4 additions
 - **Selectable voucher picker** — `GET /coupons/available` powers a Shopee-style modal (`CouponSelectorModal`) grouping platform + per-shop vouchers with per-coupon eligibility (`eligible` + `reason`: below_min/no_applicable_items/user_limit). Ineligible rows are greyed with a reason ("Add X more to use"); hidden/expired/exhausted coupons never appear. Manual entry retained as fallback. `cartSig` (same signature as the checkout preview) keys the query so both refetch in lockstep.

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,8 +7,12 @@ import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
 import { showErrorToast } from '@/common/components/feedback/toast';
 import { ApiError } from '@/core/api/api.types';
-import { useCart } from '@/features/cart';
-import { CouponPicker, type CouponValidationResult, type AppliedCouponEntry } from '@/features/coupon';
+import { useCart, cartSignature } from '@/features/cart';
+import {
+  CouponPicker,
+  estimateCouponDiscount,
+  useAppliedCouponsStore,
+} from '@/features/coupon';
 import { useCreatePayment } from '@/features/payment';
 import { useCheckout } from '../hooks/useCheckout';
 import { usePreviewCheckout } from '../hooks/usePreviewCheckout';
@@ -25,7 +29,12 @@ export default function CheckoutPage() {
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
   const checkout = useCheckout();
   const createPayment = useCreatePayment();
-  const [appliedCoupons, setAppliedCoupons] = useState<AppliedCouponEntry[]>([]);
+  // Voucher selection is shared with the Cart page via a store, so choices made
+  // in the cart carry over here (and stay editable).
+  const appliedCoupons = useAppliedCouponsStore((s) => s.appliedCoupons);
+  const applyCoupon = useAppliedCouponsStore((s) => s.apply);
+  const removeCoupon = useAppliedCouponsStore((s) => s.remove);
+  const clearCoupons = useAppliedCouponsStore((s) => s.clear);
 
   const defaultAddress = addresses?.find((a) => a.is_default);
 
@@ -51,16 +60,9 @@ export default function CheckoutPage() {
   // or quantities change. Runs whenever the cart is non-empty — even with no
   // coupon — so shipping shows exactly instead of "calculated after order".
   const couponCodes = appliedCoupons.map((c) => c.code);
-  const cartSig = useMemo(
-    () =>
-      (cart?.items ?? [])
-        .map(
-          (i) =>
-            `${i.product_variant_id}:${i.quantity}:${i.variant.sale_price ?? i.variant.price}`,
-        )
-        .join('|'),
-    [cart],
-  );
+  // Shared with the Cart page's availability query so both refetch in lockstep
+  // on any add/remove/quantity/price change.
+  const cartSig = useMemo(() => cartSignature(cart?.items ?? []), [cart]);
   const hasCartItems = !!cart && cart.items.length > 0;
   const preview = usePreviewCheckout(couponCodes, cartSig, hasCartItems);
 
@@ -71,6 +73,9 @@ export default function CheckoutPage() {
     };
     checkout.mutate(request, {
       onSuccess: (result) => {
+        // Order placed — the selection has been consumed; clear it so returning
+        // to the cart doesn't re-show stale vouchers.
+        clearCoupons();
         if (data.payment_method === 'cod') {
           navigate(`/checkout/success?orderGroupId=${result.order_group_id}`);
           return;
@@ -148,7 +153,7 @@ export default function CheckoutPage() {
       ? []
       : appliedCoupons.map((c) => ({
           code: c.code,
-          amount: calculateDiscount(c.validation, subtotal),
+          amount: estimateCouponDiscount(c.validation, subtotal),
         }));
   const discountAmount = usingPreview
     ? preview.data!.discount_total
@@ -165,14 +170,6 @@ export default function CheckoutPage() {
   const estimatedTotal = usingPreview
     ? preview.data!.grand_total
     : subtotal - discountAmount;
-
-  function handleApplyCoupon(code: string, validation: CouponValidationResult) {
-    setAppliedCoupons((prev) => [...prev, { code, validation }]);
-  }
-
-  function handleRemoveCoupon(code: string) {
-    setAppliedCoupons((prev) => prev.filter((c) => c.code !== code));
-  }
 
   return (
     <div className="space-y-6">
@@ -295,8 +292,8 @@ export default function CheckoutPage() {
               </div>
               <CouponPicker
                 appliedCoupons={appliedCoupons}
-                onApply={handleApplyCoupon}
-                onRemove={handleRemoveCoupon}
+                onApply={applyCoupon}
+                onRemove={removeCoupon}
                 cartSig={cartSig}
               />
               {couponCodes.length > 0 && preview.isError && (
@@ -331,8 +328,8 @@ export default function CheckoutPage() {
                     variant_option1_value: null,
                     variant_option2_label: null,
                     variant_option2_value: null,
-                    shop_id: null,
-                    shop_name: null,
+                    shop_id: item.shop_id,
+                    shop_name: item.shop_name,
                     product_slug: null,
                     shop_slug: null,
                   }}
@@ -416,20 +413,4 @@ export default function CheckoutPage() {
       </form>
     </div>
   );
-}
-
-function calculateDiscount(coupon: CouponValidationResult, subtotal: number): number {
-  if (coupon.min_order_amount && subtotal < coupon.min_order_amount) return 0;
-
-  let discount: number;
-  if (coupon.discount_type === 'percentage') {
-    discount = subtotal * coupon.discount_value / 100;
-    if (coupon.max_discount_amount) {
-      discount = Math.min(discount, coupon.max_discount_amount);
-    }
-  } else {
-    discount = coupon.discount_value;
-  }
-
-  return Math.min(discount, subtotal);
 }

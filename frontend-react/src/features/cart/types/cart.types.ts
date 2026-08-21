@@ -15,6 +15,9 @@ export interface CartItem {
   id: number;
   product_variant_id: number;
   quantity: number;
+  // Owning shop (null for legacy items without a shop) — used to group the cart.
+  shop_id: number | null;
+  shop_name: string | null;
   variant: CartVariant;
 }
 

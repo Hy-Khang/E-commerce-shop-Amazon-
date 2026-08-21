@@ -42,6 +42,12 @@ export class CartItemResponseDto {
   @ApiProperty()
   quantity: number;
 
+  @ApiPropertyOptional({ description: 'Owning shop id (null for legacy items)' })
+  shop_id: number | null;
+
+  @ApiPropertyOptional({ description: 'Owning shop name snapshot' })
+  shop_name: string | null;
+
   @ApiProperty({ type: CartItemVariantResponseDto })
   variant: CartItemVariantResponseDto;
 }

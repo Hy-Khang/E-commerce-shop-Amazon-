@@ -171,6 +171,78 @@ describe('CouponSelectorModal', () => {
     expect(onApply).not.toHaveBeenCalled();
   });
 
+  it('scope="platform" shows only platform vouchers, hides shop sections', () => {
+    render(
+      <CouponSelectorModal
+        open
+        onClose={vi.fn()}
+        appliedCoupons={[]}
+        onApply={vi.fn()}
+        onRemove={vi.fn()}
+        cartSig="sig"
+        scope="platform"
+      />,
+    );
+    expect(screen.getByText('PLAT10')).toBeInTheDocument();
+    expect(screen.queryByText('Shop One')).not.toBeInTheDocument();
+    expect(screen.queryByText('S1-SALE')).not.toBeInTheDocument();
+  });
+
+  it('scope=shopId shows only that shop, hides the platform section', () => {
+    render(
+      <CouponSelectorModal
+        open
+        onClose={vi.fn()}
+        appliedCoupons={[]}
+        onApply={vi.fn()}
+        onRemove={vi.fn()}
+        cartSig="sig"
+        scope={1}
+      />,
+    );
+    expect(screen.getByText('S1-SALE')).toBeInTheDocument();
+    expect(screen.queryByText('PLAT10')).not.toBeInTheDocument();
+  });
+
+  it('rejects a manual code that belongs to a different group than the scope', async () => {
+    const user = userEvent.setup();
+    // Code validates as a platform coupon (shop_id null)...
+    h.validateMutate.mockImplementation(
+      (code: string, opts: { onSuccess: (r: CouponValidationResult) => void }) =>
+        opts.onSuccess({
+          valid: true,
+          code,
+          discount_type: 'fixed',
+          discount_value: 5000,
+          max_discount_amount: null,
+          min_order_amount: null,
+          scope: 'all',
+          applicable_category_ids: null,
+          applicable_product_ids: null,
+          shop_id: null,
+        }),
+    );
+    const onApply = vi.fn();
+    render(
+      <CouponSelectorModal
+        open
+        onClose={vi.fn()}
+        appliedCoupons={[]}
+        onApply={onApply}
+        onRemove={vi.fn()}
+        cartSig="sig"
+        scope={1} // ...but this modal is scoped to shop 1
+      />,
+    );
+
+    await user.type(screen.getByPlaceholderText(/Enter voucher code/i), 'plat');
+    await user.click(screen.getByRole('button', { name: 'Apply code' }));
+
+    expect(screen.getByText(/does not apply to the selected section/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Apply' })); // footer commit
+    expect(onApply).not.toHaveBeenCalled();
+  });
+
   it('manual entry falls back to validate and applies a hidden code (kept, not lost)', async () => {
     const user = userEvent.setup();
     h.validateMutate.mockImplementation(

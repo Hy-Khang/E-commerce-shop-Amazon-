@@ -1,19 +1,54 @@
+import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/common/constants/routes';
+import { useAuthStore } from '@/features/auth';
+import {
+  CouponSelectorModal,
+  useAppliedCouponsStore,
+} from '@/features/coupon';
 import { useCart } from '../hooks/useCart';
 import { useUpdateCartItem } from '../hooks/useUpdateCartItem';
 import { useRemoveCartItem } from '../hooks/useRemoveCartItem';
-import { CartItemList } from '../components/CartItemList';
+import { CartShopGroup } from '../components/CartShopGroup';
 import { CartSummary } from '../components/CartSummary';
 import { CartPageSkeleton } from '../components/CartPageSkeleton';
+import {
+  cartShopIds,
+  cartSignature,
+  groupItemsByShop,
+} from '../utils/cart.util';
+
+type VoucherScope = 'platform' | number;
 
 export default function CartPage() {
   const { data: cart, isLoading, isError } = useCart();
   const updateItem = useUpdateCartItem();
   const removeItem = useRemoveCartItem();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const isUpdating = updateItem.isPending || removeItem.isPending;
+  const appliedCoupons = useAppliedCouponsStore((s) => s.appliedCoupons);
+  const applyCoupon = useAppliedCouponsStore((s) => s.apply);
+  const removeCoupon = useAppliedCouponsStore((s) => s.remove);
+  const reconcile = useAppliedCouponsStore((s) => s.reconcile);
+
+  const [voucher, setVoucher] = useState<{ open: boolean; scope: VoucherScope }>({
+    open: false,
+    scope: 'platform',
+  });
+
+  const items = cart?.items ?? [];
+  const cartSig = useMemo(() => cartSignature(items), [items]);
+  const shopIds = useMemo(() => cartShopIds(items), [items]);
+
+  // Keep the shared voucher selection consistent with the current cart: drop
+  // shop coupons whose shop left the cart, clear everything when empty. The
+  // store only writes when the list actually changes, so this can't loop.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    reconcile(shopIds, items.length === 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartSig, isAuthenticated]);
 
   if (isLoading) return <CartPageSkeleton />;
 
@@ -41,6 +76,17 @@ export default function CartPage() {
     );
   }
 
+  const isUpdating = updateItem.isPending || removeItem.isPending;
+  const groups = groupItemsByShop(cart.items);
+
+  const shopCouponFor = (shopId: number | null) =>
+    shopId == null
+      ? undefined
+      : appliedCoupons.find((c) => c.validation.shop_id === shopId);
+
+  const modalTitle =
+    voucher.scope === 'platform' ? 'Platform voucher' : 'Shop voucher';
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold tracking-tight text-text-primary">
@@ -48,18 +94,44 @@ export default function CartPage() {
       </h1>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <CartItemList
-            items={cart.items}
-            onUpdateQuantity={(id, quantity) => updateItem.mutate({ id, quantity })}
-            onRemove={(id) => removeItem.mutate(id)}
-            isUpdating={isUpdating}
-          />
+        <div className="space-y-4 lg:col-span-2">
+          {groups.map((group) => (
+            <CartShopGroup
+              key={group.shop_id ?? 'none'}
+              group={group}
+              appliedShopCoupon={shopCouponFor(group.shop_id)}
+              showVoucher={isAuthenticated}
+              onOpenVoucher={(shopId) => setVoucher({ open: true, scope: shopId })}
+              onRemoveCoupon={removeCoupon}
+              onUpdateQuantity={(id, quantity) => updateItem.mutate({ id, quantity })}
+              onRemove={(id) => removeItem.mutate(id)}
+              isUpdating={isUpdating}
+            />
+          ))}
         </div>
         <div>
-          <CartSummary items={cart.items} />
+          <CartSummary
+            items={cart.items}
+            showVoucher={isAuthenticated}
+            onOpenPlatformVoucher={() =>
+              setVoucher({ open: true, scope: 'platform' })
+            }
+          />
         </div>
       </div>
+
+      {isAuthenticated && (
+        <CouponSelectorModal
+          open={voucher.open}
+          onClose={() => setVoucher((v) => ({ ...v, open: false }))}
+          appliedCoupons={appliedCoupons}
+          onApply={applyCoupon}
+          onRemove={removeCoupon}
+          cartSig={cartSig}
+          scope={voucher.scope}
+          title={modalTitle}
+        />
+      )}
     </div>
   );
 }

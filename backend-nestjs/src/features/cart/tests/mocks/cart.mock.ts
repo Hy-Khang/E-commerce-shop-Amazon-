@@ -62,6 +62,8 @@ export const mockCartResponse = (
       id: 1,
       product_variant_id: 1,
       quantity: 2,
+      shop_id: 1,
+      shop_name: 'Test Shop',
       variant: {
         sku: 'ELEC-BLK-M',
         price: 250000,

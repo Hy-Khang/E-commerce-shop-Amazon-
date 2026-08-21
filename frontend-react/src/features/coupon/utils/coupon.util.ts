@@ -23,3 +23,30 @@ export function optionToValidation(o: CouponOption): CouponValidationResult {
     shop_id: o.shop_id,
   };
 }
+
+/**
+ * Advisory client-side estimate of a coupon's discount against an applicable
+ * subtotal. Below `min_order_amount` → 0; percentage capped at
+ * `max_discount_amount`; clamped to the subtotal so it never over-discounts.
+ * This is only a preview — the server's `POST /orders/preview` and checkout are
+ * the source of truth (they also apply the platform waterfall across shops,
+ * which this per-coupon estimate cannot see).
+ */
+export function estimateCouponDiscount(
+  v: CouponValidationResult,
+  applicableSubtotal: number,
+): number {
+  if (v.min_order_amount && applicableSubtotal < v.min_order_amount) return 0;
+
+  let discount: number;
+  if (v.discount_type === 'percentage') {
+    discount = (applicableSubtotal * v.discount_value) / 100;
+    if (v.max_discount_amount) {
+      discount = Math.min(discount, v.max_discount_amount);
+    }
+  } else {
+    discount = v.discount_value;
+  }
+
+  return Math.min(discount, applicableSubtotal);
+}

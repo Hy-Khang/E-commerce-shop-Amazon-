@@ -15,7 +15,16 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => h.navigate }));
-vi.mock('@/features/cart', () => ({ useCart: h.useCart }));
+vi.mock('@/features/cart', () => ({
+  useCart: h.useCart,
+  cartSignature: (items: any[]) =>
+    (items ?? [])
+      .map(
+        (i) =>
+          `${i.product_variant_id}:${i.quantity}:${i.variant.sale_price ?? i.variant.price}`,
+      )
+      .join('|'),
+}));
 vi.mock('@/features/payment', () => ({ useCreatePayment: h.useCreatePayment }));
 vi.mock('../hooks/useCheckout', () => ({ useCheckout: h.useCheckout }));
 vi.mock('../hooks/useAddresses', () => ({ useAddresses: h.useAddresses }));
@@ -24,29 +33,64 @@ vi.mock('../hooks/usePreviewCheckout', () => ({
 }));
 // Keep the item list out of the way — not under test here.
 vi.mock('../components/OrderItemRow', () => ({ OrderItemRow: () => <div /> }));
-// Stub the coupon picker so a test can drive apply/remove without the real modal.
-vi.mock('@/features/coupon', () => ({
-  CouponPicker: ({ appliedCoupons, onApply, onRemove }: any) => (
-    <div>
-      <button
-        type="button"
-        onClick={() =>
-          onApply('BADCODE', { discount_type: 'fixed', discount_value: 50000 })
-        }
-      >
-        apply-coupon
-      </button>
-      {appliedCoupons.map((c: any) => (
-        <button type="button" key={c.code} onClick={() => onRemove(c.code)}>
-          remove-{c.code}
+// Stub the coupon picker so a test can drive apply/remove without the real modal,
+// but back the applied-coupons state with a real (tiny) zustand store so the
+// page re-renders on apply/remove exactly as in production.
+vi.mock('@/features/coupon', async () => {
+  const { create } = await import('zustand');
+  const groupKey = (shopId: number | null | undefined) =>
+    shopId != null ? `shop:${shopId}` : 'platform';
+  const useAppliedCouponsStore = create((set: any) => ({
+    appliedCoupons: [] as any[],
+    apply: (code: string, validation: any) =>
+      set((s: any) => {
+        const key = groupKey(validation.shop_id);
+        const rest = s.appliedCoupons.filter(
+          (c: any) => groupKey(c.validation.shop_id) !== key && c.code !== code,
+        );
+        return { appliedCoupons: [...rest, { code, validation }] };
+      }),
+    remove: (code: string) =>
+      set((s: any) => ({
+        appliedCoupons: s.appliedCoupons.filter((c: any) => c.code !== code),
+      })),
+    clear: () => set({ appliedCoupons: [] }),
+    reconcile: () => {},
+  }));
+  const estimateCouponDiscount = (v: any, sub: number) => {
+    if (v.min_order_amount && sub < v.min_order_amount) return 0;
+    const d =
+      v.discount_type === 'percentage'
+        ? Math.min((sub * v.discount_value) / 100, v.max_discount_amount ?? Infinity)
+        : v.discount_value;
+    return Math.min(d, sub);
+  };
+  return {
+    useAppliedCouponsStore,
+    estimateCouponDiscount,
+    CouponPicker: ({ appliedCoupons, onApply, onRemove }: any) => (
+      <div>
+        <button
+          type="button"
+          onClick={() =>
+            onApply('BADCODE', { discount_type: 'fixed', discount_value: 50000 })
+          }
+        >
+          apply-coupon
         </button>
-      ))}
-    </div>
-  ),
-}));
+        {appliedCoupons.map((c: any) => (
+          <button type="button" key={c.code} onClick={() => onRemove(c.code)}>
+            remove-{c.code}
+          </button>
+        ))}
+      </div>
+    ),
+  };
+});
 
 // Imported after the mocks are registered.
 import CheckoutPage from './CheckoutPage';
+import { useAppliedCouponsStore } from '@/features/coupon';
 
 // ─── Fixtures ───
 const CART = {
@@ -122,6 +166,7 @@ function baseResult() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  (useAppliedCouponsStore as any).setState({ appliedCoupons: [] });
   h.useCart.mockReturnValue({ data: CART, isLoading: false });
   h.useAddresses.mockReturnValue({ data: [ADDRESS], isLoading: false });
   h.useCheckout.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
