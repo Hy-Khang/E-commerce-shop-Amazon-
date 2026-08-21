@@ -13,6 +13,7 @@ import { CouponUsageRepository } from './repositories/coupon-usage.repository';
 import { Category } from '../product/entities/category.entity';
 import { Product } from '../product/entities/product.entity';
 import { ShopModule } from '../shop/shop.module';
+import { CartModule } from '../cart/cart.module';
 
 @Module({
   imports: [
@@ -25,6 +26,9 @@ import { ShopModule } from '../shop/shop.module';
       Product,
     ]),
     ShopModule,
+    // Read the caller's cart to build the availability catalog. Acyclic:
+    // CartModule imports only ProductModule, never CouponModule.
+    CartModule,
   ],
   controllers: [
     CouponController,

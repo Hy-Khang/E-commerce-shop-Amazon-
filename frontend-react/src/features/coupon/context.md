@@ -4,7 +4,7 @@
 Coupon/discount code system for the e-commerce platform. Customers enter coupon codes at checkout to receive discounts. Admins manage coupons with scope-based targeting (entire order, specific categories, or specific products).
 
 ## Pages
-- **CheckoutPage** (order feature) — CouponInput component integrated into checkout flow
+- **CheckoutPage** (order feature) — `CouponPicker` (voucher picker) integrated into checkout flow
 - **AdminCouponListPage** — List all coupons (platform + shop); Owner column + filter; edit only platform coupons, deactivate any
 - **AdminCouponCreatePage** — Create platform coupon with scope selection and date range
 - **AdminCouponEditPage** — Edit platform coupon details (code immutable), view recent usages
@@ -15,9 +15,13 @@ Coupon/discount code system for the e-commerce platform. Customers enter coupon 
 ## Shared components
 - **CouponForm** — reused by admin & seller; props `hideCategoryScope`, `codePrefix`, `productSource` ('admin' | 'seller')
 - **MultiItemPicker** — `source` prop switches products between `useAdminProducts` and `useSellerProducts`
+- **CouponPicker** — checkout trigger (Shopee-style). Drop-in for `CouponInput` (same `appliedCoupons`/`onApply`/`onRemove`) plus `cartSig`. Shows applied coupons + a button that opens `CouponSelectorModal`.
+- **CouponSelectorModal** — voucher picker: manual-entry fallback (`useValidateCoupon`) + platform/per-shop sections of selectable vouchers (`useAvailableCoupons`). Edits a local draft seeded from the applied set; "Apply" commits the diff. ≤1 per group. `CouponOptionRow` renders each voucher with its eligibility/reason.
+- **CouponInput** — legacy blind-entry input, kept for back-compat (no longer used by checkout).
 
 ## API Dependencies
 - `POST /coupons/validate` — Customer validates coupon code, returns discount info + scope + `shop_id`
+- `GET /coupons/available` — Customer voucher catalog for the current cart (`useAvailableCoupons`, key `couponKeys.available(cartSig)`) — platform + per-shop groups, each coupon tagged `eligible` + `reason`. Advisory; the preview/checkout decide the real numbers.
 - `GET|POST /admin/coupons`, `GET|PATCH|DELETE /admin/coupons/:id`, `GET /admin/coupons/(:id/)usages` — admin (list supports `owner`/`shop_id` filters; platform coupons only for create/edit)
 - `GET|POST /seller/coupons`, `GET|PATCH|DELETE /seller/coupons/:id`, `GET /seller/coupons/:id/usages` — seller (shop-scoped, ownership-enforced)
 
@@ -27,8 +31,12 @@ Coupon/discount code system for the e-commerce platform. Customers enter coupon 
 - **No global store** — Coupon validation result is local to checkout page, passed via props
 
 ## Cross-Feature Integration
-- **Order feature** — CouponInput (multi-coupon) rendered in CheckoutPage; the page holds an `AppliedCouponEntry[]` and sends `coupon_codes[]`. CouponInput enforces ≤1 platform + ≤1 per shop client-side (grouped by returned `shop_id`).
+- **Order feature** — `CouponPicker` (multi-coupon) rendered in CheckoutPage; the page holds an `AppliedCouponEntry[]` and sends `coupon_codes[]`. The picker/modal enforce ≤1 platform + ≤1 per shop client-side (grouped by `shop_id`). `appliedCoupons` (page state) is the source of truth for what's applied — availability is only a catalog, so a manually-entered/hidden code stays applied even if it never appears in `GET /coupons/available`. Selected-then-expired vouchers are caught by the existing preview `COUPON_0xx` gating (no extra handling).
 - **Order display** — customer OrderDetailPage renders the `applied_coupons[]` breakdown (falls back to `coupon_code`/`discount_amount` for older orders).
+
+## Phase 4 additions
+- **Selectable voucher picker** — `GET /coupons/available` powers a Shopee-style modal (`CouponSelectorModal`) grouping platform + per-shop vouchers with per-coupon eligibility (`eligible` + `reason`: below_min/no_applicable_items/user_limit). Ineligible rows are greyed with a reason ("Add X more to use"); hidden/expired/exhausted coupons never appear. Manual entry retained as fallback. `cartSig` (same signature as the checkout preview) keys the query so both refetch in lockstep.
+- **optionToValidation** (`utils/coupon.util.ts`) — adapts a picked `CouponOption` to the `CouponValidationResult` shape the checkout page consumes; only `code`/`discount_type`/`discount_value`/`max_discount_amount`/`min_order_amount`/`shop_id` are read (the local fallback estimate + group key), so `applicable_*_ids` are `null`.
 
 ## Phase 2 additions
 - **Multi-coupon checkout** — stack one platform coupon with one coupon per shop; server computes exact per-shop distribution (FE total is an estimate).

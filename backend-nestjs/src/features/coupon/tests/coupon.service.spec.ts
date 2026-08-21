@@ -11,6 +11,8 @@ import { CouponUsageRepository } from '../repositories/coupon-usage.repository';
 import { Category } from '../../product/entities/category.entity';
 import { Product } from '../../product/entities/product.entity';
 import { ShopService } from '../../shop/shop.service';
+import { CartService } from '../../cart/cart.service';
+import { CartEmptyException } from '../../../common/exceptions/cart-empty.exception';
 import { CouponScope, DiscountType } from '../types/coupon.types';
 import { ShopStatus } from '../../../common/constants';
 
@@ -68,6 +70,7 @@ describe('CouponService', () => {
   let categoryRepo: any;
   let productRepo: any;
   let shopService: any;
+  let cartService: any;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -76,6 +79,7 @@ describe('CouponService', () => {
       findByCode: jest.fn(),
       findById: jest.fn(),
       findAllPaginated: jest.fn(),
+      findAvailableForCart: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       incrementUsage: jest.fn(),
@@ -99,6 +103,9 @@ describe('CouponService', () => {
       resolveShopByUserId: jest.fn(),
       findShopById: jest.fn(),
     };
+    cartService = {
+      getCartWithItems: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -108,6 +115,7 @@ describe('CouponService', () => {
         { provide: getRepositoryToken(Category), useValue: categoryRepo },
         { provide: getRepositoryToken(Product), useValue: productRepo },
         { provide: ShopService, useValue: shopService },
+        { provide: CartService, useValue: cartService },
       ],
     }).compile();
 
@@ -553,6 +561,139 @@ describe('CouponService', () => {
         { code: 'PLAT', discount_amount: 10000 },
         { code: 'MY-SHOP-SALE', discount_amount: 5000 },
       ]);
+    });
+  });
+
+  // ─── getAvailableCouponsForCart (Phase 4 voucher picker) ───
+
+  describe('getAvailableCouponsForCart', () => {
+    // Cart item that also carries the eager-loaded shop name (as the real cart
+    // relation does), so we can assert shop_name mapping.
+    function namedCartItem(
+      shopId: number,
+      shopName: string,
+      price: number,
+      quantity = 1,
+      opts: { productId?: number } = {},
+    ): any {
+      const item = cartItem(shopId, price, quantity, opts);
+      item.product_variant.product.shop = { id: shopId, name: shopName };
+      return item;
+    }
+
+    it('returns empty groups when the cart is empty (CartEmptyException, no 400)', async () => {
+      cartService.getCartWithItems.mockRejectedValue(new CartEmptyException());
+      const res = await service.getAvailableCouponsForCart(1);
+      expect(res).toEqual({ platform: [], shops: [] });
+      expect(couponRepo.findAvailableForCart).not.toHaveBeenCalled();
+    });
+
+    it('queries the repo with only the cart shop ids and groups platform + shops', async () => {
+      cartService.getCartWithItems.mockResolvedValue({
+        items: [
+          namedCartItem(1, 'Shop One', 100_000, 1, { productId: 11 }),
+          namedCartItem(2, 'Shop Two', 200_000, 1, { productId: 22 }),
+        ],
+      });
+      couponRepo.findAvailableForCart.mockResolvedValue([
+        buildCoupon({ id: 100, code: 'PLAT10', shop_id: null }),
+        buildCoupon({ id: 200, code: 'S1-SALE', shop_id: 1 }),
+      ]);
+
+      const res = await service.getAvailableCouponsForCart(1);
+
+      expect(couponRepo.findAvailableForCart).toHaveBeenCalledWith(
+        [1, 2],
+        expect.any(Date),
+      );
+      expect(res.platform.map((c) => c.code)).toEqual(['PLAT10']);
+      expect(res.shops).toHaveLength(1);
+      expect(res.shops[0]).toMatchObject({
+        shop_id: 1,
+        shop_name: 'Shop One',
+      });
+      expect(res.shops[0].coupons.map((c) => c.code)).toEqual(['S1-SALE']);
+      // Shop 2 has no coupon → it is not listed at all.
+    });
+
+    it('marks eligible when applicable ≥ min and previews the discount', async () => {
+      cartService.getCartWithItems.mockResolvedValue({
+        items: [namedCartItem(1, 'Shop One', 300_000, 1)],
+      });
+      couponRepo.findAvailableForCart.mockResolvedValue([
+        buildCoupon({
+          id: 100,
+          code: 'PLAT',
+          shop_id: null,
+          min_order_amount: 200_000,
+          discount_type: DiscountType.Fixed,
+          discount_value: 50_000,
+        }),
+      ]);
+
+      const res = await service.getAvailableCouponsForCart(1);
+      const opt = res.platform[0];
+      expect(opt.eligible).toBe(true);
+      expect(opt.reason).toBeUndefined();
+      expect(opt.applicable_total).toBe(300_000);
+      expect(opt.discount_preview).toBe(50_000);
+    });
+
+    it('marks below_min with short_of_min when applicable < min', async () => {
+      cartService.getCartWithItems.mockResolvedValue({
+        items: [namedCartItem(1, 'Shop One', 150_000, 1)],
+      });
+      couponRepo.findAvailableForCart.mockResolvedValue([
+        buildCoupon({
+          id: 100,
+          code: 'PLAT',
+          shop_id: null,
+          min_order_amount: 200_000,
+        }),
+      ]);
+
+      const res = await service.getAvailableCouponsForCart(1);
+      const opt = res.platform[0];
+      expect(opt.eligible).toBe(false);
+      expect(opt.reason).toBe('below_min');
+      expect(opt.short_of_min).toBe(50_000);
+      expect(opt.discount_preview).toBe(0);
+    });
+
+    it('marks no_applicable_items when the scope excludes every cart item', async () => {
+      cartService.getCartWithItems.mockResolvedValue({
+        items: [namedCartItem(1, 'Shop One', 100_000, 1, { productId: 11 })],
+      });
+      couponRepo.findAvailableForCart.mockResolvedValue([
+        buildCoupon({
+          id: 200,
+          code: 'S1-PROD',
+          shop_id: 1,
+          scope: CouponScope.Products,
+          // targets a product not in the cart
+          coupon_products: [{ product_id: 999 }],
+        }),
+      ]);
+
+      const res = await service.getAvailableCouponsForCart(1);
+      const opt = res.shops[0].coupons[0];
+      expect(opt.eligible).toBe(false);
+      expect(opt.reason).toBe('no_applicable_items');
+    });
+
+    it('marks user_limit when the user has already used it max times', async () => {
+      cartService.getCartWithItems.mockResolvedValue({
+        items: [namedCartItem(1, 'Shop One', 300_000, 1)],
+      });
+      couponRepo.findAvailableForCart.mockResolvedValue([
+        buildCoupon({ id: 100, code: 'PLAT', shop_id: null, max_uses_per_user: 1 }),
+      ]);
+      usageRepo.countActiveByUserAndCoupon.mockResolvedValue(1);
+
+      const res = await service.getAvailableCouponsForCart(1);
+      const opt = res.platform[0];
+      expect(opt.eligible).toBe(false);
+      expect(opt.reason).toBe('user_limit');
     });
   });
 });

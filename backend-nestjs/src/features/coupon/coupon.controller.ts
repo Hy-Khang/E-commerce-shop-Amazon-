@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -13,7 +14,10 @@ import {
 } from '@nestjs/swagger';
 import { CouponService } from './coupon.service';
 import { ValidateCouponDto } from './dto/validate-coupon.dto';
-import { CouponValidationResponseDto } from './dto/coupon-response.dto';
+import {
+  CouponAvailabilityResponseDto,
+  CouponValidationResponseDto,
+} from './dto/coupon-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Coupon')
@@ -31,5 +35,17 @@ export class CouponController {
     @Body() dto: ValidateCouponDto,
   ): Promise<CouponValidationResponseDto> {
     return this.couponService.validateCouponForUser(user.id, dto.code);
+  }
+
+  @Get('available')
+  @ApiOperation({
+    summary:
+      'Selectable-voucher catalog for the current cart (platform + shop groups, per-coupon eligibility)',
+  })
+  @ApiResponse({ status: 200, type: CouponAvailabilityResponseDto })
+  async getAvailable(
+    @CurrentUser() user: { id: number },
+  ): Promise<CouponAvailabilityResponseDto> {
+    return this.couponService.getAvailableCouponsForCart(user.id);
   }
 }

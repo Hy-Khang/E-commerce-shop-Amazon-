@@ -47,3 +47,13 @@ export interface IAppliedCoupon {
   code: string;
   discount_amount: number;
 }
+
+/**
+ * Why a coupon in the availability catalog is not selectable for the current
+ * cart. Only these three surface to the customer — expired / inactive /
+ * exhausted / shop-inactive coupons are hidden by the repository, never shown.
+ */
+export type CouponIneligibleReason =
+  | 'below_min'
+  | 'no_applicable_items'
+  | 'user_limit';

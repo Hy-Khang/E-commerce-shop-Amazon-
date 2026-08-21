@@ -24,9 +24,9 @@ vi.mock('../hooks/usePreviewCheckout', () => ({
 }));
 // Keep the item list out of the way — not under test here.
 vi.mock('../components/OrderItemRow', () => ({ OrderItemRow: () => <div /> }));
-// Stub the coupon input so a test can drive apply/remove without the real form.
+// Stub the coupon picker so a test can drive apply/remove without the real modal.
 vi.mock('@/features/coupon', () => ({
-  CouponInput: ({ appliedCoupons, onApply, onRemove }: any) => (
+  CouponPicker: ({ appliedCoupons, onApply, onRemove }: any) => (
     <div>
       <button
         type="button"

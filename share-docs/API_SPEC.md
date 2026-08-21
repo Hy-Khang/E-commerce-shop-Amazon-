@@ -258,6 +258,13 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | POST | `/coupons/validate` | Validate coupon code, returns discount info + applicable scope | Customer |
+| GET | `/coupons/available` | Selectable-voucher catalog for the current cart (platform + per-shop groups, per-coupon eligibility) | Customer |
+
+> **`GET /coupons/available`** powers the Shopee-style voucher picker. It reads the caller's cart server-side and returns `CouponAvailabilityResponseDto { platform: CouponOptionDto[], shops: [{ shop_id, shop_name, coupons: CouponOptionDto[] }] }`. Each `CouponOptionDto` carries `{ code, description, discount_type, discount_value, scope, shop_id, min_order_amount, max_discount_amount, applicable_total, discount_preview, eligible, reason?, short_of_min?, starts_at, expires_at }`.
+>
+> **Advisory catalog, not a reservation** (same contract as `POST /orders/preview`): eligibility is computed **per-coupon on the original cart subtotal**, independent of other selections; the real per-shop allocation is still decided by `POST /orders/preview` / checkout, which re-validate and remain the source of truth. Empty cart → `{ platform: [], shops: [] }` (never 400).
+>
+> **Hidden vs greyed:** Coupons that would fail checkout for an *invisible* reason are omitted entirely — expired / not-yet-started, inactive, `admin_disabled`, globally exhausted (`current_uses >= max_uses`), or belonging to a non-active shop. Cart-dependent failures surface as `eligible: false` with `reason ∈ { below_min, no_applicable_items, user_limit }` (`below_min` adds `short_of_min`). Only shops that have ≥1 available coupon appear in `shops[]`. Any coupon marked `eligible` is guaranteed to pass checkout re-validation at that instant (barring a race).
 
 ### Notification — `/api/v1/notifications`
 

@@ -59,6 +59,48 @@ export interface AppliedCouponEntry {
   validation: CouponValidationResult;
 }
 
+// --- Voucher availability catalog (GET /coupons/available) ---
+
+/**
+ * Why a listed voucher is not selectable for the current cart. Only these three
+ * ever surface — expired / inactive / exhausted / shop-inactive coupons are
+ * hidden by the server, never listed.
+ */
+export type CouponIneligibleReason =
+  | 'below_min'
+  | 'no_applicable_items'
+  | 'user_limit';
+
+/** One selectable voucher in the picker, with its eligibility for the cart. */
+export interface CouponOption {
+  code: string;
+  description: string | null;
+  discount_type: DiscountType;
+  discount_value: number;
+  scope: CouponScope;
+  shop_id: number | null;
+  min_order_amount: number | null;
+  max_discount_amount: number | null;
+  applicable_total: number;
+  discount_preview: number;
+  eligible: boolean;
+  reason?: CouponIneligibleReason;
+  short_of_min?: number;
+  starts_at: string;
+  expires_at: string;
+}
+
+export interface CouponAvailabilityShop {
+  shop_id: number;
+  shop_name: string;
+  coupons: CouponOption[];
+}
+
+export interface CouponAvailability {
+  platform: CouponOption[];
+  shops: CouponAvailabilityShop[];
+}
+
 export interface CouponUsage {
   id: number;
   coupon_id: number;

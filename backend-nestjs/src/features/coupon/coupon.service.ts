@@ -24,11 +24,15 @@ import { CreateSellerCouponDto } from './dto/create-seller-coupon.dto';
 import { UpdateSellerCouponDto } from './dto/update-seller-coupon.dto';
 import { CouponQueryDto, CouponUsageQueryDto } from './dto/coupon-query.dto';
 import {
+  CouponAvailabilityResponseDto,
+  CouponAvailabilityShopDto,
+  CouponOptionDto,
   CouponResponseDto,
   CouponUsageResponseDto,
   CouponValidationResponseDto,
 } from './dto/coupon-response.dto';
 import {
+  CouponIneligibleReason,
   CouponScope,
   CouponUsageStatus,
   IAppliedCoupon,
@@ -36,12 +40,15 @@ import {
 } from './types/coupon.types';
 import {
   calculateDiscount,
+  toCouponOption,
   toCouponResponse,
   toCouponUsageResponse,
   toCouponValidationResponse,
 } from './utils/coupon.util';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { CartItem } from '../cart/entities/cart-item.entity';
+import { CartService } from '../cart/cart.service';
+import { CartEmptyException } from '../../common/exceptions/cart-empty.exception';
 
 @Injectable()
 export class CouponService {
@@ -55,6 +62,7 @@ export class CouponService {
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
     private readonly shopService: ShopService,
+    private readonly cartService: CartService,
   ) {}
 
   // ─── Customer ───
@@ -65,6 +73,121 @@ export class CouponService {
   ): Promise<CouponValidationResponseDto> {
     const coupon = await this.validateCoupon(userId, code);
     return toCouponValidationResponse(coupon);
+  }
+
+  /**
+   * Selectable-voucher catalog for the current cart (Shopee-style picker):
+   * platform coupons + shop coupons for shops in the cart, each tagged with its
+   * eligibility for this cart. Read-only, no reservation — the real per-shop
+   * allocation is decided by `POST /orders/preview` / checkout, which re-validate.
+   *
+   * Every filter and eligibility check here mirrors `validateCoupon` +
+   * `validateAndCalculateDiscounts` exactly, so any coupon marked `eligible`
+   * here is guaranteed to pass checkout re-validation at the same instant
+   * (barring a race). Hard gates (expired/inactive/exhausted/shop-inactive) are
+   * applied in the repository → those coupons never appear at all; the
+   * cart-dependent gates surface as a `reason` on a greyed-out row.
+   */
+  async getAvailableCouponsForCart(
+    userId: number,
+  ): Promise<CouponAvailabilityResponseDto> {
+    let cartItems: CartItem[];
+    const shopNameById = new Map<number, string>();
+    try {
+      const cart = await this.cartService.getCartWithItems(userId);
+      cartItems = cart.items ?? [];
+    } catch (err) {
+      // Opening the picker with an empty cart must not 400.
+      if (err instanceof CartEmptyException) return { platform: [], shops: [] };
+      throw err;
+    }
+    if (cartItems.length === 0) return { platform: [], shops: [] };
+
+    for (const item of cartItems) {
+      const product = item.product_variant?.product;
+      const shopId = product?.shop_id;
+      if (shopId == null) continue;
+      if (!shopNameById.has(shopId)) {
+        shopNameById.set(shopId, product?.shop?.name ?? `Shop #${shopId}`);
+      }
+    }
+    const shopIds = [...shopNameById.keys()];
+
+    const candidates = await this.couponRepository.findAvailableForCart(
+      shopIds,
+      new Date(),
+    );
+
+    const platform: CouponOptionDto[] = [];
+    const shopOptions = new Map<number, CouponOptionDto[]>();
+
+    for (const candidate of candidates) {
+      const applicableByShop = await this.getApplicableTotalsByShop(
+        candidate,
+        cartItems,
+      );
+      const applicableTotal = [...applicableByShop.values()].reduce(
+        (sum, v) => sum + v,
+        0,
+      );
+
+      let eligible = true;
+      let reason: CouponIneligibleReason | undefined;
+      let shortOfMin: number | undefined;
+      let discountPreview = 0;
+
+      if (applicableTotal === 0) {
+        eligible = false;
+        reason = 'no_applicable_items';
+      } else if (
+        candidate.min_order_amount != null &&
+        applicableTotal < Number(candidate.min_order_amount)
+      ) {
+        eligible = false;
+        reason = 'below_min';
+        shortOfMin =
+          Math.round((Number(candidate.min_order_amount) - applicableTotal) *
+            100) / 100;
+      } else {
+        const userUsage =
+          await this.couponUsageRepository.countActiveByUserAndCoupon(
+            userId,
+            candidate.id,
+          );
+        if (userUsage >= candidate.max_uses_per_user) {
+          eligible = false;
+          reason = 'user_limit';
+        } else {
+          discountPreview = calculateDiscount(candidate, applicableTotal);
+        }
+      }
+
+      const option = toCouponOption(candidate, {
+        applicableTotal,
+        eligible,
+        reason,
+        shortOfMin,
+        discountPreview,
+      });
+
+      if (candidate.shop_id == null) {
+        platform.push(option);
+      } else {
+        const list = shopOptions.get(candidate.shop_id) ?? [];
+        list.push(option);
+        shopOptions.set(candidate.shop_id, list);
+      }
+    }
+
+    const shops: CouponAvailabilityShopDto[] = [...shopOptions.entries()].map(
+      ([shopId, coupons]) => ({
+        shop_id: shopId,
+        shop_name: shopNameById.get(shopId) ?? `Shop #${shopId}`,
+        coupons,
+      }),
+    );
+
+    return { platform, shops };
   }
 
   // ─── Cross-feature: consumed by OrderService ───

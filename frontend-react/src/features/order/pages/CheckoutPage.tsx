@@ -8,7 +8,7 @@ import { formatPrice } from '@/common/utils/format.util';
 import { showErrorToast } from '@/common/components/feedback/toast';
 import { ApiError } from '@/core/api/api.types';
 import { useCart } from '@/features/cart';
-import { CouponInput, type CouponValidationResult, type AppliedCouponEntry } from '@/features/coupon';
+import { CouponPicker, type CouponValidationResult, type AppliedCouponEntry } from '@/features/coupon';
 import { useCreatePayment } from '@/features/payment';
 import { useCheckout } from '../hooks/useCheckout';
 import { usePreviewCheckout } from '../hooks/usePreviewCheckout';
@@ -293,10 +293,11 @@ export default function CheckoutPage() {
                 <Tag className="h-5 w-5 text-text-secondary" />
                 <h2 className="text-lg font-semibold text-text-primary">Coupon Code</h2>
               </div>
-              <CouponInput
+              <CouponPicker
                 appliedCoupons={appliedCoupons}
                 onApply={handleApplyCoupon}
                 onRemove={handleRemoveCoupon}
+                cartSig={cartSig}
               />
               {couponCodes.length > 0 && preview.isError && (
                 <p className="mt-3 text-sm text-error-600">
