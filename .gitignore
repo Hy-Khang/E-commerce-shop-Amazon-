@@ -30,5 +30,7 @@ lerna-debug.log*
 # Playwright MCP
 .playwright-mcp/
 
+# Note
+my-note/
 me.txt
 de-tai-mon-hoc.txt
