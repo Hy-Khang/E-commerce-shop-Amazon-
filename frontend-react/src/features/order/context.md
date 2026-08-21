@@ -4,7 +4,10 @@
 Checkout from cart, order history, order detail, cancel pending orders, admin order management (status + payment updates).
 
 ## Pages
-- `CheckoutPage` — address selection, payment method, place order
+- `CheckoutPage` — address selection, payment method, place order. Items are **grouped by shop** (`CheckoutShopGroup`, mirroring the Cart page): each shop card carries a read-only item list + a shop-voucher row, and a platform-voucher row sits in the "Platform Voucher" card. One scoped `CouponSelectorModal` serves the platform row and every shop group; selection lives in the shared `useAppliedCouponsStore`, so choices made on the Cart page carry over and stay editable.
+
+## Components
+- `CheckoutShopGroup` — one shop's items on checkout (shop header + read-only `OrderItemRow`s + a `VoucherRow` for its shop coupon). Presentational mirror of the cart's `CartShopGroup` (no quantity controls). Reuses `groupItemsByShop` from `@/features/cart` and `VoucherRow` from `@/features/coupon`.
 - `OrderHistoryPage` — paginated list of user's orders
 - `OrderDetailPage` — order info + order items (with shop name snapshots) + cancel action
 - `AdminOrderListPage` — all orders with status/payment filters

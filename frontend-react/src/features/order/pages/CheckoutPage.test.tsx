@@ -24,6 +24,9 @@ vi.mock('@/features/cart', () => ({
           `${i.product_variant_id}:${i.quantity}:${i.variant.sale_price ?? i.variant.price}`,
       )
       .join('|'),
+  groupItemsByShop: (items: any[]) => [
+    { shop_id: null, shop_name: null, items: items ?? [] },
+  ],
 }));
 vi.mock('@/features/payment', () => ({ useCreatePayment: h.useCreatePayment }));
 vi.mock('../hooks/useCheckout', () => ({ useCheckout: h.useCheckout }));
@@ -33,7 +36,10 @@ vi.mock('../hooks/usePreviewCheckout', () => ({
 }));
 // Keep the item list out of the way — not under test here.
 vi.mock('../components/OrderItemRow', () => ({ OrderItemRow: () => <div /> }));
-// Stub the coupon picker so a test can drive apply/remove without the real modal,
+vi.mock('../components/CheckoutShopGroup', () => ({
+  CheckoutShopGroup: () => <div />,
+}));
+// Stub the voucher modal so a test can drive apply/remove without the real modal,
 // but back the applied-coupons state with a real (tiny) zustand store so the
 // page re-renders on apply/remove exactly as in production.
 vi.mock('@/features/coupon', async () => {
@@ -68,7 +74,8 @@ vi.mock('@/features/coupon', async () => {
   return {
     useAppliedCouponsStore,
     estimateCouponDiscount,
-    CouponPicker: ({ appliedCoupons, onApply, onRemove }: any) => (
+    VoucherRow: () => <div />,
+    CouponSelectorModal: ({ appliedCoupons, onApply, onRemove }: any) => (
       <div>
         <button
           type="button"

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,9 +7,10 @@ import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
 import { showErrorToast } from '@/common/components/feedback/toast';
 import { ApiError } from '@/core/api/api.types';
-import { useCart, cartSignature } from '@/features/cart';
+import { useCart, cartSignature, groupItemsByShop } from '@/features/cart';
 import {
-  CouponPicker,
+  CouponSelectorModal,
+  VoucherRow,
   estimateCouponDiscount,
   useAppliedCouponsStore,
 } from '@/features/coupon';
@@ -18,8 +19,11 @@ import { useCheckout } from '../hooks/useCheckout';
 import { usePreviewCheckout } from '../hooks/usePreviewCheckout';
 import { useAddresses } from '../hooks/useAddresses';
 import { checkoutSchema, type CheckoutFormData, type PaymentMethod } from '../types/order.types';
-import { OrderItemRow } from '../components/OrderItemRow';
+import { CheckoutShopGroup } from '../components/CheckoutShopGroup';
 import { CheckoutShopBreakdown } from '../components/CheckoutShopBreakdown';
+
+/** Which coupon group the voucher modal is scoped to. */
+type VoucherScope = 'platform' | number;
 
 const PAYMENT_METHODS: PaymentMethod[] = ['cod', 'vnpay', 'momo'];
 
@@ -35,6 +39,19 @@ export default function CheckoutPage() {
   const applyCoupon = useAppliedCouponsStore((s) => s.apply);
   const removeCoupon = useAppliedCouponsStore((s) => s.remove);
   const clearCoupons = useAppliedCouponsStore((s) => s.clear);
+
+  // One scoped voucher picker shared by the platform row + every shop group,
+  // mirroring the Cart page.
+  const [voucher, setVoucher] = useState<{ open: boolean; scope: VoucherScope }>({
+    open: false,
+    scope: 'platform',
+  });
+
+  const platformCoupon = appliedCoupons.find((c) => c.validation.shop_id == null);
+  const shopCouponFor = (shopId: number | null) =>
+    shopId == null
+      ? undefined
+      : appliedCoupons.find((c) => c.validation.shop_id === shopId);
 
   const defaultAddress = addresses?.find((a) => a.is_default);
 
@@ -284,18 +301,21 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* Coupon Code */}
+            {/* Platform Voucher */}
             <div className="rounded-xl border border-border-default bg-elevated p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Tag className="h-5 w-5 text-text-secondary" />
-                <h2 className="text-lg font-semibold text-text-primary">Coupon Code</h2>
+                <h2 className="text-lg font-semibold text-text-primary">Platform Voucher</h2>
               </div>
-              <CouponPicker
-                appliedCoupons={appliedCoupons}
-                onApply={applyCoupon}
+              <VoucherRow
+                applied={platformCoupon}
+                selectLabel="Select platform voucher"
+                onOpen={() => setVoucher({ open: true, scope: 'platform' })}
                 onRemove={removeCoupon}
-                cartSig={cartSig}
               />
+              <p className="mt-3 text-xs text-text-muted">
+                You can stack one platform coupon with one coupon per shop.
+              </p>
               {couponCodes.length > 0 && preview.isError && (
                 <p className="mt-3 text-sm text-error-600">
                   {preview.error instanceof Error
@@ -306,33 +326,16 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* Order Items Preview */}
-            <div className="rounded-xl border border-border-default bg-elevated p-6">
-              <h2 className="mb-4 text-lg font-semibold text-text-primary">
-                Items ({cart.items.length})
-              </h2>
-              {cart.items.map((item) => (
-                <OrderItemRow
-                  key={item.id}
-                  item={{
-                    id: item.id,
-                    order_id: 0,
-                    product_variant_id: item.product_variant_id,
-                    product_name: item.variant.product_name,
-                    sku: item.variant.sku,
-                    price: item.variant.sale_price ?? item.variant.price,
-                    quantity: item.quantity,
-                    thumbnail_url: item.variant.thumbnail_url,
-                    product_id: null,
-                    variant_option1_label: null,
-                    variant_option1_value: null,
-                    variant_option2_label: null,
-                    variant_option2_value: null,
-                    shop_id: item.shop_id,
-                    shop_name: item.shop_name,
-                    product_slug: null,
-                    shop_slug: null,
-                  }}
+            {/* Order Items Preview — grouped by shop, each with its shop voucher */}
+            <div className="space-y-4">
+              {groupItemsByShop(cart.items).map((group) => (
+                <CheckoutShopGroup
+                  key={group.shop_id ?? 'none'}
+                  group={group}
+                  appliedShopCoupon={shopCouponFor(group.shop_id)}
+                  showVoucher
+                  onOpenVoucher={(shopId) => setVoucher({ open: true, scope: shopId })}
+                  onRemoveCoupon={removeCoupon}
                 />
               ))}
             </div>
@@ -411,6 +414,17 @@ export default function CheckoutPage() {
           </div>
         </div>
       </form>
+
+      <CouponSelectorModal
+        open={voucher.open}
+        onClose={() => setVoucher((v) => ({ ...v, open: false }))}
+        appliedCoupons={appliedCoupons}
+        onApply={applyCoupon}
+        onRemove={removeCoupon}
+        cartSig={cartSig}
+        scope={voucher.scope}
+        title={voucher.scope === 'platform' ? 'Platform voucher' : 'Shop voucher'}
+      />
     </div>
   );
 }
