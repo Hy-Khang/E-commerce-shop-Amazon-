@@ -14,9 +14,9 @@ export function useLogout() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: () => {
-      if (!refreshToken) return Promise.resolve();
-      return authService.logout(refreshToken);
+    mutationFn: async () => {
+      if (!refreshToken) return;
+      await authService.logout(refreshToken);
     },
     meta: { suppressToast: true },
     onSettled: () => {

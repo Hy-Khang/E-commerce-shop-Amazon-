@@ -5,7 +5,7 @@ import type { ProductListParams } from '@/features/product/types/product.types';
 
 export function useShopProducts(slug: string, params: ProductListParams) {
   return useQuery({
-    queryKey: shopKeys.products(slug, params),
+    queryKey: shopKeys.products(slug, params as Record<string, unknown>),
     queryFn: () => shopService.getProducts(slug, params),
     select: (res) => ({ data: res.data.data, meta: res.data.meta }),
     enabled: !!slug,

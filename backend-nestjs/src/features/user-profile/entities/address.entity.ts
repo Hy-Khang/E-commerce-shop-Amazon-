@@ -29,6 +29,12 @@ export class Address {
   @Column({ type: 'nvarchar', length: 100 })
   city: string;
 
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  latitude: number | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  longitude: number | null;
+
   @Column({ type: 'bit', default: false })
   is_default: boolean;
 

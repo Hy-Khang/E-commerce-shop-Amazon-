@@ -29,6 +29,8 @@ import { OAuthCode } from '../../features/auth/entities/oauth-code.entity';
 import { Shop } from '../../features/shop/entities/shop.entity';
 import { Notification } from '../../features/notification/entities/notification.entity';
 import { PaymentTransaction } from '../../features/payment/entities/payment-transaction.entity';
+import { OrderStatusHistory } from '../../features/order/entities/order-status-history.entity';
+import { OrderTrackingLocation } from '../../features/order/entities/order-tracking-location.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -63,6 +65,8 @@ export const AppDataSource = new DataSource({
     Shop,
     Notification,
     PaymentTransaction,
+    OrderStatusHistory,
+    OrderTrackingLocation,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   options: {

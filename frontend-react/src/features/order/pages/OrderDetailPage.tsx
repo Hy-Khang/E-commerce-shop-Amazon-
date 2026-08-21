@@ -12,14 +12,18 @@ import { useOrder } from '../hooks/useOrder';
 import { useCancelOrder } from '../hooks/useCancelOrder';
 import { useConfirmReceipt } from '../hooks/useConfirmReceipt';
 import { useRequestReturn } from '../hooks/useRequestReturn';
+import { useOrderTracking } from '../hooks/useOrderTracking';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderItemRow } from '../components/OrderItemRow';
+import { OrderTimeline } from '../components/OrderTimeline';
+import { OrderTrackingMap } from '../components/OrderTrackingMap';
 import { isOrderCancellable, getPaymentStatusColor, groupItemsByShop } from '../utils/order.util';
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const orderId = Number(id);
   const { data: order, isLoading, isError } = useOrder(orderId);
+  const { data: tracking } = useOrderTracking(orderId, order?.status);
   const cancelOrder = useCancelOrder();
   const confirmReceipt = useConfirmReceipt();
   const requestReturn = useRequestReturn();
@@ -192,6 +196,25 @@ export default function OrderDetailPage() {
               </div>
             ))}
           </div>
+
+          {tracking && tracking.timeline.length > 0 && (
+            <div className="shop-card p-6">
+              <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">Order Timeline</h2>
+              <OrderTimeline timeline={tracking.timeline} />
+            </div>
+          )}
+
+          {tracking?.shipperLocation && (
+            <div className="shop-card p-6">
+              <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">
+                {order.status === 'shipping' ? 'Live Tracking' : 'Last Known Shipper Location'}
+              </h2>
+              <OrderTrackingMap
+                shipperLocation={tracking.shipperLocation}
+                deliveryLocation={tracking.deliveryLocation}
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">

@@ -20,6 +20,8 @@ export interface Address {
   phone: string;
   address_line: string;
   city: string;
+  latitude: number | null;
+  longitude: number | null;
   is_default: boolean;
 }
 
@@ -35,6 +37,8 @@ export interface CreateAddressRequest {
   phone: string;
   address_line: string;
   city: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface UpdateAddressRequest {
@@ -42,6 +46,21 @@ export interface UpdateAddressRequest {
   phone?: string;
   address_line?: string;
   city?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+// --- Location types (Vietnam provinces API) ---
+
+export interface LocationItem {
+  code: number;
+  name: string;
+}
+
+export interface LocationValue {
+  province: LocationItem | null;
+  district: LocationItem | null;
+  ward: LocationItem | null;
 }
 
 // --- Zod schemas (forms) ---
@@ -58,6 +77,8 @@ export const addressSchema = z.object({
   phone: z.string().min(1, 'Phone is required').max(20),
   address_line: z.string().min(1, 'Address is required').max(255),
   city: z.string().min(1, 'City is required').max(100),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
 });
 
 export type AddressFormData = z.infer<typeof addressSchema>;

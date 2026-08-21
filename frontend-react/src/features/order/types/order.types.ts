@@ -12,6 +12,8 @@ export interface ShippingAddress {
   phone: string;
   address_line: string;
   city: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface Address {
@@ -21,6 +23,8 @@ export interface Address {
   phone: string;
   address_line: string;
   city: string;
+  latitude: number | null;
+  longitude: number | null;
   is_default: boolean;
 }
 

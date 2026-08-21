@@ -7,7 +7,7 @@ import { AdminDataTable, type Column } from '@/common/components/data/AdminDataT
 import { useAdminOrders } from '../hooks/useAdminOrders';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { getPaymentStatusColor } from '../utils/order.util';
-import type { AdminOrderListParams, OrderStatus, PaymentStatus, AdminOrder } from '../types/order.types';
+import type { AdminOrderListParams, OrderStatus, PaymentStatus, OrderListItem } from '../types/order.types';
 
 const STATUS_OPTIONS: OrderStatus[] = ['pending', 'confirmed', 'shipping', 'delivered', 'completed', 'return_requested', 'cancelled'];
 const PAYMENT_OPTIONS: PaymentStatus[] = ['unpaid', 'paid'];
@@ -34,7 +34,7 @@ export default function AdminOrderListPage() {
     });
   }
 
-  const columns: Column<AdminOrder>[] = [
+  const columns: Column<OrderListItem>[] = [
     {
       key: 'order',
       header: 'Order',

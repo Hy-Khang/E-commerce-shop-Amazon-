@@ -8,7 +8,7 @@ import { Button } from '@/common/components/ui/Button';
 import { useAdminProducts } from '../hooks/useAdminProducts';
 import { useToggleProductActive } from '../hooks/useToggleProductActive';
 import { getPriceRange } from '../utils/product.util';
-import type { AdminProductListParams, AdminProduct } from '../types/product.types';
+import type { AdminProductListParams, ProductListItem } from '../types/product.types';
 
 export default function AdminProductListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -36,7 +36,7 @@ export default function AdminProductListPage() {
     });
   }
 
-  const columns: Column<AdminProduct>[] = [
+  const columns: Column<ProductListItem>[] = [
     {
       key: 'product',
       header: 'Product',

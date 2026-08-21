@@ -66,10 +66,11 @@ describe('AdminOrderController', () => {
       service.updateOrderStatus.mockResolvedValue(mockResponse as any);
 
       // Act
-      const result = await controller.updateStatus(1, dto);
+      const mockUser = { id: 99, email: 'admin@test.com', role: 'admin' };
+      const result = await controller.updateStatus(mockUser as any, 1, dto);
 
       // Assert
-      expect(service.updateOrderStatus).toHaveBeenCalledWith(1, dto);
+      expect(service.updateOrderStatus).toHaveBeenCalledWith(1, dto, 99);
       expect(result).toEqual(mockResponse);
     });
   });

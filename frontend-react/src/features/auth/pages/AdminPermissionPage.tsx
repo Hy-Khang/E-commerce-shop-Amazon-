@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Shield, Plus, Trash2, Pencil, X, Loader2 } from 'lucide-react';
+import { Shield, Plus, Trash2, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/common/components/ui/Button';
 import { PermissionMatrix } from '../components/PermissionMatrix';
@@ -14,7 +14,6 @@ import {
 import { useAdminRoles } from '../hooks/useAdminRoles';
 import type {
   Permission,
-  RoleWithUserCount,
   CreatePermissionRequest,
   UpdatePermissionRequest,
 } from '../types/admin.types';

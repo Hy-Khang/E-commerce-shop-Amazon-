@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { IsVietnamesePhone } from '../../../common/validators/is-vietnamese-phone.validator';
 
 export class CreateAddressDto {
@@ -25,6 +33,20 @@ export class CreateAddressDto {
   @IsString()
   @MaxLength(100)
   city: string;
+
+  @ApiPropertyOptional({ example: 10.762622 })
+  @IsOptional()
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  latitude?: number;
+
+  @ApiPropertyOptional({ example: 106.660172 })
+  @IsOptional()
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  longitude?: number;
 
   @ApiPropertyOptional({ example: false, default: false })
   @IsOptional()

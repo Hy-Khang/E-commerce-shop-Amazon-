@@ -1,10 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
-import { addressSchema, type AddressFormData, type Address } from '../types/user-profile.types';
+import { useEffect, useState } from 'react';
+import { addressSchema, type AddressFormData, type Address, type LocationValue } from '../types/user-profile.types';
 import { ApiError } from '@/core/api/api.types';
 import { FormInput } from '@/common/components/form/FormInput';
 import { Button } from '@/common/components/ui/Button';
+import { LocationPicker } from './LocationPicker';
+import { AddressMapPicker } from './AddressMapPicker';
 
 interface Props {
   address?: Address;
@@ -19,6 +21,8 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
@@ -27,8 +31,17 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
       phone: address?.phone ?? '',
       address_line: address?.address_line ?? '',
       city: address?.city ?? '',
+      latitude: address?.latitude ?? undefined,
+      longitude: address?.longitude ?? undefined,
     },
   });
+
+  const [location, setLocation] = useState<LocationValue>({
+    province: null,
+    district: null,
+    ward: null,
+  });
+  const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     if (address) {
@@ -37,9 +50,55 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
         phone: address.phone,
         address_line: address.address_line,
         city: address.city,
+        latitude: address.latitude ?? undefined,
+        longitude: address.longitude ?? undefined,
       });
+      setLocation({ province: null, district: null, ward: null });
     }
   }, [address, reset]);
+
+  const addressLine = watch('address_line');
+  const city = watch('city');
+  const lat = watch('latitude');
+  const lng = watch('longitude');
+  const addressText = [addressLine, city].filter(Boolean).join(', ');
+
+  async function autoGeocode(query: string) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+      );
+      const data = await res.json();
+      if (data.length > 0) {
+        const newLat = parseFloat(data[0].lat);
+        const newLng = parseFloat(data[0].lon);
+        setValue('latitude', newLat, { shouldDirty: true });
+        setValue('longitude', newLng, { shouldDirty: true });
+        setFlyTarget([newLat, newLng]);
+      }
+    } catch {
+      // Silent fail — user can still use "Find on map" or click the map
+    }
+  }
+
+  function handleLocationChange(newLocation: LocationValue) {
+    setLocation(newLocation);
+    if (newLocation.ward && newLocation.district && newLocation.province) {
+      const cityValue = `${newLocation.ward.name}, ${newLocation.district.name}, ${newLocation.province.name}`;
+      setValue('city', cityValue, { shouldDirty: true, shouldValidate: true });
+      autoGeocode(`${cityValue}, Vietnam`);
+    } else if (newLocation.province) {
+      const partial = [
+        newLocation.district?.name,
+        newLocation.province.name,
+      ]
+        .filter(Boolean)
+        .join(', ');
+      setValue('city', partial, { shouldDirty: true });
+    } else {
+      setValue('city', '', { shouldDirty: true });
+    }
+  }
 
   return (
     <div className="flex flex-col h-full justify-between">
@@ -67,20 +126,30 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
             placeholder="e.g. 0901234567"
           />
 
-          <FormInput
-            label="Address details"
-            type="text"
-            registration={register('address_line')}
-            error={errors.address_line?.message}
-            placeholder="Street name, building/apartment number"
+          <LocationPicker
+            value={location}
+            onChange={handleLocationChange}
+            error={errors.city?.message}
+            initialDisplayText={address?.city}
           />
 
           <FormInput
-            label="City"
+            label="Address Details"
             type="text"
-            registration={register('city')}
-            error={errors.city?.message}
-            placeholder="e.g. Ho Chi Minh City"
+            registration={register('address_line')}
+            error={errors.address_line?.message}
+            placeholder="House number, street name, building..."
+          />
+
+          <AddressMapPicker
+            latitude={lat ?? null}
+            longitude={lng ?? null}
+            addressText={addressText}
+            onChange={(newLat, newLng) => {
+              setValue('latitude', newLat, { shouldDirty: true });
+              setValue('longitude', newLng, { shouldDirty: true });
+            }}
+            externalFlyTo={flyTarget}
           />
         </form>
       </div>
@@ -108,4 +177,3 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
     </div>
   );
 }
-

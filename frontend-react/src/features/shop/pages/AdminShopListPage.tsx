@@ -8,7 +8,7 @@ import { AdminDataTable, type Column } from '@/common/components/data/AdminDataT
 import { useAdminShops } from '../hooks/useAdminShops';
 import { ShopFilters } from '../components/ShopFilters';
 import { ShopStatusBadge } from '../components/ShopStatusBadge';
-import type { AdminShop, AdminShopQueryParams, ShopStatus } from '../types/shop.types';
+import type { AdminShop, AdminShopQueryParams } from '../types/shop.types';
 
 export default function AdminShopListPage() {
   const { params, setPage } = usePagination({

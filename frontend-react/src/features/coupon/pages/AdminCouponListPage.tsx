@@ -9,7 +9,7 @@ import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminCoupons } from '../hooks/useAdminCoupons';
 import { useDeactivateCoupon } from '../hooks/useDeactivateCoupon';
-import type { CouponListParams, CouponScope, DiscountType, CouponListItem } from '../types/coupon.types';
+import type { CouponListParams, CouponScope, DiscountType, Coupon } from '../types/coupon.types';
 
 const SCOPE_LABELS: Record<CouponScope, string> = {
   all: 'All',
@@ -57,7 +57,7 @@ export default function AdminCouponListPage() {
     }
   }
 
-  const columns: Column<CouponListItem>[] = [
+  const columns: Column<Coupon>[] = [
     {
       key: 'code',
       header: 'Code',

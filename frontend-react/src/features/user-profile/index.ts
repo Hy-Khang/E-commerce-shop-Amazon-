@@ -4,6 +4,8 @@ export type {
   CreateAddressRequest,
   UpdateAddressRequest,
   AddressFormData,
+  LocationItem,
+  LocationValue,
 } from './types/user-profile.types';
 export { addressSchema, updateProfileSchema } from './types/user-profile.types';
 
@@ -18,3 +20,5 @@ export { useSetDefaultAddress } from './hooks/useSetDefaultAddress';
 export { ProfileForm } from './components/ProfileForm';
 export { AddressCard } from './components/AddressCard';
 export { AddressForm } from './components/AddressForm';
+export { AddressMapPicker } from './components/AddressMapPicker';
+export { LocationPicker } from './components/LocationPicker';

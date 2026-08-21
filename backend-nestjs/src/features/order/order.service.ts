@@ -10,6 +10,8 @@ import { DataSource } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { OrderRepository } from './repositories/order.repository';
 import { OrderItemRepository } from './repositories/order-item.repository';
+import { OrderStatusHistoryRepository } from './repositories/order-status-history.repository';
+import { OrderTrackingLocationRepository } from './repositories/order-tracking-location.repository';
 import { CartService } from '../cart/cart.service';
 import { ProductService } from '../product/product.service';
 import { UserProfileService } from '../user-profile/user-profile.service';
@@ -30,6 +32,7 @@ import {
 } from './dto/order-response.dto';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
+import { OrderStatusHistory } from './entities/order-status-history.entity';
 import {
   ADMIN_STATUS_TRANSITIONS,
   SELLER_STATUS_TRANSITIONS,
@@ -38,6 +41,13 @@ import {
   IShippingAddressSnapshot,
 } from './types/order.types';
 import { ShipperOrderQueryDto } from './dto/shipper-order-query.dto';
+import { UpdateShipperLocationDto } from './dto/update-shipper-location.dto';
+import {
+  OrderTrackingResponseDto,
+  StatusHistoryEntryDto,
+  ShipperLocationDto,
+  DeliveryLocationDto,
+} from './dto/order-tracking-response.dto';
 import {
   toOrderResponse,
   toOrderListItemResponse,
@@ -58,6 +68,8 @@ export class OrderService {
   constructor(
     private readonly orderRepository: OrderRepository,
     private readonly orderItemRepository: OrderItemRepository,
+    private readonly statusHistoryRepository: OrderStatusHistoryRepository,
+    private readonly trackingLocationRepository: OrderTrackingLocationRepository,
     private readonly cartService: CartService,
     private readonly productService: ProductService,
     private readonly userProfileService: UserProfileService,
@@ -106,6 +118,8 @@ export class OrderService {
       phone: address.phone,
       address_line: address.address_line,
       city: address.city,
+      latitude: address.latitude ?? null,
+      longitude: address.longitude ?? null,
     };
 
     let itemsTotal = 0;
@@ -408,6 +422,7 @@ export class OrderService {
       oldStatus,
       newStatus: OrderStatus.Completed,
       actorType: ActorType.Customer,
+      actorId: userId,
     });
 
     this.logger.log(`Order #${orderId} receipt confirmed by user ${userId}`);
@@ -454,6 +469,7 @@ export class OrderService {
       oldStatus,
       newStatus: OrderStatus.ReturnRequested,
       actorType: ActorType.Customer,
+      actorId: userId,
     });
 
     this.logger.log(`Order #${orderId} return requested by user ${userId}`);
@@ -510,6 +526,7 @@ export class OrderService {
         oldStatus,
         newStatus: OrderStatus.Cancelled,
         actorType: ActorType.Customer,
+        actorId: userId,
       });
     }
 
@@ -546,6 +563,7 @@ export class OrderService {
   async updateOrderStatus(
     orderId: number,
     dto: UpdateOrderStatusDto,
+    adminId?: number,
   ): Promise<AdminOrderResponseDto> {
     const order = await this.orderRepository.findByIdWithItemsAndUser(orderId);
     if (!order) {
@@ -605,6 +623,7 @@ export class OrderService {
       oldStatus,
       newStatus: dto.status,
       actorType: ActorType.Admin,
+      actorId: adminId,
     });
 
     this.logger.log(`Order #${orderId} status updated to ${dto.status}`);
@@ -726,6 +745,7 @@ export class OrderService {
       oldStatus,
       newStatus: dto.status,
       actorType: ActorType.Seller,
+      actorId: userId,
     });
 
     this.logger.log(
@@ -848,6 +868,7 @@ export class OrderService {
       oldStatus: OrderStatus.Confirmed,
       newStatus: OrderStatus.Shipping,
       actorType: ActorType.Shipper,
+      actorId: userId,
     });
 
     this.logger.log(
@@ -908,6 +929,7 @@ export class OrderService {
       oldStatus,
       newStatus: OrderStatus.Delivered,
       actorType: ActorType.Shipper,
+      actorId: userId,
     });
 
     this.logger.log(
@@ -961,6 +983,108 @@ export class OrderService {
     );
   }
 
+  // ─── Order Tracking ───
+
+  async getOrderTracking(
+    userId: number,
+    orderId: number,
+  ): Promise<OrderTrackingResponseDto> {
+    const order = await this.orderRepository.findByIdWithItems(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    if (order.user_id !== userId) {
+      throw new ForbiddenException({
+        code: 'ORDER_004',
+        message: 'Order does not belong to user',
+      });
+    }
+
+    const history =
+      await this.statusHistoryRepository.findByOrderId(orderId);
+
+    const timeline = this.mapHistoryToTimeline(history);
+    const shipperLocation = await this.resolveShipperLocation(order.status, orderId);
+    const deliveryLocation = this.resolveDeliveryLocation(order.shipping_address);
+
+    return { timeline, shipperLocation, deliveryLocation };
+  }
+
+  async getOrderTrackingForRole(
+    orderId: number,
+  ): Promise<OrderTrackingResponseDto> {
+    const order = await this.orderRepository.findByIdWithItems(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    const history =
+      await this.statusHistoryRepository.findByOrderId(orderId);
+
+    const timeline = this.mapHistoryToTimeline(history);
+    const shipperLocation = await this.resolveShipperLocation(order.status, orderId);
+    const deliveryLocation = this.resolveDeliveryLocation(order.shipping_address);
+
+    return { timeline, shipperLocation, deliveryLocation };
+  }
+
+  async updateShipperLocation(
+    userId: number,
+    orderId: number,
+    dto: UpdateShipperLocationDto,
+  ): Promise<void> {
+    const order = await this.orderRepository.findByIdWithItems(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    if (order.shipper_id !== userId) {
+      throw new ForbiddenException({
+        code: 'ORDER_004',
+        message: 'Order does not belong to user',
+      });
+    }
+
+    if (order.status !== OrderStatus.Shipping) {
+      throw new BadRequestException({
+        code: 'ORDER_003',
+        message: 'Can only update location for orders in shipping status',
+      });
+    }
+
+    const latest =
+      await this.trackingLocationRepository.findLatestByOrderId(orderId);
+    if (latest) {
+      const elapsed = Date.now() - latest.created_at.getTime();
+      if (elapsed < 30_000) {
+        throw new BadRequestException({
+          code: 'ORDER_003',
+          message: 'Please wait 30 seconds between location updates',
+        });
+      }
+    }
+
+    await this.trackingLocationRepository.insertLocation(
+      orderId,
+      dto.latitude,
+      dto.longitude,
+    );
+
+    this.logger.log(
+      `Shipper ${userId} updated location for order #${orderId}: ${dto.latitude}, ${dto.longitude}`,
+    );
+  }
+
   // ─── Private helpers ───
 
   private async handleCouponReversalOnCancel(order: Order): Promise<void> {
@@ -970,6 +1094,61 @@ export class OrderService {
     if (allCancelled) {
       await this.couponService.reverseGroupCouponUsage(order.order_group_id);
     }
+  }
+
+  private mapHistoryToTimeline(
+    history: OrderStatusHistory[],
+  ): StatusHistoryEntryDto[] {
+    return history.map((h) => ({
+      fromStatus: h.from_status,
+      toStatus: h.to_status,
+      actorId: h.actor_id,
+      actorType: h.actor_type,
+      actorName: h.actor?.full_name ?? null,
+      note: h.note,
+      createdAt: h.created_at,
+    }));
+  }
+
+  private async resolveShipperLocation(
+    status: string,
+    orderId: number,
+  ): Promise<ShipperLocationDto | null> {
+    const statusesWithLocation = [
+      OrderStatus.Shipping,
+      OrderStatus.Delivered,
+      OrderStatus.Completed,
+      OrderStatus.ReturnRequested,
+    ];
+    if (!statusesWithLocation.includes(status as OrderStatus)) return null;
+
+    const latest =
+      await this.trackingLocationRepository.findLatestByOrderId(orderId);
+    if (!latest) return null;
+
+    return {
+      latitude: Number(latest.latitude),
+      longitude: Number(latest.longitude),
+      createdAt: latest.created_at,
+    };
+  }
+
+  private resolveDeliveryLocation(
+    shippingAddress: string,
+  ): DeliveryLocationDto | null {
+    try {
+      const addr: IShippingAddressSnapshot = JSON.parse(shippingAddress);
+      if (addr.latitude && addr.longitude) {
+        return {
+          latitude: Number(addr.latitude),
+          longitude: Number(addr.longitude),
+          label: `${addr.address_line}, ${addr.city}`,
+        };
+      }
+    } catch {
+      // Malformed JSON — skip
+    }
+    return null;
   }
 
   private async resolveSellerUserIdsFromShopIds(shopIds: number[]): Promise<number[]> {

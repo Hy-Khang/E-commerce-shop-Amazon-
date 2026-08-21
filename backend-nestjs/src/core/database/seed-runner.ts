@@ -7,6 +7,7 @@ import { OrderSeed } from './seeds/order.seed';
 import { ReviewSeed } from './seeds/review.seed';
 import { CouponSeed } from './seeds/coupon.seed';
 import { ShopSeed } from './seeds/shop.seed';
+import { OrderTrackingSeed } from './seeds/order-tracking.seed';
 
 const ALL_SEEDS: ISeed[] = [
   AuthSeed,
@@ -14,6 +15,7 @@ const ALL_SEEDS: ISeed[] = [
   ShopSeed,
   ProductSeed,
   OrderSeed,
+  OrderTrackingSeed,
   ReviewSeed,
   CouponSeed,
 ].sort((a, b) => a.order - b.order);
@@ -26,6 +28,8 @@ const DELETE_ORDER = [
   'coupons',
   'reviews',
   'wishlist_items',
+  'order_tracking_locations',
+  'order_status_history',
   'payment_transactions',
   'notifications',
   'order_items',

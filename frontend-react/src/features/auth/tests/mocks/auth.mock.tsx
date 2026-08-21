@@ -16,6 +16,11 @@ export function mockAuthUser(overrides: Partial<AuthUser> = {}): AuthUser {
     email: 'user@example.com',
     full_name: 'Nguyen Van A',
     role: 'customer',
+    role_id: 2,
+    permissions: [],
+    email_verified: true,
+    has_password: true,
+    providers: [],
     ...overrides,
   };
 }

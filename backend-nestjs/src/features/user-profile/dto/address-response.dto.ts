@@ -16,6 +16,12 @@ export class AddressResponseDto {
   @ApiProperty({ example: 'Ho Chi Minh' })
   city: string;
 
+  @ApiProperty({ example: 10.762622, nullable: true })
+  latitude: number | null;
+
+  @ApiProperty({ example: 106.660172, nullable: true })
+  longitude: number | null;
+
   @ApiProperty({ example: false })
   is_default: boolean;
 }
