@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MapContainer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { MapPin } from 'lucide-react';
 import '@/common/components/map/leaflet-setup';
@@ -34,11 +34,16 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
   const updateLocation = useUpdateShipperLocation();
   const { isFullscreen, toggle } = useMapFullscreen();
 
-  useEffect(() => {
+  // Seed the marker once `currentLocation` arrives (it may load after mount).
+  // Adjust state during render (React docs: "storing info from previous
+  // renders") instead of an effect.
+  const [prevLocation, setPrevLocation] = useState(currentLocation);
+  if (currentLocation !== prevLocation) {
+    setPrevLocation(currentLocation);
     if (currentLocation && !selectedPosition) {
       setSelectedPosition([currentLocation.latitude, currentLocation.longitude]);
     }
-  }, [currentLocation, selectedPosition]);
+  }
 
   const center: [number, number] = selectedPosition
     ?? (deliveryLocation ? [deliveryLocation.latitude, deliveryLocation.longitude] : [10.762622, 106.660172]);
