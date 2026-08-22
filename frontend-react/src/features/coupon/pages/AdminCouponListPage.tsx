@@ -1,16 +1,26 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Power, Plus, Search, Tag, Lock, LockOpen } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Pencil, Power, Plus, Search, Tag, Lock, LockOpen, Receipt } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
-import { ROUTES } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
 import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminCoupons } from '../hooks/useAdminCoupons';
+import { useAdminCoupon } from '../hooks/useAdminCoupon';
+import { useCreateCoupon } from '../hooks/useCreateCoupon';
+import { useUpdateCoupon } from '../hooks/useUpdateCoupon';
 import { useDeactivateCoupon } from '../hooks/useDeactivateCoupon';
 import { useUnlockCoupon } from '../hooks/useUnlockCoupon';
-import type { CouponListParams, CouponScope, DiscountType, Coupon } from '../types/coupon.types';
+import { CouponFormModal } from '../components/CouponFormModal';
+import { AdminCouponUsagesDrawer } from '../components/AdminCouponUsagesDrawer';
+import type {
+  CouponListParams,
+  CouponScope,
+  DiscountType,
+  Coupon,
+  CreateCouponFormData,
+} from '../types/coupon.types';
 
 const SCOPE_LABELS: Record<CouponScope, string> = {
   all: 'All',
@@ -40,6 +50,48 @@ export default function AdminCouponListPage() {
   const deactivate = useDeactivateCoupon();
   const unlock = useUnlockCoupon();
   const [deactivateTarget, setDeactivateTarget] = useState<number | null>(null);
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [usagesTarget, setUsagesTarget] = useState<Coupon | null>(null);
+
+  const createCoupon = useCreateCoupon();
+  const updateCoupon = useUpdateCoupon(editId ?? 0);
+  const { data: editDetail, isLoading: editLoading } = useAdminCoupon(editId ?? 0);
+
+  function handleCreate(data: CreateCouponFormData) {
+    createCoupon.mutate(
+      {
+        ...data,
+        description: data.description || undefined,
+        category_ids: data.scope === 'categories' ? data.category_ids : undefined,
+        product_ids: data.scope === 'products' ? data.product_ids : undefined,
+        min_order_amount: data.min_order_amount ?? undefined,
+        max_discount_amount: data.max_discount_amount ?? undefined,
+        max_uses: data.max_uses ?? undefined,
+      },
+      { onSuccess: () => setShowCreate(false) },
+    );
+  }
+
+  function handleUpdate(data: CreateCouponFormData) {
+    if (editId === null) return;
+    // `code` is immutable on update — drop it from the payload.
+    const { code: _code, ...rest } = data;
+    void _code;
+    updateCoupon.mutate(
+      {
+        ...rest,
+        description: rest.description || undefined,
+        category_ids: rest.scope === 'categories' ? rest.category_ids : undefined,
+        product_ids: rest.scope === 'products' ? rest.product_ids : undefined,
+        min_order_amount: rest.min_order_amount ?? undefined,
+        max_discount_amount: rest.max_discount_amount ?? undefined,
+        max_uses: rest.max_uses ?? undefined,
+      },
+      { onSuccess: () => setEditId(null) },
+    );
+  }
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -148,15 +200,23 @@ export default function AdminCouponListPage() {
       className: 'text-right',
       render: (coupon) => (
         <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            iconOnly
+            icon={Receipt}
+            aria-label="View usages"
+            onClick={() => setUsagesTarget(coupon)}
+            className="hover:!text-teal-600"
+          />
           {/* Shop coupons are seller-owned — admins may only deactivate/unlock them. */}
           {coupon.shop_id == null && (
-            <Link
-              to={ROUTES.ADMIN_COUPON_EDIT(coupon.id)}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            <Button
+              variant="ghost"
+              iconOnly
+              icon={Pencil}
               aria-label="Edit coupon"
-            >
-              <Pencil className="h-4 w-4" />
-            </Link>
+              onClick={() => setEditId(coupon.id)}
+            />
           )}
           {coupon.admin_disabled ? (
             <Button
@@ -193,13 +253,14 @@ export default function AdminCouponListPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Coupons</h1>
           <p className="mt-1 text-sm text-slate-500">Manage discount codes and promotions</p>
         </div>
-        <Link
-          to={ROUTES.ADMIN_COUPON_CREATE}
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Create Coupon
-        </Link>
+        </button>
       </div>
 
       <AdminDataTable
@@ -273,6 +334,39 @@ export default function AdminCouponListPage() {
             </div>
           </div>
         }
+      />
+
+      <CouponFormModal
+        open={showCreate}
+        onClose={() => {
+          createCoupon.reset();
+          setShowCreate(false);
+        }}
+        title="Create Coupon"
+        onSubmit={handleCreate}
+        isPending={createCoupon.isPending}
+        error={createCoupon.error}
+      />
+
+      <CouponFormModal
+        open={editId !== null}
+        onClose={() => {
+          updateCoupon.reset();
+          setEditId(null);
+        }}
+        title={editDetail ? `Edit: ${editDetail.code}` : 'Edit Coupon'}
+        onSubmit={handleUpdate}
+        isPending={updateCoupon.isPending}
+        error={updateCoupon.error}
+        detail={editDetail}
+        isLoadingDetail={editLoading}
+        isEdit
+      />
+
+      <AdminCouponUsagesDrawer
+        couponId={usagesTarget?.id ?? null}
+        couponCode={usagesTarget?.code}
+        onClose={() => setUsagesTarget(null)}
       />
 
       <ConfirmModal

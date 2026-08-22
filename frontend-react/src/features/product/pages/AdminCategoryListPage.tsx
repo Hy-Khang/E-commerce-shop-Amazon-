@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { ChevronRight, ChevronDown, Plus, Search, Pencil, Trash2, FolderTree } from 'lucide-react';
-import { ROUTES } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
+import { Drawer } from '@/common/components/ui/Drawer';
 import { useCategories } from '../hooks/useCategories';
-import { useAdminCategories, useDeleteCategory } from '../hooks/useAdminCategories';
-import type { Category } from '../types/product.types';
+import { useAdminCategories, useCreateCategory, useDeleteCategory } from '../hooks/useAdminCategories';
+import { CategoryForm } from '../components/CategoryForm';
+import { CategoryEditDrawer } from '../components/CategoryEditDrawer';
+import type { Category, CreateCategoryFormData } from '../types/product.types';
 
 interface TreeRow {
   id: number;
@@ -91,6 +93,8 @@ export default function AdminCategoryListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<TreeRow | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
   const search = searchParams.get('search') || '';
 
   const { data: treeCategories, isLoading: treeLoading } = useCategories();
@@ -100,6 +104,7 @@ export default function AdminCategoryListPage() {
     sort: 'name',
     order: 'asc',
   });
+  const createCategory = useCreateCategory();
   const deleteCategory = useDeleteCategory();
 
   const isLoading = treeLoading || adminLoading;
@@ -191,6 +196,17 @@ export default function AdminCategoryListPage() {
     }
   }
 
+  function handleCreate(data: CreateCategoryFormData) {
+    createCategory.mutate(
+      {
+        name: data.name,
+        slug: data.slug,
+        parent_id: data.parent_id ?? undefined,
+      },
+      { onSuccess: () => setShowCreate(false) },
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -198,13 +214,14 @@ export default function AdminCategoryListPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Categories</h1>
           <p className="mt-1 text-sm text-slate-500">Organize your product catalog</p>
         </div>
-        <Link
-          to={ROUTES.ADMIN_CATEGORY_CREATE}
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Add Category
-        </Link>
+        </button>
       </div>
 
       <div className="admin-card p-4">
@@ -302,13 +319,13 @@ export default function AdminCategoryListPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Link
-                          to={ROUTES.ADMIN_CATEGORY_EDIT(row.id)}
-                          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                        <Button
+                          variant="ghost"
+                          iconOnly
+                          icon={Pencil}
                           aria-label="Edit category"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Link>
+                          onClick={() => setEditId(row.id)}
+                        />
                         <Button
                           variant="ghost"
                           iconOnly
@@ -339,6 +356,26 @@ export default function AdminCategoryListPage() {
       {!search && !isLoading && (
         <p className="text-sm text-slate-500">{allRows.length} categories total</p>
       )}
+
+      <Drawer
+        open={showCreate}
+        onClose={() => {
+          createCategory.reset();
+          setShowCreate(false);
+        }}
+        title="Add Category"
+        variant="modal"
+        size="lg"
+      >
+        <CategoryForm
+          onSubmit={handleCreate}
+          isPending={createCategory.isPending}
+          error={createCategory.error}
+          submitLabel="Create Category"
+        />
+      </Drawer>
+
+      <CategoryEditDrawer editId={editId} onClose={() => setEditId(null)} />
 
       <ConfirmModal
         open={deleteTarget !== null}

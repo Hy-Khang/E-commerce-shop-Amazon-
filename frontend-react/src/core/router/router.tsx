@@ -1,3 +1,10 @@
+/*
+ * Route-configuration module: it exports the `router` config object alongside
+ * lazy-loaded page components, so it can't satisfy react-refresh's
+ * "only export components" rule. Fast refresh doesn't apply to a router config
+ * anyway, so the rule is disabled for this file only.
+ */
+/* eslint-disable react-refresh/only-export-components */
 import { createBrowserRouter } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { MainLayout } from '@/core/layouts/MainLayout';
@@ -48,14 +55,10 @@ const AdminPermissionPage = lazy(() => import('@/features/auth/pages/AdminPermis
 const AdminUserListPage = lazy(() => import('@/features/auth/pages/AdminUserListPage'));
 const AdminUserDetailPage = lazy(() => import('@/features/auth/pages/AdminUserDetailPage'));
 const AdminCategoryListPage = lazy(() => import('@/features/product/pages/AdminCategoryListPage'));
-const AdminCategoryCreatePage = lazy(() => import('@/features/product/pages/AdminCategoryCreatePage'));
-const AdminCategoryEditPage = lazy(() => import('@/features/product/pages/AdminCategoryEditPage'));
 const AdminReviewListPage = lazy(() => import('@/features/review/pages/AdminReviewListPage'));
 const AdminWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/AdminWishlistPopularPage'));
 
 const AdminCouponListPage = lazy(() => import('@/features/coupon/pages/AdminCouponListPage'));
-const AdminCouponCreatePage = lazy(() => import('@/features/coupon/pages/AdminCouponCreatePage'));
-const AdminCouponEditPage = lazy(() => import('@/features/coupon/pages/AdminCouponEditPage'));
 
 const SellerDashboardPage = lazy(() => import('@/features/dashboard/pages/SellerDashboardPage'));
 const SellerProductListPage = lazy(() => import('@/features/product/pages/SellerProductListPage'));
@@ -67,8 +70,6 @@ const SellerOrderDetailPage = lazy(() => import('@/features/order/pages/SellerOr
 const ShopProfilePage = lazy(() => import('@/features/shop/pages/ShopProfilePage'));
 const SellerShopSettingsPage = lazy(() => import('@/features/shop/pages/SellerShopSettingsPage'));
 const SellerCouponListPage = lazy(() => import('@/features/coupon/pages/SellerCouponListPage'));
-const SellerCouponCreatePage = lazy(() => import('@/features/coupon/pages/SellerCouponCreatePage'));
-const SellerCouponEditPage = lazy(() => import('@/features/coupon/pages/SellerCouponEditPage'));
 const AdminShopListPage = lazy(() => import('@/features/shop/pages/AdminShopListPage'));
 const AdminShopDetailPage = lazy(() => import('@/features/shop/pages/AdminShopDetailPage'));
 
@@ -149,8 +150,6 @@ export const router = createBrowserRouter([
               { path: 'admin/products/new', element: <SuspenseWrapper><AdminProductCreatePage /></SuspenseWrapper> },
               { path: 'admin/products/:id/edit', element: <SuspenseWrapper><AdminProductEditPage /></SuspenseWrapper> },
               { path: 'admin/categories', element: <SuspenseWrapper><AdminCategoryListPage /></SuspenseWrapper> },
-              { path: 'admin/categories/new', element: <SuspenseWrapper><AdminCategoryCreatePage /></SuspenseWrapper> },
-              { path: 'admin/categories/:id/edit', element: <SuspenseWrapper><AdminCategoryEditPage /></SuspenseWrapper> },
               { path: 'admin/orders', element: <SuspenseWrapper><AdminOrderListPage /></SuspenseWrapper> },
               { path: 'admin/orders/:id', element: <SuspenseWrapper><AdminOrderDetailPage /></SuspenseWrapper> },
               { path: 'admin/shops', element: <SuspenseWrapper><AdminShopListPage /></SuspenseWrapper> },
@@ -162,8 +161,6 @@ export const router = createBrowserRouter([
               { path: 'admin/reviews', element: <SuspenseWrapper><AdminReviewListPage /></SuspenseWrapper> },
               { path: 'admin/wishlist', element: <SuspenseWrapper><AdminWishlistPopularPage /></SuspenseWrapper> },
               { path: 'admin/coupons', element: <SuspenseWrapper><AdminCouponListPage /></SuspenseWrapper> },
-              { path: 'admin/coupons/new', element: <SuspenseWrapper><AdminCouponCreatePage /></SuspenseWrapper> },
-              { path: 'admin/coupons/:id/edit', element: <SuspenseWrapper><AdminCouponEditPage /></SuspenseWrapper> },
               { path: 'admin/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },
@@ -188,8 +185,6 @@ export const router = createBrowserRouter([
               { path: 'seller/orders/:id', element: <SuspenseWrapper><SellerOrderDetailPage /></SuspenseWrapper> },
               { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
               { path: 'seller/coupons', element: <SuspenseWrapper><SellerCouponListPage /></SuspenseWrapper> },
-              { path: 'seller/coupons/new', element: <SuspenseWrapper><SellerCouponCreatePage /></SuspenseWrapper> },
-              { path: 'seller/coupons/:id/edit', element: <SuspenseWrapper><SellerCouponEditPage /></SuspenseWrapper> },
               { path: 'seller/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },

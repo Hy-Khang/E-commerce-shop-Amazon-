@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Shield, Plus, Trash2, Pencil, X } from 'lucide-react';
+import { useState, useCallback, useMemo } from 'react';
+import { Shield, Plus, Trash2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/common/components/ui/Button';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { PermissionMatrix } from '../components/PermissionMatrix';
+import { PermissionFormModal } from '../components/PermissionFormModal';
 import {
   useAdminPermissions,
   useRolePermissions,
@@ -105,11 +107,18 @@ function MatrixTab() {
       }
     });
     return map;
+    // Intentionally keyed on each query's `data` (stable react-query refs) — depending
+    // on the query objects themselves would rebuild the map on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rolePermQueries, role1Query.data, role2Query.data, role3Query.data, role4Query.data, role5Query.data]);
 
-  useEffect(() => {
+  // Sync server-derived permissions into local (optimistic) state without an effect,
+  // via React's "adjust state during render" pattern (re-renders immediately, no cascade).
+  const [syncedMap, setSyncedMap] = useState(roleQueryMap);
+  if (syncedMap !== roleQueryMap) {
+    setSyncedMap(roleQueryMap);
     setRolePermSets(roleQueryMap);
-  }, [roleQueryMap]);
+  }
 
   const handleToggle = useCallback(
     (roleId: number, permissionId: number, currentlyGranted: boolean) => {
@@ -186,6 +195,7 @@ function ManageTab() {
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Permission | null>(null);
 
   function handleCreate(data: CreatePermissionRequest) {
     createMutation.mutate(data, {
@@ -199,9 +209,10 @@ function ManageTab() {
     });
   }
 
-  function handleUpdate(id: number, data: UpdatePermissionRequest) {
+  function handleUpdate(data: UpdatePermissionRequest) {
+    if (!editingPermission) return;
     updateMutation.mutate(
-      { id, data },
+      { id: editingPermission.id, data },
       {
         onSuccess: () => {
           setEditingPermission(null);
@@ -214,12 +225,17 @@ function ManageTab() {
     );
   }
 
-  function handleDelete(permission: Permission) {
-    if (!confirm(`Delete "${permission.resource}:${permission.action}"? This cannot be undone.`)) return;
-    deleteMutation.mutate(permission.id, {
-      onSuccess: () => toast.success('Permission deleted'),
-      onError: (err) =>
-        toast.error(err instanceof ApiError ? err.message : 'Failed to delete permission'),
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        setDeleteTarget(null);
+        toast.success('Permission deleted');
+      },
+      onError: (err) => {
+        setDeleteTarget(null);
+        toast.error(err instanceof ApiError ? err.message : 'Failed to delete permission');
+      },
     });
   }
 
@@ -240,14 +256,6 @@ function ManageTab() {
           Add Permission
         </Button>
       </div>
-
-      {showCreateForm && (
-        <PermissionForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowCreateForm(false)}
-          isPending={createMutation.isPending}
-        />
-      )}
 
       <div className="space-y-4">
         {resources.map((resource) => (
@@ -276,32 +284,21 @@ function ManageTab() {
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {editingPermission?.id === permission.id ? (
-                            <InlineEditForm
-                              permission={permission}
-                              onSubmit={(data) => handleUpdate(permission.id, data)}
-                              onCancel={() => setEditingPermission(null)}
-                              isPending={updateMutation.isPending}
-                            />
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => setEditingPermission(permission)}
-                                className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-                                aria-label="Edit permission"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(permission)}
-                                disabled={deleteMutation.isPending}
-                                className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition-colors"
-                                aria-label="Delete permission"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </>
-                          )}
+                          <button
+                            onClick={() => setEditingPermission(permission)}
+                            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                            aria-label="Edit permission"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(permission)}
+                            disabled={deleteMutation.isPending}
+                            className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition-colors"
+                            aria-label="Delete permission"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -311,6 +308,36 @@ function ManageTab() {
           </div>
         ))}
       </div>
+
+      <PermissionFormModal
+        open={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+        isPending={createMutation.isPending}
+        onCreate={handleCreate}
+        onUpdate={handleUpdate}
+      />
+
+      <PermissionFormModal
+        open={editingPermission !== null}
+        onClose={() => setEditingPermission(null)}
+        permission={editingPermission}
+        isPending={updateMutation.isPending}
+        onCreate={handleCreate}
+        onUpdate={handleUpdate}
+      />
+
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="Delete Permission"
+        message={deleteTarget
+          ? `Delete "${deleteTarget.resource}:${deleteTarget.action}"? This cannot be undone.`
+          : ''}
+        variant="danger"
+        confirmLabel="Delete"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
@@ -328,135 +355,6 @@ function ActionBadge({ action }: { action: string }) {
     >
       {action}
     </span>
-  );
-}
-
-function PermissionForm({
-  onSubmit,
-  onCancel,
-  isPending,
-}: {
-  onSubmit: (data: CreatePermissionRequest) => void;
-  onCancel: () => void;
-  isPending: boolean;
-}) {
-  const [name, setName] = useState('');
-  const [resource, setResource] = useState('');
-  const [action, setAction] = useState('');
-  const [description, setDescription] = useState('');
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim() || !resource.trim() || !action.trim()) return;
-    onSubmit({
-      name: name.trim(),
-      resource: resource.trim().toLowerCase(),
-      action: action.trim().toLowerCase(),
-      description: description.trim() || undefined,
-    });
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="mb-4 rounded-xl bg-slate-50 p-4 ring-1 ring-slate-900/5"
-    >
-      <div className="grid grid-cols-4 gap-3">
-        <input
-          type="text"
-          placeholder="Name (e.g. Create Product)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="admin-input"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Resource (e.g. products)"
-          value={resource}
-          onChange={(e) => setResource(e.target.value)}
-          className="admin-input"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Action (e.g. create)"
-          value={action}
-          onChange={(e) => setAction(e.target.value)}
-          className="admin-input"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Description (optional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="admin-input"
-        />
-      </div>
-      <div className="mt-3 flex justify-end gap-2">
-        <Button variant="secondary" size="sm" type="button" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" loading={isPending} size="sm">
-          Create
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-function InlineEditForm({
-  permission,
-  onSubmit,
-  onCancel,
-  isPending,
-}: {
-  permission: Permission;
-  onSubmit: (data: UpdatePermissionRequest) => void;
-  onCancel: () => void;
-  isPending: boolean;
-}) {
-  const [name, setName] = useState(permission.name);
-  const [description, setDescription] = useState(permission.description ?? '');
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit({ name: name.trim(), description: description.trim() || undefined });
-      }}
-      className="flex items-center gap-2"
-    >
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="w-36 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-        required
-      />
-      <input
-        type="text"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="description"
-        className="w-36 rounded-lg border border-slate-200 px-2 py-1 text-xs focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-      />
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded-lg bg-teal-600 px-2 py-1 text-xs text-white hover:bg-teal-700 disabled:opacity-50"
-      >
-        Save
-      </button>
-      <button
-        type="button"
-        onClick={onCancel}
-        className="rounded p-1 text-slate-400 hover:text-slate-600"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
-    </form>
   );
 }
 
