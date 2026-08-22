@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { Menu, HelpCircle, Shield, Store, Truck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '@/features/auth';
@@ -76,20 +76,33 @@ function NavBar() {
   return (
     <nav className="hidden border-b border-border-default/50 md:block">
       <div className="shop-container flex h-10 items-center gap-0.5 overflow-x-auto">
-        <Link
+        <NavLink
           to={ROUTES.PRODUCTS}
-          className="shrink-0 rounded-md px-3 py-1.5 text-sm font-semibold text-text-primary hover:bg-neutral-100/50 transition-colors"
+          end
+          className={({ isActive }) =>
+            `shrink-0 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+              isActive
+                ? 'bg-brand-light text-text-brand'
+                : 'text-text-primary hover:bg-neutral-100/50'
+            }`
+          }
         >
           All Products
-        </Link>
+        </NavLink>
         {rootCategories.map((cat) => (
-          <Link
+          <NavLink
             key={cat.id}
             to={ROUTES.CATEGORY(cat.slug)}
-            className="shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary hover:bg-neutral-100/50 hover:text-text-primary transition-colors"
+            className={({ isActive }) =>
+              `shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-brand-light font-semibold text-text-brand'
+                  : 'text-text-secondary hover:bg-neutral-100/50 hover:text-text-primary'
+              }`
+            }
           >
             {cat.name}
-          </Link>
+          </NavLink>
         ))}
         <div className="ml-auto">
           <Link
