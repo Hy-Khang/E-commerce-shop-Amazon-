@@ -1,18 +1,28 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Power, PowerOff, Plus, Search, Tag, Lock } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Pencil, Power, PowerOff, Plus, Search, Tag, Lock, Receipt } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
-import { ROUTES } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
 import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
-import { useSellerCoupons } from '../hooks/useSellerCoupons';
+import { useMyShop } from '@/features/shop';
+import { useSellerCoupons, useSellerCoupon } from '../hooks/useSellerCoupons';
 import {
+  useCreateSellerCoupon,
+  useUpdateSellerCoupon,
   useDeactivateSellerCoupon,
   useReactivateSellerCoupon,
 } from '../hooks/useSellerCouponMutations';
-import type { CouponListParams, CouponScope, DiscountType, Coupon } from '../types/coupon.types';
+import { CouponFormModal } from '../components/CouponFormModal';
+import { SellerCouponUsagesDrawer } from '../components/SellerCouponUsagesDrawer';
+import type {
+  CouponListParams,
+  CouponScope,
+  DiscountType,
+  Coupon,
+  CreateCouponFormData,
+} from '../types/coupon.types';
 
 const SCOPE_LABELS: Record<CouponScope, string> = {
   all: 'Whole shop',
@@ -36,9 +46,58 @@ export default function SellerCouponListPage() {
   };
 
   const { data, isLoading } = useSellerCoupons(filters);
+  const { data: shop } = useMyShop();
   const deactivate = useDeactivateSellerCoupon();
   const reactivate = useReactivateSellerCoupon();
   const [deactivateTarget, setDeactivateTarget] = useState<number | null>(null);
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [usagesTarget, setUsagesTarget] = useState<Coupon | null>(null);
+
+  const createCoupon = useCreateSellerCoupon();
+  const updateCoupon = useUpdateSellerCoupon(editId ?? 0);
+  const { data: editDetail, isLoading: editLoading } = useSellerCoupon(editId ?? 0);
+
+  function handleCreate(data: CreateCouponFormData) {
+    createCoupon.mutate(
+      {
+        code: data.code,
+        description: data.description || undefined,
+        discount_type: data.discount_type,
+        discount_value: data.discount_value,
+        scope: data.scope === 'products' ? 'products' : 'all',
+        product_ids: data.scope === 'products' ? data.product_ids : undefined,
+        min_order_amount: data.min_order_amount ?? undefined,
+        max_discount_amount: data.max_discount_amount ?? undefined,
+        max_uses: data.max_uses ?? undefined,
+        max_uses_per_user: data.max_uses_per_user,
+        starts_at: data.starts_at,
+        expires_at: data.expires_at,
+      },
+      { onSuccess: () => setShowCreate(false) },
+    );
+  }
+
+  function handleUpdate(data: CreateCouponFormData) {
+    if (editId === null) return;
+    updateCoupon.mutate(
+      {
+        description: data.description || undefined,
+        discount_type: data.discount_type,
+        discount_value: data.discount_value,
+        scope: data.scope === 'products' ? 'products' : 'all',
+        product_ids: data.scope === 'products' ? data.product_ids : undefined,
+        min_order_amount: data.min_order_amount ?? undefined,
+        max_discount_amount: data.max_discount_amount ?? undefined,
+        max_uses: data.max_uses ?? undefined,
+        max_uses_per_user: data.max_uses_per_user,
+        starts_at: data.starts_at,
+        expires_at: data.expires_at,
+      },
+      { onSuccess: () => setEditId(null) },
+    );
+  }
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -131,13 +190,21 @@ export default function SellerCouponListPage() {
       className: 'text-right',
       render: (coupon) => (
         <div className="flex items-center justify-end gap-1">
-          <Link
-            to={ROUTES.SELLER_COUPON_EDIT(coupon.id)}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          <Button
+            variant="ghost"
+            iconOnly
+            icon={Receipt}
+            aria-label="View usages"
+            onClick={() => setUsagesTarget(coupon)}
+            className="hover:!text-amber-600"
+          />
+          <Button
+            variant="ghost"
+            iconOnly
+            icon={Pencil}
             aria-label={coupon.admin_disabled ? 'View coupon' : 'Edit coupon'}
-          >
-            <Pencil className="h-4 w-4" />
-          </Link>
+            onClick={() => setEditId(coupon.id)}
+          />
           {/* A coupon locked by admin cannot be deactivated/reactivated by the seller. */}
           {!coupon.admin_disabled &&
             (coupon.is_active ? (
@@ -173,13 +240,14 @@ export default function SellerCouponListPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Coupons</h1>
           <p className="mt-1 text-sm text-slate-500">Discount codes for your shop's products</p>
         </div>
-        <Link
-          to={ROUTES.SELLER_COUPON_CREATE}
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Create Coupon
-        </Link>
+        </button>
       </div>
 
       <AdminDataTable
@@ -238,6 +306,45 @@ export default function SellerCouponListPage() {
             </div>
           </div>
         }
+      />
+
+      <CouponFormModal
+        open={showCreate}
+        onClose={() => {
+          createCoupon.reset();
+          setShowCreate(false);
+        }}
+        title="Create Coupon"
+        onSubmit={handleCreate}
+        isPending={createCoupon.isPending}
+        error={createCoupon.error}
+        hideCategoryScope
+        productSource="seller"
+        codePrefix={shop?.slug ? shop.slug.toUpperCase() : undefined}
+      />
+
+      <CouponFormModal
+        open={editId !== null}
+        onClose={() => {
+          updateCoupon.reset();
+          setEditId(null);
+        }}
+        title={editDetail ? `${editDetail.admin_disabled ? 'View' : 'Edit'}: ${editDetail.code}` : 'Edit Coupon'}
+        onSubmit={handleUpdate}
+        isPending={updateCoupon.isPending}
+        error={updateCoupon.error}
+        detail={editDetail}
+        isLoadingDetail={editLoading}
+        isEdit
+        hideCategoryScope
+        productSource="seller"
+        locked={editDetail?.admin_disabled}
+      />
+
+      <SellerCouponUsagesDrawer
+        couponId={usagesTarget?.id ?? null}
+        couponCode={usagesTarget?.code}
+        onClose={() => setUsagesTarget(null)}
       />
 
       <ConfirmModal

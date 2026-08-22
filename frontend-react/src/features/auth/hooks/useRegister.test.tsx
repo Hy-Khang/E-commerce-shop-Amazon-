@@ -1,7 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useRegister } from './useRegister';
-import { mockLoginResponse, createTestQueryClient } from '../tests/mocks/auth.mock';
+import { createTestQueryClient } from '../tests/mocks/auth.mock';
+import type { RegisterResponse } from '../types/auth.types';
+
+function mockRegisterResponse(overrides: Partial<RegisterResponse> = {}): RegisterResponse {
+  return {
+    email: 'user@example.com',
+    expiresIn: 300,
+    message: 'Verification code sent',
+    ...overrides,
+  };
+}
 import { QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { type ReactNode } from 'react';
@@ -43,8 +53,7 @@ describe('useRegister', () => {
   });
 
   it('should call authService.register without confirmPassword', async () => {
-    const loginResponse = mockLoginResponse();
-    vi.mocked(authService.register).mockResolvedValue({ data: { data: loginResponse } } as never);
+    vi.mocked(authService.register).mockResolvedValue({ data: { data: mockRegisterResponse() } } as never);
 
     const { result } = renderHook(() => useRegister(), { wrapper });
 
@@ -64,9 +73,8 @@ describe('useRegister', () => {
     });
   });
 
-  it('should store tokens via auth store on success', async () => {
-    const loginResponse = mockLoginResponse();
-    vi.mocked(authService.register).mockResolvedValue({ data: { data: loginResponse } } as never);
+  it('should NOT auto-login on success (email verification required first)', async () => {
+    vi.mocked(authService.register).mockResolvedValue({ data: { data: mockRegisterResponse() } } as never);
 
     const { result } = renderHook(() => useRegister(), { wrapper });
 
@@ -79,12 +87,13 @@ describe('useRegister', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockStoreLogin).toHaveBeenCalledWith(loginResponse);
+    expect(mockStoreLogin).not.toHaveBeenCalled();
   });
 
-  it('should navigate to home on success', async () => {
-    const loginResponse = mockLoginResponse();
-    vi.mocked(authService.register).mockResolvedValue({ data: { data: loginResponse } } as never);
+  it('should navigate to the verify-email page with the email on success', async () => {
+    vi.mocked(authService.register).mockResolvedValue({
+      data: { data: mockRegisterResponse({ email: 'user@example.com' }) },
+    } as never);
 
     const { result } = renderHook(() => useRegister(), { wrapper });
 
@@ -97,7 +106,9 @@ describe('useRegister', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/verify-email?email=user%40example.com', {
+      replace: true,
+    });
   });
 
   it('should set error state on failure', async () => {

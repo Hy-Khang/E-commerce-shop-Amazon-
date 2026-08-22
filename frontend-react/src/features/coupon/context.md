@@ -5,15 +5,13 @@ Coupon/discount code system for the e-commerce platform. Customers enter coupon 
 
 ## Pages
 - **CheckoutPage** (order feature) — voucher selection grouped by shop (`CheckoutShopGroup` shop rows + a platform-voucher row), opening a scoped `CouponSelectorModal`; mirrors the Cart page
-- **AdminCouponListPage** — List all coupons (platform + shop); Owner column + filter; edit only platform coupons, deactivate any
-- **AdminCouponCreatePage** — Create platform coupon with scope selection and date range
-- **AdminCouponEditPage** — Edit platform coupon details (code immutable), view recent usages
-- **SellerCouponListPage** — List the seller's own shop coupons (amber portal)
-- **SellerCouponCreatePage** — Create shop coupon (scope all/products, code auto-prefixed with shop slug, own-shop product picker)
-- **SellerCouponEditPage** — Edit shop coupon (code immutable), view recent usages
+- **AdminCouponListPage** — List all coupons (platform + shop); Owner column + filter. Create/edit (platform coupons only) happen in-page via a `CouponFormModal` popup; a "View usages" row action opens `AdminCouponUsagesDrawer`; deactivate/unlock any.
+- **SellerCouponListPage** — List the seller's own shop coupons (amber portal). Create/edit happen in a `CouponFormModal` popup (scope all/products, code auto-prefixed with shop slug); admin-locked coupons open read-only. "View usages" opens `SellerCouponUsagesDrawer`.
 
 ## Shared components
 - **CouponForm** — reused by admin & seller; props `hideCategoryScope`, `codePrefix`, `productSource` ('admin' | 'seller')
+- **CouponFormModal** — `Drawer variant="modal" size="xl"` wrapper around `CouponForm`; owns the RHF instance, hydrates edit via `values` from the fetched detail (spinner while `isLoadingDetail`), and renders a read-only locked notice when `locked`. Create + edit both live on the list pages (no separate routes).
+- **AdminCouponUsagesDrawer / SellerCouponUsagesDrawer** — `Drawer` popups listing a coupon's usages (`useAdminCouponUsages` / `useSellerCouponUsages`), opened from the "View usages" row action.
 - **MultiItemPicker** — `source` prop switches products between `useAdminProducts` and `useSellerProducts`
 - **CouponPicker** — checkout trigger (Shopee-style). Drop-in for `CouponInput` (same `appliedCoupons`/`onApply`/`onRemove`) plus `cartSig`. Shows applied coupons + a button that opens `CouponSelectorModal`.
 - **CouponSelectorModal** — voucher picker: manual-entry fallback (`useValidateCoupon`) + platform/per-shop sections of selectable vouchers (`useAvailableCoupons`). Edits a local draft seeded from the applied set; "Apply" commits the diff. ≤1 per group. `CouponOptionRow` renders each voucher with its eligibility/reason. `scope` prop (`'all'` default | `'platform'` | `shopId`) filters which sections/manual codes are shown/allowed — the Cart page opens it scoped per shop or to platform; the draft is still seeded from the full applied set so hidden-group coupons are preserved.
@@ -47,4 +45,4 @@ Coupon/discount code system for the e-commerce platform. Customers enter coupon 
 ## Phase 2 additions
 - **Multi-coupon checkout** — stack one platform coupon with one coupon per shop; server computes exact per-shop distribution (FE total is an estimate).
 - **Admin lock** — AdminCouponListPage shows a "Locked" badge for `admin_disabled` shop coupons and an Unlock action (`useUnlockCoupon` → `PATCH /admin/coupons/:id/unlock`).
-- **Seller lock** — SellerCouponListPage shows "Locked by admin" (no edit/deactivate); SellerCouponEditPage renders a read-only locked notice instead of the form.
+- **Seller lock** — SellerCouponListPage shows "Locked by admin" (no deactivate); opening an admin-locked coupon in the `CouponFormModal` renders a read-only locked notice instead of the form.

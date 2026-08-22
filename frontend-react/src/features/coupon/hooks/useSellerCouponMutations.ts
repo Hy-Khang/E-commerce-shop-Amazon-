@@ -1,8 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import { sellerCouponService } from '../services/seller-coupon.service';
 import { sellerCouponKeys } from './useSellerCoupons';
-import { ROUTES } from '@/common/constants/routes';
 import { showSuccessToast } from '@/common/components/feedback/toast';
 import { useTranslation } from '@/common/i18n';
 import type {
@@ -12,7 +10,6 @@ import type {
 
 export function useCreateSellerCoupon() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const { t } = useTranslation();
 
   return useMutation({
@@ -22,7 +19,6 @@ export function useCreateSellerCoupon() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sellerCouponKeys.all });
       showSuccessToast(t((m) => m.toast.coupon.created));
-      navigate(ROUTES.SELLER_COUPONS);
     },
   });
 }
