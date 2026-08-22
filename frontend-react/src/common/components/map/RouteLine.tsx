@@ -127,8 +127,16 @@ export function RouteLine({ from, to }: RouteLineProps) {
   // transient failure retries once the shipper moves (coords change).
   const lastRoutedKey = useRef('');
 
+  // Depend on the four scalar coordinates rather than the array props, so the
+  // effect re-runs on value changes (not array identity) and the deps stay
+  // statically checkable. `from`/`to` are rebuilt inside from these scalars.
+  const [fromLat, fromLng] = from;
+  const [toLat, toLng] = to;
+
   useEffect(() => {
-    const key = `${from[0]},${from[1]};${to[0]},${to[1]}`;
+    const fromPt: [number, number] = [fromLat, fromLng];
+    const toPt: [number, number] = [toLat, toLng];
+    const key = `${fromLat},${fromLng};${toLat},${toLng}`;
     if (key === lastRoutedKey.current) return;
 
     const controller = new AbortController();
@@ -137,7 +145,7 @@ export function RouteLine({ from, to }: RouteLineProps) {
       // Tier 1 — ORS
       if (ORS_API_KEY) {
         try {
-          const ors = await fetchOrsRoute(from, to, controller.signal);
+          const ors = await fetchOrsRoute(fromPt, toPt, controller.signal);
           if (ors) {
             lastRoutedKey.current = key;
             setRouteCoords(ors.coords);
@@ -152,7 +160,7 @@ export function RouteLine({ from, to }: RouteLineProps) {
 
       // Tier 2 — OSRM (validated inside VN)
       try {
-        const osrm = await fetchOsrmRoute(from, to, controller.signal);
+        const osrm = await fetchOsrmRoute(fromPt, toPt, controller.signal);
         if (osrm && isRouteInsideVietnam(osrm.coords)) {
           lastRoutedKey.current = key;
           setRouteCoords(osrm.coords);
@@ -165,12 +173,12 @@ export function RouteLine({ from, to }: RouteLineProps) {
       }
 
       // Tier 3 — straight line. Deliberately does NOT set lastRoutedKey → retry later.
-      setRouteCoords([from, to]);
+      setRouteCoords([fromPt, toPt]);
       setRouteInfo(null);
     })();
 
     return () => controller.abort();
-  }, [from[0], from[1], to[0], to[1]]);
+  }, [fromLat, fromLng, toLat, toLng]);
 
   if (routeCoords.length === 0) return null;
 
