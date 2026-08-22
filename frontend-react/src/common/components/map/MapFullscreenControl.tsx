@@ -4,6 +4,7 @@ import { Maximize2, Minimize2 } from 'lucide-react';
 
 // Parent-level fullscreen state: Esc to exit + lock body scroll while the map
 // overlays the page. Pair with the wrapper classes from `fullscreenWrapperClass`.
+// eslint-disable-next-line react-refresh/only-export-components -- hook co-located with its control component (fast-refresh DX only)
 export function useMapFullscreen() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 

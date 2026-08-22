@@ -5,6 +5,7 @@ import { Polyline } from 'react-leaflet';
 // outline was clipped to the land-border arc (Móng Cái → Hà Tiên, the sea-facing
 // coastline excluded) and simplified with Douglas–Peucker (~0.008°, ~800m).
 // Regenerate rather than hand-edit. Coordinates are [lat, lng].
+// eslint-disable-next-line react-refresh/only-export-components -- data const co-located with its Polyline component (fast-refresh DX only)
 export const VIETNAM_LAND_BORDER: [number, number][] = [
   [21.52521, 108.04462],
   [21.57246, 108.04111],

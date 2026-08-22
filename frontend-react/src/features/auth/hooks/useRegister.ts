@@ -8,8 +8,10 @@ export function useRegister() {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: ({ confirmPassword: _, ...data }: RegisterFormData) =>
-      authService.register(data),
+    mutationFn: ({ confirmPassword, ...data }: RegisterFormData) => {
+      void confirmPassword; // form-only field, never sent to the API
+      return authService.register(data);
+    },
     meta: { suppressToast: true },
     onSuccess: (response) => {
       const { email } = response.data.data;

@@ -78,7 +78,9 @@ export function AdminLayout() {
   useEffect(() => {
     try {
       localStorage.setItem(SIDEBAR_KEY, String(collapsed));
-    } catch {}
+    } catch {
+      /* localStorage unavailable (private mode / quota) — non-fatal */
+    }
   }, [collapsed]);
 
   const filteredSections = navSections
