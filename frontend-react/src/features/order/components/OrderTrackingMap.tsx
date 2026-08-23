@@ -5,7 +5,8 @@ import L from 'leaflet';
 import { shipperMapIcon, deliveryMapIcon, VIETNAM_BOUNDS, VIETNAM_MIN_ZOOM } from '@/common/components/map/map-icons';
 import { BaseTileLayer } from '@/common/components/map/BaseTileLayer';
 import { VietnamBorderHighlight } from '@/common/components/map/vietnam-land-border';
-import { MapFullscreenControl, useMapFullscreen } from '@/common/components/map/MapFullscreenControl';
+import { MapFullscreenControl } from '@/common/components/map/MapFullscreenControl';
+import { useMapFullscreen } from '@/common/components/map/useMapFullscreen';
 import { RouteLine } from '@/common/components/map/RouteLine';
 import type { ShipperLocation, DeliveryLocation } from '../types/order-tracking.types';
 
