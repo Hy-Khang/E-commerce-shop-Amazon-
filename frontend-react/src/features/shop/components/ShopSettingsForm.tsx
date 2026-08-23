@@ -11,7 +11,7 @@ import {
   type UpdateShopFormData,
 } from '../types/shop.types';
 
-const DESCRIPTION_MAX = 500;
+const DESCRIPTION_MAX = 2000;
 
 /** Shared editable-field shape — both create & update forms are compatible with it. */
 type ShopFormValues = {
