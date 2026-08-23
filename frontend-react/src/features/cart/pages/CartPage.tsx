@@ -37,7 +37,7 @@ export default function CartPage() {
     scope: 'platform',
   });
 
-  const items = cart?.items ?? [];
+  const items = useMemo(() => cart?.items ?? [], [cart?.items]);
   const cartSig = useMemo(() => cartSignature(items), [items]);
   const shopIds = useMemo(() => cartShopIds(items), [items]);
 

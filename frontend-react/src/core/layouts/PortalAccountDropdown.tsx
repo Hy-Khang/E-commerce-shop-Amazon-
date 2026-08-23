@@ -26,9 +26,13 @@ export function PortalAccountDropdown() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  useEffect(() => {
+  // Close the dropdown on navigation. Adjust state during render (React docs:
+  // "storing info from previous renders") instead of an effect.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setIsOpen(false);
-  }, [pathname]);
+  }
 
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const visiblePortals = getVisiblePortals(hasPermission);

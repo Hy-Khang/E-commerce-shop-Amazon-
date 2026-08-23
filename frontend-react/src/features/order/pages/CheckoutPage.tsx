@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MapPin, CreditCard, Tag, Loader2 } from 'lucide-react';
 import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
@@ -59,7 +59,7 @@ export default function CheckoutPage() {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -68,7 +68,8 @@ export default function CheckoutPage() {
     },
   });
 
-  const selectedAddressId = watch('address_id');
+  const selectedAddressId = useWatch({ control, name: 'address_id' });
+  const paymentMethod = useWatch({ control, name: 'payment_method' });
 
   const isProcessing = checkout.isPending || createPayment.isPending;
 
@@ -279,7 +280,7 @@ export default function CheckoutPage() {
                   <label
                     key={method}
                     className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
-                      watch('payment_method') === method
+                      paymentMethod === method
                         ? 'border-border-brand bg-brand-light/30 ring-1 ring-brand/10'
                         : 'border-border-default hover:border-border-strong bg-white'
                     }`}

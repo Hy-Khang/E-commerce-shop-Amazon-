@@ -8,7 +8,8 @@ export function useRegister() {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: ({ confirmPassword: _, ...data }: RegisterFormData) =>
+    // confirmPassword is a form-only field, stripped via rest-sibling destructure.
+    mutationFn: ({ confirmPassword, ...data }: RegisterFormData) =>
       authService.register(data),
     meta: { suppressToast: true },
     onSuccess: (response) => {

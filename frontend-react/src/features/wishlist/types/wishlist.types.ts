@@ -42,6 +42,6 @@ export interface BulkCheckWishlistRequest {
 
 // --- Query params ---
 
-export interface WishlistListParams extends PaginationParams {}
+export type WishlistListParams = PaginationParams;
 
-export interface AdminPopularWishlistParams extends PaginationParams {}
+export type AdminPopularWishlistParams = PaginationParams;

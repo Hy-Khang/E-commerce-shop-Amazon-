@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Shield, ChevronDown, ChevronRight } from 'lucide-react';
 import type { Permission, PermissionsByResource, RoleWithUserCount } from '../types/admin.types';
 
@@ -245,9 +245,13 @@ interface ToggleCheckboxProps {
 function ToggleCheckbox({ checked, disabled, onChange }: ToggleCheckboxProps) {
   const [optimistic, setOptimistic] = useState(checked);
 
-  useEffect(() => {
+  // Re-sync optimistic value when the source prop changes. Adjust state during
+  // render (React docs: "storing info from previous renders") instead of an effect.
+  const [prevChecked, setPrevChecked] = useState(checked);
+  if (checked !== prevChecked) {
+    setPrevChecked(checked);
     setOptimistic(checked);
-  }, [checked]);
+  }
 
   function handleClick() {
     if (disabled) return;

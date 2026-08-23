@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@/core/api/api.types';
+import type { CartItem } from '@/features/cart';
+import type { AppliedCouponEntry, CouponValidationResult } from '@/features/coupon';
 import type { CheckoutPreview } from '../types/order.types';
 
 // ─── Hoisted mocks (referenced inside vi.mock factories) ───
@@ -17,14 +19,14 @@ const h = vi.hoisted(() => ({
 vi.mock('react-router-dom', () => ({ useNavigate: () => h.navigate }));
 vi.mock('@/features/cart', () => ({
   useCart: h.useCart,
-  cartSignature: (items: any[]) =>
+  cartSignature: (items: CartItem[]) =>
     (items ?? [])
       .map(
         (i) =>
           `${i.product_variant_id}:${i.quantity}:${i.variant.sale_price ?? i.variant.price}`,
       )
       .join('|'),
-  groupItemsByShop: (items: any[]) => [
+  groupItemsByShop: (items: CartItem[]) => [
     { shop_id: null, shop_name: null, items: items ?? [] },
   ],
 }));
@@ -46,24 +48,31 @@ vi.mock('@/features/coupon', async () => {
   const { create } = await import('zustand');
   const groupKey = (shopId: number | null | undefined) =>
     shopId != null ? `shop:${shopId}` : 'platform';
-  const useAppliedCouponsStore = create((set: any) => ({
-    appliedCoupons: [] as any[],
-    apply: (code: string, validation: any) =>
-      set((s: any) => {
+  interface CouponStoreState {
+    appliedCoupons: AppliedCouponEntry[];
+    apply: (code: string, validation: CouponValidationResult) => void;
+    remove: (code: string) => void;
+    clear: () => void;
+    reconcile: () => void;
+  }
+  const useAppliedCouponsStore = create<CouponStoreState>((set) => ({
+    appliedCoupons: [],
+    apply: (code, validation) =>
+      set((s) => {
         const key = groupKey(validation.shop_id);
         const rest = s.appliedCoupons.filter(
-          (c: any) => groupKey(c.validation.shop_id) !== key && c.code !== code,
+          (c) => groupKey(c.validation.shop_id) !== key && c.code !== code,
         );
         return { appliedCoupons: [...rest, { code, validation }] };
       }),
-    remove: (code: string) =>
-      set((s: any) => ({
-        appliedCoupons: s.appliedCoupons.filter((c: any) => c.code !== code),
+    remove: (code) =>
+      set((s) => ({
+        appliedCoupons: s.appliedCoupons.filter((c) => c.code !== code),
       })),
     clear: () => set({ appliedCoupons: [] }),
     reconcile: () => {},
   }));
-  const estimateCouponDiscount = (v: any, sub: number) => {
+  const estimateCouponDiscount = (v: CouponValidationResult, sub: number) => {
     if (v.min_order_amount && sub < v.min_order_amount) return 0;
     const d =
       v.discount_type === 'percentage'
@@ -75,17 +84,36 @@ vi.mock('@/features/coupon', async () => {
     useAppliedCouponsStore,
     estimateCouponDiscount,
     VoucherRow: () => <div />,
-    CouponSelectorModal: ({ appliedCoupons, onApply, onRemove }: any) => (
+    CouponSelectorModal: ({
+      appliedCoupons,
+      onApply,
+      onRemove,
+    }: {
+      appliedCoupons: AppliedCouponEntry[];
+      onApply: (code: string, validation: CouponValidationResult) => void;
+      onRemove: (code: string) => void;
+    }) => (
       <div>
         <button
           type="button"
           onClick={() =>
-            onApply('BADCODE', { discount_type: 'fixed', discount_value: 50000 })
+            onApply('BADCODE', {
+              valid: true,
+              code: 'BADCODE',
+              discount_type: 'fixed',
+              discount_value: 50000,
+              max_discount_amount: null,
+              min_order_amount: null,
+              scope: 'all',
+              applicable_category_ids: null,
+              applicable_product_ids: null,
+              shop_id: null,
+            })
           }
         >
           apply-coupon
         </button>
-        {appliedCoupons.map((c: any) => (
+        {appliedCoupons.map((c) => (
           <button type="button" key={c.code} onClick={() => onRemove(c.code)}>
             remove-{c.code}
           </button>
@@ -173,7 +201,7 @@ function baseResult() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (useAppliedCouponsStore as any).setState({ appliedCoupons: [] });
+  useAppliedCouponsStore.setState({ appliedCoupons: [] });
   h.useCart.mockReturnValue({ data: CART, isLoading: false });
   h.useAddresses.mockReturnValue({ data: [ADDRESS], isLoading: false });
   h.useCheckout.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });

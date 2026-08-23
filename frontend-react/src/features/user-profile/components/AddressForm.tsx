@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { addressSchema, type AddressFormData, type Address, type LocationValue } from '../types/user-profile.types';
@@ -21,7 +21,7 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { errors },
   } = useForm<AddressFormData>({
@@ -53,14 +53,21 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
         latitude: address.latitude ?? undefined,
         longitude: address.longitude ?? undefined,
       });
-      setLocation({ province: null, district: null, ward: null });
     }
   }, [address, reset]);
 
-  const addressLine = watch('address_line');
-  const city = watch('city');
-  const lat = watch('latitude');
-  const lng = watch('longitude');
+  // Clear the cascading location picker when a different address is edited.
+  // Adjust state during render (React docs: "storing info from previous renders").
+  const [prevAddressId, setPrevAddressId] = useState(address?.id);
+  if (address?.id !== prevAddressId) {
+    setPrevAddressId(address?.id);
+    setLocation({ province: null, district: null, ward: null });
+  }
+
+  const addressLine = useWatch({ control, name: 'address_line' });
+  const city = useWatch({ control, name: 'city' });
+  const lat = useWatch({ control, name: 'latitude' });
+  const lng = useWatch({ control, name: 'longitude' });
   const addressText = [addressLine, city].filter(Boolean).join(', ');
 
   async function autoGeocode(query: string) {

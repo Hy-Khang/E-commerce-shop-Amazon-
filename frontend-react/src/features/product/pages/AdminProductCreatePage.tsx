@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -20,16 +20,20 @@ export default function AdminProductCreatePage() {
     register,
     handleSubmit,
     setValue,
-    watch,
+    getValues,
+    control,
     formState: { errors },
   } = useForm<CreateProductFormData>({
     resolver: zodResolver(createProductSchema),
   });
 
-  const name = watch('name');
+  const categoryId = useWatch({ control, name: 'category_id' });
+  const thumbnailUrl = useWatch({ control, name: 'thumbnail_url' });
 
+  // Auto-fill slug from name on blur — imperative one-shot read, no subscription.
   function handleNameBlur() {
-    if (name && !watch('slug')) {
+    const name = getValues('name');
+    if (name && !getValues('slug')) {
       setValue('slug', generateSlug(name));
     }
   }
@@ -77,7 +81,7 @@ export default function AdminProductCreatePage() {
 
           <CategoryCascader
             categories={categories ?? []}
-            value={watch('category_id')}
+            value={categoryId}
             onChange={(id) => setValue('category_id', id as number, { shouldValidate: true })}
             error={errors.category_id?.message}
           />
@@ -101,7 +105,7 @@ export default function AdminProductCreatePage() {
           <div>
             <ImageUpload
               label="Thumbnail"
-              value={watch('thumbnail_url') || undefined}
+              value={thumbnailUrl || undefined}
               onUploaded={(url) => setValue('thumbnail_url', url, { shouldValidate: true })}
               onClear={() => setValue('thumbnail_url', '', { shouldValidate: true })}
             />
