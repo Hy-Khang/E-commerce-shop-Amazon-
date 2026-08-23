@@ -40,7 +40,7 @@ export function ShopProfilePreview({ name, logoUrl, bannerUrl, slug, status }: S
 
       <div className="px-6 pb-5">
         <div className="flex items-end gap-4">
-          <div className="-mt-12 h-24 w-24 flex-shrink-0 overflow-hidden rounded-full bg-white shadow-lg ring-4 ring-white">
+          <div className="relative z-10 -mt-12 h-24 w-24 flex-shrink-0 overflow-hidden rounded-full bg-white shadow-lg ring-4 ring-white">
             {logo ? (
               <img src={logo} alt={name} className="h-full w-full object-cover" />
             ) : (
