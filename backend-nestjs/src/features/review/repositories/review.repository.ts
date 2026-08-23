@@ -87,6 +87,7 @@ export class ReviewRepository {
 
   async findAllPaginated(
     query: ReviewQueryDto,
+    extra?: { shopId?: number; categoryIds?: number[] },
   ): Promise<IPaginatedResult<Review>> {
     const qb = this.repo
       .createQueryBuilder('review')
@@ -105,6 +106,16 @@ export class ReviewRepository {
 
     if (query.rating) {
       qb.andWhere('review.rating = :rating', { rating: query.rating });
+    }
+
+    if (extra?.categoryIds?.length) {
+      qb.andWhere('product.category_id IN (:...categoryIds)', {
+        categoryIds: extra.categoryIds,
+      });
+    }
+
+    if (extra?.shopId) {
+      qb.andWhere('product.shop_id = :shopId', { shopId: extra.shopId });
     }
 
     const sort = query.sort || 'created_at';

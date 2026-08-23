@@ -1,4 +1,4 @@
-import type { ProductVariant, ProductListItem } from '../types/product.types';
+import type { ProductVariant, ProductListItem, Category } from '../types/product.types';
 
 export function getEffectivePrice(variant: ProductVariant): number {
   return variant.sale_price ?? variant.price;
@@ -41,4 +41,24 @@ export function getLowestPriceVariant(product: ProductListItem): ProductVariant 
   return product.variants.reduce((low, v) =>
     getEffectivePrice(v) < getEffectivePrice(low) ? v : low,
   );
+}
+
+export interface FlatCategoryOption {
+  id: number;
+  label: string;
+}
+
+/** Flattens a category tree into indented options for a `<select>` dropdown. */
+export function flattenCategoryTree(
+  categories: Category[],
+  depth = 0,
+): FlatCategoryOption[] {
+  const result: FlatCategoryOption[] = [];
+  for (const cat of categories) {
+    result.push({ id: cat.id, label: `${'— '.repeat(depth)}${cat.name}` });
+    if (cat.children?.length) {
+      result.push(...flattenCategoryTree(cat.children, depth + 1));
+    }
+  }
+  return result;
 }

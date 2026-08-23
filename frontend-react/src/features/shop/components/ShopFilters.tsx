@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useDebounce } from '@/common/hooks/useDebounce';
+import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
 import type { ShopStatus } from '../types/shop.types';
 import { SHOP_STATUS_LABELS } from '../types/shop.types';
 
@@ -12,6 +13,12 @@ interface Props {
 }
 
 const statusOptions = Object.entries(SHOP_STATUS_LABELS) as [ShopStatus, string][];
+
+const SHOP_SORT_OPTIONS: SortOption[] = [
+  { label: 'Newest', sort: 'created_at', order: 'desc' },
+  { label: 'Oldest', sort: 'created_at', order: 'asc' },
+  { label: 'Name A→Z', sort: 'name', order: 'asc' },
+];
 
 export function ShopFilters({ onFilterChange }: Props) {
   const [search, setSearch] = useState('');
@@ -57,6 +64,8 @@ export function ShopFilters({ onFilterChange }: Props) {
             ))}
           </select>
         </div>
+
+        <AdminSortSelect options={SHOP_SORT_OPTIONS} />
       </div>
     </div>
   );

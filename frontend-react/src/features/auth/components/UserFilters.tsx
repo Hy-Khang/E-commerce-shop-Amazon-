@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useDebounce } from '@/common/hooks/useDebounce';
+import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
 import type { RoleWithUserCount } from '../types/admin.types';
+
+const USER_SORT_OPTIONS: SortOption[] = [
+  { label: 'Newest', sort: 'created_at', order: 'desc' },
+  { label: 'Oldest', sort: 'created_at', order: 'asc' },
+  { label: 'Name A→Z', sort: 'full_name', order: 'asc' },
+  { label: 'Email A→Z', sort: 'email', order: 'asc' },
+];
 
 interface Props {
   roles: RoleWithUserCount[];
@@ -71,6 +79,8 @@ export function UserFilters({ roles, onFilterChange }: Props) {
             <option value="false">Inactive</option>
           </select>
         </div>
+
+        <AdminSortSelect options={USER_SORT_OPTIONS} />
       </div>
     </div>
   );

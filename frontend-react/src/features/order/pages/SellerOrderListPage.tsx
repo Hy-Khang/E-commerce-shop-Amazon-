@@ -4,6 +4,7 @@ import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES, ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
+import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
 import { useSellerOrders } from '../hooks/useSellerOrders';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { getPaymentStatusColor } from '../utils/order.util';
@@ -11,6 +12,13 @@ import type { SellerOrderListParams, OrderStatus, PaymentStatus, OrderListItem }
 
 const STATUS_OPTIONS: OrderStatus[] = ['pending', 'confirmed', 'shipping', 'delivered', 'completed', 'return_requested', 'cancelled'];
 const PAYMENT_OPTIONS: PaymentStatus[] = ['unpaid', 'paid'];
+
+const ORDER_SORT_OPTIONS: SortOption[] = [
+  { label: 'Newest', sort: 'created_at', order: 'desc' },
+  { label: 'Oldest', sort: 'created_at', order: 'asc' },
+  { label: 'Total: high → low', sort: 'total_amount', order: 'desc' },
+  { label: 'Total: low → high', sort: 'total_amount', order: 'asc' },
+];
 
 export default function SellerOrderListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -124,6 +132,8 @@ export default function SellerOrderListPage() {
                   <option key={s} value={s}>{PAYMENT_STATUS_LABELS[s]}</option>
                 ))}
               </select>
+
+              <AdminSortSelect options={ORDER_SORT_OPTIONS} bare />
             </div>
           </div>
         }

@@ -70,6 +70,8 @@ const SellerOrderDetailPage = lazy(() => import('@/features/order/pages/SellerOr
 const ShopProfilePage = lazy(() => import('@/features/shop/pages/ShopProfilePage'));
 const SellerShopSettingsPage = lazy(() => import('@/features/shop/pages/SellerShopSettingsPage'));
 const SellerCouponListPage = lazy(() => import('@/features/coupon/pages/SellerCouponListPage'));
+const SellerReviewListPage = lazy(() => import('@/features/review/pages/SellerReviewListPage'));
+const SellerWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/SellerWishlistPopularPage'));
 const AdminShopListPage = lazy(() => import('@/features/shop/pages/AdminShopListPage'));
 const AdminShopDetailPage = lazy(() => import('@/features/shop/pages/AdminShopDetailPage'));
 
@@ -185,6 +187,8 @@ export const router = createBrowserRouter([
               { path: 'seller/orders/:id', element: <SuspenseWrapper><SellerOrderDetailPage /></SuspenseWrapper> },
               { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
               { path: 'seller/coupons', element: <SuspenseWrapper><SellerCouponListPage /></SuspenseWrapper> },
+              { path: 'seller/reviews', element: <SuspenseWrapper><SellerReviewListPage /></SuspenseWrapper> },
+              { path: 'seller/wishlist', element: <SuspenseWrapper><SellerWishlistPopularPage /></SuspenseWrapper> },
               { path: 'seller/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },

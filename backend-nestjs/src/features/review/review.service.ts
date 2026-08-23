@@ -8,6 +8,7 @@ import {
 import { ReviewRepository } from './repositories/review.repository';
 import { OrderService } from '../order/order.service';
 import { ProductService } from '../product/product.service';
+import { ShopService } from '../shop/shop.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { ReviewQueryDto } from './dto/review-query.dto';
 import {
@@ -34,6 +35,7 @@ export class ReviewService {
     private readonly reviewRepository: ReviewRepository,
     private readonly orderService: OrderService,
     private readonly productService: ProductService,
+    private readonly shopService: ShopService,
   ) {}
 
   // ─── Customer endpoints ───
@@ -202,8 +204,19 @@ export class ReviewService {
 
   async findAllReviews(
     query: ReviewQueryDto,
+    extra?: { shopId?: number },
   ): Promise<IPaginatedResult<AdminReviewResponseDto>> {
-    const result = await this.reviewRepository.findAllPaginated(query);
+    let categoryIds: number[] | undefined;
+    if (query.category_id) {
+      categoryIds = await this.productService.getCategoryDescendantIds(
+        query.category_id,
+      );
+    }
+
+    const result = await this.reviewRepository.findAllPaginated(query, {
+      shopId: extra?.shopId,
+      categoryIds,
+    });
 
     const variantMap = await this.reviewRepository.findVariantInfoForReviews(
       result.data.map((r) => ({
@@ -221,6 +234,16 @@ export class ReviewService {
       ),
       meta: result.meta,
     };
+  }
+
+  // ─── Seller endpoints ───
+
+  async findSellerReviews(
+    userId: number,
+    query: ReviewQueryDto,
+  ): Promise<IPaginatedResult<AdminReviewResponseDto>> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    return this.findAllReviews(query, { shopId: shop.id });
   }
 
   async deleteReview(reviewId: number): Promise<void> {

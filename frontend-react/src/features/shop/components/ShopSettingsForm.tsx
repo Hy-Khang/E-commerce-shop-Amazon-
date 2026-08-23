@@ -1,14 +1,25 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch, type Control, type UseFormRegister, type UseFormSetValue, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ImageUpload } from '@/features/product';
 import { ApiError } from '@/core/api/api.types';
 import { useMyShop, useCreateMyShop, useUpdateMyShop } from '../hooks/useMyShop';
+import { ShopProfilePreview } from './ShopProfilePreview';
 import {
   createShopSchema,
   updateShopSchema,
   type CreateShopFormData,
   type UpdateShopFormData,
-  SHOP_STATUS_LABELS,
 } from '../types/shop.types';
+
+const DESCRIPTION_MAX = 500;
+
+/** Shared editable-field shape — both create & update forms are compatible with it. */
+type ShopFormValues = {
+  name: string;
+  description?: string;
+  logo_url?: string;
+  banner_url?: string;
+};
 
 export function ShopSettingsForm() {
   const { data: shop, isLoading, error: fetchError } = useMyShop();
@@ -36,10 +47,15 @@ function CreateShopView({ create }: { create: ReturnType<typeof useCreateMyShop>
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<CreateShopFormData>({
     resolver: zodResolver(createShopSchema),
+    defaultValues: { name: '', description: '', logo_url: '', banner_url: '' },
   });
+
+  const [name, logoUrl, bannerUrl] = useWatch({ control, name: ['name', 'logo_url', 'banner_url'] });
 
   function onSubmit(data: CreateShopFormData) {
     create.mutate({
@@ -51,26 +67,29 @@ function CreateShopView({ create }: { create: ReturnType<typeof useCreateMyShop>
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-slate-900">Set Up Your Shop</h2>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Set Up Your Shop</h1>
         <p className="mt-1 text-sm text-slate-500">Create your shop profile to start selling.</p>
       </div>
 
+      <ShopProfilePreview name={name} logoUrl={logoUrl} bannerUrl={bannerUrl} />
+
       {create.error instanceof ApiError && (
-        <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700">{create.error.message}</div>
+        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{create.error.message}</div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <FieldInput id="name" label="Shop Name" register={register('name')} error={errors.name?.message} />
-        <FieldTextarea id="description" label="Description" register={register('description')} />
-        <FieldInput id="logo_url" label="Logo URL" register={register('logo_url')} error={errors.logo_url?.message} placeholder="https://..." />
-        <FieldInput id="banner_url" label="Banner URL" register={register('banner_url')} error={errors.banner_url?.message} placeholder="https://..." />
-
+      <form onSubmit={handleSubmit(onSubmit)} className="admin-card space-y-5 p-6">
+        <ShopFormFields
+          register={register as unknown as UseFormRegister<ShopFormValues>}
+          control={control as unknown as Control<ShopFormValues>}
+          setValue={setValue as unknown as UseFormSetValue<ShopFormValues>}
+          errors={errors as FieldErrors<ShopFormValues>}
+        />
         <button
           type="submit"
           disabled={create.isPending}
-          className="w-full rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+          className="rounded-lg bg-amber-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-amber-700 disabled:opacity-50"
         >
           {create.isPending ? 'Creating...' : 'Create Shop'}
         </button>
@@ -89,6 +108,8 @@ function UpdateShopView({
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<UpdateShopFormData>({
     resolver: zodResolver(updateShopSchema),
@@ -100,6 +121,8 @@ function UpdateShopView({
     },
   });
 
+  const [name, logoUrl, bannerUrl] = useWatch({ control, name: ['name', 'logo_url', 'banner_url'] });
+
   function onSubmit(data: UpdateShopFormData) {
     update.mutate({
       name: data.name,
@@ -110,34 +133,39 @@ function UpdateShopView({
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900">Shop Settings</h2>
-        <StatusBadge status={shop.status} />
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Shop Settings</h1>
+        <p className="mt-1 text-sm text-slate-500">Manage how your storefront appears to shoppers.</p>
       </div>
 
-      <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">
-        Slug: <span className="font-mono text-slate-900">{shop.slug}</span>
-      </div>
+      <ShopProfilePreview
+        name={name}
+        logoUrl={logoUrl}
+        bannerUrl={bannerUrl}
+        slug={shop.slug}
+        status={shop.status}
+      />
 
       {update.error instanceof ApiError && (
-        <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700">{update.error.message}</div>
+        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{update.error.message}</div>
       )}
 
       {update.isSuccess && (
-        <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">Shop updated successfully.</div>
+        <div className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">Shop updated successfully.</div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <FieldInput id="name" label="Shop Name" register={register('name')} error={errors.name?.message} />
-        <FieldTextarea id="description" label="Description" register={register('description')} />
-        <FieldInput id="logo_url" label="Logo URL" register={register('logo_url')} error={errors.logo_url?.message} placeholder="https://..." />
-        <FieldInput id="banner_url" label="Banner URL" register={register('banner_url')} error={errors.banner_url?.message} placeholder="https://..." />
-
+      <form onSubmit={handleSubmit(onSubmit)} className="admin-card space-y-5 p-6">
+        <ShopFormFields
+          register={register as unknown as UseFormRegister<ShopFormValues>}
+          control={control as unknown as Control<ShopFormValues>}
+          setValue={setValue as unknown as UseFormSetValue<ShopFormValues>}
+          errors={errors as FieldErrors<ShopFormValues>}
+        />
         <button
           type="submit"
           disabled={update.isPending || !isDirty}
-          className="w-full rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+          className="rounded-lg bg-amber-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-amber-700 disabled:opacity-50"
         >
           {update.isPending ? 'Saving...' : 'Save Changes'}
         </button>
@@ -146,66 +174,64 @@ function UpdateShopView({
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    active: 'bg-emerald-100 text-emerald-800',
-    pending_verification: 'bg-amber-100 text-amber-800',
-    suspended: 'bg-rose-100 text-rose-800',
-    banned: 'bg-slate-100 text-slate-800',
-  };
-
-  return (
-    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] ?? 'bg-slate-100 text-slate-800'}`}>
-      {SHOP_STATUS_LABELS[status as keyof typeof SHOP_STATUS_LABELS] ?? status}
-    </span>
-  );
-}
-
-function FieldInput({
-  id,
-  label,
+function ShopFormFields({
   register,
-  error,
-  placeholder,
+  control,
+  setValue,
+  errors,
 }: {
-  id: string;
-  label: string;
-  register: ReturnType<ReturnType<typeof useForm>['register']>;
-  error?: string;
-  placeholder?: string;
+  register: UseFormRegister<ShopFormValues>;
+  control: Control<ShopFormValues>;
+  setValue: UseFormSetValue<ShopFormValues>;
+  errors: FieldErrors<ShopFormValues>;
 }) {
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
-      <input
-        id={id}
-        {...register}
-        placeholder={placeholder}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-      />
-      {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
-    </div>
-  );
-}
+  const description = useWatch({ control, name: 'description' }) ?? '';
+  const logoUrl = useWatch({ control, name: 'logo_url' });
+  const bannerUrl = useWatch({ control, name: 'banner_url' });
 
-function FieldTextarea({
-  id,
-  label,
-  register,
-}: {
-  id: string;
-  label: string;
-  register: ReturnType<ReturnType<typeof useForm>['register']>;
-}) {
   return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
-      <textarea
-        id={id}
-        rows={4}
-        {...register}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-      />
-    </div>
+    <>
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium text-slate-700">Shop Name</label>
+        <input
+          id="name"
+          {...register('name')}
+          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+        />
+        {errors.name?.message && <p className="mt-1 text-xs text-rose-600">{errors.name.message}</p>}
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between">
+          <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>
+          <span className={`text-xs ${description.length > DESCRIPTION_MAX ? 'text-rose-600' : 'text-slate-400'}`}>
+            {description.length}{DESCRIPTION_MAX ? ` / ${DESCRIPTION_MAX}` : ''}
+          </span>
+        </div>
+        <textarea
+          id="description"
+          rows={4}
+          {...register('description')}
+          placeholder="Tell shoppers what your shop is about..."
+          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+        />
+        {errors.description?.message && <p className="mt-1 text-xs text-rose-600">{errors.description.message}</p>}
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <ImageUpload
+          label="Logo"
+          value={logoUrl || undefined}
+          onUploaded={(url) => setValue('logo_url', url, { shouldDirty: true })}
+          onClear={() => setValue('logo_url', '', { shouldDirty: true })}
+        />
+        <ImageUpload
+          label="Banner"
+          value={bannerUrl || undefined}
+          onUploaded={(url) => setValue('banner_url', url, { shouldDirty: true })}
+          onClear={() => setValue('banner_url', '', { shouldDirty: true })}
+        />
+      </div>
+    </>
   );
 }

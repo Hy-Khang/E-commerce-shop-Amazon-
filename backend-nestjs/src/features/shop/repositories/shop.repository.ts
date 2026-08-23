@@ -15,6 +15,13 @@ export interface IShopFilter {
   limit: number;
 }
 
+/** Defensive allowlist — sort is interpolated into the query, never trust raw input. */
+const SHOP_SORT_COLUMNS = new Set(['created_at', 'name']);
+
+function resolveShopSortColumn(sort?: string): string {
+  return sort && SHOP_SORT_COLUMNS.has(sort) ? sort : 'created_at';
+}
+
 @Injectable()
 export class ShopRepository {
   constructor(
@@ -79,7 +86,7 @@ export class ShopRepository {
       qb.andWhere('shop.name LIKE :search', { search: `%${filter.search}%` });
     }
 
-    const sortColumn = filter.sort || 'created_at';
+    const sortColumn = resolveShopSortColumn(filter.sort);
     const sortOrder = (filter.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
     qb.orderBy(`shop.${sortColumn}`, sortOrder);
 
@@ -104,7 +111,7 @@ export class ShopRepository {
       qb.andWhere('shop.name LIKE :search', { search: `%${filter.search}%` });
     }
 
-    const sortColumn = filter.sort || 'created_at';
+    const sortColumn = resolveShopSortColumn(filter.sort);
     const sortOrder = (filter.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
     qb.orderBy(`shop.${sortColumn}`, sortOrder);
 

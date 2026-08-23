@@ -57,6 +57,11 @@ export class ProductService {
     return this.categoryRepository.findTree();
   }
 
+  /** Returns the category id plus all descendant ids (recursive CTE). */
+  async getCategoryDescendantIds(categoryId: number): Promise<number[]> {
+    return this.categoryRepository.findDescendantIds(categoryId);
+  }
+
   async getCategoryBySlug(
     slug: string,
     page: number,

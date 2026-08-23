@@ -26,6 +26,7 @@ export {
 
 // Components
 export { CategoryForm } from './components/CategoryForm';
+export { ProductFilters } from './components/ProductFilters';
 export { ProductCard } from './components/ProductCard';
 export { HomepageProductCard } from './components/HomepageProductCard';
 export { SaleProductCard } from './components/SaleProductCard';
@@ -60,7 +61,9 @@ export {
   getUniqueOptionValues,
   generateSlug,
   getLowestPriceVariant,
+  flattenCategoryTree,
 } from './utils/product.util';
+export type { FlatCategoryOption } from './utils/product.util';
 
 // Types
 export type {

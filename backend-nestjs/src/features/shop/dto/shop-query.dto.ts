@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { ShopSortBy } from '../types/shop.types';
 
 export class ShopQueryDto extends PaginationDto {
   @ApiPropertyOptional()
@@ -13,9 +14,9 @@ export class ShopQueryDto extends PaginationDto {
   @IsString()
   status?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: ShopSortBy, default: ShopSortBy.CreatedAt })
   @IsOptional()
-  @IsString()
+  @IsEnum(ShopSortBy)
   sort?: string;
 
   @ApiPropertyOptional({ enum: ['asc', 'desc'] })

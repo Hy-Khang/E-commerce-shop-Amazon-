@@ -4,6 +4,7 @@ import { Pencil, Power, PowerOff, Plus, Search, Tag, Lock, Receipt } from 'lucid
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
+import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
 import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useMyShop } from '@/features/shop';
@@ -29,6 +30,13 @@ const SCOPE_LABELS: Record<CouponScope, string> = {
   categories: 'Categories',
   products: 'Products',
 };
+
+const COUPON_SORT_OPTIONS: SortOption[] = [
+  { label: 'Newest', sort: 'created_at', order: 'desc' },
+  { label: 'Expiring soon', sort: 'expires_at', order: 'asc' },
+  { label: 'Code A→Z', sort: 'code', order: 'asc' },
+  { label: 'Most used', sort: 'current_uses', order: 'desc' },
+];
 
 function DiscountDisplay({ type, value }: { type: DiscountType; value: number }) {
   return type === 'percentage' ? <span>{value}%</span> : <span>{formatPrice(value)}</span>;
@@ -303,6 +311,7 @@ export default function SellerCouponListPage() {
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
               </select>
+              <AdminSortSelect options={COUPON_SORT_OPTIONS} bare />
             </div>
           </div>
         }

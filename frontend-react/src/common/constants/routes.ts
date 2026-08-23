@@ -52,6 +52,8 @@ export const ROUTES = {
   SELLER_ORDER_DETAIL: (id: number) => `/seller/orders/${id}`,
   SELLER_SHOP: '/seller/shop',
   SELLER_COUPONS: '/seller/coupons',
+  SELLER_REVIEWS: '/seller/reviews',
+  SELLER_WISHLIST: '/seller/wishlist',
 
   SHIPPER_DASHBOARD: '/shipper/dashboard',
   SHIPPER_DELIVERIES: '/shipper/deliveries',

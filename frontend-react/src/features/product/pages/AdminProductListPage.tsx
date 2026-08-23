@@ -1,17 +1,19 @@
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Search, Plus, Package } from 'lucide-react';
+import { Pencil, Plus, Package } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
-import { Button } from '@/common/components/ui/Button';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
+import { ProductFilters } from '../components/ProductFilters';
 import { useAdminProducts } from '../hooks/useAdminProducts';
 import { useToggleProductActive } from '../hooks/useToggleProductActive';
 import { getPriceRange } from '../utils/product.util';
 import type { AdminProductListParams, ProductListItem } from '../types/product.types';
 
 export default function AdminProductListPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { params, setPage } = usePagination({ limit: 20, sort: 'created_at', order: 'desc' });
 
   const filters: AdminProductListParams = {
@@ -23,18 +25,7 @@ export default function AdminProductListPage() {
 
   const { data, isLoading } = useAdminProducts(filters);
   const toggleActive = useToggleProductActive();
-
-  function handleSearch(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const search = formData.get('search') as string;
-    setSearchParams((prev) => {
-      if (search) prev.set('search', search);
-      else prev.delete('search');
-      prev.set('page', '1');
-      return prev;
-    });
-  }
+  const [toggleTarget, setToggleTarget] = useState<ProductListItem | null>(null);
 
   const columns: Column<ProductListItem>[] = [
     {
@@ -75,8 +66,7 @@ export default function AdminProductListPage() {
       header: 'Status',
       render: (product) => (
         <button
-          onClick={() => toggleActive.mutate(product.id)}
-          disabled={toggleActive.isPending}
+          onClick={() => setToggleTarget(product)}
           className={`inline-flex items-center gap-1.5 text-xs font-medium ${
             product.is_active ? 'text-emerald-700' : 'text-rose-700'
           }`}
@@ -132,23 +122,28 @@ export default function AdminProductListPage() {
         emptyIcon={Package}
         emptyTitle="No products found"
         emptyDescription="Add a product to get started or adjust your search."
-        toolbar={
-          <div className="admin-card p-4">
-            <form onSubmit={handleSearch} className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  name="search"
-                  type="text"
-                  placeholder="Search products..."
-                  defaultValue={searchParams.get('search') || ''}
-                  className="admin-input pl-9"
-                />
-              </div>
-              <Button type="submit" variant="secondary">Search</Button>
-            </form>
-          </div>
+        toolbar={<ProductFilters />}
+      />
+
+      <ConfirmModal
+        open={toggleTarget !== null}
+        variant="warning"
+        title={toggleTarget?.is_active ? 'Hide product?' : 'Show product?'}
+        message={
+          toggleTarget?.is_active
+            ? `"${toggleTarget?.name}" will be hidden from the storefront until you show it again.`
+            : `"${toggleTarget?.name}" will be visible on the storefront again.`
         }
+        confirmLabel={toggleTarget?.is_active ? 'Hide' : 'Show'}
+        confirmVariant={toggleTarget?.is_active ? 'danger' : 'primary'}
+        loading={toggleActive.isPending}
+        onCancel={() => setToggleTarget(null)}
+        onConfirm={() => {
+          if (!toggleTarget) return;
+          toggleActive.mutate(toggleTarget.id, {
+            onSuccess: () => setToggleTarget(null),
+          });
+        }}
       />
     </div>
   );
