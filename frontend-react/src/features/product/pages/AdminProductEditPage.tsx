@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Loader2, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Trash2, X, ZoomIn } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { Button } from '@/common/components/ui/Button';
+import { ImageLightbox } from '@/common/components/ui/ImageLightbox';
 import { useAdminProduct } from '../hooks/useAdminProduct';
 import { useUpdateProduct } from '../hooks/useUpdateProduct';
 import { useCategories } from '../hooks/useCategories';
@@ -136,6 +138,7 @@ export default function AdminProductEditPage() {
   const toggleActive = useToggleProductActive();
   const deleteVariant = useDeleteVariant(productId);
   const deleteImage = useDeleteImage(productId);
+  const [zoomSrc, setZoomSrc] = useState<string | null>(null);
 
   const {
     register,
@@ -309,16 +312,26 @@ export default function AdminProductEditPage() {
           <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
             {[...product.images].sort((a, b) => a.sort_order - b.sort_order).map((img) => (
               <div key={img.id} className="group relative overflow-hidden rounded-lg ring-1 ring-slate-900/5">
-                <img src={getImageUrl(img.image_url)} alt="" className="aspect-square w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setZoomSrc(getImageUrl(img.image_url))}
+                  className="block w-full cursor-zoom-in"
+                  aria-label="Zoom image"
+                >
+                  <img src={getImageUrl(img.image_url)} alt="" className="aspect-square w-full object-cover" />
+                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
+                    <ZoomIn className="h-5 w-5 text-white" />
+                  </span>
+                </button>
                 <button
                   onClick={() => deleteImage.mutate(img.id)}
                   disabled={deleteImage.isPending}
-                  className="absolute right-1 top-1 rounded-full bg-slate-900/70 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  className="absolute right-1 top-1 z-10 rounded-full bg-slate-900/70 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
                   aria-label="Delete image"
                 >
                   <X className="h-3 w-3" />
                 </button>
-                <div className="absolute bottom-0 left-0 right-0 flex items-center gap-1 bg-slate-900/60 px-1.5 py-0.5">
+                <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex items-center gap-1 bg-slate-900/60 px-1.5 py-0.5">
                   <span className="text-xs text-white">#{img.sort_order}</span>
                   {img.variant_option1 && (
                     <span className="rounded bg-sky-500/80 px-1 text-[10px] font-medium text-white">{img.variant_option1}</span>
@@ -330,6 +343,8 @@ export default function AdminProductEditPage() {
         )}
         <ImageForm productId={productId} variants={product.variants} option1Label={product.option1_label} />
       </section>
+
+      <ImageLightbox src={zoomSrc} onClose={() => setZoomSrc(null)} />
     </div>
   );
 }
