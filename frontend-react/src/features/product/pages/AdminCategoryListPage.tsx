@@ -241,8 +241,8 @@ export default function AdminCategoryListPage() {
           </form>
           {!search && (
             <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={expandAll}>Expand All</Button>
-              <Button variant="secondary" size="sm" onClick={collapseAll}>Collapse All</Button>
+              <Button variant="secondary" onClick={expandAll}>Expand All</Button>
+              <Button variant="secondary" onClick={collapseAll}>Collapse All</Button>
             </div>
           )}
         </div>

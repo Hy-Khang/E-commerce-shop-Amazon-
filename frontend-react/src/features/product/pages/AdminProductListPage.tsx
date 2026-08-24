@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Plus, Package } from 'lucide-react';
+import { Pencil, Plus, Package, Eye, EyeOff } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
@@ -65,15 +65,14 @@ export default function AdminProductListPage() {
       key: 'status',
       header: 'Status',
       render: (product) => (
-        <button
-          onClick={() => setToggleTarget(product)}
+        <span
           className={`inline-flex items-center gap-1.5 text-xs font-medium ${
             product.is_active ? 'text-emerald-700' : 'text-rose-700'
           }`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${product.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
           {product.is_active ? 'Active' : 'Inactive'}
-        </button>
+        </span>
       ),
     },
     {
@@ -86,13 +85,27 @@ export default function AdminProductListPage() {
       header: 'Actions',
       className: 'text-right',
       render: (product) => (
-        <Link
-          to={ROUTES.ADMIN_PRODUCT_EDIT(product.id)}
-          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
-          aria-label="Edit product"
-        >
-          <Pencil className="h-4 w-4" />
-        </Link>
+        <div className="flex items-center justify-end gap-1">
+          <Link
+            to={ROUTES.ADMIN_PRODUCT_EDIT(product.id)}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
+            aria-label="Edit product"
+          >
+            <Pencil className="h-4 w-4" />
+          </Link>
+          <button
+            onClick={() => setToggleTarget(product)}
+            className={`inline-flex rounded-lg p-2 text-slate-400 transition-colors ${
+              product.is_active
+                ? 'hover:bg-rose-50 hover:text-rose-600'
+                : 'hover:bg-emerald-50 hover:text-emerald-600'
+            }`}
+            aria-label={product.is_active ? 'Hide product' : 'Show product'}
+            title={product.is_active ? 'Hide product' : 'Show product'}
+          >
+            {product.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       ),
     },
   ];

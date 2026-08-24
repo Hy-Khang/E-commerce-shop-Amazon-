@@ -1,14 +1,42 @@
 import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, Store } from 'lucide-react';
+import { Eye, Store, CheckCircle2, PauseCircle, Ban } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatDate } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminShops } from '../hooks/useAdminShops';
+import { useUpdateShopStatus } from '../hooks/useUpdateShopStatus';
 import { ShopFilters } from '../components/ShopFilters';
 import { ShopStatusBadge } from '../components/ShopStatusBadge';
 import type { AdminShop, AdminShopQueryParams } from '../types/shop.types';
+
+const STATUS_COPY: Record<'active' | 'suspended' | 'banned', {
+  title: string;
+  message: (name: string) => string;
+  confirmLabel: string;
+  variant: 'danger' | 'warning' | 'info';
+}> = {
+  active: {
+    title: 'Activate shop?',
+    message: (name) => `"${name}" will be visible on the storefront and can sell again.`,
+    confirmLabel: 'Activate',
+    variant: 'info',
+  },
+  suspended: {
+    title: 'Suspend shop?',
+    message: (name) => `"${name}"'s products will be hidden from the storefront until you reactivate it.`,
+    confirmLabel: 'Suspend',
+    variant: 'warning',
+  },
+  banned: {
+    title: 'Ban shop?',
+    message: (name) => `"${name}" will be banned and all its products hidden. You can reactivate it later.`,
+    confirmLabel: 'Ban',
+    variant: 'danger',
+  },
+};
 
 export default function AdminShopListPage() {
   const { params, setPage } = usePagination({
@@ -21,6 +49,8 @@ export default function AdminShopListPage() {
   const queryParams: AdminShopQueryParams = { ...params, ...filters };
 
   const { data, isLoading } = useAdminShops(queryParams);
+  const updateStatus = useUpdateShopStatus();
+  const [statusTarget, setStatusTarget] = useState<{ shop: AdminShop; next: 'active' | 'suspended' | 'banned' } | null>(null);
 
   const handleFilterChange = useCallback(
     (newFilters: Partial<Pick<AdminShopQueryParams, 'search' | 'status'>>) => {
@@ -78,14 +108,44 @@ export default function AdminShopListPage() {
       header: 'Actions',
       className: 'text-right',
       render: (shop) => (
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-1">
           <Link
             to={ROUTES.ADMIN_SHOP_DETAIL(shop.id)}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
             aria-label="View shop details"
           >
             <Eye className="h-4 w-4" />
           </Link>
+          {shop.status !== 'active' && (
+            <button
+              onClick={() => setStatusTarget({ shop, next: 'active' })}
+              className="inline-flex rounded-lg p-2 text-slate-400 transition-colors hover:bg-emerald-50 hover:text-emerald-600"
+              aria-label={shop.status === 'pending_verification' ? 'Approve shop' : 'Reactivate shop'}
+              title={shop.status === 'pending_verification' ? 'Approve shop' : 'Reactivate shop'}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+            </button>
+          )}
+          {shop.status === 'active' && (
+            <button
+              onClick={() => setStatusTarget({ shop, next: 'suspended' })}
+              className="inline-flex rounded-lg p-2 text-slate-400 transition-colors hover:bg-orange-50 hover:text-orange-600"
+              aria-label="Suspend shop"
+              title="Suspend shop"
+            >
+              <PauseCircle className="h-4 w-4" />
+            </button>
+          )}
+          {shop.status !== 'banned' && (
+            <button
+              onClick={() => setStatusTarget({ shop, next: 'banned' })}
+              className="inline-flex rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+              aria-label="Ban shop"
+              title="Ban shop"
+            >
+              <Ban className="h-4 w-4" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -108,6 +168,23 @@ export default function AdminShopListPage() {
         emptyTitle="No shops found"
         emptyDescription="Try adjusting your search or filter criteria."
         toolbar={<ShopFilters onFilterChange={handleFilterChange} />}
+      />
+
+      <ConfirmModal
+        open={statusTarget !== null}
+        variant={statusTarget ? STATUS_COPY[statusTarget.next].variant : 'warning'}
+        title={statusTarget ? STATUS_COPY[statusTarget.next].title : ''}
+        message={statusTarget ? STATUS_COPY[statusTarget.next].message(statusTarget.shop.name) : ''}
+        confirmLabel={statusTarget ? STATUS_COPY[statusTarget.next].confirmLabel : 'Confirm'}
+        loading={updateStatus.isPending}
+        onCancel={() => setStatusTarget(null)}
+        onConfirm={() => {
+          if (!statusTarget) return;
+          updateStatus.mutate(
+            { id: statusTarget.shop.id, status: statusTarget.next },
+            { onSuccess: () => setStatusTarget(null) },
+          );
+        }}
       />
     </div>
   );
