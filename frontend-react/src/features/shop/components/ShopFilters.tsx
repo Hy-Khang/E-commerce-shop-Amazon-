@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useDebounce } from '@/common/hooks/useDebounce';
 import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
+import { AdminSelect } from '@/common/components/data/AdminSelect';
 import type { ShopStatus } from '../types/shop.types';
 import { SHOP_STATUS_LABELS } from '../types/shop.types';
 
@@ -22,6 +23,7 @@ const SHOP_SORT_OPTIONS: SortOption[] = [
 
 export function ShopFilters({ onFilterChange }: Props) {
   const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
   useDebounce(search, 300);
 
   return (
@@ -51,18 +53,19 @@ export function ShopFilters({ onFilterChange }: Props) {
           <label htmlFor="shop-status-filter" className="block text-sm font-medium text-slate-700">
             Status
           </label>
-          <select
+          <AdminSelect
             id="shop-status-filter"
-            onChange={(e) => onFilterChange({ status: (e.target.value as ShopStatus) || undefined })}
-            className="admin-input mt-1"
-          >
-            <option value="">All statuses</option>
-            {statusOptions.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            className="mt-1"
+            value={status}
+            onChange={(v) => {
+              setStatus(v);
+              onFilterChange({ status: (v as ShopStatus) || undefined });
+            }}
+            options={[
+              { value: '', label: 'All statuses' },
+              ...statusOptions.map(([value, label]) => ({ value, label })),
+            ]}
+          />
         </div>
 
         <AdminSortSelect options={SHOP_SORT_OPTIONS} />

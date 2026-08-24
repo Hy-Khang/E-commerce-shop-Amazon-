@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
+import { AdminSelect } from '@/common/components/data/AdminSelect';
 import { Button } from '@/common/components/ui/Button';
 import { useCategories } from '../hooks/useCategories';
 import { flattenCategoryTree } from '../utils/product.util';
@@ -71,35 +72,33 @@ export function ProductFilters() {
           <label htmlFor="product-category" className="block text-sm font-medium text-slate-700">
             Category
           </label>
-          <select
+          <AdminSelect
             id="product-category"
+            className="mt-1"
             value={searchParams.get('category_id') || ''}
-            onChange={(e) => updateParam('category_id', e.target.value)}
-            className="admin-input mt-1"
-          >
-            <option value="">All categories</option>
-            {categoryOptions.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => updateParam('category_id', v)}
+            options={[
+              { value: '', label: 'All categories' },
+              ...categoryOptions.map((cat) => ({ value: String(cat.id), label: cat.label })),
+            ]}
+          />
         </div>
 
         <div className="w-40">
           <label htmlFor="product-status" className="block text-sm font-medium text-slate-700">
             Status
           </label>
-          <select
+          <AdminSelect
             id="product-status"
+            className="mt-1"
             value={searchParams.get('is_active') ?? ''}
-            onChange={(e) => updateParam('is_active', e.target.value)}
-            className="admin-input mt-1"
-          >
-            <option value="">All</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
+            onChange={(v) => updateParam('is_active', v)}
+            options={[
+              { value: '', label: 'All' },
+              { value: 'true', label: 'Active' },
+              { value: 'false', label: 'Inactive' },
+            ]}
+          />
         </div>
 
         <AdminSortSelect options={PRODUCT_SORT_OPTIONS} />

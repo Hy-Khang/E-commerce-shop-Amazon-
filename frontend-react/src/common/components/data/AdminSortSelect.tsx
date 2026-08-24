@@ -1,5 +1,6 @@
 import { ArrowUpDown } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import { AdminSelect, type AdminSelectOption } from './AdminSelect';
 
 export interface SortOption {
   label: string;
@@ -29,8 +30,13 @@ export function AdminSortSelect({ options, label = 'Sort by', bare = false, clas
   const currentOrder = searchParams.get('order') ?? options[0]?.order;
   const currentValue = `${currentSort}:${currentOrder}`;
 
-  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const [sort, order] = e.target.value.split(':');
+  const selectOptions: AdminSelectOption[] = options.map((opt) => ({
+    value: `${opt.sort}:${opt.order}`,
+    label: opt.label,
+  }));
+
+  function handleChange(next: string) {
+    const [sort, order] = next.split(':');
     setSearchParams((prev) => {
       prev.set('sort', sort);
       prev.set('order', order);
@@ -40,22 +46,15 @@ export function AdminSortSelect({ options, label = 'Sort by', bare = false, clas
   }
 
   const select = (
-    <div className="relative">
-      <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-      <select
-        id="admin-sort"
-        aria-label={label}
-        value={currentValue}
-        onChange={handleChange}
-        className={`admin-input pl-9 ${bare ? 'w-auto' : ''}`}
-      >
-        {options.map((opt) => (
-          <option key={`${opt.sort}:${opt.order}`} value={`${opt.sort}:${opt.order}`}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
+    <AdminSelect
+      id="admin-sort"
+      ariaLabel={label}
+      value={currentValue}
+      onChange={handleChange}
+      options={selectOptions}
+      leadingIcon={ArrowUpDown}
+      className={bare ? 'w-48' : ''}
+    />
   );
 
   if (bare) return select;

@@ -5,6 +5,7 @@ import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { ROUTES, ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
+import { AdminSelect } from '@/common/components/data/AdminSelect';
 import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useShipperOrders } from '../hooks/useShipperOrders';
@@ -210,16 +211,16 @@ export default function ShipperDeliveryListPage() {
 
             {activeTab === 'my_deliveries' && (
               <div className="admin-card p-4">
-                <select
+                <AdminSelect
+                  ariaLabel="Filter by status"
+                  className="w-44"
                   value={searchParams.get('status') || ''}
-                  onChange={(e) => handleStatusFilter(e.target.value)}
-                  className="admin-input w-auto"
-                >
-                  <option value="">All Statuses</option>
-                  {MY_STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>
-                  ))}
-                </select>
+                  onChange={(v) => handleStatusFilter(v)}
+                  options={[
+                    { value: '', label: 'All Statuses' },
+                    ...MY_STATUS_OPTIONS.map((s) => ({ value: s, label: ORDER_STATUS_LABELS[s] })),
+                  ]}
+                />
               </div>
             )}
           </div>

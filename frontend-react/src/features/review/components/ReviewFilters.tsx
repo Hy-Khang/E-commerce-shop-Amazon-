@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
+import { AdminSelect } from '@/common/components/data/AdminSelect';
 import { useCategories, flattenCategoryTree } from '@/features/product';
 
 const RATING_OPTIONS = [1, 2, 3, 4, 5];
@@ -30,27 +31,27 @@ export function ReviewFilters() {
   return (
     <div className="admin-card p-4">
       <div className="flex flex-wrap gap-3">
-        <select
+        <AdminSelect
+          ariaLabel="Filter by rating"
+          className="w-40"
           value={searchParams.get('rating') || ''}
-          onChange={(e) => updateParam('rating', e.target.value)}
-          className="admin-input w-auto"
-        >
-          <option value="">All Ratings</option>
-          {RATING_OPTIONS.map((r) => (
-            <option key={r} value={r}>{r} Star{r > 1 ? 's' : ''}</option>
-          ))}
-        </select>
+          onChange={(v) => updateParam('rating', v)}
+          options={[
+            { value: '', label: 'All Ratings' },
+            ...RATING_OPTIONS.map((r) => ({ value: String(r), label: `${r} Star${r > 1 ? 's' : ''}` })),
+          ]}
+        />
 
-        <select
+        <AdminSelect
+          ariaLabel="Filter by category"
+          className="w-52"
           value={searchParams.get('category_id') || ''}
-          onChange={(e) => updateParam('category_id', e.target.value)}
-          className="admin-input w-auto"
-        >
-          <option value="">All Categories</option>
-          {categoryOptions.map((cat) => (
-            <option key={cat.id} value={cat.id}>{cat.label}</option>
-          ))}
-        </select>
+          onChange={(v) => updateParam('category_id', v)}
+          options={[
+            { value: '', label: 'All Categories' },
+            ...categoryOptions.map((cat) => ({ value: String(cat.id), label: cat.label })),
+          ]}
+        />
 
         <AdminSortSelect options={REVIEW_SORT_OPTIONS} bare />
       </div>
