@@ -13,10 +13,14 @@ export const sellerCouponKeys = {
   usages: (id: number) => ['seller', 'coupons', 'usages', id] as const,
 };
 
-export function useSellerCoupons(params: CouponListParams) {
+export function useSellerCoupons(
+  params: CouponListParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: sellerCouponKeys.list(params),
     queryFn: () => sellerCouponService.getList(params),
+    enabled: options?.enabled,
     select: (res) => ({
       data: res.data.data,
       meta: res.data.meta,

@@ -8,10 +8,14 @@ export const adminOrderKeys = {
   detail: (id: number) => ['admin', 'orders', 'detail', id] as const,
 };
 
-export function useAdminOrders(params: AdminOrderListParams) {
+export function useAdminOrders(
+  params: AdminOrderListParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: adminOrderKeys.list(params),
     queryFn: () => adminOrderService.getList(params),
+    enabled: options?.enabled,
     select: (res) => ({
       data: res.data.data,
       meta: res.data.meta,

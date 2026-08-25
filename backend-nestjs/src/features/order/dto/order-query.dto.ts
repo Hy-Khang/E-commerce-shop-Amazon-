@@ -27,6 +27,14 @@ export class OrderQueryDto extends PaginationDto {
   @IsPositive()
   user_id?: number;
 
+  @ApiPropertyOptional({
+    description:
+      'Free-text search (admin only) — matches order id, customer name/email, or shop name',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
   @ApiPropertyOptional({ enum: OrderSortBy, default: OrderSortBy.CreatedAt })
   @IsOptional()
   @IsEnum(OrderSortBy)

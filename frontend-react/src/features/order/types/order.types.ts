@@ -147,11 +147,13 @@ export interface AdminOrderListParams extends PaginationParams {
   status?: OrderStatus;
   payment_status?: PaymentStatus;
   user_id?: number;
+  search?: string;
 }
 
 export interface SellerOrderListParams extends PaginationParams {
   status?: OrderStatus;
   payment_status?: PaymentStatus;
+  search?: string;
 }
 
 export interface SellerOrderDetail extends Order {

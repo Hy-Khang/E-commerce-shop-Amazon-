@@ -21,6 +21,7 @@ import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { NotificationBell } from '@/features/notification';
 import { PortalAccountDropdown } from './PortalAccountDropdown';
+import { AdminGlobalSearch } from './AdminGlobalSearch';
 
 type NavItem = {
   to: string;
@@ -161,7 +162,10 @@ export function AdminLayout() {
       </aside>
 
       <main className="flex flex-1 flex-col bg-slate-50">
-        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-slate-200 bg-white px-4 py-3 md:px-8">
+        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 md:px-8">
+          <div className="flex-1">
+            <AdminGlobalSearch />
+          </div>
           <NotificationBell />
           <PortalAccountDropdown />
         </header>

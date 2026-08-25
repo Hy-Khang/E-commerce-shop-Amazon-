@@ -8,10 +8,14 @@ export const adminUserKeys = {
   detail: (id: number) => ['admin', 'users', 'detail', id] as const,
 };
 
-export function useAdminUsers(params: AdminUserQueryParams) {
+export function useAdminUsers(
+  params: AdminUserQueryParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: adminUserKeys.list(params),
     queryFn: () => adminUserService.getAll(params),
+    enabled: options?.enabled,
     select: (res) => ({
       data: res.data.data,
       meta: res.data.meta,

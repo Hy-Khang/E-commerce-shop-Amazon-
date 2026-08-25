@@ -373,7 +373,7 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 
 | Method | Path | Description | Filter/Sort |
 |--------|------|-------------|-------------|
-| GET | `/admin/orders` | List all orders (paginated) | `?status=pending&payment_status=unpaid&user_id=123&sort=created_at&order=desc` |
+| GET | `/admin/orders` | List all orders (paginated) | `?search=keyword&status=pending&payment_status=unpaid&user_id=123&sort=created_at&order=desc` |
 | GET | `/admin/orders/:id` | Get order detail + order_items + user info + `applied_coupons[]` | — |
 | PATCH | `/admin/orders/:id/status` | Update order status (valid transitions only) | — |
 | PATCH | `/admin/orders/:id/payment-status` | Update payment status (unpaid → paid) | — |
