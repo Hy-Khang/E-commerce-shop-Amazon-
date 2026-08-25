@@ -5,6 +5,7 @@ import { useSellerDashboardStats } from '../hooks/useSellerDashboardStats';
 import { usePeriodParam } from '../hooks/usePeriodParam';
 import { StatCard } from '../components/StatCard';
 import { PeriodSelector } from '../components/PeriodSelector';
+import { DashboardSection } from '../components/DashboardSection';
 import { SellerRecentOrdersTable } from '../components/SellerRecentOrdersTable';
 import { SellerTopProductsList } from '../components/SellerTopProductsList';
 import { SellerLowStockAlerts } from '../components/SellerLowStockAlerts';
@@ -77,19 +78,25 @@ export default function SellerDashboardPage() {
         <SectionError title="Summary" onRetry={refetch} />
       )}
 
-      <Suspense fallback={<ChartFallback />}>
-        <RevenueChart
-          data={stats.revenueOverTime}
-          granularity={period === '12m' ? 'month' : 'day'}
-        />
-      </Suspense>
+      <DashboardSection label="Performance">
+        <Suspense fallback={<ChartFallback />}>
+          <RevenueChart
+            data={stats.revenueOverTime}
+            granularity={period === '12m' ? 'month' : 'day'}
+          />
+        </Suspense>
+      </DashboardSection>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SellerRecentOrdersTable orders={stats.recentOrders} />
-        <SellerTopProductsList products={stats.topProducts} />
-      </div>
+      <DashboardSection label="Orders & Products">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <SellerRecentOrdersTable orders={stats.recentOrders} />
+          <SellerTopProductsList products={stats.topProducts} />
+        </div>
+      </DashboardSection>
 
-      <SellerLowStockAlerts alerts={stats.lowStockAlerts} />
+      <DashboardSection label="Inventory">
+        <SellerLowStockAlerts alerts={stats.lowStockAlerts} />
+      </DashboardSection>
     </div>
   );
 }
