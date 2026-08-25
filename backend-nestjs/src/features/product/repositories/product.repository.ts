@@ -52,7 +52,7 @@ export class ProductRepository {
   async findById(id: number): Promise<Product | null> {
     return this.repo.findOne({
       where: { id },
-      relations: ['category', 'variants', 'images'],
+      relations: ['category', 'variants', 'images', 'shop'],
     });
   }
 
@@ -88,7 +88,8 @@ export class ProductRepository {
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
-      .leftJoinAndSelect('product.category', 'category');
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.shop', 'shop');
 
     if (filter.is_active !== undefined) {
       const isActive = filter.is_active === 'true';

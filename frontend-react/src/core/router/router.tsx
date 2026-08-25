@@ -43,6 +43,7 @@ const AdminDashboardPage = lazy(() => import('@/features/dashboard/pages/AdminDa
 const AdminProductListPage = lazy(() => import('@/features/product/pages/AdminProductListPage'));
 const AdminProductCreatePage = lazy(() => import('@/features/product/pages/AdminProductCreatePage'));
 const AdminProductEditPage = lazy(() => import('@/features/product/pages/AdminProductEditPage'));
+const AdminProductDetailPage = lazy(() => import('@/features/product/pages/AdminProductDetailPage'));
 const AdminOrderListPage = lazy(() => import('@/features/order/pages/AdminOrderListPage'));
 const AdminOrderDetailPage = lazy(() => import('@/features/order/pages/AdminOrderDetailPage'));
 
@@ -150,6 +151,7 @@ export const router = createBrowserRouter([
               { path: 'admin/dashboard', element: <SuspenseWrapper><AdminDashboardPage /></SuspenseWrapper> },
               { path: 'admin/products', element: <SuspenseWrapper><AdminProductListPage /></SuspenseWrapper> },
               { path: 'admin/products/new', element: <SuspenseWrapper><AdminProductCreatePage /></SuspenseWrapper> },
+              { path: 'admin/products/:id', element: <SuspenseWrapper><AdminProductDetailPage /></SuspenseWrapper> },
               { path: 'admin/products/:id/edit', element: <SuspenseWrapper><AdminProductEditPage /></SuspenseWrapper> },
               { path: 'admin/categories', element: <SuspenseWrapper><AdminCategoryListPage /></SuspenseWrapper> },
               { path: 'admin/orders', element: <SuspenseWrapper><AdminOrderListPage /></SuspenseWrapper> },

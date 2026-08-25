@@ -8,10 +8,14 @@ export const adminShopKeys = {
   detail: (id: number) => ['admin', 'shops', 'detail', id] as const,
 };
 
-export function useAdminShops(params: AdminShopQueryParams) {
+export function useAdminShops(
+  params: AdminShopQueryParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: adminShopKeys.list(params),
     queryFn: () => adminShopService.getAll(params),
+    enabled: options?.enabled,
     select: (res) => ({
       data: res.data.data,
       meta: res.data.meta,

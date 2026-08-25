@@ -28,6 +28,7 @@ export const ROUTES = {
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_PRODUCTS: '/admin/products',
   ADMIN_PRODUCT_CREATE: '/admin/products/new',
+  ADMIN_PRODUCT_DETAIL: (id: number) => `/admin/products/${id}`,
   ADMIN_PRODUCT_EDIT: (id: number) => `/admin/products/${id}/edit`,
   ADMIN_ORDERS: '/admin/orders',
   ADMIN_ORDER_DETAIL: (id: number) => `/admin/orders/${id}`,

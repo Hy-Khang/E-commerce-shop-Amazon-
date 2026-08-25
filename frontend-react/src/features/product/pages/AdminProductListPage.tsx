@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Plus, Package, Eye, EyeOff } from 'lucide-react';
+import { Pencil, Plus, Package, Eye, EyeOff, Store } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
@@ -21,6 +21,7 @@ export default function AdminProductListPage() {
     search: searchParams.get('search') || undefined,
     category_id: searchParams.get('category_id') ? Number(searchParams.get('category_id')) : undefined,
     is_active: searchParams.get('is_active') !== null ? searchParams.get('is_active') === 'true' : undefined,
+    shop_id: searchParams.get('shop_id') ? Number(searchParams.get('shop_id')) : undefined,
   };
 
   const { data, isLoading } = useAdminProducts(filters);
@@ -43,6 +44,22 @@ export default function AdminProductListPage() {
           <span className="font-medium text-slate-900">{product.name}</span>
         </div>
       ),
+    },
+    {
+      key: 'shop',
+      header: 'Shop',
+      render: (product) =>
+        product.shop ? (
+          <Link
+            to={ROUTES.ADMIN_SHOP_DETAIL(product.shop.id)}
+            className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-teal-700 transition-colors"
+          >
+            <Store className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <span className="truncate">{product.shop.name}</span>
+          </Link>
+        ) : (
+          <span className="text-slate-400">—</span>
+        ),
     },
     {
       key: 'price',
@@ -86,6 +103,13 @@ export default function AdminProductListPage() {
       className: 'text-right',
       render: (product) => (
         <div className="flex items-center justify-end gap-1">
+          <Link
+            to={ROUTES.ADMIN_PRODUCT_DETAIL(product.id)}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
+            aria-label="View product"
+          >
+            <Eye className="h-4 w-4" />
+          </Link>
           <Link
             to={ROUTES.ADMIN_PRODUCT_EDIT(product.id)}
             className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
@@ -135,7 +159,7 @@ export default function AdminProductListPage() {
         emptyIcon={Package}
         emptyTitle="No products found"
         emptyDescription="Add a product to get started or adjust your search."
-        toolbar={<ProductFilters />}
+        toolbar={<ProductFilters showShopFilter />}
       />
 
       <ConfirmModal

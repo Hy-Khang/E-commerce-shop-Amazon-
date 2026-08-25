@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
 import { AdminSelect } from '@/common/components/data/AdminSelect';
 import { Button } from '@/common/components/ui/Button';
+import { useAdminShops } from '@/features/shop';
 import { useCategories } from '../hooks/useCategories';
 import { flattenCategoryTree } from '../utils/product.util';
 
@@ -13,16 +14,27 @@ const PRODUCT_SORT_OPTIONS: SortOption[] = [
   { label: 'Name Z→A', sort: 'name', order: 'desc' },
 ];
 
+interface ProductFiltersProps {
+  /** Admin-only: show a Shop filter dropdown (URL param `shop_id`). Seller list omits it. */
+  showShopFilter?: boolean;
+}
+
 /**
  * Filter toolbar shared by the admin & seller product lists. Fully URL-driven
- * (search / category_id / is_active / sort / order) so it composes with
- * `usePagination`, which reads the same params.
+ * (search / category_id / is_active / shop_id / sort / order) so it composes with
+ * `usePagination`, which reads the same params. The Shop filter is admin-only,
+ * gated behind `showShopFilter`.
  */
-export function ProductFilters() {
+export function ProductFilters({ showShopFilter = false }: ProductFiltersProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories } = useCategories();
+  const { data: shopData } = useAdminShops(
+    { page: 1, limit: 100 },
+    { enabled: showShopFilter },
+  );
 
   const categoryOptions = categories ? flattenCategoryTree(categories) : [];
+  const shopOptions = shopData?.data ?? [];
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -83,6 +95,24 @@ export function ProductFilters() {
             ]}
           />
         </div>
+
+        {showShopFilter && (
+          <div className="w-52">
+            <label htmlFor="product-shop" className="block text-sm font-medium text-slate-700">
+              Shop
+            </label>
+            <AdminSelect
+              id="product-shop"
+              className="mt-1"
+              value={searchParams.get('shop_id') || ''}
+              onChange={(v) => updateParam('shop_id', v)}
+              options={[
+                { value: '', label: 'All shops' },
+                ...shopOptions.map((shop) => ({ value: String(shop.id), label: shop.name })),
+              ]}
+            />
+          </div>
+        )}
 
         <div className="w-40">
           <label htmlFor="product-status" className="block text-sm font-medium text-slate-700">

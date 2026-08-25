@@ -7,6 +7,7 @@ import { ROUTES } from '@/common/constants/routes';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { Button } from '@/common/components/ui/Button';
 import { ImageLightbox } from '@/common/components/ui/ImageLightbox';
+import { useAdminShops } from '@/features/shop';
 import { useAdminProduct } from '../hooks/useAdminProduct';
 import { useUpdateProduct } from '../hooks/useUpdateProduct';
 import { useCategories } from '../hooks/useCategories';
@@ -134,6 +135,8 @@ export default function AdminProductEditPage() {
   const productId = Number(id);
   const { data: product, isLoading } = useAdminProduct(productId);
   const { data: categories } = useCategories();
+  const { data: shopData } = useAdminShops({ page: 1, limit: 100 });
+  const shopOptions = shopData?.data ?? [];
   const updateProduct = useUpdateProduct(productId);
   const toggleActive = useToggleProductActive();
   const deleteVariant = useDeleteVariant(productId);
@@ -156,6 +159,7 @@ export default function AdminProductEditPage() {
       thumbnail_url: product.thumbnail_url ?? '',
       option1_label: product.option1_label ?? '',
       option2_label: product.option2_label ?? '',
+      shop_id: product.shop_id ?? undefined,
     } : undefined,
   });
 
@@ -230,6 +234,20 @@ export default function AdminProductEditPage() {
             onChange={(id) => setValue('category_id', id as number, { shouldValidate: true })}
             error={errors.category_id?.message}
           />
+          <div>
+            <label htmlFor="shop_id" className="block text-sm font-medium text-slate-700">Shop</label>
+            <select
+              id="shop_id"
+              className="admin-input mt-1"
+              value={watch('shop_id') ?? ''}
+              onChange={(e) => setValue('shop_id', e.target.value ? Number(e.target.value) : undefined)}
+            >
+              <option value="">— No shop —</option>
+              {shopOptions.map((shop) => (
+                <option key={shop.id} value={shop.id}>{shop.name}</option>
+              ))}
+            </select>
+          </div>
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>
             <textarea id="description" rows={4} {...register('description')} className="admin-input mt-1" />

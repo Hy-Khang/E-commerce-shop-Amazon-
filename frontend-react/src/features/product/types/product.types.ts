@@ -71,11 +71,13 @@ export interface ProductListItem {
   created_at: string;
   category_id: number;
   variants: ProductVariant[];
+  shop?: ShopSummary | null;
 }
 
 export interface AdminProductDetail extends Product {
-  review_count?: number;
-  average_rating?: number;
+  category?: Category;
+  reviewCount?: number;
+  avgRating?: number;
 }
 
 export interface CategoryDetail {
@@ -154,6 +156,7 @@ export interface AdminProductListParams extends PaginationParams {
   category_id?: number;
   search?: string;
   is_active?: boolean;
+  shop_id?: number;
 }
 
 export interface AdminCategoryListParams extends PaginationParams {
@@ -171,6 +174,7 @@ export interface CreateProductRequest {
   thumbnail_url?: string;
   option1_label?: string;
   option2_label?: string;
+  shop_id?: number;
 }
 
 export interface UpdateProductRequest {
@@ -181,6 +185,7 @@ export interface UpdateProductRequest {
   thumbnail_url?: string;
   option1_label?: string;
   option2_label?: string;
+  shop_id?: number;
 }
 
 export interface CreateVariantRequest {
@@ -244,6 +249,7 @@ export const createProductSchema = z.object({
     .or(z.literal('')),
   option1_label: z.string().max(50).optional().or(z.literal('')),
   option2_label: z.string().max(50).optional().or(z.literal('')),
+  shop_id: z.number().int().positive().optional(),
 });
 
 export type CreateProductFormData = z.infer<typeof createProductSchema>;

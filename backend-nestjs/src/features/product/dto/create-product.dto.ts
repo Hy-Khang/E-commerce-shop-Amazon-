@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
 import { IsImagePath } from '../../../common/validators/is-image-path.validator';
 import { normalizeOptionalString } from '../../../common/transforms/normalize-optional-string.transform';
@@ -21,6 +21,13 @@ export class CreateProductDto {
   @IsInt()
   @IsPositive()
   category_id: number;
+
+  @ApiPropertyOptional({ example: 1, description: 'Owning shop id (admin only). Omit to leave the product unassigned.' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
+  shop_id?: number;
 
   @ApiPropertyOptional({ example: 'A comfortable basic t-shirt for everyday wear' })
   @IsOptional()
