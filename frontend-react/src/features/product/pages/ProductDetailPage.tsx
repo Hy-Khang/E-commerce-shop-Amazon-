@@ -17,7 +17,7 @@ import { ProductDetailSkeleton } from '../components/ProductDetailSkeleton';
 import { ShopProductsCarousel } from '../components/ShopProductsCarousel';
 import { RelatedProducts } from '../components/RelatedProducts';
 import { getEffectivePrice, isInStock } from '../utils/product.util';
-import type { ProductVariant } from '../types/product.types';
+import type { Category, ProductVariant } from '../types/product.types';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -42,7 +42,7 @@ export default function ProductDetailPage() {
   const active = selectedVariant ?? product.variants[0] ?? null;
 
   // Helper to find category by ID in tree
-  function findCategoryById(cats: any[], id: number): any | null {
+  function findCategoryById(cats: Category[], id: number): Category | null {
     for (const cat of cats) {
       if (cat.id === id) return cat;
       if (cat.children?.length) {

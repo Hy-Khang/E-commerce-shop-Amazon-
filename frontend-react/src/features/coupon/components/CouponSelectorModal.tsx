@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Tag, Loader2, Check } from 'lucide-react';
@@ -68,16 +68,19 @@ export function CouponSelectorModal({
   const [code, setCode] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
-  // Seed the draft from the applied set each time the modal opens.
-  useEffect(() => {
+  // Seed the draft from the applied set each time the modal opens. Adjust state
+  // during render (React docs: "storing info from previous renders") so it only
+  // re-seeds on the open transition, not on every applied-set change. `prevOpen`
+  // starts `false` so a component mounted already-open still seeds on first render.
+  const [prevOpen, setPrevOpen] = useState(false);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setDraft(appliedCoupons);
       setCode('');
       setLocalError(null);
     }
-    // Only re-seed on open transition, not on every applied-set change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }
 
   function selectOption(option: CouponOption) {
     const key = groupKey(option.shop_id);

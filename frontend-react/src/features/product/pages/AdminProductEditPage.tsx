@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Loader2, Trash2, X, ZoomIn } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
@@ -79,11 +79,11 @@ function VariantForm({ productId, option1Label, option2Label }: { productId: num
 
 function ImageForm({ productId, variants, option1Label }: { productId: number; variants: ProductVariant[]; option1Label: string | null }) {
   const addImage = useAddImage(productId);
-  const { register, handleSubmit, reset, setValue, watch } = useForm<{ image_url: string; sort_order: number; variant_option1: string }>({
+  const { register, handleSubmit, reset, setValue, control } = useForm<{ image_url: string; sort_order: number; variant_option1: string }>({
     defaultValues: { image_url: '', sort_order: 0, variant_option1: '' },
   });
 
-  const imageUrl = watch('image_url');
+  const imageUrl = useWatch({ control, name: 'image_url' });
   const option1Values = option1Label ? getUniqueOptionValues(variants, 'option1') : [];
 
   function onSubmit(data: { image_url: string; sort_order: number; variant_option1: string }) {
@@ -147,7 +147,7 @@ export default function AdminProductEditPage() {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<CreateProductFormData>({
     resolver: zodResolver(createProductSchema),
@@ -162,6 +162,10 @@ export default function AdminProductEditPage() {
       shop_id: product.shop_id ?? undefined,
     } : undefined,
   });
+
+  const categoryId = useWatch({ control, name: 'category_id' });
+  const thumbnailUrl = useWatch({ control, name: 'thumbnail_url' });
+  const shopId = useWatch({ control, name: 'shop_id' });
 
   function onSubmit(data: CreateProductFormData) {
     updateProduct.mutate({
@@ -230,7 +234,7 @@ export default function AdminProductEditPage() {
           </div>
           <CategoryCascader
             categories={categories ?? []}
-            value={watch('category_id')}
+            value={categoryId}
             onChange={(id) => setValue('category_id', id as number, { shouldValidate: true })}
             error={errors.category_id?.message}
           />
@@ -239,7 +243,7 @@ export default function AdminProductEditPage() {
             <select
               id="shop_id"
               className="admin-input mt-1"
-              value={watch('shop_id') ?? ''}
+              value={shopId ?? ''}
               onChange={(e) => setValue('shop_id', e.target.value ? Number(e.target.value) : undefined)}
             >
               <option value="">— No shop —</option>
@@ -265,7 +269,7 @@ export default function AdminProductEditPage() {
           <div>
             <ImageUpload
               label="Thumbnail"
-              value={watch('thumbnail_url') || undefined}
+              value={thumbnailUrl || undefined}
               onUploaded={(url) => setValue('thumbnail_url', url, { shouldValidate: true })}
               onClear={() => setValue('thumbnail_url', '', { shouldValidate: true })}
             />

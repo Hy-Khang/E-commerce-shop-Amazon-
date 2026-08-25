@@ -21,9 +21,13 @@ export function SearchBarWithSuggestions() {
   const flatItems = buildFlatItems(suggestions);
   const showDropdown = focused && query.trim().length >= 2 && flatItems.length > 0;
 
-  useEffect(() => {
+  // Reset the keyboard highlight whenever the query changes. Adjust state during
+  // render (React docs: "storing info from previous renders") instead of an effect.
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (query !== prevQuery) {
+    setPrevQuery(query);
     setActiveIndex(-1);
-  }, [query]);
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

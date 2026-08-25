@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MapContainer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { MapPin } from 'lucide-react';
 import '@/common/components/map/leaflet-setup';
 import { shipperMapIcon, deliveryMapIcon, VIETNAM_BOUNDS, VIETNAM_MIN_ZOOM } from '@/common/components/map/map-icons';
 import { BaseTileLayer } from '@/common/components/map/BaseTileLayer';
 import { VietnamBorderHighlight } from '@/common/components/map/vietnam-land-border';
-import { MapFullscreenControl, useMapFullscreen } from '@/common/components/map/MapFullscreenControl';
+import { MapFullscreenControl } from '@/common/components/map/MapFullscreenControl';
+import { useMapFullscreen } from '@/common/components/map/useMapFullscreen';
 import { RouteLine } from '@/common/components/map/RouteLine';
 import { Button } from '@/common/components/ui/Button';
 import { showErrorToast, showSuccessToast } from '@/common/components/feedback/toast';
@@ -34,11 +35,16 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
   const updateLocation = useUpdateShipperLocation();
   const { isFullscreen, toggle } = useMapFullscreen();
 
-  useEffect(() => {
+  // Seed the marker once `currentLocation` arrives (it may load after mount).
+  // Adjust state during render (React docs: "storing info from previous
+  // renders") instead of an effect.
+  const [prevLocation, setPrevLocation] = useState(currentLocation);
+  if (currentLocation !== prevLocation) {
+    setPrevLocation(currentLocation);
     if (currentLocation && !selectedPosition) {
       setSelectedPosition([currentLocation.latitude, currentLocation.longitude]);
     }
-  }, [currentLocation, selectedPosition]);
+  }
 
   const center: [number, number] = selectedPosition
     ?? (deliveryLocation ? [deliveryLocation.latitude, deliveryLocation.longitude] : [10.762622, 106.660172]);

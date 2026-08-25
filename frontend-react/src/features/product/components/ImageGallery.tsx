@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { getImageUrl } from '@/common/utils/format.util';
 import type { ProductImage } from '../types/product.types';
 
@@ -26,9 +26,13 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
     return [];
   }, [images, selectedOption1]);
 
-  useEffect(() => {
+  // Reset to the first image when the selected variant changes. Adjust state
+  // during render (React docs: "storing info from previous renders").
+  const [prevOption1, setPrevOption1] = useState(selectedOption1);
+  if (selectedOption1 !== prevOption1) {
+    setPrevOption1(selectedOption1);
     setActiveIndex(0);
-  }, [selectedOption1]);
+  }
 
   const clampedIndex = Math.min(activeIndex, Math.max(displayImages.length - 1, 0));
 

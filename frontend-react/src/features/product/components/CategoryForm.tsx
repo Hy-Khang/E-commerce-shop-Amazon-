@@ -22,17 +22,17 @@ export function CategoryForm({ defaultValues, onSubmit, isPending, error, submit
     register,
     handleSubmit,
     setValue,
-    watch,
+    getValues,
     formState: { errors },
   } = useForm<CreateCategoryFormData>({
     resolver: zodResolver(createCategorySchema),
     defaultValues,
   });
 
-  const name = watch('name');
-
+  // Auto-fill slug from name on blur — imperative one-shot read, no subscription.
   function handleNameBlur() {
-    if (name && !watch('slug')) {
+    const name = getValues('name');
+    if (name && !getValues('slug')) {
       setValue('slug', generateSlug(name));
     }
   }

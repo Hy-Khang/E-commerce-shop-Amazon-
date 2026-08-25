@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Star, Loader2 } from 'lucide-react';
 import { useCreateReview } from '../hooks/useCreateReview';
@@ -19,7 +19,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<ReviewFormData>({
     resolver: zodResolver(reviewSchema),
@@ -31,7 +31,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
     },
   });
 
-  const currentRating = watch('rating');
+  const currentRating = useWatch({ control, name: 'rating' });
 
   function onSubmit(data: ReviewFormData) {
     createReview.mutate(data, {

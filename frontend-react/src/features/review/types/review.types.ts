@@ -36,7 +36,7 @@ export interface ProductReviewListParams extends PaginationParams {
   rating?: number;
 }
 
-export interface MyReviewListParams extends PaginationParams {}
+export type MyReviewListParams = PaginationParams;
 
 export interface AdminReviewListParams extends PaginationParams {
   product_id?: number;
