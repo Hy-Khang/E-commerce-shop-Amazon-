@@ -11,6 +11,7 @@ interface Props {
     search?: string;
     status?: ShopStatus | '';
   }) => void;
+  initialStatus?: ShopStatus | '';
 }
 
 const statusOptions = Object.entries(SHOP_STATUS_LABELS) as [ShopStatus, string][];
@@ -21,9 +22,9 @@ const SHOP_SORT_OPTIONS: SortOption[] = [
   { label: 'Name A→Z', sort: 'name', order: 'asc' },
 ];
 
-export function ShopFilters({ onFilterChange }: Props) {
+export function ShopFilters({ onFilterChange, initialStatus = '' }: Props) {
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<string>(initialStatus);
   useDebounce(search, 300);
 
   return (

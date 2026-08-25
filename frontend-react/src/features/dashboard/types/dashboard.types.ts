@@ -1,3 +1,12 @@
+export type DashboardPeriod = '7d' | '30d' | '90d' | '12m';
+
+export type RevenueGranularity = 'day' | 'month';
+
+export interface MetricChange {
+  changePercent: number | null; // null when the previous period was zero
+  direction: 'up' | 'down' | 'flat';
+}
+
 export interface DashboardStats {
   summary: SummaryStats | null;
   revenueOverTime: RevenueDataPoint[];
@@ -6,14 +15,32 @@ export interface DashboardStats {
   usersByRole: UserRoleCount[];
   topProducts: TopProduct[];
   lowStockAlerts: LowStockAlert[];
+  attentionSignals: AttentionSignals | null;
+  topShops: TopShop[];
 }
 
 export interface SummaryStats {
   grossRevenue: number;
+  grossRevenueChange: MetricChange;
   collectedRevenue: number;
+  collectedRevenueChange: MetricChange;
   totalOrders: number;
+  totalOrdersChange: MetricChange;
   totalProducts: number;
   totalUsers: number;
+}
+
+export interface AttentionSignals {
+  pendingShops: number;
+  returnRequestedOrders: number;
+}
+
+export interface TopShop {
+  id: number;
+  name: string;
+  slug: string;
+  revenue: number;
+  orderCount: number;
 }
 
 export interface RevenueDataPoint {
@@ -59,8 +86,11 @@ export interface LowStockAlert {
 
 export interface SellerSummaryStats {
   grossRevenue: number;
+  grossRevenueChange: MetricChange;
   collectedRevenue: number;
+  collectedRevenueChange: MetricChange;
   totalOrders: number;
+  totalOrdersChange: MetricChange;
   totalProducts: number;
   lowStockCount: number;
 }

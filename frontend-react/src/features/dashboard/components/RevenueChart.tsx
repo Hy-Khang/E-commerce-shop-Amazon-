@@ -7,10 +7,14 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import type { RevenueDataPoint } from '../types/dashboard.types';
+import type {
+  RevenueDataPoint,
+  RevenueGranularity,
+} from '../types/dashboard.types';
 
 interface Props {
   data: RevenueDataPoint[];
+  granularity?: RevenueGranularity;
 }
 
 function formatVND(value: number): string {
@@ -19,24 +23,30 @@ function formatVND(value: number): string {
   return String(value);
 }
 
-function formatDateLabel(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+function makeDateLabelFormatter(granularity: RevenueGranularity) {
+  return (dateStr: string): string => {
+    const d = new Date(dateStr + 'T00:00:00');
+    return granularity === 'month'
+      ? d.toLocaleDateString('vi-VN', { month: '2-digit', year: 'numeric' })
+      : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+  };
 }
 
 function CustomTooltip({
   active,
   payload,
   label,
+  labelFormatter,
 }: {
   active?: boolean;
   payload?: Array<{ value: number }>;
   label?: string;
+  labelFormatter: (dateStr: string) => string;
 }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg bg-slate-900 px-3 py-2 text-sm shadow-lg">
-      <p className="text-slate-400">{label ? formatDateLabel(label) : ''}</p>
+      <p className="text-slate-400">{label ? labelFormatter(label) : ''}</p>
       <p className="font-semibold text-white">
         {new Intl.NumberFormat('vi-VN', {
           style: 'currency',
@@ -48,7 +58,9 @@ function CustomTooltip({
   );
 }
 
-export default function RevenueChart({ data }: Props) {
+export default function RevenueChart({ data, granularity = 'day' }: Props) {
+  const formatDateLabel = makeDateLabelFormatter(granularity);
+
   return (
     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
       <h2 className="mb-4 font-jakarta text-lg font-bold text-slate-900">
@@ -57,7 +69,7 @@ export default function RevenueChart({ data }: Props) {
       <div className="h-72">
         {data.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-slate-400">
-            <p className="text-sm">No revenue data in the last 30 days</p>
+            <p className="text-sm">No revenue data in this period</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -83,7 +95,9 @@ export default function RevenueChart({ data }: Props) {
                 tickLine={false}
                 width={50}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={<CustomTooltip labelFormatter={formatDateLabel} />}
+              />
               <Area
                 type="monotone"
                 dataKey="revenue"

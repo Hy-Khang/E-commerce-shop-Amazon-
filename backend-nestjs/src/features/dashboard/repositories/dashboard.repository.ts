@@ -10,12 +10,15 @@ import type {
   IUserRoleCount,
   ITopProduct,
   ILowStockAlert,
+  IAttentionSignals,
+  ITopShop,
   ISellerSummaryStats,
   ISellerRecentOrder,
   IShipperSummaryStats,
   IShipperDeliveryDataPoint,
   IShipperRecentDelivery,
 } from '../types/dashboard.types';
+import { computeChange, type RevenueGranularity } from '../utils/period.util';
 
 @Injectable()
 export class DashboardRepository {
@@ -24,33 +27,45 @@ export class DashboardRepository {
     private readonly repo: Repository<Order>,
   ) {}
 
-  async getSummaryStats(): Promise<ISummaryStats> {
+  async getSummaryStats(days: number): Promise<ISummaryStats> {
     const mgr = this.repo.manager;
 
-    const [
-      grossRevenueResult,
-      collectedRevenueResult,
-      orderResult,
-      productResult,
-      userResult,
-    ] = await Promise.all([
+    // Current window: [now-days, now]; previous window: [now-2*days, now-days].
+    // Both computed in a single scan via conditional SUM.
+    const CUR = 'o.created_at >= DATEADD(DAY, :curStart, GETUTCDATE())';
+    const PREV =
+      'o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE()) AND o.created_at < DATEADD(DAY, :curStart, GETUTCDATE())';
+
+    const [flowResult, productResult, userResult] = await Promise.all([
       mgr
         .createQueryBuilder()
-        .select('COALESCE(SUM(total_amount), 0)', 'grossRevenue')
         .from('orders', 'o')
-        .where("o.status = 'completed'")
-        .getRawOne(),
-      mgr
-        .createQueryBuilder()
-        .select('COALESCE(SUM(total_amount), 0)', 'collectedRevenue')
-        .from('orders', 'o')
-        .where("o.payment_status = 'paid'")
-        .andWhere("o.status = 'completed'")
-        .getRawOne(),
-      mgr
-        .createQueryBuilder()
-        .select('COUNT(*)', 'totalOrders')
-        .from('orders', 'o')
+        .select(
+          `COALESCE(SUM(CASE WHEN o.status = 'completed' AND ${CUR} THEN o.total_amount END), 0)`,
+          'curGross',
+        )
+        .addSelect(
+          `COALESCE(SUM(CASE WHEN o.status = 'completed' AND ${PREV} THEN o.total_amount END), 0)`,
+          'prevGross',
+        )
+        .addSelect(
+          `COALESCE(SUM(CASE WHEN o.status = 'completed' AND o.payment_status = 'paid' AND ${CUR} THEN o.total_amount END), 0)`,
+          'curCollected',
+        )
+        .addSelect(
+          `COALESCE(SUM(CASE WHEN o.status = 'completed' AND o.payment_status = 'paid' AND ${PREV} THEN o.total_amount END), 0)`,
+          'prevCollected',
+        )
+        .addSelect(
+          `COALESCE(SUM(CASE WHEN o.status <> 'cancelled' AND ${CUR} THEN 1 ELSE 0 END), 0)`,
+          'curOrders',
+        )
+        .addSelect(
+          `COALESCE(SUM(CASE WHEN o.status <> 'cancelled' AND ${PREV} THEN 1 ELSE 0 END), 0)`,
+          'prevOrders',
+        )
+        .where('o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE())')
+        .setParameters({ curStart: -days, prevStart: -2 * days })
         .getRawOne(),
       mgr
         .createQueryBuilder()
@@ -66,38 +81,147 @@ export class DashboardRepository {
         .getRawOne(),
     ]);
 
+    const curGross = parseFloat(flowResult.curGross) || 0;
+    const prevGross = parseFloat(flowResult.prevGross) || 0;
+    const curCollected = parseFloat(flowResult.curCollected) || 0;
+    const prevCollected = parseFloat(flowResult.prevCollected) || 0;
+    const curOrders = parseInt(flowResult.curOrders, 10) || 0;
+    const prevOrders = parseInt(flowResult.prevOrders, 10) || 0;
+
     return {
-      grossRevenue: parseFloat(grossRevenueResult.grossRevenue) || 0,
-      collectedRevenue:
-        parseFloat(collectedRevenueResult.collectedRevenue) || 0,
-      totalOrders: parseInt(orderResult.totalOrders, 10),
+      grossRevenue: curGross,
+      grossRevenueChange: computeChange(curGross, prevGross),
+      collectedRevenue: curCollected,
+      collectedRevenueChange: computeChange(curCollected, prevCollected),
+      totalOrders: curOrders,
+      totalOrdersChange: computeChange(curOrders, prevOrders),
       totalProducts: parseInt(productResult.totalProducts, 10),
       totalUsers: parseInt(userResult.totalUsers, 10),
     };
   }
 
-  async getRevenueOverTime(days: number): Promise<IRevenueDataPoint[]> {
-    // SQL Server: CAST(created_at AS DATE) for date grouping
-    const rows = await this.repo.manager
-      .createQueryBuilder()
-      .select('CAST(o.created_at AS DATE)', 'date')
-      .addSelect('COALESCE(SUM(o.total_amount), 0)', 'revenue')
-      .from('orders', 'o')
+  async getRevenueOverTime(
+    days: number,
+    granularity: RevenueGranularity = 'day',
+  ): Promise<IRevenueDataPoint[]> {
+    return this.queryRevenueOverTime(days, granularity, null);
+  }
+
+  /**
+   * Revenue trend bucketed by day (short ranges) or calendar month (12m).
+   * Monthly buckets group on CONVERT(varchar(7), created_at, 126) → 'yyyy-MM'
+   * and are returned as 'yyyy-MM-01' so the frontend parses them as dates.
+   * When `shopId` is provided the revenue is the shop's share (order_items).
+   */
+  private async queryRevenueOverTime(
+    days: number,
+    granularity: RevenueGranularity,
+    shopId: number | null,
+  ): Promise<IRevenueDataPoint[]> {
+    const isMonth = granularity === 'month';
+    const bucketExpr = isMonth
+      ? "CONVERT(varchar(7), o.created_at, 126)"
+      : 'CAST(o.created_at AS DATE)';
+    const revenueExpr = shopId
+      ? 'COALESCE(SUM(oi.price * oi.quantity), 0)'
+      : 'COALESCE(SUM(o.total_amount), 0)';
+
+    const qb = this.repo.manager.createQueryBuilder();
+
+    if (shopId) {
+      qb.from('order_items', 'oi').innerJoin(
+        'orders',
+        'o',
+        'oi.order_id = o.id',
+      );
+    } else {
+      qb.from('orders', 'o');
+    }
+
+    qb.select(bucketExpr, 'bucket')
+      .addSelect(revenueExpr, 'revenue')
       .where("o.payment_status = 'paid'")
       .andWhere("o.status = 'completed'")
       .andWhere('o.created_at >= DATEADD(DAY, :days, GETUTCDATE())', {
         days: -days,
-      })
-      .groupBy('CAST(o.created_at AS DATE)')
-      .orderBy('date', 'ASC')
+      });
+
+    if (shopId) {
+      qb.andWhere('o.shop_id = :shopId', { shopId });
+    }
+
+    const rows = await qb
+      .groupBy(bucketExpr)
+      .orderBy('bucket', 'ASC')
+      .getRawMany();
+
+    return rows.map((row) => {
+      let date: string;
+      if (isMonth) {
+        // 'yyyy-MM' → 'yyyy-MM-01'
+        date = `${String(row.bucket)}-01`;
+      } else {
+        date =
+          row.bucket instanceof Date
+            ? row.bucket.toISOString().split('T')[0]
+            : String(row.bucket);
+      }
+      return { date, revenue: parseFloat(row.revenue) || 0 };
+    });
+  }
+
+  async getAttentionSignals(): Promise<IAttentionSignals> {
+    const mgr = this.repo.manager;
+
+    const [pendingShopsResult, returnRequestedResult] = await Promise.all([
+      mgr
+        .createQueryBuilder()
+        .select('COUNT(*)', 'count')
+        .from('shops', 's')
+        .where("s.status = 'pending_verification'")
+        .getRawOne(),
+      mgr
+        .createQueryBuilder()
+        .select('COUNT(*)', 'count')
+        .from('orders', 'o')
+        .where("o.status = 'return_requested'")
+        .getRawOne(),
+    ]);
+
+    return {
+      pendingShops: parseInt(pendingShopsResult.count, 10) || 0,
+      returnRequestedOrders: parseInt(returnRequestedResult.count, 10) || 0,
+    };
+  }
+
+  async getTopShops(limit: number): Promise<ITopShop[]> {
+    const rows = await this.repo.manager
+      .createQueryBuilder()
+      .select([
+        's.id AS id',
+        's.name AS name',
+        's.slug AS slug',
+        'COALESCE(SUM(oi.price * oi.quantity), 0) AS revenue',
+        'COUNT(DISTINCT o.id) AS orderCount',
+      ])
+      .from('order_items', 'oi')
+      .innerJoin('orders', 'o', 'oi.order_id = o.id')
+      .innerJoin('shops', 's', 'o.shop_id = s.id')
+      .where("o.payment_status = 'paid'")
+      .andWhere("o.status = 'completed'")
+      .groupBy('s.id')
+      .addGroupBy('s.name')
+      .addGroupBy('s.slug')
+      .orderBy('revenue', 'DESC')
+      .limit(limit)
       .getRawMany();
 
     return rows.map((row) => ({
-      date:
-        row.date instanceof Date
-          ? row.date.toISOString().split('T')[0]
-          : String(row.date),
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
       revenue: parseFloat(row.revenue) || 0,
+      orderCount: parseInt(row.orderCount, 10) || 0,
     }));
   }
 
@@ -221,66 +345,89 @@ export class DashboardRepository {
     }));
   }
 
-  async getSellerSummaryStats(shopId: number): Promise<ISellerSummaryStats> {
+  async getSellerSummaryStats(
+    shopId: number,
+    days: number,
+  ): Promise<ISellerSummaryStats> {
     const mgr = this.repo.manager;
 
-    const [
-      grossRevenueResult,
-      collectedRevenueResult,
-      orderResult,
-      productResult,
-      lowStockResult,
-    ] = await Promise.all([
-      mgr
-        .createQueryBuilder()
-        .select('COALESCE(SUM(oi.price * oi.quantity), 0)', 'grossRevenue')
-        .from('order_items', 'oi')
-        .innerJoin('orders', 'o', 'oi.order_id = o.id')
-        .where('o.shop_id = :shopId', { shopId })
-        .andWhere("o.status = 'completed'")
-        .getRawOne(),
-      mgr
-        .createQueryBuilder()
-        .select(
-          'COALESCE(SUM(oi.price * oi.quantity), 0)',
-          'collectedRevenue',
-        )
-        .from('order_items', 'oi')
-        .innerJoin('orders', 'o', 'oi.order_id = o.id')
-        .where('o.shop_id = :shopId', { shopId })
-        .andWhere("o.payment_status = 'paid'")
-        .andWhere("o.status = 'completed'")
-        .getRawOne(),
-      mgr
-        .createQueryBuilder()
-        .select('COUNT(*)', 'totalOrders')
-        .from('orders', 'o')
-        .where('o.shop_id = :shopId', { shopId })
-        .andWhere("o.status != 'cancelled'")
-        .getRawOne(),
-      mgr
-        .createQueryBuilder()
-        .select('COUNT(*)', 'totalProducts')
-        .from('products', 'p')
-        .where('p.shop_id = :shopId', { shopId })
-        .andWhere('p.is_active = 1')
-        .getRawOne(),
-      mgr
-        .createQueryBuilder()
-        .select('COUNT(*)', 'lowStockCount')
-        .from('product_variants', 'pv')
-        .innerJoin('products', 'p', 'pv.product_id = p.id')
-        .where('p.shop_id = :shopId', { shopId })
-        .andWhere('p.is_active = 1')
-        .andWhere('pv.stock_quantity < :threshold', { threshold: 10 })
-        .getRawOne(),
-    ]);
+    const CUR = 'o.created_at >= DATEADD(DAY, :curStart, GETUTCDATE())';
+    const PREV =
+      'o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE()) AND o.created_at < DATEADD(DAY, :curStart, GETUTCDATE())';
+
+    const [flowResult, orderResult, productResult, lowStockResult] =
+      await Promise.all([
+        mgr
+          .createQueryBuilder()
+          .from('order_items', 'oi')
+          .innerJoin('orders', 'o', 'oi.order_id = o.id')
+          .select(
+            `COALESCE(SUM(CASE WHEN o.status = 'completed' AND ${CUR} THEN oi.price * oi.quantity END), 0)`,
+            'curGross',
+          )
+          .addSelect(
+            `COALESCE(SUM(CASE WHEN o.status = 'completed' AND ${PREV} THEN oi.price * oi.quantity END), 0)`,
+            'prevGross',
+          )
+          .addSelect(
+            `COALESCE(SUM(CASE WHEN o.status = 'completed' AND o.payment_status = 'paid' AND ${CUR} THEN oi.price * oi.quantity END), 0)`,
+            'curCollected',
+          )
+          .addSelect(
+            `COALESCE(SUM(CASE WHEN o.status = 'completed' AND o.payment_status = 'paid' AND ${PREV} THEN oi.price * oi.quantity END), 0)`,
+            'prevCollected',
+          )
+          .where('o.shop_id = :shopId')
+          .andWhere('o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE())')
+          .setParameters({ shopId, curStart: -days, prevStart: -2 * days })
+          .getRawOne(),
+        mgr
+          .createQueryBuilder()
+          .from('orders', 'o')
+          .select(
+            `COALESCE(SUM(CASE WHEN o.status <> 'cancelled' AND ${CUR} THEN 1 ELSE 0 END), 0)`,
+            'curOrders',
+          )
+          .addSelect(
+            `COALESCE(SUM(CASE WHEN o.status <> 'cancelled' AND ${PREV} THEN 1 ELSE 0 END), 0)`,
+            'prevOrders',
+          )
+          .where('o.shop_id = :shopId')
+          .andWhere('o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE())')
+          .setParameters({ shopId, curStart: -days, prevStart: -2 * days })
+          .getRawOne(),
+        mgr
+          .createQueryBuilder()
+          .select('COUNT(*)', 'totalProducts')
+          .from('products', 'p')
+          .where('p.shop_id = :shopId', { shopId })
+          .andWhere('p.is_active = 1')
+          .getRawOne(),
+        mgr
+          .createQueryBuilder()
+          .select('COUNT(*)', 'lowStockCount')
+          .from('product_variants', 'pv')
+          .innerJoin('products', 'p', 'pv.product_id = p.id')
+          .where('p.shop_id = :shopId', { shopId })
+          .andWhere('p.is_active = 1')
+          .andWhere('pv.stock_quantity < :threshold', { threshold: 10 })
+          .getRawOne(),
+      ]);
+
+    const curGross = parseFloat(flowResult.curGross) || 0;
+    const prevGross = parseFloat(flowResult.prevGross) || 0;
+    const curCollected = parseFloat(flowResult.curCollected) || 0;
+    const prevCollected = parseFloat(flowResult.prevCollected) || 0;
+    const curOrders = parseInt(orderResult.curOrders, 10) || 0;
+    const prevOrders = parseInt(orderResult.prevOrders, 10) || 0;
 
     return {
-      grossRevenue: parseFloat(grossRevenueResult.grossRevenue) || 0,
-      collectedRevenue:
-        parseFloat(collectedRevenueResult.collectedRevenue) || 0,
-      totalOrders: parseInt(orderResult.totalOrders, 10),
+      grossRevenue: curGross,
+      grossRevenueChange: computeChange(curGross, prevGross),
+      collectedRevenue: curCollected,
+      collectedRevenueChange: computeChange(curCollected, prevCollected),
+      totalOrders: curOrders,
+      totalOrdersChange: computeChange(curOrders, prevOrders),
       totalProducts: parseInt(productResult.totalProducts, 10),
       lowStockCount: parseInt(lowStockResult.lowStockCount, 10),
     };
@@ -289,30 +436,9 @@ export class DashboardRepository {
   async getSellerRevenueOverTime(
     shopId: number,
     days: number,
+    granularity: RevenueGranularity = 'day',
   ): Promise<IRevenueDataPoint[]> {
-    const rows = await this.repo.manager
-      .createQueryBuilder()
-      .select('CAST(o.created_at AS DATE)', 'date')
-      .addSelect('COALESCE(SUM(oi.price * oi.quantity), 0)', 'revenue')
-      .from('order_items', 'oi')
-      .innerJoin('orders', 'o', 'oi.order_id = o.id')
-      .where('o.shop_id = :shopId', { shopId })
-      .andWhere("o.payment_status = 'paid'")
-      .andWhere("o.status = 'completed'")
-      .andWhere('o.created_at >= DATEADD(DAY, :days, GETUTCDATE())', {
-        days: -days,
-      })
-      .groupBy('CAST(o.created_at AS DATE)')
-      .orderBy('date', 'ASC')
-      .getRawMany();
-
-    return rows.map((row) => ({
-      date:
-        row.date instanceof Date
-          ? row.date.toISOString().split('T')[0]
-          : String(row.date),
-      revenue: parseFloat(row.revenue) || 0,
-    }));
+    return this.queryRevenueOverTime(days, granularity, shopId);
   }
 
   async getSellerTopProducts(

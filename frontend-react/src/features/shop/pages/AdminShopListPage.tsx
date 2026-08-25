@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Eye, Store, CheckCircle2, PauseCircle, Ban } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatDate } from '@/common/utils/format.util';
@@ -10,7 +10,16 @@ import { useAdminShops } from '../hooks/useAdminShops';
 import { useUpdateShopStatus } from '../hooks/useUpdateShopStatus';
 import { ShopFilters } from '../components/ShopFilters';
 import { ShopStatusBadge } from '../components/ShopStatusBadge';
-import type { AdminShop, AdminShopQueryParams } from '../types/shop.types';
+import { SHOP_STATUS_LABELS } from '../types/shop.types';
+import type {
+  AdminShop,
+  AdminShopQueryParams,
+  ShopStatus,
+} from '../types/shop.types';
+
+function statusFromUrl(raw: string | null): ShopStatus | undefined {
+  return raw && raw in SHOP_STATUS_LABELS ? (raw as ShopStatus) : undefined;
+}
 
 const STATUS_COPY: Record<'active' | 'suspended' | 'banned', {
   title: string;
@@ -44,7 +53,15 @@ export default function AdminShopListPage() {
     order: 'desc',
   });
 
-  const [filters, setFilters] = useState<Pick<AdminShopQueryParams, 'search' | 'status'>>({});
+  const [searchParams] = useSearchParams();
+  const [filters, setFilters] = useState<
+    Pick<AdminShopQueryParams, 'search' | 'status'>
+  >(() => {
+    // Seed the status filter from the URL so deep-links (e.g. the dashboard
+    // "pending shops" signal) land pre-filtered.
+    const status = statusFromUrl(searchParams.get('status'));
+    return status ? { status } : {};
+  });
 
   const queryParams: AdminShopQueryParams = { ...params, ...filters };
 
@@ -167,7 +184,12 @@ export default function AdminShopListPage() {
         emptyIcon={Store}
         emptyTitle="No shops found"
         emptyDescription="Try adjusting your search or filter criteria."
-        toolbar={<ShopFilters onFilterChange={handleFilterChange} />}
+        toolbar={
+          <ShopFilters
+            onFilterChange={handleFilterChange}
+            initialStatus={filters.status ?? ''}
+          />
+        }
       />
 
       <ConfirmModal

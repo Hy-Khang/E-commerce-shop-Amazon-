@@ -1,4 +1,6 @@
+import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import type { MetricChange } from '../types/dashboard.types';
 
 interface Props {
   title: string;
@@ -6,6 +8,8 @@ interface Props {
   icon: LucideIcon;
   color: 'emerald' | 'blue' | 'violet' | 'amber' | 'teal';
   index: number;
+  /** Optional period-over-period comparison. Omit for absolute-snapshot cards. */
+  trend?: MetricChange;
 }
 
 const colorMap = {
@@ -41,7 +45,47 @@ const colorMap = {
   },
 };
 
-export function StatCard({ title, value, icon: Icon, color, index }: Props) {
+function TrendPill({ trend }: { trend: MetricChange }) {
+  const { changePercent, direction } = trend;
+
+  if (changePercent === null) {
+    // No baseline in the previous period.
+    const isNew = direction === 'up';
+    return (
+      <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-slate-400">
+        <Minus className="h-3.5 w-3.5" />
+        {isNew ? 'New this period' : 'No prior data'}
+      </span>
+    );
+  }
+
+  const styles =
+    direction === 'up'
+      ? { text: 'text-emerald-600', Icon: ArrowUp }
+      : direction === 'down'
+        ? { text: 'text-rose-600', Icon: ArrowDown }
+        : { text: 'text-slate-400', Icon: Minus };
+  const { text, Icon } = styles;
+
+  return (
+    <span
+      className={`mt-2 inline-flex items-center gap-1 text-xs font-semibold ${text}`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {Math.abs(changePercent).toFixed(1)}%
+      <span className="font-normal text-slate-400">vs prev</span>
+    </span>
+  );
+}
+
+export function StatCard({
+  title,
+  value,
+  icon: Icon,
+  color,
+  index,
+  trend,
+}: Props) {
   const c = colorMap[color];
 
   return (
@@ -55,6 +99,7 @@ export function StatCard({ title, value, icon: Icon, color, index }: Props) {
           <p className="mt-1 font-jakarta text-2xl font-bold tracking-tight text-slate-900 tabular-nums truncate">
             {value}
           </p>
+          {trend && <TrendPill trend={trend} />}
         </div>
         <div className={`shrink-0 rounded-xl ${c.iconBg} p-3`}>
           <Icon className={`h-6 w-6 ${c.iconText}`} />

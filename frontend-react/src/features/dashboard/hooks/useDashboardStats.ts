@@ -1,15 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from '../services/dashboard.service';
+import type { DashboardPeriod } from '../types/dashboard.types';
 
 export const dashboardKeys = {
   all: ['admin', 'dashboard'] as const,
-  stats: () => ['admin', 'dashboard', 'stats'] as const,
+  stats: (period: DashboardPeriod) =>
+    ['admin', 'dashboard', 'stats', period] as const,
 };
 
-export function useDashboardStats() {
+export function useDashboardStats(period: DashboardPeriod) {
   return useQuery({
-    queryKey: dashboardKeys.stats(),
-    queryFn: () => dashboardService.getStats(),
+    queryKey: dashboardKeys.stats(period),
+    queryFn: () => dashboardService.getStats(period),
     select: (res) => res.data.data,
     staleTime: 60_000,
   });
