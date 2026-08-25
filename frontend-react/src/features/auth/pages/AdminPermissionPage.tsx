@@ -89,9 +89,6 @@ function MatrixTab() {
     return safeRoles.map((r) => r.id);
   }, [safeRoles]);
 
-  const [rolePermSets, setRolePermSets] = useState<Map<number, Set<number>>>(new Map());
-  const [pendingRoleId, setPendingRoleId] = useState<number | null>(null);
-
   const role1Query = useRolePermissions(rolePermQueries[0] ?? 0);
   const role2Query = useRolePermissions(rolePermQueries[1] ?? 0);
   const role3Query = useRolePermissions(rolePermQueries[2] ?? 0);
@@ -112,8 +109,16 @@ function MatrixTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rolePermQueries, role1Query.data, role2Query.data, role3Query.data, role4Query.data, role5Query.data]);
 
-  // Sync server-derived permissions into local (optimistic) state without an effect,
-  // via React's "adjust state during render" pattern (re-renders immediately, no cascade).
+  // Local (optimistic) copy of the server permission sets. Initialised FROM roleQueryMap
+  // so a cached SPA navigation — where roleQueryMap already holds data on the first render —
+  // shows the toggles immediately instead of an empty 0/N grid until reload.
+  const [rolePermSets, setRolePermSets] = useState<Map<number, Set<number>>>(roleQueryMap);
+  const [pendingRoleId, setPendingRoleId] = useState<number | null>(null);
+
+  // Sync server-derived permissions into local state without an effect, via React's
+  // "adjust state during render" pattern (re-renders immediately, no cascade). Must init
+  // syncedMap from the SAME roleQueryMap as rolePermSets, otherwise the two disagree on the
+  // first render and the reconcile never runs (that was the cached-navigation 0/N bug).
   const [syncedMap, setSyncedMap] = useState(roleQueryMap);
   if (syncedMap !== roleQueryMap) {
     setSyncedMap(roleQueryMap);

@@ -8,6 +8,7 @@ export { useRemoveFromWishlist } from './hooks/useRemoveFromWishlist';
 export { useCheckWishlist } from './hooks/useCheckWishlist';
 export { useBulkCheckWishlist } from './hooks/useBulkCheckWishlist';
 export { useAdminPopularWishlist, adminWishlistKeys } from './hooks/useAdminPopularWishlist';
+export { useSellerPopularWishlist, sellerWishlistKeys } from './hooks/useSellerPopularWishlist';
 export { useWishlistStore } from './stores/wishlist.store';
 export type {
   WishlistItem,

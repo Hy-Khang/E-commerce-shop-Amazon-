@@ -28,6 +28,7 @@ export const ROUTES = {
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_PRODUCTS: '/admin/products',
   ADMIN_PRODUCT_CREATE: '/admin/products/new',
+  ADMIN_PRODUCT_DETAIL: (id: number) => `/admin/products/${id}`,
   ADMIN_PRODUCT_EDIT: (id: number) => `/admin/products/${id}/edit`,
   ADMIN_ORDERS: '/admin/orders',
   ADMIN_ORDER_DETAIL: (id: number) => `/admin/orders/${id}`,
@@ -52,6 +53,8 @@ export const ROUTES = {
   SELLER_ORDER_DETAIL: (id: number) => `/seller/orders/${id}`,
   SELLER_SHOP: '/seller/shop',
   SELLER_COUPONS: '/seller/coupons',
+  SELLER_REVIEWS: '/seller/reviews',
+  SELLER_WISHLIST: '/seller/wishlist',
 
   SHIPPER_DASHBOARD: '/shipper/dashboard',
   SHIPPER_DELIVERIES: '/shipper/deliveries',

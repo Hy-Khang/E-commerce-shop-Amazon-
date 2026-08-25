@@ -10,10 +10,14 @@ export const adminCouponKeys = {
   allUsages: (params: Record<string, unknown>) => ['admin', 'coupons', 'allUsages', params] as const,
 };
 
-export function useAdminCoupons(params: CouponListParams) {
+export function useAdminCoupons(
+  params: CouponListParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: adminCouponKeys.list(params),
     queryFn: () => adminCouponService.getList(params),
+    enabled: options?.enabled,
     select: (res) => ({
       data: res.data.data,
       meta: res.data.meta,

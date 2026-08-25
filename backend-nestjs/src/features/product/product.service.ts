@@ -57,6 +57,11 @@ export class ProductService {
     return this.categoryRepository.findTree();
   }
 
+  /** Returns the category id plus all descendant ids (recursive CTE). */
+  async getCategoryDescendantIds(categoryId: number): Promise<number[]> {
+    return this.categoryRepository.findDescendantIds(categoryId);
+  }
+
   async getCategoryBySlug(
     slug: string,
     page: number,
@@ -278,6 +283,10 @@ export class ProductService {
       });
     }
 
+    if (dto.shop_id != null) {
+      await this.shopService.findShopById(dto.shop_id); // throws SHOP_001 if not found
+    }
+
     const product = await this.productRepository.create(dto);
     this.logger.log(`Product created: ${product.name} (${product.slug})`);
     return product;
@@ -310,6 +319,10 @@ export class ProductService {
           message: 'Category not found',
         });
       }
+    }
+
+    if (dto.shop_id != null && dto.shop_id !== product.shop_id) {
+      await this.shopService.findShopById(dto.shop_id); // throws SHOP_001 if not found
     }
 
     const updated = await this.productRepository.update(id, dto);
@@ -598,7 +611,10 @@ export class ProductService {
 
   async updateProductForSeller(userId: number, id: number, dto: UpdateProductDto): Promise<Product> {
     await this.assertSellerCanModifyProduct(userId, id);
-    return this.updateProduct(id, dto);
+    // Sellers cannot reassign a product to another shop — strip shop_id (admin-only field).
+    const sellerSafeDto: UpdateProductDto = { ...dto };
+    delete sellerSafeDto.shop_id;
+    return this.updateProduct(id, sellerSafeDto);
   }
 
   async toggleProductActiveForSeller(userId: number, id: number): Promise<Product> {

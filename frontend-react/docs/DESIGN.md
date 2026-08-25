@@ -80,6 +80,7 @@ This document captures the visual design patterns, tokens, and component convent
 - **Never use raw gray-\*** (`text-gray-500`, `bg-gray-50`, etc.) — always use semantic tokens or neutral ramp
 - **Admin dashboard** uses `slate-*` ramp (separate from storefront) — this is intentional, do not migrate admin to semantic tokens
 - **Storefront/customer** pages always use semantic tokens
+- **Always pair a border/ring with a color.** In Tailwind v4 a bare `border` resolves to `currentColor` (inherits the text color → dark, inconsistent). Give form controls an explicit `border border-slate-200` / `border-border-default`; give images & floating cards the subtle `ring-1 ring-slate-900/5` instead of a border.
 
 ---
 
@@ -202,6 +203,8 @@ Error state: add `border-error-500 focus:border-error-500 focus:ring-error-500/2
 }
 ```
 
+**Admin dropdown (`AdminSelect`, `@/common/components/data`):** custom listbox that replaces the native `<select>` for admin/seller/shipper **filter** bars — the native popup is OS-rendered and can't be styled. Drop-in contract (`value` + `onChange(value)` + `options[]`). Trigger reuses `.admin-input`; the popup is `rounded-lg border border-slate-200 bg-white shadow-lg ring-1 ring-slate-900/5`, options hover `bg-slate-50`, the selected row is `text-teal-700` + a teal check. Keyboard: ↑/↓ move, Enter/Space select, Esc/Tab close, Home/End jump; closes on outside click. Form selects inside create/edit forms stay native (`.admin-input` / storefront `FormSelect`).
+
 ### 5.4 Buttons
 
 **Variants (from Button component):**
@@ -261,6 +264,7 @@ Pattern for cart, order, wishlist rows: `flex items-center gap-4 border-b border
 - Header: `border-b border-border-default px-4 py-3` with `text-lg font-semibold text-text-primary`
 - Close button: `rounded-lg p-1.5 text-text-secondary hover:bg-surface-hover`
 - Animation: `motion/react` with spring transitions
+- **Image lightbox** (`ImageLightbox`, `@/common/components/ui`): full-screen click-to-zoom preview. Overlay `bg-black/80 backdrop-blur-sm` at `z-80`; image `max-h-[90vh] max-w-[90vw] object-contain`; closes on backdrop click, the top-right X, or Escape. Controlled purely by an `src` prop (`null` = closed). Trigger thumbnails add `cursor-zoom-in` + a hover `ZoomIn` overlay.
 
 ### 5.10 Tables (column header pattern)
 
@@ -389,6 +393,7 @@ This project has **two distinct visual systems**:
 
 | Layer | z-index | Usage |
 |-------|---------|-------|
-| Header | `z-40` | Sticky header |
+| Header | `z-40` | Sticky storefront header (admin/seller/shipper portal headers use `z-20`) |
 | Drawers | `z-60` | Side drawers |
 | Modals | `z-70` | Confirm modal, dialog |
+| Image lightbox | `z-80` | Full-screen image zoom preview — sits above modals (`ImageLightbox`) |

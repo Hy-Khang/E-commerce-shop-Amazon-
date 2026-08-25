@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DashboardRepository } from './repositories/dashboard.repository';
 import { ShopService } from '../shop/shop.service';
 import type { ISellerDashboardStats } from './types/dashboard.types';
+import { resolvePeriod, type DashboardPeriod } from './utils/period.util';
 
 @Injectable()
 export class SellerDashboardService {
@@ -12,13 +13,21 @@ export class SellerDashboardService {
     private readonly shopService: ShopService,
   ) {}
 
-  async getSellerDashboard(userId: number): Promise<ISellerDashboardStats> {
+  async getSellerDashboard(
+    userId: number,
+    period?: DashboardPeriod,
+  ): Promise<ISellerDashboardStats> {
     const shop = await this.shopService.resolveShopByUserId(userId);
     const shopId = shop.id;
+    const { days, granularity } = resolvePeriod(period);
 
     const results = await Promise.allSettled([
-      this.dashboardRepository.getSellerSummaryStats(shopId),
-      this.dashboardRepository.getSellerRevenueOverTime(shopId, 30),
+      this.dashboardRepository.getSellerSummaryStats(shopId, days),
+      this.dashboardRepository.getSellerRevenueOverTime(
+        shopId,
+        days,
+        granularity,
+      ),
       this.dashboardRepository.getSellerTopProducts(shopId, 5),
       this.dashboardRepository.getSellerRecentOrders(shopId, 10),
       this.dashboardRepository.getSellerLowStockAlerts(shopId, 10),

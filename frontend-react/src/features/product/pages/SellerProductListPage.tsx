@@ -1,14 +1,19 @@
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Pencil, Plus, Package } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
+import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
+import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
+import { ProductFilters } from '../components/ProductFilters';
 import { useSellerProducts } from '../hooks/useSellerProducts';
 import { useSellerToggleProductActive } from '../hooks/useSellerToggleProductActive';
 import { getPriceRange } from '../utils/product.util';
-import type { AdminProductListParams } from '../types/product.types';
+import type { AdminProductListParams, ProductListItem } from '../types/product.types';
 
 export default function SellerProductListPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { params, setPage } = usePagination({ limit: 20, sort: 'created_at', order: 'desc' });
 
   const filters: AdminProductListParams = {
@@ -20,146 +25,126 @@ export default function SellerProductListPage() {
 
   const { data, isLoading } = useSellerProducts(filters);
   const toggleActive = useSellerToggleProductActive();
+  const [toggleTarget, setToggleTarget] = useState<ProductListItem | null>(null);
 
-  function handleSearch(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const search = formData.get('search') as string;
-    setSearchParams((prev) => {
-      if (search) prev.set('search', search);
-      else prev.delete('search');
-      prev.set('page', '1');
-      return prev;
-    });
-  }
+  const columns: Column<ProductListItem>[] = [
+    {
+      key: 'product',
+      header: 'Product',
+      render: (product) => (
+        <div className="flex items-center gap-3">
+          {product.thumbnail_url ? (
+            <img src={getImageUrl(product.thumbnail_url)} alt="" className="h-10 w-10 rounded-lg object-cover ring-1 ring-slate-900/5" />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 ring-1 ring-slate-900/5">
+              <Package className="h-4 w-4 text-slate-400" />
+            </div>
+          )}
+          <span className="font-medium text-slate-900">{product.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'price',
+      header: 'Price Range',
+      render: (product) => {
+        const range = getPriceRange(product.variants);
+        return range ? (
+          <span className="text-slate-600">{formatPrice(range.min)} — {formatPrice(range.max)}</span>
+        ) : (
+          <span className="text-slate-400">—</span>
+        );
+      },
+    },
+    {
+      key: 'variants',
+      header: 'Variants',
+      render: (product) => <span className="text-slate-600">{product.variants.length}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (product) => (
+        <button
+          onClick={() => setToggleTarget(product)}
+          className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+            product.is_active ? 'text-emerald-700' : 'text-rose-700'
+          }`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${product.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+          {product.is_active ? 'Active' : 'Inactive'}
+        </button>
+      ),
+    },
+    {
+      key: 'created',
+      header: 'Created',
+      render: (product) => <span className="text-slate-500">{formatDate(product.created_at)}</span>,
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      className: 'text-right',
+      render: (product) => (
+        <Link
+          to={ROUTES.SELLER_PRODUCT_EDIT(product.id)}
+          className="rounded-lg p-2 text-slate-400 hover:bg-amber-50 hover:text-amber-700 transition-colors inline-flex"
+          aria-label="Edit product"
+        >
+          <Pencil className="h-4 w-4" />
+        </Link>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">My Products</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">My Products</h1>
+          <p className="mt-1 text-sm text-slate-500">Manage your shop's product catalog</p>
+        </div>
         <Link
           to={ROUTES.SELLER_PRODUCT_CREATE}
-          className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 transition-colors"
         >
+          <Plus className="h-4 w-4" />
           Add Product
         </Link>
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <input
-          name="search"
-          type="text"
-          placeholder="Search products..."
-          defaultValue={searchParams.get('search') || ''}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-        />
-        <button
-          type="submit"
-          className="rounded-md bg-slate-100 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200"
-        >
-          Search
-        </button>
-      </form>
+      <AdminDataTable
+        columns={columns}
+        data={data?.data}
+        isLoading={isLoading}
+        meta={data?.meta}
+        onPageChange={setPage}
+        emptyIcon={Package}
+        emptyTitle="No products found"
+        emptyDescription="Create your first product to get started or adjust your search."
+        toolbar={<ProductFilters />}
+      />
 
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Product</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Price Range</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Variants</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Created</th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 bg-white">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 6 }).map((__, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-4 animate-pulse rounded bg-slate-200" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : data && data.data.length > 0 ? (
-              data.data.map((product) => {
-                const range = getPriceRange(product.variants);
-                return (
-                  <tr key={product.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {product.thumbnail_url ? (
-                          <img src={getImageUrl(product.thumbnail_url)} alt="" className="h-10 w-10 rounded object-cover" />
-                        ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded bg-slate-100 text-xs text-slate-400">N/A</div>
-                        )}
-                        <span className="text-sm font-medium text-slate-900">{product.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {range ? `${formatPrice(range.min)} — ${formatPrice(range.max)}` : '—'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{product.variants.length}</td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => toggleActive.mutate(product.id)}
-                        disabled={toggleActive.isPending}
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          product.is_active
-                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                            : 'bg-rose-100 text-rose-800 hover:bg-rose-200'
-                        }`}
-                      >
-                        {product.is_active ? 'Active' : 'Inactive'}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{formatDate(product.created_at)}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        to={ROUTES.SELLER_PRODUCT_EDIT(product.id)}
-                        className="text-sm font-medium text-amber-600 hover:text-amber-800"
-                      >
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
-                  No products found. Create your first product to get started.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {data && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => setPage(data.meta.page - 1)}
-            disabled={data.meta.page <= 1}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-slate-600">
-            Page {data.meta.page} of {data.meta.totalPages}
-          </span>
-          <button
-            onClick={() => setPage(data.meta.page + 1)}
-            disabled={data.meta.page >= data.meta.totalPages}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <ConfirmModal
+        open={toggleTarget !== null}
+        variant="warning"
+        title={toggleTarget?.is_active ? 'Hide product?' : 'Show product?'}
+        message={
+          toggleTarget?.is_active
+            ? `"${toggleTarget?.name}" will be hidden from the storefront until you show it again.`
+            : `"${toggleTarget?.name}" will be visible on the storefront again.`
+        }
+        confirmLabel={toggleTarget?.is_active ? 'Hide' : 'Show'}
+        confirmVariant={toggleTarget?.is_active ? 'danger' : 'primary'}
+        loading={toggleActive.isPending}
+        onCancel={() => setToggleTarget(null)}
+        onConfirm={() => {
+          if (!toggleTarget) return;
+          toggleActive.mutate(toggleTarget.id, {
+            onSuccess: () => setToggleTarget(null),
+          });
+        }}
+      />
     </div>
   );
 }

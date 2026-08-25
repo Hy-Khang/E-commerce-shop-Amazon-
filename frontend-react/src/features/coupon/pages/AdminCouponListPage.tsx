@@ -4,6 +4,8 @@ import { Pencil, Power, Plus, Search, Tag, Lock, LockOpen, Receipt } from 'lucid
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { AdminDataTable, type Column } from '@/common/components/data/AdminDataTable';
+import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
+import { AdminSelect } from '@/common/components/data/AdminSelect';
 import { Button } from '@/common/components/ui/Button';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminCoupons } from '../hooks/useAdminCoupons';
@@ -27,6 +29,13 @@ const SCOPE_LABELS: Record<CouponScope, string> = {
   categories: 'Categories',
   products: 'Products',
 };
+
+const COUPON_SORT_OPTIONS: SortOption[] = [
+  { label: 'Newest', sort: 'created_at', order: 'desc' },
+  { label: 'Expiring soon', sort: 'expires_at', order: 'asc' },
+  { label: 'Code A→Z', sort: 'code', order: 'asc' },
+  { label: 'Most used', sort: 'current_uses', order: 'desc' },
+];
 
 function DiscountDisplay({ type, value }: { type: DiscountType; value: number }) {
   return type === 'percentage'
@@ -288,49 +297,56 @@ export default function AdminCouponListPage() {
                 </div>
                 <Button type="submit" variant="secondary">Search</Button>
               </form>
-              <select
+              <AdminSelect
+                ariaLabel="Filter by owner"
+                className="w-40"
                 value={searchParams.get('owner') || ''}
-                onChange={(e) => setSearchParams((prev) => {
-                  if (e.target.value) prev.set('owner', e.target.value);
+                onChange={(v) => setSearchParams((prev) => {
+                  if (v) prev.set('owner', v);
                   else prev.delete('owner');
                   prev.set('page', '1');
                   return prev;
                 })}
-                className="admin-input w-auto"
-              >
-                <option value="">All owners</option>
-                <option value="platform">Platform</option>
-                <option value="shop">Shop</option>
-              </select>
-              <select
+                options={[
+                  { value: '', label: 'All owners' },
+                  { value: 'platform', label: 'Platform' },
+                  { value: 'shop', label: 'Shop' },
+                ]}
+              />
+              <AdminSelect
+                ariaLabel="Filter by scope"
+                className="w-44"
                 value={searchParams.get('scope') || ''}
-                onChange={(e) => setSearchParams((prev) => {
-                  if (e.target.value) prev.set('scope', e.target.value);
+                onChange={(v) => setSearchParams((prev) => {
+                  if (v) prev.set('scope', v);
                   else prev.delete('scope');
                   prev.set('page', '1');
                   return prev;
                 })}
-                className="admin-input w-auto"
-              >
-                <option value="">All scopes</option>
-                <option value="all">All (order-wide)</option>
-                <option value="categories">Categories</option>
-                <option value="products">Products</option>
-              </select>
-              <select
+                options={[
+                  { value: '', label: 'All scopes' },
+                  { value: 'all', label: 'All (order-wide)' },
+                  { value: 'categories', label: 'Categories' },
+                  { value: 'products', label: 'Products' },
+                ]}
+              />
+              <AdminSelect
+                ariaLabel="Filter by status"
+                className="w-40"
                 value={searchParams.get('is_active') ?? ''}
-                onChange={(e) => setSearchParams((prev) => {
-                  if (e.target.value !== '') prev.set('is_active', e.target.value);
+                onChange={(v) => setSearchParams((prev) => {
+                  if (v !== '') prev.set('is_active', v);
                   else prev.delete('is_active');
                   prev.set('page', '1');
                   return prev;
                 })}
-                className="admin-input w-auto"
-              >
-                <option value="">All status</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
+                options={[
+                  { value: '', label: 'All status' },
+                  { value: 'true', label: 'Active' },
+                  { value: 'false', label: 'Inactive' },
+                ]}
+              />
+              <AdminSortSelect options={COUPON_SORT_OPTIONS} bare />
             </div>
           </div>
         }

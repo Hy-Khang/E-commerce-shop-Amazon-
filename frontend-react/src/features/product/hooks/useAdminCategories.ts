@@ -11,10 +11,14 @@ export const adminCategoryKeys = {
   detail: (id: number) => ['admin', 'categories', 'detail', id] as const,
 };
 
-export function useAdminCategories(params: AdminCategoryListParams) {
+export function useAdminCategories(
+  params: AdminCategoryListParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: adminCategoryKeys.list(params),
     queryFn: () => adminCategoryService.getList(params),
+    enabled: options?.enabled,
     select: (res) => ({
       data: res.data.data,
       meta: res.data.meta,

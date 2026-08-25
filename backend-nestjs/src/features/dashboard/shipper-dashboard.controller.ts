@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -11,6 +11,7 @@ import { PERMISSIONS } from '../../common/constants/permissions.constant';
 import type { ICurrentUser } from '../../common/interfaces/current-user.interface';
 import { ShipperDashboardService } from './shipper-dashboard.service';
 import { ShipperDashboardStatsResponseDto } from './dto/shipper-dashboard-stats-response.dto';
+import { DashboardQueryDto } from './dto/dashboard-query.dto';
 
 @ApiTags('Shipper: Dashboard')
 @ApiBearerAuth()
@@ -28,7 +29,13 @@ export class ShipperDashboardController {
     description: 'Shipper dashboard analytics data',
     type: ShipperDashboardStatsResponseDto,
   })
-  async getShipperDashboard(@CurrentUser() user: ICurrentUser) {
-    return this.shipperDashboardService.getShipperDashboard(user.id);
+  async getShipperDashboard(
+    @CurrentUser() user: ICurrentUser,
+    @Query() query: DashboardQueryDto,
+  ) {
+    return this.shipperDashboardService.getShipperDashboard(
+      user.id,
+      query.period,
+    );
   }
 }

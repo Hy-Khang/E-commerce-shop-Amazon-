@@ -1,7 +1,16 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useDebounce } from '@/common/hooks/useDebounce';
+import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
+import { AdminSelect } from '@/common/components/data/AdminSelect';
 import type { RoleWithUserCount } from '../types/admin.types';
+
+const USER_SORT_OPTIONS: SortOption[] = [
+  { label: 'Newest', sort: 'created_at', order: 'desc' },
+  { label: 'Oldest', sort: 'created_at', order: 'asc' },
+  { label: 'Name A→Z', sort: 'full_name', order: 'asc' },
+  { label: 'Email A→Z', sort: 'email', order: 'asc' },
+];
 
 interface Props {
   roles: RoleWithUserCount[];
@@ -14,6 +23,8 @@ interface Props {
 
 export function UserFilters({ roles, onFilterChange }: Props) {
   const [search, setSearch] = useState('');
+  const [role, setRole] = useState('');
+  const [isActive, setIsActive] = useState('');
   useDebounce(search, 300);
 
   return (
@@ -43,34 +54,42 @@ export function UserFilters({ roles, onFilterChange }: Props) {
           <label htmlFor="role-filter" className="block text-sm font-medium text-slate-700">
             Role
           </label>
-          <select
+          <AdminSelect
             id="role-filter"
-            onChange={(e) => onFilterChange({ role: e.target.value || undefined })}
-            className="admin-input mt-1"
-          >
-            <option value="">All roles</option>
-            {roles.map((role) => (
-              <option key={role.id} value={role.name}>
-                {role.name}
-              </option>
-            ))}
-          </select>
+            className="mt-1"
+            value={role}
+            onChange={(v) => {
+              setRole(v);
+              onFilterChange({ role: v || undefined });
+            }}
+            options={[
+              { value: '', label: 'All roles' },
+              ...roles.map((r) => ({ value: r.name, label: r.name })),
+            ]}
+          />
         </div>
 
         <div className="w-40">
           <label htmlFor="status-filter" className="block text-sm font-medium text-slate-700">
             Status
           </label>
-          <select
+          <AdminSelect
             id="status-filter"
-            onChange={(e) => onFilterChange({ is_active: e.target.value || undefined })}
-            className="admin-input mt-1"
-          >
-            <option value="">All</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
+            className="mt-1"
+            value={isActive}
+            onChange={(v) => {
+              setIsActive(v);
+              onFilterChange({ is_active: v || undefined });
+            }}
+            options={[
+              { value: '', label: 'All' },
+              { value: 'true', label: 'Active' },
+              { value: 'false', label: 'Inactive' },
+            ]}
+          />
         </div>
+
+        <AdminSortSelect options={USER_SORT_OPTIONS} />
       </div>
     </div>
   );

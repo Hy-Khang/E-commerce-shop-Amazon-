@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -10,6 +10,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PERMISSIONS } from '../../common/constants/permissions.constant';
 import type { ICurrentUser } from '../../common/interfaces/current-user.interface';
 import { SellerDashboardService } from './seller-dashboard.service';
+import { DashboardQueryDto } from './dto/dashboard-query.dto';
 import { SellerDashboardStatsResponseDto } from './dto/seller-dashboard-stats-response.dto';
 
 @ApiTags('Seller: Dashboard')
@@ -28,7 +29,13 @@ export class SellerDashboardController {
     description: 'Seller dashboard analytics data',
     type: SellerDashboardStatsResponseDto,
   })
-  async getSellerDashboard(@CurrentUser() user: ICurrentUser) {
-    return this.sellerDashboardService.getSellerDashboard(user.id);
+  async getSellerDashboard(
+    @CurrentUser() user: ICurrentUser,
+    @Query() query: DashboardQueryDto,
+  ) {
+    return this.sellerDashboardService.getSellerDashboard(
+      user.id,
+      query.period,
+    );
   }
 }

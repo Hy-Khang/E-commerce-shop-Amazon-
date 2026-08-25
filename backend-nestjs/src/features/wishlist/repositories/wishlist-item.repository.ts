@@ -87,6 +87,7 @@ export class WishlistItemRepository {
   async findMostWishlistedPaginated(
     page: number,
     limit: number,
+    shopId?: number,
   ): Promise<IPaginatedResult<PopularWishlistItemDto>> {
     const qb = this.repo
       .createQueryBuilder('wi')
@@ -106,12 +107,20 @@ export class WishlistItemRepository {
       .offset((page - 1) * limit)
       .limit(limit);
 
+    if (shopId) {
+      qb.where('product.shop_id = :shopId', { shopId });
+    }
+
     const data = await qb.getRawMany();
 
     const countQb = this.repo
       .createQueryBuilder('wi')
-      .select('wi.product_id')
-      .groupBy('wi.product_id');
+      .innerJoin('wi.product', 'product')
+      .select('product.id')
+      .groupBy('product.id');
+    if (shopId) {
+      countQb.where('product.shop_id = :shopId', { shopId });
+    }
     const totalResult = await countQb.getRawMany();
     const total = totalResult.length;
 

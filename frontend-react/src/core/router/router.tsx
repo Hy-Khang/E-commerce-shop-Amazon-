@@ -43,6 +43,7 @@ const AdminDashboardPage = lazy(() => import('@/features/dashboard/pages/AdminDa
 const AdminProductListPage = lazy(() => import('@/features/product/pages/AdminProductListPage'));
 const AdminProductCreatePage = lazy(() => import('@/features/product/pages/AdminProductCreatePage'));
 const AdminProductEditPage = lazy(() => import('@/features/product/pages/AdminProductEditPage'));
+const AdminProductDetailPage = lazy(() => import('@/features/product/pages/AdminProductDetailPage'));
 const AdminOrderListPage = lazy(() => import('@/features/order/pages/AdminOrderListPage'));
 const AdminOrderDetailPage = lazy(() => import('@/features/order/pages/AdminOrderDetailPage'));
 
@@ -70,6 +71,8 @@ const SellerOrderDetailPage = lazy(() => import('@/features/order/pages/SellerOr
 const ShopProfilePage = lazy(() => import('@/features/shop/pages/ShopProfilePage'));
 const SellerShopSettingsPage = lazy(() => import('@/features/shop/pages/SellerShopSettingsPage'));
 const SellerCouponListPage = lazy(() => import('@/features/coupon/pages/SellerCouponListPage'));
+const SellerReviewListPage = lazy(() => import('@/features/review/pages/SellerReviewListPage'));
+const SellerWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/SellerWishlistPopularPage'));
 const AdminShopListPage = lazy(() => import('@/features/shop/pages/AdminShopListPage'));
 const AdminShopDetailPage = lazy(() => import('@/features/shop/pages/AdminShopDetailPage'));
 
@@ -148,6 +151,7 @@ export const router = createBrowserRouter([
               { path: 'admin/dashboard', element: <SuspenseWrapper><AdminDashboardPage /></SuspenseWrapper> },
               { path: 'admin/products', element: <SuspenseWrapper><AdminProductListPage /></SuspenseWrapper> },
               { path: 'admin/products/new', element: <SuspenseWrapper><AdminProductCreatePage /></SuspenseWrapper> },
+              { path: 'admin/products/:id', element: <SuspenseWrapper><AdminProductDetailPage /></SuspenseWrapper> },
               { path: 'admin/products/:id/edit', element: <SuspenseWrapper><AdminProductEditPage /></SuspenseWrapper> },
               { path: 'admin/categories', element: <SuspenseWrapper><AdminCategoryListPage /></SuspenseWrapper> },
               { path: 'admin/orders', element: <SuspenseWrapper><AdminOrderListPage /></SuspenseWrapper> },
@@ -185,6 +189,8 @@ export const router = createBrowserRouter([
               { path: 'seller/orders/:id', element: <SuspenseWrapper><SellerOrderDetailPage /></SuspenseWrapper> },
               { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
               { path: 'seller/coupons', element: <SuspenseWrapper><SellerCouponListPage /></SuspenseWrapper> },
+              { path: 'seller/reviews', element: <SuspenseWrapper><SellerReviewListPage /></SuspenseWrapper> },
+              { path: 'seller/wishlist', element: <SuspenseWrapper><SellerWishlistPopularPage /></SuspenseWrapper> },
               { path: 'seller/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },

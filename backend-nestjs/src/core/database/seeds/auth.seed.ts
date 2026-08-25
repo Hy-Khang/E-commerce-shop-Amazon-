@@ -9,6 +9,8 @@ const SELLER_PERMISSIONS = [
   'categories:read',
   'orders:read', 'orders:update',
   'coupons:create', 'coupons:read', 'coupons:update', 'coupons:delete',
+  'reviews:read',
+  'wishlist:read',
   'uploads:create',
   'dashboard:read',
   'shops:create', 'shops:read', 'shops:update',

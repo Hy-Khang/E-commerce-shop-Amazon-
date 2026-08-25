@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
+import { useAdminShops } from '@/features/shop';
 import { useCategories } from '../hooks/useCategories';
 import { useCreateProduct } from '../hooks/useCreateProduct';
 import { generateSlug } from '../utils/product.util';
@@ -14,7 +15,9 @@ import { ApiError } from '@/core/api/api.types';
 
 export default function AdminProductCreatePage() {
   const { data: categories } = useCategories();
+  const { data: shopData } = useAdminShops({ page: 1, limit: 100 });
   const createProduct = useCreateProduct();
+  const shopOptions = shopData?.data ?? [];
 
   const {
     register,
@@ -29,6 +32,7 @@ export default function AdminProductCreatePage() {
 
   const categoryId = useWatch({ control, name: 'category_id' });
   const thumbnailUrl = useWatch({ control, name: 'thumbnail_url' });
+  const shopId = useWatch({ control, name: 'shop_id' });
 
   // Auto-fill slug from name on blur — imperative one-shot read, no subscription.
   function handleNameBlur() {
@@ -85,6 +89,21 @@ export default function AdminProductCreatePage() {
             onChange={(id) => setValue('category_id', id as number, { shouldValidate: true })}
             error={errors.category_id?.message}
           />
+
+          <div>
+            <label htmlFor="shop_id" className="block text-sm font-medium text-slate-700">Shop</label>
+            <select
+              id="shop_id"
+              className="admin-input mt-1"
+              value={shopId ?? ''}
+              onChange={(e) => setValue('shop_id', e.target.value ? Number(e.target.value) : undefined)}
+            >
+              <option value="">— No shop —</option>
+              {shopOptions.map((shop) => (
+                <option key={shop.id} value={shop.id}>{shop.name}</option>
+              ))}
+            </select>
+          </div>
 
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>

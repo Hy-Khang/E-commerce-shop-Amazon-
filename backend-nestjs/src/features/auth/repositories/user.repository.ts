@@ -14,6 +14,13 @@ export interface IAdminUserFilter {
   limit: number;
 }
 
+/** Defensive allowlist — sort is interpolated into the query, never trust raw input. */
+const USER_SORT_COLUMNS = new Set(['created_at', 'email', 'full_name']);
+
+function resolveUserSortColumn(sort?: string): string {
+  return sort && USER_SORT_COLUMNS.has(sort) ? sort : 'created_at';
+}
+
 @Injectable()
 export class UserRepository {
   constructor(
@@ -59,7 +66,7 @@ export class UserRepository {
       qb.andWhere('user.is_active = :isActive', { isActive });
     }
 
-    const sortColumn = filter.sort || 'created_at';
+    const sortColumn = resolveUserSortColumn(filter.sort);
     const sortOrder = (filter.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
     qb.orderBy(`user.${sortColumn}`, sortOrder);
 

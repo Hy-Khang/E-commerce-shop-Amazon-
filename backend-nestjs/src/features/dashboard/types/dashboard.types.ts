@@ -1,9 +1,32 @@
+export interface IMetricChange {
+  changePercent: number | null; // null when the previous period was zero
+  direction: 'up' | 'down' | 'flat';
+}
+
 export interface ISummaryStats {
+  // Period-scoped flow metrics (compared against the previous equal window)
   grossRevenue: number;
+  grossRevenueChange: IMetricChange;
   collectedRevenue: number;
-  totalOrders: number;
+  collectedRevenueChange: IMetricChange;
+  totalOrders: number; // excludes cancelled
+  totalOrdersChange: IMetricChange;
+  // Absolute snapshots (no comparison)
   totalProducts: number;
   totalUsers: number;
+}
+
+export interface IAttentionSignals {
+  pendingShops: number;
+  returnRequestedOrders: number;
+}
+
+export interface ITopShop {
+  id: number;
+  name: string;
+  slug: string;
+  revenue: number;
+  orderCount: number;
 }
 
 export interface IRevenueDataPoint {
@@ -55,12 +78,19 @@ export interface IDashboardStats {
   usersByRole: IUserRoleCount[];
   topProducts: ITopProduct[];
   lowStockAlerts: ILowStockAlert[];
+  attentionSignals: IAttentionSignals | null;
+  topShops: ITopShop[];
 }
 
 export interface ISellerSummaryStats {
+  // Period-scoped flow metrics (compared against the previous equal window)
   grossRevenue: number;
+  grossRevenueChange: IMetricChange;
   collectedRevenue: number;
-  totalOrders: number;
+  collectedRevenueChange: IMetricChange;
+  totalOrders: number; // excludes cancelled
+  totalOrdersChange: IMetricChange;
+  // Absolute snapshots (no comparison)
   totalProducts: number;
   lowStockCount: number;
 }
@@ -83,7 +113,9 @@ export interface ISellerDashboardStats {
 }
 
 export interface IShipperSummaryStats {
+  /** Deliveries completed within the selected period (flow metric). */
   totalDelivered: number;
+  totalDeliveredChange: IMetricChange;
   activeDeliveries: number;
   availableForPickup: number;
   deliveredToday: number;

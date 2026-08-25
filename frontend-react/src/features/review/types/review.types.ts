@@ -42,6 +42,13 @@ export interface AdminReviewListParams extends PaginationParams {
   product_id?: number;
   user_id?: number;
   rating?: number;
+  category_id?: number;
+}
+
+export interface SellerReviewListParams extends PaginationParams {
+  product_id?: number;
+  rating?: number;
+  category_id?: number;
 }
 
 // --- Request types ---

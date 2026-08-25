@@ -8,10 +8,14 @@ export const adminProductKeys = {
   detail: (id: number) => ['admin', 'products', 'detail', id] as const,
 };
 
-export function useAdminProducts(params: AdminProductListParams) {
+export function useAdminProducts(
+  params: AdminProductListParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: adminProductKeys.list(params),
     queryFn: () => adminProductService.getList(params),
+    enabled: options?.enabled,
     select: (res) => ({
       data: res.data.data,
       meta: res.data.meta,

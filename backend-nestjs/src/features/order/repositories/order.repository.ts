@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, UpdateResult } from 'typeorm';
+import { Brackets, Repository, UpdateResult } from 'typeorm';
 import { Order } from '../entities/order.entity';
 import { OrderQueryDto } from '../dto/order-query.dto';
 import { ShipperOrderQueryDto } from '../dto/shipper-order-query.dto';
@@ -87,6 +87,23 @@ export class OrderRepository {
       qb.andWhere('order.user_id = :userId', { userId: query.user_id });
     }
 
+    const search = query.search?.trim();
+    if (search) {
+      qb.leftJoin('order.user', 'user');
+      const like = `%${search}%`;
+      const orderId = /^\d+$/.test(search) ? Number(search) : null;
+      qb.andWhere(
+        new Brackets((w) => {
+          w.where('order.shop_name LIKE :like', { like })
+            .orWhere('user.full_name LIKE :like', { like })
+            .orWhere('user.email LIKE :like', { like });
+          if (orderId !== null) {
+            w.orWhere('order.id = :orderId', { orderId });
+          }
+        }),
+      );
+    }
+
     const sort = query.sort || 'created_at';
     const order = (query.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
     qb.orderBy(`order.${sort}`, order);
@@ -128,6 +145,24 @@ export class OrderRepository {
       qb.andWhere('order.payment_status = :paymentStatus', {
         paymentStatus: query.payment_status,
       });
+    }
+
+    const search = query.search?.trim();
+    if (search) {
+      qb.leftJoin('order.user', 'user');
+      const like = `%${search}%`;
+      const orderId = /^\d+$/.test(search) ? Number(search) : null;
+      qb.andWhere(
+        new Brackets((w) => {
+          w.where('user.full_name LIKE :like', { like }).orWhere(
+            'user.email LIKE :like',
+            { like },
+          );
+          if (orderId !== null) {
+            w.orWhere('order.id = :orderId', { orderId });
+          }
+        }),
+      );
     }
 
     qb.orderBy(`order.${sort}`, order)

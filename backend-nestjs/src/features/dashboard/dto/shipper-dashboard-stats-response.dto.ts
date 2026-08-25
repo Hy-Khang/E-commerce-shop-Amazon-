@@ -1,8 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { MetricChangeDto } from './dashboard-stats-response.dto';
 
 export class ShipperSummaryDto {
-  @ApiProperty({ description: 'Total orders delivered/completed by this shipper' })
+  @ApiProperty({
+    description: 'Orders delivered/completed by this shipper in the selected period',
+  })
   totalDelivered: number;
+
+  @ApiProperty({ type: MetricChangeDto })
+  totalDeliveredChange: MetricChangeDto;
 
   @ApiProperty({ description: 'Orders currently in shipping status assigned to this shipper' })
   activeDeliveries: number;

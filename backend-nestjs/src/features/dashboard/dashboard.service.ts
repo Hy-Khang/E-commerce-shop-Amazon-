@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DashboardRepository } from './repositories/dashboard.repository';
 import type { IDashboardStats } from './types/dashboard.types';
+import { resolvePeriod, type DashboardPeriod } from './utils/period.util';
 
 @Injectable()
 export class DashboardService {
@@ -8,15 +9,19 @@ export class DashboardService {
 
   constructor(private readonly dashboardRepository: DashboardRepository) {}
 
-  async getDashboard(): Promise<IDashboardStats> {
+  async getDashboard(period?: DashboardPeriod): Promise<IDashboardStats> {
+    const { days, granularity } = resolvePeriod(period);
+
     const results = await Promise.allSettled([
-      this.dashboardRepository.getSummaryStats(),
-      this.dashboardRepository.getRevenueOverTime(30),
+      this.dashboardRepository.getSummaryStats(days),
+      this.dashboardRepository.getRevenueOverTime(days, granularity),
       this.dashboardRepository.getOrdersByStatus(),
       this.dashboardRepository.getRecentOrders(10),
       this.dashboardRepository.getUsersByRole(),
       this.dashboardRepository.getTopProducts(5),
       this.dashboardRepository.getLowStockAlerts(10),
+      this.dashboardRepository.getAttentionSignals(),
+      this.dashboardRepository.getTopShops(5),
     ]);
 
     for (const [i, result] of results.entries()) {
@@ -40,6 +45,10 @@ export class DashboardService {
         results[5].status === 'fulfilled' ? results[5].value : [],
       lowStockAlerts:
         results[6].status === 'fulfilled' ? results[6].value : [],
+      attentionSignals:
+        results[7].status === 'fulfilled' ? results[7].value : null,
+      topShops:
+        results[8].status === 'fulfilled' ? results[8].value : [],
     };
   }
 }

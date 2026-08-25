@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Upload, X, Link } from 'lucide-react';
+import { Upload, X, Link, ZoomIn } from 'lucide-react';
 import { useUploadImage } from '../hooks/useUploadImage';
+import { ImageLightbox } from '@/common/components/ui/ImageLightbox';
 import { showWarningToast } from '@/common/components/feedback/toast';
 import { useTranslation } from '@/common/i18n';
 
@@ -21,6 +22,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
   const [preview, setPreview] = useState<string | null>(null);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlValue, setUrlValue] = useState('');
+  const [zoomed, setZoomed] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -87,14 +89,26 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
     return (
       <div className="space-y-1">
         {label && <label className="block text-sm font-medium text-slate-700">{label}</label>}
-        <div className="relative inline-block">
-          <img
-            src={displayUrl}
-            alt={label || 'Uploaded image'}
-            className="h-32 w-32 rounded-md border object-cover"
-          />
+        <div className="group relative inline-block">
+          <button
+            type="button"
+            onClick={() => !uploadImage.isPending && setZoomed(true)}
+            className="block cursor-zoom-in"
+            aria-label="Zoom image"
+          >
+            <img
+              src={displayUrl}
+              alt={label || 'Uploaded image'}
+              className="h-32 w-32 rounded-lg object-cover ring-1 ring-slate-900/5"
+            />
+            {!uploadImage.isPending && (
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
+                <ZoomIn className="h-6 w-6 text-white" />
+              </span>
+            )}
+          </button>
           {uploadImage.isPending && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/40">
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
             </div>
           )}
@@ -102,12 +116,13 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
             <button
               type="button"
               onClick={handleClear}
-              className="absolute -right-2 -top-2 rounded-full bg-rose-500 p-0.5 text-white shadow hover:bg-rose-600"
+              className="absolute -right-2 -top-2 z-10 rounded-full bg-rose-500 p-0.5 text-white shadow hover:bg-rose-600"
             >
               <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
+        <ImageLightbox src={zoomed ? displayUrl : null} alt={label} onClose={() => setZoomed(false)} />
       </div>
     );
   }

@@ -19,6 +19,15 @@ export class ReviewQueryDto extends PaginationDto {
   @IsPositive()
   user_id?: number;
 
+  @ApiPropertyOptional({
+    description: 'Filter by category ID (includes sub-categories)',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
+  category_id?: number;
+
   @ApiPropertyOptional({ description: 'Filter by rating (1-5)', minimum: 1, maximum: 5 })
   @IsOptional()
   @Type(() => Number)

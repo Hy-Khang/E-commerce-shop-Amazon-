@@ -373,7 +373,7 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 
 | Method | Path | Description | Filter/Sort |
 |--------|------|-------------|-------------|
-| GET | `/admin/orders` | List all orders (paginated) | `?status=pending&payment_status=unpaid&user_id=123&sort=created_at&order=desc` |
+| GET | `/admin/orders` | List all orders (paginated) | `?search=keyword&status=pending&payment_status=unpaid&user_id=123&sort=created_at&order=desc` |
 | GET | `/admin/orders/:id` | Get order detail + order_items + user info + `applied_coupons[]` | — |
 | PATCH | `/admin/orders/:id/status` | Update order status (valid transitions only) | — |
 | PATCH | `/admin/orders/:id/payment-status` | Update payment status (unpaid → paid) | — |
@@ -438,9 +438,13 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 
 | Method | Path | Description | Permission |
 |--------|------|-------------|------------|
-| GET | `/admin/dashboard` | Dashboard analytics: summary stats, revenue trend, order status, recent orders, users by role, top products, low stock alerts | `dashboard:read` |
+| GET | `/admin/dashboard` | Dashboard analytics: summary stats, revenue trend, order status, recent orders, users by role, top products, low stock alerts, attention signals, top shops (`?period=7d\|30d\|90d\|12m`, default 30d) | `dashboard:read` |
 
-> **Partial failure tolerance:** Uses `Promise.allSettled()` — if one query fails, other sections still return. Failed sections return `null` or `[]`. Response includes 7 data sections: `summary`, `revenueOverTime`, `ordersByStatus`, `recentOrders`, `usersByRole`, `topProducts`, `lowStockAlerts`.
+> **Partial failure tolerance:** Uses `Promise.allSettled()` — if one query fails, other sections still return. Failed sections return `null` or `[]`. Response includes 9 data sections: `summary`, `revenueOverTime`, `ordersByStatus`, `recentOrders`, `usersByRole`, `topProducts`, `lowStockAlerts`, `attentionSignals`, `topShops`.
+>
+> **`?period=7d|30d|90d|12m`** (default `30d`) sets the time window. `revenueOverTime` buckets by **day** for `7d/30d/90d` and by **calendar month** for `12m` (points returned as `yyyy-MM-01`). The `summary` **flow metrics** (`grossRevenue`, `collectedRevenue`, `totalOrders` — excludes cancelled) are scoped to the selected period and each carries a `*Change` object `{ changePercent: number | null, direction: 'up'|'down'|'flat' }` comparing against the previous equal-length window (`changePercent` is `null` when the previous window was zero). `totalProducts` / `totalUsers` remain absolute current snapshots (no change).
+>
+> **`attentionSignals`** = `{ pendingShops, returnRequestedOrders }` (admin operator queue). **`topShops`** = top 5 shops by completed+paid revenue `{ id, name, slug, revenue, orderCount }`.
 
 ---
 
@@ -467,9 +471,11 @@ All seller endpoints use **permission-based access control** via `@Permissions()
 
 | Method | Path | Description | Permission |
 |--------|------|-------------|------------|
-| GET | `/seller/dashboard` | Dashboard analytics: summary stats, revenue trend, order status breakdown, top products, recent orders | `dashboard:read` |
+| GET | `/seller/dashboard` | Dashboard analytics: summary stats, revenue trend, order status breakdown, top products, recent orders (`?period=7d\|30d\|90d\|12m`, default 30d) | `dashboard:read` |
 
 > **Partial failure tolerance:** Uses `Promise.allSettled()` — same pattern as Admin dashboard. Revenue counts `completed` orders only, filtered by seller's `shop_id`.
+>
+> **`?period=`** behaves exactly like the admin dashboard: same values/default, day-vs-month bucketing for `revenueOverTime`, and period-scoped `summary` flow metrics (`grossRevenue`, `collectedRevenue`, `totalOrders`) each with a `*Change` object vs the previous window. `totalProducts` / `lowStockCount` stay absolute snapshots. Seller response has **no** `attentionSignals` / `topShops` (admin-only).
 
 ### Seller: Coupons — `/api/v1/seller/coupons`
 
@@ -519,7 +525,9 @@ All shipper endpoints use **permission-based access control** via `@Permissions(
 
 | Method | Path | Description | Permission |
 |--------|------|-------------|------------|
-| GET | `/shipper/dashboard` | Dashboard stats: summary, deliveries over time (30d), recent deliveries | `dashboard:read` |
+| GET | `/shipper/dashboard` | Dashboard stats: summary, deliveries over time, recent deliveries (`?period=7d\|30d\|90d\|12m`, default 30d) | `dashboard:read` |
 
-> **Partial failure tolerance:** Uses `Promise.allSettled()` — same pattern as Admin/Seller dashboards. Response includes 3 data sections: `summary` (totalDelivered, activeDeliveries, availableForPickup, deliveredToday), `deliveriesOverTime` (last 30 days), `recentDeliveries` (last 10).
+> **Partial failure tolerance:** Uses `Promise.allSettled()` — same pattern as Admin/Seller dashboards. Response includes 3 data sections: `summary` (totalDelivered, activeDeliveries, availableForPickup, deliveredToday), `deliveriesOverTime`, `recentDeliveries` (last 10).
+>
+> **`?period=7d|30d|90d|12m`** (default `30d`) sets the time window, same values/default and day-vs-month bucketing as the admin/seller dashboards. `summary.totalDelivered` is **period-scoped** (deliveries whose `delivered_at` falls in the window) and carries a `totalDeliveredChange` object `{ changePercent: number | null, direction: 'up'|'down'|'flat' }` comparing against the previous equal-length window. `activeDeliveries`, `availableForPickup`, `deliveredToday` remain **live snapshots** (no period, no change). `deliveriesOverTime` buckets by **day** for `7d/30d/90d` and by **calendar month** for `12m` (points returned as `yyyy-MM-01`).
 

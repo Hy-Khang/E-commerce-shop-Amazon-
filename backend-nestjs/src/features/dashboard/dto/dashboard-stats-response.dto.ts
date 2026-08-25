@@ -1,20 +1,70 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+export class MetricChangeDto {
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'Percent change vs previous period; null if baseline was zero',
+  })
+  changePercent: number | null;
+
+  @ApiProperty({ enum: ['up', 'down', 'flat'] })
+  direction: 'up' | 'down' | 'flat';
+}
+
 export class SummaryDto {
-  @ApiProperty({ description: 'Total value of completed orders (regardless of payment)' })
+  @ApiProperty({
+    description:
+      'Value of completed orders in the selected period (regardless of payment)',
+  })
   grossRevenue: number;
 
-  @ApiProperty({ description: 'Total value of completed + paid orders' })
+  @ApiProperty({ type: MetricChangeDto })
+  grossRevenueChange: MetricChangeDto;
+
+  @ApiProperty({
+    description: 'Value of completed + paid orders in the selected period',
+  })
   collectedRevenue: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: MetricChangeDto })
+  collectedRevenueChange: MetricChangeDto;
+
+  @ApiProperty({ description: 'Non-cancelled orders in the selected period' })
   totalOrders: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: MetricChangeDto })
+  totalOrdersChange: MetricChangeDto;
+
+  @ApiProperty({ description: 'Active products (current snapshot)' })
   totalProducts: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Active users (current snapshot)' })
   totalUsers: number;
+}
+
+export class AttentionSignalsDto {
+  @ApiProperty({ description: 'Shops awaiting verification' })
+  pendingShops: number;
+
+  @ApiProperty({ description: 'Orders with an open return request' })
+  returnRequestedOrders: number;
+}
+
+export class TopShopDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  slug: string;
+
+  @ApiProperty()
+  revenue: number;
+
+  @ApiProperty()
+  orderCount: number;
 }
 
 export class RevenueDataPointDto {
@@ -119,4 +169,10 @@ export class DashboardStatsResponseDto {
 
   @ApiProperty({ type: [LowStockAlertDto] })
   lowStockAlerts: LowStockAlertDto[];
+
+  @ApiPropertyOptional({ type: AttentionSignalsDto })
+  attentionSignals: AttentionSignalsDto | null;
+
+  @ApiProperty({ type: [TopShopDto] })
+  topShops: TopShopDto[];
 }

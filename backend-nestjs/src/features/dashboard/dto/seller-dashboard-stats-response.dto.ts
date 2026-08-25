@@ -3,22 +3,37 @@ import {
   RevenueDataPointDto,
   TopProductDto,
   LowStockAlertDto,
+  MetricChangeDto,
 } from './dashboard-stats-response.dto';
 
 export class SellerSummaryDto {
-  @ApiProperty({ description: 'Total value of completed orders (regardless of payment)' })
+  @ApiProperty({
+    description:
+      "Value of the shop's completed order items in the selected period (regardless of payment)",
+  })
   grossRevenue: number;
 
-  @ApiProperty({ description: 'Total value of completed + paid orders' })
+  @ApiProperty({ type: MetricChangeDto })
+  grossRevenueChange: MetricChangeDto;
+
+  @ApiProperty({
+    description: "Value of the shop's completed + paid order items in period",
+  })
   collectedRevenue: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: MetricChangeDto })
+  collectedRevenueChange: MetricChangeDto;
+
+  @ApiProperty({ description: 'Non-cancelled orders in the selected period' })
   totalOrders: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: MetricChangeDto })
+  totalOrdersChange: MetricChangeDto;
+
+  @ApiProperty({ description: 'Active products (current snapshot)' })
   totalProducts: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Low-stock variants (current snapshot)' })
   lowStockCount: number;
 }
 

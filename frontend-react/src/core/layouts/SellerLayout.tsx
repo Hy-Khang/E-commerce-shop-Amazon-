@@ -1,10 +1,11 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Store, Tag, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Store, Tag, Star, Heart, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { NotificationBell } from '@/features/notification';
 import { PortalAccountDropdown } from './PortalAccountDropdown';
+import { SellerGlobalSearch } from './SellerGlobalSearch';
 
 const sellerLinks: Array<{ to: string; label: string; icon: LucideIcon; permission: string }> = [
   { to: '/seller/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.DASHBOARD_READ },
@@ -12,6 +13,8 @@ const sellerLinks: Array<{ to: string; label: string; icon: LucideIcon; permissi
   { to: '/seller/products', label: 'Products', icon: Package, permission: PERMISSIONS.PRODUCTS_READ },
   { to: '/seller/orders', label: 'Orders', icon: ShoppingCart, permission: PERMISSIONS.ORDERS_READ },
   { to: '/seller/coupons', label: 'Coupons', icon: Tag, permission: PERMISSIONS.COUPONS_READ },
+  { to: '/seller/reviews', label: 'Reviews', icon: Star, permission: PERMISSIONS.REVIEWS_READ },
+  { to: '/seller/wishlist', label: 'Wishlist', icon: Heart, permission: PERMISSIONS.WISHLIST_READ },
 ];
 
 export function SellerLayout() {
@@ -53,7 +56,10 @@ export function SellerLayout() {
         </div>
       </aside>
       <main className="flex flex-1 flex-col bg-slate-50/50">
-        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-slate-200 bg-white px-4 py-3 md:px-6">
+        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 md:px-6">
+          <div className="flex-1">
+            <SellerGlobalSearch />
+          </div>
           <NotificationBell />
           <PortalAccountDropdown />
         </header>

@@ -14,6 +14,7 @@
 ### Must Read
 - @docs/FE-PROJECT-RULES.md — naming conventions, component rules, TanStack Query patterns, anti-patterns
 - @docs/FE-ARCHITECTURE.md — folder structure, data flow, routing, state management strategy
+- @docs/DESIGN.md — design system: color tokens, typography, component patterns, border/z-index scale (read before any UI styling)
 
 ### Reference
 - @../share-docs/API_SPEC.md — REST endpoints, request/response format, auth flow, error codes

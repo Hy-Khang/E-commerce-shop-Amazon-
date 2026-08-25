@@ -8,10 +8,14 @@ export const sellerProductKeys = {
   detail: (id: number) => ['seller', 'products', 'detail', id] as const,
 };
 
-export function useSellerProducts(params: AdminProductListParams) {
+export function useSellerProducts(
+  params: AdminProductListParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: sellerProductKeys.list(params),
     queryFn: () => sellerProductService.getList(params),
+    enabled: options?.enabled,
     select: (res) => ({
       data: res.data.data,
       meta: res.data.meta,

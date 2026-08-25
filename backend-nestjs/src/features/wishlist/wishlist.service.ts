@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { WishlistItemRepository } from './repositories/wishlist-item.repository';
 import { ProductService } from '../product/product.service';
+import { ShopService } from '../shop/shop.service';
 import { AddWishlistItemDto } from './dto/add-wishlist-item.dto';
 import { BulkCheckWishlistDto } from './dto/bulk-check-wishlist.dto';
 import { WishlistQueryDto } from './dto/wishlist-query.dto';
@@ -25,6 +26,7 @@ export class WishlistService {
   constructor(
     private readonly wishlistItemRepository: WishlistItemRepository,
     private readonly productService: ProductService,
+    private readonly shopService: ShopService,
   ) {}
 
   // ─── Customer endpoints ───
@@ -151,5 +153,20 @@ export class WishlistService {
     limit: number,
   ): Promise<IPaginatedResult<PopularWishlistItemDto>> {
     return this.wishlistItemRepository.findMostWishlistedPaginated(page, limit);
+  }
+
+  // ─── Seller endpoints ───
+
+  async getShopMostWishlisted(
+    userId: number,
+    page: number,
+    limit: number,
+  ): Promise<IPaginatedResult<PopularWishlistItemDto>> {
+    const shop = await this.shopService.resolveShopByUserId(userId);
+    return this.wishlistItemRepository.findMostWishlistedPaginated(
+      page,
+      limit,
+      shop.id,
+    );
   }
 }

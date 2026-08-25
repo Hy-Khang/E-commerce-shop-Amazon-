@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -8,6 +8,7 @@ import {
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { PERMISSIONS } from '../../common/constants/permissions.constant';
 import { DashboardService } from './dashboard.service';
+import { DashboardQueryDto } from './dto/dashboard-query.dto';
 import { DashboardStatsResponseDto } from './dto/dashboard-stats-response.dto';
 
 @ApiTags('Admin: Dashboard')
@@ -24,7 +25,7 @@ export class DashboardController {
     description: 'Dashboard analytics data',
     type: DashboardStatsResponseDto,
   })
-  async getDashboard() {
-    return this.dashboardService.getDashboard();
+  async getDashboard(@Query() query: DashboardQueryDto) {
+    return this.dashboardService.getDashboard(query.period);
   }
 }
