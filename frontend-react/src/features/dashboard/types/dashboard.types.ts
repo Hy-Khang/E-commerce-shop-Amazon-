@@ -113,7 +113,9 @@ export interface SellerDashboardStats {
 }
 
 export interface ShipperSummaryStats {
+  /** Deliveries completed within the selected period (flow metric). */
   totalDelivered: number;
+  totalDeliveredChange: MetricChange;
   activeDeliveries: number;
   availableForPickup: number;
   deliveredToday: number;

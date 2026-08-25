@@ -551,36 +551,61 @@ export class DashboardRepository {
 
   async getShipperSummaryStats(
     shipperId: number,
+    days: number,
   ): Promise<IShipperSummaryStats> {
     const mgr = this.repo.manager;
+
+    // "Total delivered" is a period flow metric: deliveries whose delivered_at
+    // falls in the current window [now-days, now], compared against the previous
+    // window [now-2*days, now-days]. The other three counts are live snapshots.
+    const DELIVERED = "o.status IN ('delivered','completed')";
+    const CUR = 'o.delivered_at >= DATEADD(DAY, :curStart, GETUTCDATE())';
+    const PREV =
+      'o.delivered_at >= DATEADD(DAY, :prevStart, GETUTCDATE()) AND o.delivered_at < DATEADD(DAY, :curStart, GETUTCDATE())';
 
     const result = await mgr
       .createQueryBuilder()
       .select([
-        `SUM(CASE WHEN status IN ('delivered','completed') THEN 1 ELSE 0 END) AS totalDelivered`,
-        `SUM(CASE WHEN status = 'shipping' THEN 1 ELSE 0 END) AS activeDeliveries`,
+        `COALESCE(SUM(CASE WHEN ${DELIVERED} AND ${CUR} THEN 1 ELSE 0 END), 0) AS curDelivered`,
+        `COALESCE(SUM(CASE WHEN ${DELIVERED} AND ${PREV} THEN 1 ELSE 0 END), 0) AS prevDelivered`,
+        `SUM(CASE WHEN o.status = 'shipping' THEN 1 ELSE 0 END) AS activeDeliveries`,
         `(SELECT COUNT(*) FROM orders WHERE status = 'confirmed' AND shipper_id IS NULL) AS availableForPickup`,
-        `SUM(CASE WHEN status IN ('delivered','completed') AND CAST(delivered_at AS DATE) = CAST(GETUTCDATE() AS DATE) THEN 1 ELSE 0 END) AS deliveredToday`,
+        `SUM(CASE WHEN ${DELIVERED} AND CAST(o.delivered_at AS DATE) = CAST(GETUTCDATE() AS DATE) THEN 1 ELSE 0 END) AS deliveredToday`,
       ])
       .from('orders', 'o')
       .where('o.shipper_id = :shipperId', { shipperId })
+      .setParameters({ curStart: -days, prevStart: -2 * days })
       .getRawOne();
 
+    const curDelivered = parseInt(result.curDelivered, 10) || 0;
+    const prevDelivered = parseInt(result.prevDelivered, 10) || 0;
+
     return {
-      totalDelivered: parseInt(result.totalDelivered, 10) || 0,
+      totalDelivered: curDelivered,
+      totalDeliveredChange: computeChange(curDelivered, prevDelivered),
       activeDeliveries: parseInt(result.activeDeliveries, 10) || 0,
       availableForPickup: parseInt(result.availableForPickup, 10) || 0,
       deliveredToday: parseInt(result.deliveredToday, 10) || 0,
     };
   }
 
+  /**
+   * Delivery counts bucketed by day (short ranges) or calendar month (12m),
+   * mirroring the revenue-over-time bucketing (monthly → 'yyyy-MM-01').
+   */
   async getShipperDeliveriesOverTime(
     shipperId: number,
     days: number = 30,
+    granularity: RevenueGranularity = 'day',
   ): Promise<IShipperDeliveryDataPoint[]> {
+    const isMonth = granularity === 'month';
+    const bucketExpr = isMonth
+      ? 'CONVERT(varchar(7), o.delivered_at, 126)'
+      : 'CAST(o.delivered_at AS DATE)';
+
     const rows = await this.repo.manager
       .createQueryBuilder()
-      .select('CAST(o.delivered_at AS DATE)', 'date')
+      .select(bucketExpr, 'bucket')
       .addSelect('COUNT(*)', 'count')
       .from('orders', 'o')
       .where('o.shipper_id = :shipperId', { shipperId })
@@ -588,17 +613,22 @@ export class DashboardRepository {
       .andWhere('o.delivered_at >= DATEADD(DAY, :days, GETUTCDATE())', {
         days: -days,
       })
-      .groupBy('CAST(o.delivered_at AS DATE)')
-      .orderBy('date', 'ASC')
+      .groupBy(bucketExpr)
+      .orderBy('bucket', 'ASC')
       .getRawMany();
 
-    return rows.map((row) => ({
-      date:
-        row.date instanceof Date
-          ? row.date.toISOString().split('T')[0]
-          : String(row.date),
-      count: parseInt(row.count, 10) || 0,
-    }));
+    return rows.map((row) => {
+      let date: string;
+      if (isMonth) {
+        date = `${String(row.bucket)}-01`;
+      } else {
+        date =
+          row.bucket instanceof Date
+            ? row.bucket.toISOString().split('T')[0]
+            : String(row.bucket);
+      }
+      return { date, count: parseInt(row.count, 10) || 0 };
+    });
   }
 
   async getShipperRecentDeliveries(

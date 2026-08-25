@@ -525,7 +525,9 @@ All shipper endpoints use **permission-based access control** via `@Permissions(
 
 | Method | Path | Description | Permission |
 |--------|------|-------------|------------|
-| GET | `/shipper/dashboard` | Dashboard stats: summary, deliveries over time (30d), recent deliveries | `dashboard:read` |
+| GET | `/shipper/dashboard` | Dashboard stats: summary, deliveries over time, recent deliveries (`?period=7d\|30d\|90d\|12m`, default 30d) | `dashboard:read` |
 
-> **Partial failure tolerance:** Uses `Promise.allSettled()` — same pattern as Admin/Seller dashboards. Response includes 3 data sections: `summary` (totalDelivered, activeDeliveries, availableForPickup, deliveredToday), `deliveriesOverTime` (last 30 days), `recentDeliveries` (last 10).
+> **Partial failure tolerance:** Uses `Promise.allSettled()` — same pattern as Admin/Seller dashboards. Response includes 3 data sections: `summary` (totalDelivered, activeDeliveries, availableForPickup, deliveredToday), `deliveriesOverTime`, `recentDeliveries` (last 10).
+>
+> **`?period=7d|30d|90d|12m`** (default `30d`) sets the time window, same values/default and day-vs-month bucketing as the admin/seller dashboards. `summary.totalDelivered` is **period-scoped** (deliveries whose `delivered_at` falls in the window) and carries a `totalDeliveredChange` object `{ changePercent: number | null, direction: 'up'|'down'|'flat' }` comparing against the previous equal-length window. `activeDeliveries`, `availableForPickup`, `deliveredToday` remain **live snapshots** (no period, no change). `deliveriesOverTime` buckets by **day** for `7d/30d/90d` and by **calendar month** for `12m` (points returned as `yyyy-MM-01`).
 

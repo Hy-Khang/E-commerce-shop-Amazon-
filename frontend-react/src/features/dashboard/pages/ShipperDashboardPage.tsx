@@ -1,7 +1,9 @@
 import { lazy, Suspense } from 'react';
 import { CheckCircle, Truck, Package, Clock } from 'lucide-react';
 import { useShipperDashboardStats } from '../hooks/useShipperDashboardStats';
+import { usePeriodParam } from '../hooks/usePeriodParam';
 import { StatCard } from '../components/StatCard';
+import { PeriodSelector } from '../components/PeriodSelector';
 import { ShipperRecentDeliveriesTable } from '../components/ShipperRecentDeliveriesTable';
 import { DashboardSkeleton } from '../components/DashboardSkeleton';
 import { SectionError } from '../components/SectionError';
@@ -13,24 +15,29 @@ function ChartFallback() {
 }
 
 export default function ShipperDashboardPage() {
-  const { data: stats, isLoading, refetch } = useShipperDashboardStats();
+  const [period, setPeriod] = usePeriodParam();
+  const { data: stats, isLoading, refetch } = useShipperDashboardStats(period);
 
   if (isLoading || !stats) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-8">
-      <h1 className="font-jakarta text-3xl font-extrabold tracking-tight text-slate-900">
-        Shipper Dashboard
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-jakarta text-3xl font-extrabold tracking-tight text-slate-900">
+          Shipper Dashboard
+        </h1>
+        <PeriodSelector value={period} onChange={setPeriod} />
+      </div>
 
       {stats.summary ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Total Delivered"
+            title="Delivered"
             value={stats.summary.totalDelivered.toLocaleString()}
             icon={CheckCircle}
             color="emerald"
             index={0}
+            trend={stats.summary.totalDeliveredChange}
           />
           <StatCard
             title="Active Deliveries"
@@ -59,7 +66,10 @@ export default function ShipperDashboardPage() {
       )}
 
       <Suspense fallback={<ChartFallback />}>
-        <DeliveryChart data={stats.deliveriesOverTime} />
+        <DeliveryChart
+          data={stats.deliveriesOverTime}
+          granularity={period === '12m' ? 'month' : 'day'}
+        />
       </Suspense>
 
       <ShipperRecentDeliveriesTable deliveries={stats.recentDeliveries} />

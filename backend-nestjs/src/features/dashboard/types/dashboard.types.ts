@@ -113,7 +113,9 @@ export interface ISellerDashboardStats {
 }
 
 export interface IShipperSummaryStats {
+  /** Deliveries completed within the selected period (flow metric). */
   totalDelivered: number;
+  totalDeliveredChange: IMetricChange;
   activeDeliveries: number;
   availableForPickup: number;
   deliveredToday: number;
