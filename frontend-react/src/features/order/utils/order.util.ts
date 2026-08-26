@@ -5,24 +5,24 @@ export function isOrderCancellable(status: OrderStatus): boolean {
 }
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
-  pending: 'bg-amber-500 text-amber-700',
-  confirmed: 'bg-sky-500 text-sky-700',
-  shipping: 'bg-violet-500 text-violet-700',
-  delivered: 'bg-blue-500 text-blue-700',
-  completed: 'bg-emerald-500 text-emerald-700',
-  return_requested: 'bg-rose-500 text-rose-700',
-  cancelled: 'bg-neutral-500 text-neutral-700',
+  pending: 'bg-amber-500 text-amber-700 dark:text-amber-400',
+  confirmed: 'bg-sky-500 text-sky-700 dark:text-sky-400',
+  shipping: 'bg-violet-500 text-violet-700 dark:text-violet-400',
+  delivered: 'bg-blue-500 text-blue-700 dark:text-blue-400',
+  completed: 'bg-emerald-500 text-emerald-700 dark:text-emerald-400',
+  return_requested: 'bg-rose-500 text-rose-700 dark:text-rose-400',
+  cancelled: 'bg-neutral-500 text-neutral-700 dark:text-neutral-400',
 };
 
 export function getStatusColor(status: OrderStatus): string {
-  return STATUS_STYLES[status] ?? 'bg-neutral-500 text-neutral-700';
+  return STATUS_STYLES[status] ?? 'bg-neutral-500 text-neutral-700 dark:text-neutral-400';
 }
 
 export function getPaymentStatusColor(status: string): string {
   switch (status) {
-    case 'paid': return 'bg-emerald-500 text-emerald-700';
-    case 'unpaid': return 'bg-amber-500 text-amber-700';
-    default: return 'bg-neutral-500 text-neutral-700';
+    case 'paid': return 'bg-emerald-500 text-emerald-700 dark:text-emerald-400';
+    case 'unpaid': return 'bg-amber-500 text-amber-700 dark:text-amber-400';
+    default: return 'bg-neutral-500 text-neutral-700 dark:text-neutral-400';
   }
 }
 

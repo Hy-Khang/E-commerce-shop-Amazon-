@@ -59,7 +59,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
                   className={`h-6 w-6 transition-colors ${
                     starValue <= (hoverRating || currentRating)
                       ? 'fill-amber-400 text-amber-400'
-                      : 'text-neutral-300'
+                      : 'text-neutral-300 dark:text-neutral-600'
                   }`}
                 />
               </button>
@@ -80,7 +80,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: Props) {
           {...register('comment')}
           rows={3}
           placeholder="Share your experience with this product..."
-          className="w-full rounded-lg border border-border-default px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-border-brand focus:outline-none focus:ring-1 focus:ring-brand bg-white transition-colors"
+          className="w-full rounded-lg border border-border-default px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-border-brand focus:outline-none focus:ring-1 focus:ring-brand bg-surface transition-colors"
         />
         {errors.comment && (
           <p className="mt-1 text-xs text-error-600">{errors.comment.message}</p>

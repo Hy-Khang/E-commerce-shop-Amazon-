@@ -21,7 +21,7 @@ export function ProductCard({ product }: Props) {
       onMouseEnter={() => prefetch(product.slug)}
       className="group block overflow-hidden rounded-xl border border-border-default bg-elevated transition-all hover:border-border-strong hover:shadow-sm"
     >
-      <div className="relative aspect-square overflow-hidden bg-neutral-100">
+      <div className="relative aspect-square overflow-hidden bg-surface-hover">
         {product.thumbnail_url ? (
           <img
             src={getImageUrl(product.thumbnail_url)}

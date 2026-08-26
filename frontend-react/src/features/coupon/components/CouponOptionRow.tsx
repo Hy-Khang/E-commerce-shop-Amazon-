@@ -46,10 +46,10 @@ export function CouponOptionRow({ option, selected, onToggle }: Props) {
       aria-pressed={selected}
       className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
         disabled
-          ? 'cursor-not-allowed border-border-default bg-neutral-50 opacity-60'
+          ? 'cursor-not-allowed border-border-default bg-surface-hover opacity-60'
           : selected
             ? 'border-brand bg-brand-light/30 ring-1 ring-brand/20'
-            : 'border-border-default bg-white hover:border-border-strong'
+            : 'border-border-default bg-surface hover:border-border-strong'
       }`}
     >
       <Ticket
@@ -60,7 +60,7 @@ export function CouponOptionRow({ option, selected, onToggle }: Props) {
           <span className="truncate text-sm font-semibold text-text-primary">
             {option.code}
           </span>
-          <span className="shrink-0 text-xs font-medium text-emerald-700">
+          <span className="shrink-0 text-xs font-medium text-emerald-700 dark:text-emerald-400">
             {discountLabel(option)}
           </span>
         </div>
@@ -90,7 +90,7 @@ export function CouponOptionRow({ option, selected, onToggle }: Props) {
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
           selected
             ? 'border-brand bg-brand text-white'
-            : 'border-border-strong bg-white'
+            : 'border-border-strong bg-surface'
         }`}
       >
         {selected && <Check className="h-3.5 w-3.5" />}

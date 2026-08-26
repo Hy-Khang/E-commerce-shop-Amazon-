@@ -43,7 +43,7 @@ export function OrderCard({ order }: Props) {
         <div className="mt-3 space-y-2">
           {visibleItems.map((item) => (
             <div key={item.id} className="flex items-center gap-3">
-              <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-neutral-50">
+              <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-surface-hover">
                 {item.thumbnail_url ? (
                   <img
                     src={getImageUrl(item.thumbnail_url)}

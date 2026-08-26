@@ -99,15 +99,15 @@ export function FilterSidebar() {
               onClick={() => updateParam('min_rating', currentMinRating === String(rating) ? null : String(rating))}
               className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors ${
                 currentMinRating === String(rating)
-                  ? 'bg-primary-50 text-text-brand font-medium'
-                  : 'text-text-secondary hover:bg-neutral-50'
+                  ? 'bg-brand-light text-text-brand font-medium'
+                  : 'text-text-secondary hover:bg-surface-hover'
               }`}
             >
               <span className="flex items-center gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-3.5 w-3.5 ${i < rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-300'}`}
+                    className={`h-3.5 w-3.5 ${i < rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-300 dark:text-neutral-600'}`}
                   />
                 ))}
               </span>
@@ -118,12 +118,12 @@ export function FilterSidebar() {
       </FilterSection>
 
       <FilterSection title="Availability" defaultOpen>
-        <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-neutral-50 transition-colors">
+        <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-surface-hover transition-colors">
           <input
             type="checkbox"
             checked={currentInStock === 'true'}
             onChange={(e) => updateParam('in_stock', e.target.checked ? 'true' : null)}
-            className="rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+            className="rounded border-neutral-300 dark:border-neutral-600 text-primary-600 focus:ring-primary-500"
           />
           <span className="text-sm text-text-secondary">In stock only</span>
         </label>

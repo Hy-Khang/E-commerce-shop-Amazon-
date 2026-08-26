@@ -18,9 +18,9 @@ export function ReviewList({ productId }: Props) {
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="border-b border-border-default py-4">
-            <div className="h-4 w-32 animate-pulse rounded bg-neutral-200" />
-            <div className="mt-2 h-3 w-48 animate-pulse rounded bg-neutral-200" />
-            <div className="mt-2 h-3 w-full animate-pulse rounded bg-neutral-200" />
+            <div className="h-4 w-32 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+            <div className="mt-2 h-3 w-48 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+            <div className="mt-2 h-3 w-full animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
           </div>
         ))}
       </div>
@@ -87,7 +87,7 @@ function ReviewSummary({ stats }: { stats: ReviewStats }) {
               className={`h-4 w-4 ${
                 i < Math.round(stats.average_rating)
                   ? 'fill-amber-400 text-amber-400'
-                  : 'text-neutral-200'
+                  : 'text-neutral-200 dark:text-neutral-600'
               }`}
             />
           ))}
@@ -105,7 +105,7 @@ function ReviewSummary({ stats }: { stats: ReviewStats }) {
             <div key={rating} className="flex items-center gap-2 text-xs font-medium text-text-secondary">
               <span className="w-4 text-right">{rating}</span>
               <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-100">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-hover">
                 <div
                   className="h-full rounded-full bg-brand"
                   style={{ width: `${pct}%` }}

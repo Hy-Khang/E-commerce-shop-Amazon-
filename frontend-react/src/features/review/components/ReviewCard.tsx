@@ -28,7 +28,7 @@ export function ReviewCard({ review, showDelete, onDelete, isDeleting }: Props) 
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-4 w-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-200'}`}
+                  className={`h-4 w-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-200 dark:text-neutral-600'}`}
                 />
               ))}
             </div>
@@ -39,7 +39,7 @@ export function ReviewCard({ review, showDelete, onDelete, isDeleting }: Props) 
           <div className="mt-1 flex items-center gap-2">
             <span className="text-xs text-text-muted">{formatDate(review.created_at)}</span>
             {variantLabel && (
-              <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-medium text-text-secondary">
+              <span className="rounded bg-surface-hover px-1.5 py-0.5 text-xs font-medium text-text-secondary">
                 {variantLabel}
               </span>
             )}
@@ -50,7 +50,7 @@ export function ReviewCard({ review, showDelete, onDelete, isDeleting }: Props) 
           <button
             onClick={() => onDelete(review.id)}
             disabled={isDeleting}
-            className="rounded-lg p-1 text-text-muted hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition-colors"
+            className="rounded-lg p-1 text-text-muted hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/15 disabled:opacity-50 transition-colors"
           >
             <Trash2 className="h-4 w-4" />
           </button>

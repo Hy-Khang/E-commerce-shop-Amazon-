@@ -59,19 +59,19 @@ export function CouponInput({ appliedCoupons, onApply, onRemove }: Props) {
           {appliedCoupons.map(({ code: applied, validation }) => (
             <li
               key={applied}
-              className="flex items-center justify-between rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2"
+              className="flex items-center justify-between rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-400/20 dark:bg-emerald-500/15"
             >
               <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-emerald-700" />
-                <span className="text-sm font-medium text-emerald-800">{applied}</span>
-                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                <Check className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+                <span className="text-sm font-medium text-emerald-800 dark:text-emerald-300">{applied}</span>
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                   {groupLabel(validation)}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => onRemove(applied)}
-                className="rounded p-0.5 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
+                className="rounded p-0.5 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-500/20 dark:hover:text-emerald-300"
                 aria-label={`Remove coupon ${applied}`}
               >
                 <X className="h-4 w-4" />
@@ -93,14 +93,14 @@ export function CouponInput({ appliedCoupons, onApply, onRemove }: Props) {
             }}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApply())}
             placeholder="Enter coupon code"
-            className="w-full rounded-lg border border-border-default py-2 pl-9 pr-3 text-sm uppercase placeholder:normal-case focus:border-border-brand focus:outline-none focus:ring-1 focus:ring-brand bg-white transition-colors"
+            className="w-full rounded-lg border border-border-default py-2 pl-9 pr-3 text-sm uppercase placeholder:normal-case focus:border-border-brand focus:outline-none focus:ring-1 focus:ring-brand bg-surface transition-colors"
           />
         </div>
         <button
           type="button"
           onClick={handleApply}
           disabled={validate.isPending || !code.trim()}
-          className="flex items-center gap-1.5 rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-text-secondary hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-text-secondary hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {validate.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           Apply

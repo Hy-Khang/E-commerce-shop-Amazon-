@@ -22,7 +22,7 @@ function TrendingCard({ product }: { product: TrendingProductItem }) {
       onMouseEnter={() => prefetch(product.slug)}
       className="group block overflow-hidden rounded-xl border border-border-default bg-elevated transition-all hover:border-primary-200 hover:shadow-sm"
     >
-      <div className="relative aspect-square overflow-hidden bg-neutral-100">
+      <div className="relative aspect-square overflow-hidden bg-surface-hover">
         {product.thumbnailUrl ? (
           <img
             src={getImageUrl(product.thumbnailUrl)}
@@ -38,7 +38,7 @@ function TrendingCard({ product }: { product: TrendingProductItem }) {
           <WishlistButton productId={product.id} size="sm" />
         </div>
         {!product.inStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/60">
+          <div className="absolute inset-0 flex items-center justify-center bg-surface/60">
             <span className="rounded-full bg-neutral-800/80 px-3 py-1 text-xs font-semibold text-white">
               Out of stock
             </span>

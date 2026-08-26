@@ -11,7 +11,7 @@ export function WishlistBadge() {
   return (
     <Link
       to={ROUTES.WISHLIST}
-      className="relative rounded-lg p-2 text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
+      className="relative rounded-lg p-2 text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
     >
       <Heart className="h-5 w-5" />
       {itemCount > 0 && (

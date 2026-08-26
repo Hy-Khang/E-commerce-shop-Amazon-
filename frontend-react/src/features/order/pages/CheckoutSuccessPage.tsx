@@ -39,7 +39,7 @@ export default function CheckoutSuccessPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 py-4 animate-in">
       {/* Step Indicator */}
-      <div className="rounded-xl bg-white p-4 border border-border-default shadow-xs">
+      <div className="rounded-xl bg-surface p-4 border border-border-default shadow-xs">
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-2 text-text-brand font-semibold">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-text-brand">1</span>
@@ -78,7 +78,7 @@ export default function CheckoutSuccessPage() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className="rounded-xl border border-border-default bg-neutral-50/50 p-4 space-y-3"
+              className="rounded-xl border border-border-default bg-surface-hover/50 p-4 space-y-3"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -109,7 +109,7 @@ export default function CheckoutSuccessPage() {
         </div>
 
         {/* Shared Info */}
-        <div className="rounded-xl border border-border-default bg-neutral-50/50 p-6 text-left space-y-4">
+        <div className="rounded-xl border border-border-default bg-surface-hover/50 p-6 text-left space-y-4">
           <div className="flex justify-between border-b border-border-default pb-3 text-sm">
             <span className="text-text-secondary">Payment Method</span>
             <span className="font-semibold text-text-primary">

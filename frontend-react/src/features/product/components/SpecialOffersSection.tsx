@@ -46,18 +46,18 @@ export function SpecialOffersSection({ products, isLoading }: Props) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: 0.5 }}
-      className="rounded-2xl bg-gradient-to-r from-amber-50/60 via-orange-50/40 to-amber-50/60 p-6"
+      className="rounded-2xl bg-gradient-to-r from-amber-50/60 via-orange-50/40 to-amber-50/60 dark:from-amber-500/[0.07] dark:via-orange-500/[0.04] dark:to-amber-500/[0.07] p-6 dark:ring-1 dark:ring-inset dark:ring-amber-500/10"
     >
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-amber-600" />
+          <Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           <h2 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
             Special Offers
           </h2>
         </div>
         <Link
           to={ROUTES.PRODUCTS}
-          className="text-sm font-semibold text-amber-700 hover:text-amber-800 transition-colors"
+          className="text-sm font-semibold text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
         >
           View all
         </Link>
@@ -68,7 +68,7 @@ export function SpecialOffersSection({ products, isLoading }: Props) {
           <button
             type="button"
             onClick={() => scrollRef.current?.scrollBy({ left: -SCROLL_AMOUNT, behavior: 'smooth' })}
-            className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md border border-amber-100 text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity hover:text-amber-700"
+            className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface shadow-md border border-amber-100 dark:border-amber-400/20 text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity hover:text-amber-700 dark:hover:text-amber-400"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -96,7 +96,7 @@ export function SpecialOffersSection({ products, isLoading }: Props) {
           <button
             type="button"
             onClick={() => scrollRef.current?.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' })}
-            className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md border border-amber-100 text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity hover:text-amber-700"
+            className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface shadow-md border border-amber-100 dark:border-amber-400/20 text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity hover:text-amber-700 dark:hover:text-amber-400"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

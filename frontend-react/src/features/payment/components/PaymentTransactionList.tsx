@@ -59,7 +59,7 @@ export function PaymentTransactionList({ orderId, variant = 'customer' }: Props)
         {transactions.map((tx) => (
           <div
             key={tx.id}
-            className={`rounded-lg border ${isAdmin ? 'border-slate-200 bg-slate-50' : 'border-border-default bg-neutral-50/50'} p-4`}
+            className={`rounded-lg border ${isAdmin ? 'border-slate-200 bg-slate-50' : 'border-border-default bg-surface-hover/50'} p-4`}
           >
             <div className="flex items-center justify-between mb-2">
               <span className={`text-xs font-medium ${labelClass}`}>

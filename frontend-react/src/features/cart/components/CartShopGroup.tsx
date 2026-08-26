@@ -35,7 +35,7 @@ export function CartShopGroup({
   const canPickVoucher = showVoucher && group.shop_id != null;
 
   return (
-    <div className="rounded-xl border border-border-default bg-white">
+    <div className="rounded-xl border border-border-default bg-surface">
       <div className="flex items-center gap-2 border-b border-border-default px-4 py-3">
         <Store className="h-4 w-4 text-text-secondary" />
         <span className="text-sm font-semibold text-text-primary">

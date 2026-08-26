@@ -5,7 +5,7 @@ type SkeletonProps = {
 export function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <div
-      className={`rounded-md bg-neutral-200 ${className}`}
+      className={`rounded-md bg-neutral-200 dark:bg-neutral-700 ${className}`}
       style={{
         backgroundImage:
           'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)',

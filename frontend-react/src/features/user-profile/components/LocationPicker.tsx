@@ -124,10 +124,10 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
         }}
         className={`w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm text-left transition-colors ${
           error
-            ? 'border-rose-300 bg-rose-50/50'
+            ? 'border-rose-300 bg-rose-50/50 dark:border-rose-400/30 dark:bg-rose-500/10'
             : isOpen
               ? 'border-blue-400 ring-2 ring-blue-400/20'
-              : 'border-border-default bg-white hover:border-slate-400'
+              : 'border-border-default bg-surface hover:border-border-strong'
         }`}
       >
         <span className={displayText ? 'text-text-primary' : 'text-text-muted'}>
@@ -137,13 +137,13 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
           {displayText && (
             <span
               onClick={handleClear}
-              className="p-0.5 rounded hover:bg-slate-100"
+              className="p-0.5 rounded hover:bg-surface-hover"
             >
-              <X className="h-3.5 w-3.5 text-slate-400" />
+              <X className="h-3.5 w-3.5 text-text-muted" />
             </span>
           )}
           <ChevronDown
-            className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
       </button>
@@ -151,22 +151,22 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
       {error && <p className="mt-1 text-xs text-rose-500">{error}</p>}
 
       {isOpen && (
-        <div className="absolute z-[1000] mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
-          <div className="p-2.5 border-b border-slate-100">
+        <div className="absolute z-[1000] mt-1 w-full rounded-xl border border-border-default bg-elevated shadow-xl overflow-hidden">
+          <div className="p-2.5 border-b border-border-default">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
               <input
                 ref={searchRef}
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
+                className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-border-default bg-surface-hover focus:bg-surface focus:outline-none focus:border-border-brand focus:ring-1 focus:ring-brand transition-colors"
               />
             </div>
           </div>
 
-          <div className="flex border-b border-slate-100">
+          <div className="flex border-b border-border-default">
             {TABS.map((tab) => {
               const isDisabled =
                 (tab.key === 'district' && !value.province) ||
@@ -187,12 +187,12 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
                   disabled={isDisabled}
                   className={`flex-1 px-2 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
                     isActive
-                      ? 'border-orange-500 text-orange-600'
+                      ? 'border-orange-500 text-orange-600 dark:text-orange-400'
                       : isDisabled
-                        ? 'border-transparent text-slate-300 cursor-not-allowed'
+                        ? 'border-transparent text-text-muted/60 cursor-not-allowed'
                         : hasValue
-                          ? 'border-transparent text-emerald-600 hover:text-emerald-700'
-                          : 'border-transparent text-slate-500 hover:text-slate-700'
+                          ? 'border-transparent text-emerald-600 hover:text-emerald-700 dark:text-emerald-400'
+                          : 'border-transparent text-text-secondary hover:text-text-primary'
                   }`}
                 >
                   {tab.label}
@@ -206,12 +206,12 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
 
           <div className="max-h-[220px] overflow-y-auto">
             {isLoading ? (
-              <div className="flex items-center justify-center gap-2 p-6 text-sm text-slate-400">
+              <div className="flex items-center justify-center gap-2 p-6 text-sm text-text-muted">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading...
               </div>
             ) : filtered.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-400">
+              <div className="p-6 text-center text-sm text-text-muted">
                 No results found
               </div>
             ) : (
@@ -224,8 +224,8 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
                     onClick={() => handleSelect(item)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm text-left transition-colors ${
                       selected
-                        ? 'text-orange-600 bg-orange-50/60 font-medium'
-                        : 'text-slate-700 hover:bg-slate-50'
+                        ? 'text-orange-600 bg-orange-50/60 dark:text-orange-400 dark:bg-orange-500/15 font-medium'
+                        : 'text-text-secondary hover:bg-surface-hover'
                     }`}
                   >
                     {item.name}

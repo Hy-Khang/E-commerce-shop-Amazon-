@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-jakarta: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-display: "Instrument Serif", Georgia, serif;
@@ -67,6 +69,37 @@
 
   /* Interactive */
   --color-ring-focus: var(--color-primary-500);
+}
+
+/* ── Storefront Dark Theme ── */
+/* CSS drives color-scheme; theme.util only toggles the `.dark` class.
+   `:root.dark` outranks @theme's `:root`, so these overrides win the cascade. */
+
+:root {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --color-page: var(--color-neutral-900);
+  --color-surface: var(--color-neutral-800);
+  --color-surface-hover: var(--color-neutral-700);
+  --color-elevated: var(--color-neutral-800);
+  --color-brand-light: var(--color-primary-900);
+
+  /* Text */
+  --color-text-primary: var(--color-neutral-50);
+  --color-text-secondary: var(--color-neutral-400);
+  --color-text-muted: var(--color-neutral-500);
+  /* Brand/price must read brighter on dark — the light-mode 600/500 greens are too dark. */
+  --color-text-brand: var(--color-primary-300);
+  --color-text-price: var(--color-primary-300);
+
+  /* Borders */
+  --color-border-default: var(--color-neutral-700);
+  --color-border-strong: var(--color-neutral-600);
 }
 
 /* ── Admin Dashboard Animations ── */
@@ -136,7 +169,7 @@
   }
 
   .shop-input {
-    @apply w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-border-brand focus:ring-2 focus:ring-ring-focus/20 focus:outline-none transition-colors;
+    @apply w-full rounded-lg border border-border-default bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-border-brand focus:ring-2 focus:ring-ring-focus/20 focus:outline-none transition-colors;
   }
 }
 

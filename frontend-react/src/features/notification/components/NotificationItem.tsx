@@ -27,8 +27,8 @@ export function NotificationItem({ notification, onClose }: Props) {
   return (
     <button
       onClick={handleClick}
-      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-neutral-50 ${
-        !notification.is_read ? 'bg-primary-50/40' : ''
+      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover ${
+        !notification.is_read ? 'bg-brand-light/40' : ''
       }`}
     >
       <div className="mt-1.5 shrink-0">

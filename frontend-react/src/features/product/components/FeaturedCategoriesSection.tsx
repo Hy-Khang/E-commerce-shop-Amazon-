@@ -48,13 +48,13 @@ export function FeaturedCategoriesSection({ categories }: Props) {
                 {cat.children.slice(0, 3).map((child) => (
                   <span
                     key={child.id}
-                    className="inline-block rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700"
+                    className="inline-block rounded-full bg-brand-light px-2.5 py-0.5 text-xs font-medium text-text-brand"
                   >
                     {child.name}
                   </span>
                 ))}
                 {cat.children.length > 3 && (
-                  <span className="inline-block rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-text-muted">
+                  <span className="inline-block rounded-full bg-surface-hover px-2.5 py-0.5 text-xs font-medium text-text-muted">
                     +{cat.children.length - 3} more
                   </span>
                 )}

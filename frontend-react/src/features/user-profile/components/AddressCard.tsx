@@ -22,7 +22,7 @@ export function AddressCard({
     <div className={`shop-card p-5 relative overflow-hidden transition-all duration-200 hover:border-border-brand ${address.is_default ? 'ring-2 ring-brand/10 border-border-brand' : 'hover:shadow-sm'}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3.5">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${address.is_default ? 'bg-brand-light text-text-brand' : 'bg-neutral-100 text-text-secondary'}`}>
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${address.is_default ? 'bg-brand-light text-text-brand' : 'bg-surface-hover text-text-secondary'}`}>
             <MapPin className="h-4.5 w-4.5" />
           </div>
           <div className="min-w-0">

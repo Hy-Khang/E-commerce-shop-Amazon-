@@ -164,7 +164,7 @@ export default function OrderDetailPage() {
                     {canReview && item.product_id && (
                       <div className="pb-4 pl-20">
                         {reviewingItemId === item.id ? (
-                          <div className="rounded-xl border border-border-default bg-neutral-50/50 p-5">
+                          <div className="rounded-xl border border-border-default bg-surface-hover/50 p-5">
                             <div className="mb-3.5 flex items-center justify-between">
                               <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">Write a Review</h3>
                               <button

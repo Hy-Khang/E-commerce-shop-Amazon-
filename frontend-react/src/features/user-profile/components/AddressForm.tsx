@@ -161,7 +161,7 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
         </form>
       </div>
 
-      <div className="mt-8 border-t border-border-default pt-4 flex items-center justify-end gap-3 bg-white">
+      <div className="mt-8 border-t border-border-default pt-4 flex items-center justify-end gap-3 bg-surface">
         <Button
           type="button"
           variant="secondary"

@@ -81,13 +81,13 @@ export function SearchBarWithSuggestions() {
         <div
           className={`flex items-center rounded-full border transition-all ${
             focused
-              ? 'border-primary-400 bg-white ring-4 ring-primary-500/5'
-              : 'border-neutral-200 bg-neutral-50/80 hover:border-neutral-300'
+              ? 'border-primary-400 bg-surface ring-4 ring-primary-500/5'
+              : 'border-border-default bg-surface-hover/80 hover:border-border-strong'
           }`}
         >
           <button
             type="submit"
-            className="flex shrink-0 items-center justify-center pl-4 text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="flex shrink-0 items-center justify-center pl-4 text-text-muted hover:text-text-secondary transition-colors"
             aria-label="Search"
           >
             <Search className="h-[18px] w-[18px]" />
@@ -100,7 +100,7 @@ export function SearchBarWithSuggestions() {
             onFocus={() => setFocused(true)}
             onKeyDown={handleKeyDown}
             placeholder="Search for products..."
-            className="w-full bg-transparent py-2.5 pl-3 pr-1 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none"
+            className="w-full bg-transparent py-2.5 pl-3 pr-1 text-sm text-text-primary placeholder:text-text-muted outline-none"
             role="combobox"
             aria-expanded={showDropdown}
             aria-autocomplete="list"
@@ -109,7 +109,7 @@ export function SearchBarWithSuggestions() {
           <button
             type="button"
             onClick={() => setVisualSearchOpen(true)}
-            className="flex shrink-0 items-center justify-center pr-4 text-neutral-400 hover:text-neutral-600 transition-colors"
+            className="flex shrink-0 items-center justify-center pr-4 text-text-muted hover:text-text-secondary transition-colors"
             aria-label="Search by image"
             title="Search by image"
           >
@@ -119,7 +119,7 @@ export function SearchBarWithSuggestions() {
       </form>
 
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1.5 overflow-hidden rounded-xl border border-border-default bg-white shadow-lg">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1.5 overflow-hidden rounded-xl border border-border-default bg-elevated shadow-lg">
           <SuggestionGroup
             icon={<Package className="h-3.5 w-3.5" />}
             label="Products"
@@ -133,7 +133,7 @@ export function SearchBarWithSuggestions() {
               <img
                 src={getImageUrl(item.thumbnail_url)}
                 alt=""
-                className="h-8 w-8 rounded object-cover bg-neutral-100"
+                className="h-8 w-8 rounded object-cover bg-surface-hover"
               />
             )}
           />
@@ -161,7 +161,7 @@ export function SearchBarWithSuggestions() {
                 <img
                   src={getImageUrl(item.logo_url)}
                   alt=""
-                  className="h-6 w-6 rounded-full object-cover bg-neutral-100"
+                  className="h-6 w-6 rounded-full object-cover bg-surface-hover"
                 />
               ) : null
             }
@@ -242,7 +242,7 @@ function SuggestionGroup<T extends { name: string; slug: string }>({
             role="option"
             aria-selected={isActive}
             className={`flex w-full items-center gap-3 px-4 py-2 text-sm text-left transition-colors ${
-              isActive ? 'bg-primary-50 text-text-primary' : 'text-text-secondary hover:bg-neutral-50'
+              isActive ? 'bg-brand-light text-text-primary' : 'text-text-secondary hover:bg-surface-hover'
             }`}
             onMouseDown={(e) => {
               e.preventDefault();

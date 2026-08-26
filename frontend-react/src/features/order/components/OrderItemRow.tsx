@@ -15,7 +15,7 @@ export function OrderItemRow({ item, productLinkOverride }: Props) {
     : item.product_slug ? ROUTES.PRODUCT_DETAIL(item.product_slug) : null;
 
   const thumbnail = (
-    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-neutral-50">
+    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-surface-hover">
       {item.thumbnail_url ? (
         <img
           src={getImageUrl(item.thumbnail_url)}

@@ -68,7 +68,7 @@ export function ProfileForm({ profile }: Props) {
           type="email"
           value={profile.email}
           disabled
-          className="shop-input bg-neutral-100 text-text-secondary cursor-not-allowed border-neutral-200"
+          className="shop-input bg-surface-hover text-text-secondary cursor-not-allowed border-border-default"
         />
       </div>
 

@@ -17,7 +17,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
 
   return (
     <div className="flex items-center gap-4 border-b border-border-default py-4 last:border-b-0">
-      <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-neutral-50">
+      <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-border-default bg-surface-hover">
         {item.variant.thumbnail_url ? (
           <img
             src={getImageUrl(item.variant.thumbnail_url)}
@@ -56,7 +56,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
         <button
           onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
           disabled={isUpdating || item.quantity <= 1}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-default text-text-secondary hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-default text-text-secondary hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Minus className="h-4 w-4" />
         </button>
@@ -64,7 +64,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
         <button
           onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
           disabled={isUpdating || item.quantity >= maxStock}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-default text-text-secondary hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-default text-text-secondary hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus className="h-4 w-4" />
         </button>
@@ -77,7 +77,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
       <button
         onClick={() => onRemove(item.id)}
         disabled={isUpdating}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-rose-50 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Trash2 className="h-4 w-4" />
       </button>

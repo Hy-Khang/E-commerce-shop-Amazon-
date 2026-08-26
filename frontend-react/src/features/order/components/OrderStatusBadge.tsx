@@ -8,7 +8,8 @@ interface Props {
 
 export function OrderStatusBadge({ status }: Props) {
   const colors = getStatusColor(status);
-  const [dotColor, textColor] = colors.split(' ');
+  const [dotColor, ...textParts] = colors.split(' ');
+  const textColor = textParts.join(' ');
 
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${textColor}`}>

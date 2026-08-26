@@ -192,10 +192,10 @@ export default function CheckoutPage() {
   return (
     <div className="space-y-6">
       {/* Step Indicator */}
-      <div className="rounded-xl bg-white p-4 border border-border-default shadow-xs">
+      <div className="rounded-xl bg-surface p-4 border border-border-default shadow-xs">
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-2 text-text-secondary">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold">1</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-hover text-[10px] font-bold">1</span>
             <span className="text-xs font-medium">Cart</span>
           </div>
           <div className="mx-4 h-[1px] w-12 bg-border-default" />
@@ -205,7 +205,7 @@ export default function CheckoutPage() {
           </div>
           <div className="mx-4 h-[1px] w-12 bg-border-default" />
           <div className="flex items-center gap-2 text-text-muted">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold">3</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-hover text-[10px] font-bold">3</span>
             <span className="text-xs">Complete</span>
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function CheckoutPage() {
                       className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
                         selectedAddressId === address.id
                           ? 'border-border-brand bg-brand-light/30 ring-1 ring-brand/10'
-                          : 'border-border-default hover:border-border-strong bg-white'
+                          : 'border-border-default hover:border-border-strong bg-surface'
                       }`}
                     >
                       <input
@@ -282,7 +282,7 @@ export default function CheckoutPage() {
                     className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
                       paymentMethod === method
                         ? 'border-border-brand bg-brand-light/30 ring-1 ring-brand/10'
-                        : 'border-border-default hover:border-border-strong bg-white'
+                        : 'border-border-default hover:border-border-strong bg-surface'
                     }`}
                   >
                     <input
@@ -392,7 +392,7 @@ export default function CheckoutPage() {
                   addresses.length === 0 ||
                   couponRejected
                 }
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300 shadow-xs"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300 dark:disabled:bg-neutral-700 shadow-xs"
               >
                 {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
                 {createPayment.isPending
