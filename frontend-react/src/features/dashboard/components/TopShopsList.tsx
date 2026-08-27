@@ -10,12 +10,12 @@ interface Props {
 
 export function TopShopsList({ shops }: Props) {
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
-      <h2 className="mb-4 font-jakarta text-lg font-bold text-slate-900">
+    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-900 dark:ring-white/10">
+      <h2 className="mb-4 font-jakarta text-lg font-bold text-slate-900 dark:text-slate-100">
         Top Shops by Revenue
       </h2>
       {shops.length === 0 ? (
-        <p className="py-8 text-center text-sm text-slate-400">
+        <p className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
           No sales data yet
         </p>
       ) : (
@@ -23,26 +23,26 @@ export function TopShopsList({ shops }: Props) {
           {shops.map((shop, i) => (
             <div
               key={shop.id}
-              className="flex items-center gap-3 rounded-lg p-2 hover:bg-slate-50"
+              className="flex items-center gap-3 rounded-lg p-2 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                 {i + 1}
               </span>
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                <Store className="h-5 w-5 text-slate-400" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
+                <Store className="h-5 w-5 text-slate-400 dark:text-slate-500" />
               </div>
               <div className="min-w-0 flex-1">
                 <Link
                   to={ROUTES.ADMIN_SHOP_DETAIL(shop.id)}
-                  className="block truncate text-sm font-medium text-slate-900 hover:text-teal-600"
+                  className="block truncate text-sm font-medium text-slate-900 hover:text-teal-600 dark:text-slate-100 dark:hover:text-teal-400"
                 >
                   {shop.name}
                 </Link>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {shop.orderCount} orders
                 </p>
               </div>
-              <p className="shrink-0 text-sm font-semibold tabular-nums text-slate-900">
+              <p className="shrink-0 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                 {formatPrice(shop.revenue)}
               </p>
             </div>

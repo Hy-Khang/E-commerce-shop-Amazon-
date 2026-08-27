@@ -211,8 +211,8 @@ export default function AdminCategoryListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Categories</h1>
-          <p className="mt-1 text-sm text-slate-500">Organize your product catalog</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Categories</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Organize your product catalog</p>
         </div>
         <button
           type="button"
@@ -228,7 +228,7 @@ export default function AdminCategoryListPage() {
         <div className="flex items-center justify-between gap-3">
           <form onSubmit={handleSearch} className="flex flex-1 gap-2">
             <div className="relative min-w-[200px] flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
                 name="search"
                 type="text"
@@ -259,13 +259,13 @@ export default function AdminCategoryListPage() {
                 <th className="px-6 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i}>
                     {Array.from({ length: 4 }).map((__, j) => (
                       <td key={j} className="px-6 py-4">
-                        <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
+                        <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
                       </td>
                     ))}
                   </tr>
@@ -274,9 +274,9 @@ export default function AdminCategoryListPage() {
                 displayRows.map((row) => (
                   <tr
                     key={row.id}
-                    className={`hover:bg-slate-50/50 transition-colors ${row.depth === 0 ? 'bg-slate-50/30' : ''}`}
+                    className={`hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50 ${row.depth === 0 ? 'bg-slate-50/30 dark:bg-slate-800/30' : ''}`}
                   >
-                    <td className="py-4 text-sm text-slate-900">
+                    <td className="py-4 text-sm text-slate-900 dark:text-slate-100">
                       <div
                         className="flex items-center"
                         style={{ paddingLeft: `${row.depth * 24 + 24}px` }}
@@ -284,7 +284,7 @@ export default function AdminCategoryListPage() {
                         {row.hasChildren && !search ? (
                           <button
                             onClick={() => toggleExpand(row.id)}
-                            className="mr-1.5 rounded-lg p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
+                            className="mr-1.5 rounded-lg p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
                           >
                             {collapsedIds.has(row.id) ? (
                               <ChevronRight className="h-4 w-4" />
@@ -300,21 +300,21 @@ export default function AdminCategoryListPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-sm text-slate-500">{row.slug}</td>
+                    <td className="px-6 py-4 font-mono text-sm text-slate-500 dark:text-slate-400">{row.slug}</td>
                     <td className="w-32 px-6 py-4 text-center text-sm">
                       {row.totalCount > 0 ? (
                         <span className="inline-flex items-center justify-center gap-1">
-                          <span className="inline-flex items-center rounded-md bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
+                          <span className="inline-flex items-center rounded-md bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-500/15 dark:text-teal-300">
                             {row.totalCount}
                           </span>
                           {row.hasChildren && row.directCount !== row.totalCount && (
-                            <span className="text-xs text-slate-400" title="Direct products in this category">
+                            <span className="text-xs text-slate-400 dark:text-slate-500" title="Direct products in this category">
                               ({row.directCount})
                             </span>
                           )}
                         </span>
                       ) : (
-                        <span className="text-slate-400">0</span>
+                        <span className="text-slate-400 dark:text-slate-500">0</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -342,9 +342,9 @@ export default function AdminCategoryListPage() {
               ) : (
                 <tr>
                   <td colSpan={4} className="py-16 text-center">
-                    <FolderTree className="mx-auto h-12 w-12 text-slate-300" />
-                    <p className="mt-4 text-sm font-semibold text-slate-900">No categories found</p>
-                    <p className="mt-1 text-sm text-slate-500">Add a category to organize your products.</p>
+                    <FolderTree className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600" />
+                    <p className="mt-4 text-sm font-semibold text-slate-900 dark:text-slate-100">No categories found</p>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Add a category to organize your products.</p>
                   </td>
                 </tr>
               )}
@@ -354,7 +354,7 @@ export default function AdminCategoryListPage() {
       </div>
 
       {!search && !isLoading && (
-        <p className="text-sm text-slate-500">{allRows.length} categories total</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{allRows.length} categories total</p>
       )}
 
       <Drawer

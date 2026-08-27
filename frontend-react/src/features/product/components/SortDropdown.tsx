@@ -46,7 +46,7 @@ export function SortDropdown() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-lg border border-border-default bg-white px-3 py-2 text-sm font-medium text-text-secondary hover:border-border-strong transition-colors"
+        className="flex items-center gap-2 rounded-lg border border-border-default bg-surface px-3 py-2 text-sm font-medium text-text-secondary hover:border-border-strong transition-colors"
       >
         <span className="text-text-muted">Sort:</span>
         <span className="text-text-primary">{activeOption.label}</span>
@@ -54,7 +54,7 @@ export function SortDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-1 w-52 overflow-hidden rounded-lg border border-border-default bg-white shadow-lg">
+        <div className="absolute right-0 z-30 mt-1 w-52 overflow-hidden rounded-lg border border-border-default bg-elevated shadow-lg">
           {SORT_OPTIONS.map((option) => {
             const isActive = option.sort === activeOption.sort && option.order === activeOption.order;
             return (
@@ -62,7 +62,7 @@ export function SortDropdown() {
                 key={`${option.sort}-${option.order}`}
                 onClick={() => selectOption(option)}
                 className={`flex w-full items-center justify-between px-3 py-2 text-sm transition-colors ${
-                  isActive ? 'bg-primary-50 text-text-brand font-medium' : 'text-text-secondary hover:bg-neutral-50'
+                  isActive ? 'bg-brand-light text-text-brand font-medium' : 'text-text-secondary hover:bg-surface-hover'
                 }`}
               >
                 {option.label}

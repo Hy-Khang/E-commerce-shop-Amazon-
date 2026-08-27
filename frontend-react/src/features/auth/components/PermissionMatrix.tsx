@@ -3,10 +3,10 @@ import { Shield, ChevronDown, ChevronRight } from 'lucide-react';
 import type { Permission, PermissionsByResource, RoleWithUserCount } from '../types/admin.types';
 
 const ACTION_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  create: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  read: { bg: 'bg-sky-50', text: 'text-sky-700', dot: 'bg-sky-500' },
-  update: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
-  delete: { bg: 'bg-rose-50', text: 'text-rose-700', dot: 'bg-rose-500' },
+  create: { bg: 'bg-emerald-50 dark:bg-emerald-500/15', text: 'text-emerald-700 dark:text-emerald-300', dot: 'bg-emerald-500' },
+  read: { bg: 'bg-sky-50 dark:bg-sky-500/15', text: 'text-sky-700 dark:text-sky-300', dot: 'bg-sky-500' },
+  update: { bg: 'bg-amber-50 dark:bg-amber-500/15', text: 'text-amber-700 dark:text-amber-300', dot: 'bg-amber-500' },
+  delete: { bg: 'bg-rose-50 dark:bg-rose-500/15', text: 'text-rose-700 dark:text-rose-300', dot: 'bg-rose-500' },
 };
 
 const RESOURCE_ICONS: Record<string, string> = {
@@ -24,7 +24,7 @@ const RESOURCE_ICONS: Record<string, string> = {
 };
 
 function getActionColor(action: string) {
-  return ACTION_COLORS[action] ?? { bg: 'bg-slate-50', text: 'text-slate-700', dot: 'bg-slate-400' };
+  return ACTION_COLORS[action] ?? { bg: 'bg-slate-50 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', dot: 'bg-slate-400' };
 }
 
 interface Props {
@@ -69,23 +69,23 @@ export function PermissionMatrix({ grouped, roles, rolePermissionSets, pendingRo
       <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th className="sticky left-0 z-10 min-w-[260px] border-b-2 border-slate-200 bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <th className="sticky left-0 z-10 min-w-[260px] border-b-2 border-slate-200 bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
               Resource / Action
             </th>
             {roles.map((role) => (
               <th
                 key={role.id}
-                className="min-w-[120px] border-b-2 border-slate-200 bg-slate-50 px-3 py-3 text-center"
+                className="min-w-[120px] border-b-2 border-slate-200 bg-slate-50 px-3 py-3 text-center dark:border-slate-700 dark:bg-slate-800/50"
               >
                 <div className="flex flex-col items-center gap-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     {role.name}
                   </span>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
                     {role.userCount} user{role.userCount !== 1 ? 's' : ''}
                   </span>
                   {role.is_system && (
-                    <span className="inline-flex items-center gap-0.5 rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700">
+                    <span className="inline-flex items-center gap-0.5 rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
                       <Shield className="h-2.5 w-2.5" />
                       system
                     </span>
@@ -158,21 +158,21 @@ function ResourceGroup({
   return (
     <>
       <tr
-        className="group cursor-pointer select-none border-t border-slate-100 hover:bg-slate-50/80 transition-colors"
+        className="group cursor-pointer select-none border-t border-slate-100 hover:bg-slate-50/80 transition-colors dark:border-slate-800 dark:hover:bg-slate-800/50"
         onClick={onToggleCollapse}
       >
-        <td className="sticky left-0 z-10 bg-white px-4 py-3 group-hover:bg-slate-50/80">
+        <td className="sticky left-0 z-10 bg-white px-4 py-3 group-hover:bg-slate-50/80 dark:bg-slate-900 dark:group-hover:bg-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-xs font-bold text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-xs font-bold text-white dark:bg-slate-700">
               {icon}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold capitalize text-slate-900">{resource}</span>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-sm font-semibold capitalize text-slate-900 dark:text-slate-100">{resource}</span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
                 {permissions.length} permission{permissions.length !== 1 ? 's' : ''}
               </span>
             </div>
-            <div className="ml-auto text-slate-400 transition-transform">
+            <div className="ml-auto text-slate-400 transition-transform dark:text-slate-500">
               {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </div>
           </div>
@@ -184,10 +184,10 @@ function ResourceGroup({
               <span
                 className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                   granted === permissions.length
-                    ? 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
                     : granted > 0
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-slate-100 text-slate-400'
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
+                      : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
                 }`}
               >
                 {granted}/{permissions.length}
@@ -203,9 +203,9 @@ function ResourceGroup({
           return (
             <tr
               key={permission.id}
-              className="border-t border-slate-50 transition-colors hover:bg-slate-50/50"
+              className="border-t border-slate-50 transition-colors hover:bg-slate-50/50 dark:border-slate-800/60 dark:hover:bg-slate-800/40"
             >
-              <td className="sticky left-0 z-10 bg-white py-2.5 pl-16 pr-4 hover:bg-slate-50/50">
+              <td className="sticky left-0 z-10 bg-white py-2.5 pl-16 pr-4 hover:bg-slate-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/40">
                 <div className="flex items-center gap-2.5">
                   <span
                     className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium ${color.bg} ${color.text}`}
@@ -213,7 +213,7 @@ function ResourceGroup({
                     <span className={`h-1.5 w-1.5 rounded-full ${color.dot}`} />
                     {permission.action}
                   </span>
-                  <span className="text-xs text-slate-400">{permission.name}</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500">{permission.name}</span>
                 </div>
               </td>
               {roles.map((role) => {
@@ -269,7 +269,7 @@ function ToggleCheckbox({ checked, disabled, onChange }: ToggleCheckboxProps) {
         transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2
         focus-visible:ring-teal-500 focus-visible:ring-offset-2
         disabled:cursor-not-allowed disabled:opacity-50
-        ${optimistic ? 'bg-emerald-500' : 'bg-slate-300'}
+        ${optimistic ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}
       `}
     >
       <span

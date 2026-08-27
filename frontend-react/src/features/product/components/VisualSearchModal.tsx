@@ -87,7 +87,7 @@ export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-2xl"
+            className="relative z-10 w-full max-w-md rounded-2xl bg-elevated shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-border-default px-5 py-4">
               <div className="flex items-center gap-2.5">
@@ -97,7 +97,7 @@ export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
               <button
                 onClick={handleClose}
                 disabled={isPending}
-                className="rounded-lg p-1.5 text-text-secondary hover:bg-neutral-100 transition-colors disabled:opacity-50"
+                className="rounded-lg p-1.5 text-text-secondary hover:bg-surface-hover transition-colors disabled:opacity-50"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -124,11 +124,11 @@ export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
                   onClick={() => fileInputRef.current?.click()}
                   className={`flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors ${
                     dragOver
-                      ? 'border-brand bg-primary-50'
-                      : 'border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50'
+                      ? 'border-brand bg-brand-light'
+                      : 'border-border-strong hover:border-border-strong hover:bg-surface-hover'
                   }`}
                 >
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-50">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-light">
                     {preview ? (
                       <ImageIcon className="h-7 w-7 text-brand" />
                     ) : (
@@ -147,7 +147,7 @@ export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
               )}
 
               {error && (
-                <p className="mt-3 text-center text-sm text-red-600">{error}</p>
+                <p className="mt-3 text-center text-sm text-error-600">{error}</p>
               )}
 
               <input

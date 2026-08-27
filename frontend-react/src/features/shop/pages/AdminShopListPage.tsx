@@ -83,7 +83,7 @@ export default function AdminShopListPage() {
       header: 'Shop',
       render: (shop) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
             {shop.logo_url ? (
               <img
                 src={shop.logo_url}
@@ -95,8 +95,8 @@ export default function AdminShopListPage() {
             )}
           </div>
           <div className="min-w-0">
-            <div className="font-medium text-slate-900 truncate">{shop.name}</div>
-            <div className="text-xs text-slate-400 truncate">/{shop.slug}</div>
+            <div className="font-medium text-slate-900 truncate dark:text-slate-100">{shop.name}</div>
+            <div className="text-xs text-slate-400 truncate dark:text-slate-500">/{shop.slug}</div>
           </div>
         </div>
       ),
@@ -110,14 +110,14 @@ export default function AdminShopListPage() {
       key: 'owner',
       header: 'Owner ID',
       render: (shop) => (
-        <span className="text-sm tabular-nums text-slate-500">#{shop.user_id}</span>
+        <span className="text-sm tabular-nums text-slate-500 dark:text-slate-400">#{shop.user_id}</span>
       ),
     },
     {
       key: 'created',
       header: 'Created',
       render: (shop) => (
-        <span className="text-slate-500">{formatDate(shop.created_at)}</span>
+        <span className="text-slate-500 dark:text-slate-400">{formatDate(shop.created_at)}</span>
       ),
     },
     {
@@ -128,7 +128,7 @@ export default function AdminShopListPage() {
         <div className="flex items-center justify-end gap-1">
           <Link
             to={ROUTES.ADMIN_SHOP_DETAIL(shop.id)}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             aria-label="View shop details"
           >
             <Eye className="h-4 w-4" />
@@ -136,7 +136,7 @@ export default function AdminShopListPage() {
           {shop.status !== 'active' && (
             <button
               onClick={() => setStatusTarget({ shop, next: 'active' })}
-              className="inline-flex rounded-lg p-2 text-slate-400 transition-colors hover:bg-emerald-50 hover:text-emerald-600"
+              className="inline-flex rounded-lg p-2 text-slate-400 transition-colors hover:bg-emerald-50 hover:text-emerald-600 dark:text-slate-500 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400"
               aria-label={shop.status === 'pending_verification' ? 'Approve shop' : 'Reactivate shop'}
               title={shop.status === 'pending_verification' ? 'Approve shop' : 'Reactivate shop'}
             >
@@ -146,7 +146,7 @@ export default function AdminShopListPage() {
           {shop.status === 'active' && (
             <button
               onClick={() => setStatusTarget({ shop, next: 'suspended' })}
-              className="inline-flex rounded-lg p-2 text-slate-400 transition-colors hover:bg-orange-50 hover:text-orange-600"
+              className="inline-flex rounded-lg p-2 text-slate-400 transition-colors hover:bg-orange-50 hover:text-orange-600 dark:text-slate-500 dark:hover:bg-orange-500/10 dark:hover:text-orange-400"
               aria-label="Suspend shop"
               title="Suspend shop"
             >
@@ -156,7 +156,7 @@ export default function AdminShopListPage() {
           {shop.status !== 'banned' && (
             <button
               onClick={() => setStatusTarget({ shop, next: 'banned' })}
-              className="inline-flex rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+              className="inline-flex rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-500 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
               aria-label="Ban shop"
               title="Ban shop"
             >
@@ -171,8 +171,8 @@ export default function AdminShopListPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Shops</h1>
-        <p className="mt-1 text-sm text-slate-500">Manage seller shops and verification status</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Shops</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage seller shops and verification status</p>
       </div>
 
       <AdminDataTable

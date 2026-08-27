@@ -11,6 +11,7 @@ import type {
   RevenueDataPoint,
   RevenueGranularity,
 } from '../types/dashboard.types';
+import { useChartTheme } from '../utils/useChartTheme';
 
 interface Props {
   data: RevenueDataPoint[];
@@ -60,15 +61,16 @@ function CustomTooltip({
 
 export default function RevenueChart({ data, granularity = 'day' }: Props) {
   const formatDateLabel = makeDateLabelFormatter(granularity);
+  const chart = useChartTheme();
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
-      <h2 className="mb-4 font-jakarta text-lg font-bold text-slate-900">
+    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-900 dark:ring-white/10">
+      <h2 className="mb-4 font-jakarta text-lg font-bold text-slate-900 dark:text-slate-100">
         Collected Revenue Trend
       </h2>
       <div className="h-72">
         {data.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center text-slate-400">
+          <div className="flex h-full flex-col items-center justify-center text-slate-400 dark:text-slate-500">
             <p className="text-sm">No revenue data in this period</p>
           </div>
         ) : (
@@ -80,17 +82,17 @@ export default function RevenueChart({ data, granularity = 'day' }: Props) {
                   <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDateLabel}
-                tick={{ fontSize: 12, fill: '#9ca3af' }}
+                tick={{ fontSize: 12, fill: chart.axis }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 tickFormatter={formatVND}
-                tick={{ fontSize: 12, fill: '#9ca3af' }}
+                tick={{ fontSize: 12, fill: chart.axis }}
                 axisLine={false}
                 tickLine={false}
                 width={50}

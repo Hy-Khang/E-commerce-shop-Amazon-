@@ -50,15 +50,15 @@ export function CouponFormModal({
   return (
     <Drawer open={open} onClose={onClose} title={title} variant="modal" size="xl">
       {error instanceof ApiError && (
-        <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error.message}</div>
+        <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{error.message}</div>
       )}
 
       {isEdit && isLoadingDetail ? (
         <div className="flex h-40 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
         </div>
       ) : locked ? (
-        <div className="flex items-start gap-2 rounded-lg bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="flex items-start gap-2 rounded-lg bg-rose-50 p-4 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             This coupon has been deactivated by an administrator and cannot be edited or
@@ -66,7 +66,7 @@ export function CouponFormModal({
           </p>
         </div>
       ) : isEdit && !detail ? (
-        <p className="py-10 text-center text-sm text-slate-500">Coupon not found.</p>
+        <p className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">Coupon not found.</p>
       ) : (
         // Mounted only while the drawer is open (and, for edit, after the detail
         // has loaded) so the form is freshly seeded on every open.

@@ -88,7 +88,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
   if (displayUrl) {
     return (
       <div className="space-y-1">
-        {label && <label className="block text-sm font-medium text-slate-700">{label}</label>}
+        {label && <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>}
         <div className="group relative inline-block">
           <button
             type="button"
@@ -99,7 +99,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
             <img
               src={displayUrl}
               alt={label || 'Uploaded image'}
-              className="h-32 w-32 rounded-lg object-cover ring-1 ring-slate-900/5"
+              className="h-32 w-32 rounded-lg object-cover ring-1 ring-slate-900/5 dark:ring-white/10"
             />
             {!uploadImage.isPending && (
               <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
@@ -129,15 +129,15 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
 
   return (
     <div className="space-y-2">
-      {label && <label className="block text-sm font-medium text-slate-700">{label}</label>}
+      {label && <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+        className="flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:border-blue-500 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
       >
         <Upload className="h-6 w-6" />
         <span>Click to upload</span>
-        <span className="text-xs text-slate-400">JPEG, PNG, WebP (max 5MB)</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500">JPEG, PNG, WebP (max 5MB)</span>
       </button>
       <input
         ref={inputRef}
@@ -155,7 +155,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
             onChange={(e) => setUrlValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlSubmit())}
             placeholder="https://..."
-            className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+            className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           />
           <button
             type="button"
@@ -167,7 +167,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
           <button
             type="button"
             onClick={() => { setShowUrlInput(false); setUrlValue(''); }}
-            className="rounded-md px-2 py-1.5 text-sm text-slate-500 hover:text-slate-700"
+            className="rounded-md px-2 py-1.5 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
             Cancel
           </button>
@@ -176,7 +176,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
         <button
           type="button"
           onClick={() => setShowUrlInput(true)}
-          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
         >
           <Link className="h-3 w-3" />
           Or paste URL

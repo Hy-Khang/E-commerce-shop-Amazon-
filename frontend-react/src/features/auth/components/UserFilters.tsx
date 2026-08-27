@@ -31,11 +31,11 @@ export function UserFilters({ roles, onFilterChange }: Props) {
     <div className="admin-card p-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-[200px] flex-1">
-          <label htmlFor="search" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="search" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Search
           </label>
           <div className="relative mt-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input
               id="search"
               type="text"
@@ -51,7 +51,7 @@ export function UserFilters({ roles, onFilterChange }: Props) {
         </div>
 
         <div className="w-40">
-          <label htmlFor="role-filter" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="role-filter" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Role
           </label>
           <AdminSelect
@@ -70,7 +70,7 @@ export function UserFilters({ roles, onFilterChange }: Props) {
         </div>
 
         <div className="w-40">
-          <label htmlFor="status-filter" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="status-filter" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Status
           </label>
           <AdminSelect

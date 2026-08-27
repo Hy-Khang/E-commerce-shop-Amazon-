@@ -27,20 +27,20 @@ const VARIANT_CONFIG: Record<ConfirmVariant, {
 }> = {
   danger: {
     icon: Trash2,
-    iconBg: 'bg-rose-50 border border-rose-100',
-    iconColor: 'text-rose-600',
+    iconBg: 'bg-rose-50 border border-rose-100 dark:bg-rose-500/10 dark:border-rose-500/20',
+    iconColor: 'text-rose-600 dark:text-rose-400',
     buttonVariant: 'danger',
   },
   warning: {
     icon: AlertTriangle,
-    iconBg: 'bg-amber-50 border border-amber-100',
-    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-50 border border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/20',
+    iconColor: 'text-amber-600 dark:text-amber-400',
     buttonVariant: 'danger',
   },
   info: {
     icon: Info,
-    iconBg: 'bg-teal-50 border border-teal-100',
-    iconColor: 'text-teal-600',
+    iconBg: 'bg-teal-50 border border-teal-100 dark:bg-teal-500/10 dark:border-teal-500/20',
+    iconColor: 'text-teal-600 dark:text-teal-400',
     buttonVariant: 'primary',
   },
 };
@@ -99,7 +99,7 @@ export function ConfirmModal({
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100 ring-1 ring-black/5 overflow-hidden"
+            className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100 ring-1 ring-black/5 overflow-hidden dark:bg-slate-900 dark:border-slate-800 dark:ring-white/10"
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -108,7 +108,7 @@ export function ConfirmModal({
             <button
               onClick={onCancel}
               disabled={loading}
-              className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600 disabled:opacity-50 transition-colors"
+              className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600 disabled:opacity-50 transition-colors dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -119,8 +119,8 @@ export function ConfirmModal({
                 <Icon className={`h-5.5 w-5.5 ${config.iconColor}`} />
               </div>
               <div className="min-w-0 flex-1 pt-1">
-                <h3 className="text-lg font-semibold text-slate-900 leading-6">{title}</h3>
-                <p className="mt-2 text-sm text-slate-500 leading-relaxed">{message}</p>
+                <h3 className="text-lg font-semibold text-slate-900 leading-6 dark:text-slate-100">{title}</h3>
+                <p className="mt-2 text-sm text-slate-500 leading-relaxed dark:text-slate-400">{message}</p>
               </div>
             </div>
 

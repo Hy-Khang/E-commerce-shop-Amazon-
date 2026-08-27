@@ -24,10 +24,10 @@ export default function NotificationPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-6 w-40 rounded bg-neutral-200 animate-pulse" />
+        <div className="h-6 w-40 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-xl bg-neutral-200 animate-pulse" />
+            <div key={i} className="h-20 rounded-xl bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
           ))}
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function NotificationPage() {
           <button
             onClick={() => markAllAsRead.mutate()}
             disabled={markAllAsRead.isPending}
-            className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors disabled:opacity-50"
+            className="text-sm font-medium text-text-brand hover:text-primary-700 dark:hover:text-primary-200 transition-colors disabled:opacity-50"
           >
             Mark all as read
           </button>

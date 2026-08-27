@@ -11,7 +11,7 @@ import { SectionError } from '../components/SectionError';
 const DeliveryChart = lazy(() => import('../components/DeliveryChart'));
 
 function ChartFallback() {
-  return <div className="h-80 animate-pulse rounded-xl bg-slate-200" />;
+  return <div className="h-80 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />;
 }
 
 export default function ShipperDashboardPage() {
@@ -23,7 +23,7 @@ export default function ShipperDashboardPage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-jakarta text-3xl font-extrabold tracking-tight text-slate-900">
+        <h1 className="font-jakarta text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
           Shipper Dashboard
         </h1>
         <PeriodSelector value={period} onChange={setPeriod} />

@@ -51,7 +51,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
           <button
             type="button"
             onClick={() => setExpanded((prev) => !prev)}
-            className="flex shrink-0 items-center justify-center rounded p-0.5 text-text-muted hover:bg-neutral-100 hover:text-text-primary transition-colors"
+            className="flex shrink-0 items-center justify-center rounded p-0.5 text-text-muted hover:bg-surface-hover hover:text-text-primary transition-colors"
           >
             {expanded
               ? <ChevronDown className="size-4" />
@@ -64,7 +64,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
           to={ROUTES.CATEGORY(category.slug)}
           className={`block flex-1 rounded-md px-2 py-1.5 text-sm transition-colors ${isActive
             ? 'bg-brand-light font-semibold text-text-brand'
-            : 'text-text-secondary hover:bg-neutral-50 hover:text-text-primary'
+            : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
             }`}
           style={{ paddingLeft: `${4 + depth * 8}px` }}
         >
@@ -125,7 +125,7 @@ export function CategorySidebar() {
     return (
       <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-8 animate-pulse rounded-md bg-neutral-200" />
+          <div key={i} className="h-8 animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-700" />
         ))}
       </div>
     );

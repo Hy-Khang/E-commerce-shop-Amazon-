@@ -28,13 +28,13 @@ export default function AdminShopDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
       </div>
     );
   }
 
   if (!shop) {
-    return <div className="text-slate-500">Shop not found.</div>;
+    return <div className="text-slate-500 dark:text-slate-400">Shop not found.</div>;
   }
 
   const availableActions = statusActions.filter((a) => a.target !== shop.status);
@@ -43,7 +43,7 @@ export default function AdminShopDetailPage() {
     <div className="space-y-6">
       <Link
         to={ROUTES.ADMIN_SHOPS}
-        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Shops
@@ -52,18 +52,18 @@ export default function AdminShopDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-teal-50 to-slate-100 ring-1 ring-slate-200/60">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-teal-50 to-slate-100 ring-1 ring-slate-200/60 dark:from-teal-500/10 dark:to-slate-800 dark:ring-white/10">
             {shop.logo_url ? (
               <img src={shop.logo_url} alt={shop.name} className="h-14 w-14 rounded-xl object-cover" />
             ) : (
-              <Store className="h-6 w-6 text-slate-400" />
+              <Store className="h-6 w-6 text-slate-400 dark:text-slate-500" />
             )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{shop.name}</h1>
-            <p className="flex items-center gap-2 text-sm text-slate-500">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{shop.name}</h1>
+            <p className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <span className="font-mono">/{shop.slug}</span>
-              <span className="text-slate-300">|</span>
+              <span className="text-slate-300 dark:text-slate-600">|</span>
               <span>Owner #{shop.user_id}</span>
             </p>
           </div>
@@ -74,7 +74,7 @@ export default function AdminShopDetailPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Profile Card */}
         <div className="admin-card p-6 lg:col-span-2">
-          <h2 className="text-lg font-semibold text-slate-900">Shop Profile</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Shop Profile</h2>
 
           {shop.banner_url && (
             <div className="mt-4 overflow-hidden rounded-lg">
@@ -88,34 +88,34 @@ export default function AdminShopDetailPage() {
 
           <dl className="mt-4 space-y-3">
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Name</dt>
-              <dd className="text-sm font-medium text-slate-900">{shop.name}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Name</dt>
+              <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">{shop.name}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Slug</dt>
-              <dd className="font-mono text-sm text-slate-600">/{shop.slug}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Slug</dt>
+              <dd className="font-mono text-sm text-slate-600 dark:text-slate-300">/{shop.slug}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Description</dt>
-              <dd className="max-w-xs text-right text-sm text-slate-900">
-                {shop.description || <span className="text-slate-400 italic">No description</span>}
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Description</dt>
+              <dd className="max-w-xs text-right text-sm text-slate-900 dark:text-slate-100">
+                {shop.description || <span className="text-slate-400 italic dark:text-slate-500">No description</span>}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Created</dt>
-              <dd className="text-sm font-medium text-slate-900">{formatDate(shop.created_at)}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Created</dt>
+              <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">{formatDate(shop.created_at)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Updated</dt>
-              <dd className="text-sm font-medium text-slate-900">{formatDate(shop.updated_at)}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Updated</dt>
+              <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">{formatDate(shop.updated_at)}</dd>
             </div>
           </dl>
 
           {shop.status === 'active' && (
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
               <Link
                 to={ROUTES.SHOP_PROFILE(shop.slug)}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors dark:text-teal-400 dark:hover:text-teal-300"
               >
                 View public profile
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -126,7 +126,7 @@ export default function AdminShopDetailPage() {
 
         {/* Moderation Timeline */}
         <div className="admin-card p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Moderation</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Moderation</h2>
           <div className="mt-4 space-y-4">
             <TimelineItem
               icon={Calendar}
@@ -165,8 +165,8 @@ export default function AdminShopDetailPage() {
 
       {/* Admin Actions */}
       <div className="admin-card p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Admin Actions</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Admin Actions</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Change shop status. Setting to active will verify the shop if not already verified.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
@@ -206,9 +206,9 @@ function TimelineItem({
         <Icon className="h-4 w-4" />
       </div>
       <div>
-        <p className="text-sm font-medium text-slate-900">{label}</p>
-        <p className="text-xs text-slate-500">{formatDate(date)}</p>
-        {detail && <p className="text-xs text-slate-400">{detail}</p>}
+        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{label}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{formatDate(date)}</p>
+        {detail && <p className="text-xs text-slate-400 dark:text-slate-500">{detail}</p>}
       </div>
     </div>
   );

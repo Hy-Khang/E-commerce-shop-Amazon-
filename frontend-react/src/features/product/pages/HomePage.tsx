@@ -35,7 +35,7 @@ const HERO_SLIDES = [
     description: "Bring organic textures and premium sustainable materials into your dining and living spaces.",
     cta: "Explore Collection",
     link: ROUTES.PRODUCTS + '?search=minimal',
-    bgClass: "from-neutral-100 to-neutral-200/60 border border-neutral-200/50",
+    bgClass: "from-neutral-100 to-neutral-200/60 border border-neutral-200/50 dark:from-neutral-800 dark:to-neutral-900/60 dark:border-neutral-700/50",
     textClass: "text-text-primary",
     dotClass: "bg-text-primary",
   },
@@ -162,13 +162,13 @@ export default function HomePage() {
       </div>
 
       {/* ── 2. Value Propositions Banner ── */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 border border-border-default/80 bg-neutral-100/40 rounded-xl p-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 border border-border-default/80 bg-surface-hover/40 rounded-xl p-6">
         {VALUE_PROPS.map((prop, i) => {
           const Icon = prop.icon;
           return (
             <div key={i} className="flex gap-3 items-center">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50">
-                <Icon className="h-5 w-5 text-primary-600" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-light">
+                <Icon className="h-5 w-5 text-text-brand" />
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-text-primary">{prop.title}</h4>

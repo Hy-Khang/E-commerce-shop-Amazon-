@@ -4,6 +4,7 @@ import { useAuthStore, useLogout } from '@/features/auth';
 import { useCategories } from '@/features/product';
 import { ROUTES } from '@/common/constants/routes';
 import { Drawer } from '@/common/components/ui/Drawer';
+import { ThemeToggle } from '@/common/components/ui/ThemeToggle';
 
 export function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -71,6 +72,11 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
           </div>
         )}
 
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Appearance</p>
+          <ThemeToggle />
+        </div>
+
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">Shop</p>
           <nav className="flex flex-col">
@@ -102,7 +108,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
 
             <button
               onClick={() => { logout(); onClose(); }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-error-500 hover:bg-neutral-50 transition-colors"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-error-500 hover:bg-surface-hover transition-colors"
             >
               <LogOut className="h-4 w-4" />
               Logout

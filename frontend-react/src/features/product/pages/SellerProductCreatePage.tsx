@@ -48,38 +48,38 @@ export default function SellerProductCreatePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Create Product</h1>
-        <Link to={ROUTES.SELLER_PRODUCTS} className="text-sm text-slate-600 hover:text-slate-900">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Create Product</h1>
+        <Link to={ROUTES.SELLER_PRODUCTS} className="text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
           Back to list
         </Link>
       </div>
 
       {createProduct.error instanceof ApiError && (
-        <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700">
+        <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
           {createProduct.error.message}
         </div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-slate-700">Name</label>
+          <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
           <input
             id="name"
             {...register('name')}
             onBlur={handleNameBlur}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           />
-          {errors.name && <p className="mt-1 text-xs text-rose-600">{errors.name.message}</p>}
+          {errors.name && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.name.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="slug" className="block text-sm font-medium text-slate-700">Slug</label>
+          <label htmlFor="slug" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Slug</label>
           <input
             id="slug"
             {...register('slug')}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           />
-          {errors.slug && <p className="mt-1 text-xs text-rose-600">{errors.slug.message}</p>}
+          {errors.slug && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.slug.message}</p>}
         </div>
 
         <CategoryCascader
@@ -90,32 +90,32 @@ export default function SellerProductCreatePage() {
         />
 
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>
+          <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
           <textarea
             id="description"
             rows={4}
             {...register('description')}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="option1_label" className="block text-sm font-medium text-slate-700">Variant Option 1</label>
+            <label htmlFor="option1_label" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Variant Option 1</label>
             <input
               id="option1_label"
               {...register('option1_label')}
               placeholder="e.g. Color, RAM, Connectivity"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
           <div>
-            <label htmlFor="option2_label" className="block text-sm font-medium text-slate-700">Variant Option 2</label>
+            <label htmlFor="option2_label" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Variant Option 2</label>
             <input
               id="option2_label"
               {...register('option2_label')}
               placeholder="e.g. Size, Storage, DPI"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function SellerProductCreatePage() {
             onUploaded={(url) => setValue('thumbnail_url', url, { shouldValidate: true })}
             onClear={() => setValue('thumbnail_url', '', { shouldValidate: true })}
           />
-          {errors.thumbnail_url && <p className="mt-1 text-xs text-rose-600">{errors.thumbnail_url.message}</p>}
+          {errors.thumbnail_url && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.thumbnail_url.message}</p>}
         </div>
 
         <button

@@ -57,8 +57,8 @@ export default function AdminUserListPage() {
       header: 'User',
       render: (user) => (
         <div>
-          <div className="font-medium text-slate-900">{user.full_name}</div>
-          <div className="text-slate-500">{user.email}</div>
+          <div className="font-medium text-slate-900 dark:text-slate-100">{user.full_name}</div>
+          <div className="text-slate-500 dark:text-slate-400">{user.email}</div>
         </div>
       ),
     },
@@ -66,8 +66,8 @@ export default function AdminUserListPage() {
       key: 'role',
       header: 'Role',
       render: (user) => (
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700">
-          <ShieldCheck className="h-3 w-3 text-slate-400" />
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+          <ShieldCheck className="h-3 w-3 text-slate-400 dark:text-slate-500" />
           {user.role.name}
         </span>
       ),
@@ -80,7 +80,7 @@ export default function AdminUserListPage() {
     {
       key: 'created',
       header: 'Created',
-      render: (user) => <span className="text-slate-500">{formatDate(user.created_at)}</span>,
+      render: (user) => <span className="text-slate-500 dark:text-slate-400">{formatDate(user.created_at)}</span>,
     },
     {
       key: 'actions',
@@ -90,7 +90,7 @@ export default function AdminUserListPage() {
         <div className="flex items-center justify-end gap-1">
           <Link
             to={ROUTES.ADMIN_USER_DETAIL(user.id)}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             aria-label="View user"
           >
             <Eye className="h-4 w-4" />
@@ -112,8 +112,8 @@ export default function AdminUserListPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Users</h1>
-        <p className="mt-1 text-sm text-slate-500">Manage user accounts and access</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Users</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage user accounts and access</p>
       </div>
 
       <AdminDataTable

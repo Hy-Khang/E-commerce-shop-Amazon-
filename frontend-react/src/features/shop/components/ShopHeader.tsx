@@ -9,7 +9,7 @@ export function ShopHeader({ shop }: Props) {
   return (
     <div className="overflow-hidden rounded-xl border border-border-default bg-elevated shadow-sm">
       {shop.banner_url ? (
-        <div className="h-40 w-full bg-neutral-100 sm:h-52">
+        <div className="h-40 w-full bg-surface-hover sm:h-52">
           <img
             src={shop.banner_url}
             alt=""
@@ -26,11 +26,11 @@ export function ShopHeader({ shop }: Props) {
             <img
               src={shop.logo_url}
               alt={shop.name}
-              className="h-20 w-20 rounded-full border-4 border-white bg-white object-cover shadow"
+              className="h-20 w-20 rounded-full border-4 border-surface bg-surface object-cover shadow"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-primary-50 shadow">
-              <Store className="h-8 w-8 text-primary-600" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-surface bg-brand-light shadow">
+              <Store className="h-8 w-8 text-text-brand" />
             </div>
           )}
           <div className="mb-1 min-w-0 flex-1">

@@ -34,12 +34,12 @@ function SignalCard({
         <Icon className="h-6 w-6" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-jakarta text-2xl font-bold tabular-nums text-slate-900">
+        <p className="font-jakarta text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
           {count}
         </p>
-        <p className="text-sm font-medium text-slate-600">{label}</p>
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{label}</p>
       </div>
-      <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+      <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-slate-500" />
     </Link>
   );
 }
@@ -57,8 +57,8 @@ export function AttentionSignals({ signals }: Props) {
           count={pendingShops}
           label="Shops awaiting verification"
           to={`${ROUTES.ADMIN_SHOPS}?status=pending_verification`}
-          accent="border-amber-200 bg-amber-50/60 hover:bg-amber-50"
-          iconBg="bg-amber-100 text-amber-600"
+          accent="border-amber-200 bg-amber-50/60 hover:bg-amber-50 dark:border-amber-500/25 dark:bg-amber-500/10 dark:hover:bg-amber-500/15"
+          iconBg="bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
         />
       )}
       {returnRequestedOrders > 0 && (
@@ -67,8 +67,8 @@ export function AttentionSignals({ signals }: Props) {
           count={returnRequestedOrders}
           label="Orders with a return request"
           to={`${ROUTES.ADMIN_ORDERS}?status=return_requested`}
-          accent="border-rose-200 bg-rose-50/60 hover:bg-rose-50"
-          iconBg="bg-rose-100 text-rose-600"
+          accent="border-rose-200 bg-rose-50/60 hover:bg-rose-50 dark:border-rose-500/25 dark:bg-rose-500/10 dark:hover:bg-rose-500/15"
+          iconBg="bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
         />
       )}
     </div>

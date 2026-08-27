@@ -60,7 +60,7 @@ export default function CategoryPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">
               {category?.category.name ?? (
-                <span className="inline-block h-8 w-48 animate-pulse rounded bg-neutral-200" />
+                <span className="inline-block h-8 w-48 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
               )}
             </h1>
             {!isLoading && data && (
@@ -72,7 +72,7 @@ export default function CategoryPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setFilterDrawerOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-border-default bg-white px-3 py-2 text-sm font-medium text-text-secondary hover:border-border-strong transition-colors lg:hidden"
+              className="flex items-center gap-2 rounded-lg border border-border-default bg-surface px-3 py-2 text-sm font-medium text-text-secondary hover:border-border-strong transition-colors lg:hidden"
             >
               <SlidersHorizontal className="h-4 w-4" />
               Filters

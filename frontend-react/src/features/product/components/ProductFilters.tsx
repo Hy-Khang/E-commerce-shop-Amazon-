@@ -62,11 +62,11 @@ export function ProductFilters({ showShopFilter = false }: ProductFiltersProps) 
       <div className="flex flex-wrap items-end gap-3">
         <form onSubmit={handleSearch} className="flex min-w-[220px] flex-1 items-end gap-2">
           <div className="flex-1">
-            <label htmlFor="product-search" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="product-search" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Search
             </label>
             <div className="relative mt-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
                 id="product-search"
                 name="search"
@@ -81,7 +81,7 @@ export function ProductFilters({ showShopFilter = false }: ProductFiltersProps) 
         </form>
 
         <div className="w-52">
-          <label htmlFor="product-category" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="product-category" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Category
           </label>
           <AdminSelect
@@ -98,7 +98,7 @@ export function ProductFilters({ showShopFilter = false }: ProductFiltersProps) 
 
         {showShopFilter && (
           <div className="w-52">
-            <label htmlFor="product-shop" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="product-shop" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Shop
             </label>
             <AdminSelect
@@ -115,7 +115,7 @@ export function ProductFilters({ showShopFilter = false }: ProductFiltersProps) 
         )}
 
         <div className="w-40">
-          <label htmlFor="product-status" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="product-status" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Status
           </label>
           <AdminSelect

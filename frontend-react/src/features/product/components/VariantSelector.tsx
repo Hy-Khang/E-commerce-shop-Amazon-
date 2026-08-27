@@ -52,7 +52,7 @@ export function VariantSelector({ variants, selectedVariantId, onSelect, option1
                       ? 'border-border-brand bg-brand-light text-text-brand font-semibold ring-1 ring-brand/5'
                       : outOfStock
                         ? 'border-border-default opacity-40 line-through cursor-not-allowed'
-                        : 'border-border-default text-text-secondary hover:border-border-brand hover:text-text-brand bg-white'
+                        : 'border-border-default text-text-secondary hover:border-border-brand hover:text-text-brand bg-surface'
                   }`}
                 >
                   {value}
@@ -82,7 +82,7 @@ export function VariantSelector({ variants, selectedVariantId, onSelect, option1
                       ? 'border-border-brand bg-brand-light text-text-brand font-semibold ring-1 ring-brand/5'
                       : outOfStock
                         ? 'border-border-default opacity-40 line-through cursor-not-allowed'
-                        : 'border-border-default text-text-secondary hover:border-border-brand hover:text-text-brand bg-white'
+                        : 'border-border-default text-text-secondary hover:border-border-brand hover:text-text-brand bg-surface'
                   }`}
                 >
                   {value}

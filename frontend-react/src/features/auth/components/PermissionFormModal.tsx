@@ -79,7 +79,7 @@ function PermissionFields({ permission, isPending, onCancel, onCreate, onUpdate 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="perm-name" className="block text-sm font-medium text-slate-700">Name</label>
+        <label htmlFor="perm-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
         <input
           id="perm-name"
           type="text"
@@ -93,8 +93,8 @@ function PermissionFields({ permission, isPending, onCancel, onCreate, onUpdate 
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="perm-resource" className="block text-sm font-medium text-slate-700">
-            Resource {isEdit && <span className="text-xs text-slate-400">(immutable)</span>}
+          <label htmlFor="perm-resource" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Resource {isEdit && <span className="text-xs text-slate-400 dark:text-slate-500">(immutable)</span>}
           </label>
           <input
             id="perm-resource"
@@ -103,13 +103,13 @@ function PermissionFields({ permission, isPending, onCancel, onCreate, onUpdate 
             value={resource}
             onChange={(e) => setResource(e.target.value)}
             readOnly={isEdit}
-            className={`admin-input mt-1 ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500' : ''}`}
+            className={`admin-input mt-1 ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' : ''}`}
             required
           />
         </div>
         <div>
-          <label htmlFor="perm-action" className="block text-sm font-medium text-slate-700">
-            Action {isEdit && <span className="text-xs text-slate-400">(immutable)</span>}
+          <label htmlFor="perm-action" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Action {isEdit && <span className="text-xs text-slate-400 dark:text-slate-500">(immutable)</span>}
           </label>
           <input
             id="perm-action"
@@ -118,15 +118,15 @@ function PermissionFields({ permission, isPending, onCancel, onCreate, onUpdate 
             value={action}
             onChange={(e) => setAction(e.target.value)}
             readOnly={isEdit}
-            className={`admin-input mt-1 ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500' : ''}`}
+            className={`admin-input mt-1 ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' : ''}`}
             required
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="perm-description" className="block text-sm font-medium text-slate-700">
-          Description <span className="text-xs text-slate-400">(optional)</span>
+        <label htmlFor="perm-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          Description <span className="text-xs text-slate-400 dark:text-slate-500">(optional)</span>
         </label>
         <input
           id="perm-description"

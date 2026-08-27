@@ -36,16 +36,16 @@ export default function AdminOrderDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
       </div>
     );
   }
 
   if (isError || !order) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+      <div className="flex flex-col items-center justify-center py-16 text-slate-500 dark:text-slate-400">
         <p>Order not found.</p>
-        <Link to={ROUTES.ADMIN_ORDERS} className="mt-4 text-sm text-teal-600 hover:text-teal-700">
+        <Link to={ROUTES.ADMIN_ORDERS} className="mt-4 text-sm text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">
           Back to orders
         </Link>
       </div>
@@ -93,7 +93,7 @@ export default function AdminOrderDetailPage() {
     <div className="space-y-6">
       <Link
         to={ROUTES.ADMIN_ORDERS}
-        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to orders
@@ -101,18 +101,18 @@ export default function AdminOrderDetailPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Order #{order.id}</h1>
-          <p className="mt-1 text-sm text-slate-500">{formatDate(order.created_at)}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Order #{order.id}</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatDate(order.created_at)}</p>
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
 
       {order.status === 'return_requested' && (
-        <div className="flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
+        <div className="flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-500/25 dark:bg-orange-500/10">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-orange-500" />
           <div>
-            <p className="text-sm font-semibold text-orange-800">Customer requested a return/refund</p>
-            <p className="mt-0.5 text-sm text-orange-700">
+            <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">Customer requested a return/refund</p>
+            <p className="mt-0.5 text-sm text-orange-700 dark:text-orange-400">
               Review and resolve: mark as Completed to reject, or Cancel to approve the return.
             </p>
           </div>
@@ -122,22 +122,22 @@ export default function AdminOrderDetailPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
               Items ({order.order_items.length})
             </h2>
             {[...groupItemsByShop(order.order_items)].map(([shopId, group]) => (
               <div key={shopId ?? 'no-shop'}>
-                <div className="flex items-center gap-2 border-b border-slate-100 pb-2 pt-2 first:pt-0">
-                  <Store className="h-4 w-4 text-slate-400" />
+                <div className="flex items-center gap-2 border-b border-slate-100 pb-2 pt-2 first:pt-0 dark:border-slate-800">
+                  <Store className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                   {shopId ? (
                     <Link
                       to={ROUTES.ADMIN_SHOP_DETAIL(shopId)}
-                      className="text-sm font-semibold text-slate-900 hover:text-teal-600 transition-colors"
+                      className="text-sm font-semibold text-slate-900 hover:text-teal-600 transition-colors dark:text-slate-100 dark:hover:text-teal-400"
                     >
                       {group.shopName}
                     </Link>
                   ) : (
-                    <span className="text-sm font-semibold text-slate-900">{group.shopName}</span>
+                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{group.shopName}</span>
                   )}
                 </div>
                 {group.items.map((item) => (
@@ -153,20 +153,20 @@ export default function AdminOrderDetailPage() {
 
           {order.user && (
             <div className="admin-card p-6">
-              <h2 className="mb-4 text-lg font-semibold text-slate-900">Customer</h2>
+              <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Customer</h2>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Name</dt>
-                  <dd className="font-medium text-slate-900">{order.user.full_name}</dd>
+                  <dt className="text-slate-500 dark:text-slate-400">Name</dt>
+                  <dd className="font-medium text-slate-900 dark:text-slate-100">{order.user.full_name}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Email</dt>
-                  <dd className="text-slate-900">{order.user.email}</dd>
+                  <dt className="text-slate-500 dark:text-slate-400">Email</dt>
+                  <dd className="text-slate-900 dark:text-slate-100">{order.user.email}</dd>
                 </div>
                 {order.user.phone && (
                   <div className="flex justify-between">
-                    <dt className="text-slate-500">Phone</dt>
-                    <dd className="text-slate-900">{order.user.phone}</dd>
+                    <dt className="text-slate-500 dark:text-slate-400">Phone</dt>
+                    <dd className="text-slate-900 dark:text-slate-100">{order.user.phone}</dd>
                   </div>
                 )}
               </dl>
@@ -175,14 +175,14 @@ export default function AdminOrderDetailPage() {
 
           {tracking && tracking.timeline.length > 0 && (
             <div className="admin-card p-6">
-              <h2 className="mb-4 text-lg font-semibold text-slate-900">Order Timeline</h2>
+              <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Order Timeline</h2>
               <OrderTimeline timeline={tracking.timeline} />
             </div>
           )}
 
           {tracking?.shipperLocation && (
             <div className="admin-card p-6">
-              <h2 className="mb-4 text-lg font-semibold text-slate-900">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {order.status === 'shipping' ? 'Live Tracking' : 'Last Known Shipper Location'}
               </h2>
               <OrderTrackingMap
@@ -195,7 +195,7 @@ export default function AdminOrderDetailPage() {
 
         <div className="space-y-6">
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Update Status</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Update Status</h2>
             {nextStatuses.length > 0 ? (
               <div className="space-y-2">
                 {nextStatuses.map((status) => (
@@ -211,22 +211,22 @@ export default function AdminOrderDetailPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">No further status transitions available.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No further status transitions available.</p>
             )}
           </div>
 
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Payment</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Payment</h2>
             <div className="mb-3 flex items-center justify-between text-sm">
-              <span className="text-slate-500">Status</span>
+              <span className="text-slate-500 dark:text-slate-400">Status</span>
               <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${payTextColor}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${payDotColor}`} />
                 {PAYMENT_STATUS_LABELS[order.payment_status]}
               </span>
             </div>
             <div className="mb-4 flex items-center justify-between text-sm">
-              <span className="text-slate-500">Method</span>
-              <span className="font-medium text-slate-900">
+              <span className="text-slate-500 dark:text-slate-400">Method</span>
+              <span className="font-medium text-slate-900 dark:text-slate-100">
                 {PAYMENT_METHOD_LABELS[order.payment_method]}
               </span>
             </div>
@@ -244,9 +244,9 @@ export default function AdminOrderDetailPage() {
           </div>
 
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Shipping Address</h2>
-            <div className="text-sm text-slate-700">
-              <p className="font-medium text-slate-900">{order.shipping_address.full_name}</p>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Shipping Address</h2>
+            <div className="text-sm text-slate-700 dark:text-slate-300">
+              <p className="font-medium text-slate-900 dark:text-slate-100">{order.shipping_address.full_name}</p>
               <p>{order.shipping_address.phone}</p>
               <p>{order.shipping_address.address_line}</p>
               <p>{order.shipping_address.city}</p>
@@ -254,32 +254,32 @@ export default function AdminOrderDetailPage() {
           </div>
 
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Summary</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Summary</h2>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-slate-600">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Subtotal</span>
                 <span>{formatPrice(order.total_amount + order.discount_amount - order.shipping_fee)}</span>
               </div>
               {order.applied_coupons && order.applied_coupons.length > 0 ? (
                 order.applied_coupons.map((c) => (
-                  <div key={c.code} className="flex justify-between text-emerald-600">
+                  <div key={c.code} className="flex justify-between text-emerald-600 dark:text-emerald-400">
                     <span>Coupon ({c.code})</span>
                     <span>-{formatPrice(c.discount_amount)}</span>
                   </div>
                 ))
               ) : (
                 order.coupon_code && (
-                  <div className="flex justify-between text-emerald-600">
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                     <span>Coupon ({order.coupon_code})</span>
                     <span>-{formatPrice(order.discount_amount)}</span>
                   </div>
                 )
               )}
-              <div className="flex justify-between text-slate-600">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Shipping</span>
                 <span>{formatPrice(order.shipping_fee)}</span>
               </div>
-              <div className="flex justify-between border-t border-slate-100 pt-2 text-base font-semibold text-slate-900">
+              <div className="flex justify-between border-t border-slate-100 pt-2 text-base font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
                 <span>Total</span>
                 <span>{formatPrice(order.total_amount)}</span>
               </div>

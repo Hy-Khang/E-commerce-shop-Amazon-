@@ -40,13 +40,13 @@ export default function MyReviewsPage() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="shop-card p-5 animate-pulse space-y-4">
               <div className="flex gap-4">
-                <div className="h-16 w-16 rounded-lg bg-neutral-200" />
+                <div className="h-16 w-16 rounded-lg bg-neutral-200 dark:bg-neutral-700" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-40 rounded bg-neutral-200" />
-                  <div className="h-3 w-24 rounded bg-neutral-200" />
+                  <div className="h-4 w-40 rounded bg-neutral-200 dark:bg-neutral-700" />
+                  <div className="h-3 w-24 rounded bg-neutral-200 dark:bg-neutral-700" />
                 </div>
               </div>
-              <div className="h-4 w-full rounded bg-neutral-200" />
+              <div className="h-4 w-full rounded bg-neutral-200 dark:bg-neutral-700" />
             </div>
           ))}
         </div>
@@ -106,7 +106,7 @@ function MyReviewCard({ review, onDelete, isDeleting }: MyReviewCardProps) {
   return (
     <div className="shop-card p-5 relative overflow-hidden transition-all duration-200 hover:border-border-strong">
       <div className="flex gap-4 items-start">
-        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-border-default bg-neutral-50">
+        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-border-default bg-surface-hover">
           {review.product_thumbnail_url ? (
             <img
               src={getImageUrl(review.product_thumbnail_url)}
@@ -133,14 +133,14 @@ function MyReviewCard({ review, onDelete, isDeleting }: MyReviewCardProps) {
                     <Star
                       key={i}
                       className={`h-3.5 w-3.5 ${
-                        i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-200'
+                        i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-200 dark:text-neutral-600'
                       }`}
                     />
                   ))}
                 </div>
                 <span className="text-xs text-text-muted">{formatDate(review.created_at)}</span>
                 {(review.variant_option1 || review.variant_option2) && (
-                  <span className="inline-flex items-center gap-1 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1 rounded bg-surface-hover px-1.5 py-0.5 text-[10px] font-bold text-text-secondary uppercase tracking-wider">
                     {[review.variant_option1, review.variant_option2].filter(Boolean).join(' / ')}
                   </span>
                 )}

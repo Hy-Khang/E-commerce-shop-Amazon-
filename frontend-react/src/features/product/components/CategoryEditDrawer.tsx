@@ -43,10 +43,10 @@ export function CategoryEditDrawer({ editId, onClose }: Props) {
     >
       {isLoading ? (
         <div className="flex h-40 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
         </div>
       ) : !category ? (
-        <p className="py-10 text-center text-sm text-slate-500">Category not found.</p>
+        <p className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">Category not found.</p>
       ) : (
         <CategoryForm
           key={editId}

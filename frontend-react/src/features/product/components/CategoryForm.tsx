@@ -42,33 +42,33 @@ export function CategoryForm({ defaultValues, onSubmit, isPending, error, submit
   return (
     <>
       {error instanceof ApiError && (
-        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error.message}</div>
+        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{error.message}</div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-slate-700">Name</label>
+          <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
           <input
             id="name"
             {...register('name')}
             onBlur={handleNameBlur}
             className="admin-input mt-1"
           />
-          {errors.name && <p className="mt-1 text-xs text-rose-600">{errors.name.message}</p>}
+          {errors.name && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.name.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="slug" className="block text-sm font-medium text-slate-700">Slug</label>
+          <label htmlFor="slug" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Slug</label>
           <input
             id="slug"
             {...register('slug')}
             className="admin-input mt-1"
           />
-          {errors.slug && <p className="mt-1 text-xs text-rose-600">{errors.slug.message}</p>}
+          {errors.slug && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.slug.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="parent_id" className="block text-sm font-medium text-slate-700">Parent Category</label>
+          <label htmlFor="parent_id" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Parent Category</label>
           <select
             id="parent_id"
             {...register('parent_id', {

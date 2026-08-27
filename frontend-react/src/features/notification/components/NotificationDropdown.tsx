@@ -33,7 +33,7 @@ export function NotificationDropdown({ onClose }: Props) {
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-border-default bg-white shadow-lg ring-1 ring-black/5 overflow-hidden z-50"
+      className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-border-default bg-elevated shadow-lg ring-1 ring-black/5 overflow-hidden z-50"
     >
       <div className="flex items-center justify-between border-b border-border-default px-4 py-3">
         <h3 className="text-sm font-semibold text-text-primary">Notifications</h3>
@@ -41,7 +41,7 @@ export function NotificationDropdown({ onClose }: Props) {
           <button
             onClick={() => markAllAsRead.mutate()}
             disabled={markAllAsRead.isPending}
-            className="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors disabled:opacity-50"
+            className="text-xs font-medium text-text-brand hover:text-primary-700 dark:hover:text-primary-200 transition-colors disabled:opacity-50"
           >
             Mark all as read
           </button>
@@ -76,7 +76,7 @@ export function NotificationDropdown({ onClose }: Props) {
           <Link
             to={notificationsPath}
             onClick={onClose}
-            className="block py-2.5 text-center text-xs font-medium text-primary-600 hover:text-primary-700 hover:bg-neutral-50 transition-colors"
+            className="block py-2.5 text-center text-xs font-medium text-text-brand hover:text-primary-700 dark:hover:text-primary-200 hover:bg-surface-hover transition-colors"
           >
             View all notifications
           </Link>

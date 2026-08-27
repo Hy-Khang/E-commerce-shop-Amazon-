@@ -17,9 +17,9 @@ export function SaleProductCard({ product }: Props) {
     <Link
       to={ROUTES.PRODUCT_DETAIL(product.slug)}
       onMouseEnter={() => prefetch(product.slug)}
-      className="group block overflow-hidden rounded-xl border border-border-default bg-elevated transition-all hover:border-amber-200 hover:shadow-sm"
+      className="group block overflow-hidden rounded-xl border border-border-default bg-elevated transition-all hover:border-amber-200 hover:shadow-sm dark:hover:border-amber-400/40 dark:hover:shadow-amber-500/5"
     >
-      <div className="relative aspect-square overflow-hidden bg-neutral-100">
+      <div className="relative aspect-square overflow-hidden bg-surface-hover">
         {product.thumbnailUrl ? (
           <img
             src={getImageUrl(product.thumbnailUrl)}
@@ -42,7 +42,7 @@ export function SaleProductCard({ product }: Props) {
           <WishlistButton productId={product.id} size="sm" />
         </div>
         {!product.inStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/60">
+          <div className="absolute inset-0 flex items-center justify-center bg-surface/60">
             <span className="rounded-full bg-neutral-800/80 px-3 py-1 text-xs font-semibold text-white">
               Out of stock
             </span>
@@ -50,11 +50,11 @@ export function SaleProductCard({ product }: Props) {
         )}
       </div>
       <div className="p-4">
-        <h3 className="truncate text-sm font-semibold text-text-primary group-hover:text-amber-700 transition-colors">
+        <h3 className="truncate text-sm font-semibold text-text-primary group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
           {product.name}
         </h3>
         <div className="mt-1 flex items-baseline gap-2">
-          <span className="text-sm font-bold text-amber-700">
+          <span className="text-sm font-bold text-amber-700 dark:text-amber-400">
             {formatPrice(product.price)}
           </span>
           {hasDiscount && (

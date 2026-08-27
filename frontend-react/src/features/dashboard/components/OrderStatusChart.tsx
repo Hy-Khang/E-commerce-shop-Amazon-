@@ -62,8 +62,8 @@ export default function OrderStatusChart({ data }: Props) {
   const total = fullData.reduce((sum, d) => sum + d.count, 0);
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
-      <h2 className="mb-4 font-jakarta text-lg font-bold text-slate-900">
+    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-900 dark:ring-white/10">
+      <h2 className="mb-4 font-jakarta text-lg font-bold text-slate-900 dark:text-slate-100">
         Orders by Status
       </h2>
       <div className="h-52">
@@ -98,10 +98,10 @@ export default function OrderStatusChart({ data }: Props) {
               className="inline-block h-2.5 w-2.5 rounded-full"
               style={{ backgroundColor: STATUS_COLORS[entry.status] || '#94a3b8' }}
             />
-            <span className="text-slate-600">
+            <span className="text-slate-600 dark:text-slate-400">
               {STATUS_LABELS[entry.status] || entry.status}
             </span>
-            <span className="font-medium text-slate-900">
+            <span className="font-medium text-slate-900 dark:text-slate-200">
               {total > 0 ? Math.round((entry.count / total) * 100) : 0}%
             </span>
           </div>

@@ -23,7 +23,7 @@ export function CheckoutShopBreakdown({ shops }: CheckoutShopBreakdownProps) {
       {shops.map((shop) => (
         <div
           key={shop.shop_id}
-          className="space-y-1 rounded-lg border border-border-default bg-white p-3"
+          className="space-y-1 rounded-lg border border-border-default bg-surface p-3"
         >
           <p className="truncate text-sm font-medium text-text-primary">
             {shop.shop_name || `Shop #${shop.shop_id}`}
@@ -33,7 +33,7 @@ export function CheckoutShopBreakdown({ shops }: CheckoutShopBreakdownProps) {
             <span>{formatPrice(shop.items_total)}</span>
           </div>
           {shop.discount_amount > 0 && (
-            <div className="flex justify-between text-xs text-emerald-700">
+            <div className="flex justify-between text-xs text-emerald-700 dark:text-emerald-400">
               <span>Discount</span>
               <span>-{formatPrice(shop.discount_amount)}</span>
             </div>

@@ -6,9 +6,11 @@ const variants = {
   primary: 'bg-teal-600 hover:bg-teal-700 text-white shadow-sm',
   brand: 'bg-brand hover:bg-brand-hover text-white shadow-sm',
   'brand-outline': 'border border-border-brand text-text-brand hover:bg-brand-light shadow-sm',
-  secondary: 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm',
+  secondary:
+    'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm dark:border-border-default dark:bg-surface dark:hover:bg-surface-hover dark:text-text-primary',
   danger: 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm',
-  ghost: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
+  ghost:
+    'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-text-secondary dark:hover:bg-surface-hover dark:hover:text-text-primary',
 } as const;
 
 const sizes = {

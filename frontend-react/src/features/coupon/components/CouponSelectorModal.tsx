@@ -178,7 +178,7 @@ export function CouponSelectorModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="relative z-10 flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-2xl"
+            className="relative z-10 flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-elevated shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-border-default px-5 py-4">
               <div className="flex items-center gap-2.5">
@@ -190,7 +190,7 @@ export function CouponSelectorModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-neutral-100"
+                className="rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-surface-hover"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -214,7 +214,7 @@ export function CouponSelectorModal({
                       (e.preventDefault(), handleManualApply())
                     }
                     placeholder="Enter voucher code"
-                    className="w-full rounded-lg border border-border-default bg-white py-2 pl-9 pr-3 text-sm uppercase transition-colors placeholder:normal-case focus:border-border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                    className="w-full rounded-lg border border-border-default bg-surface py-2 pl-9 pr-3 text-sm uppercase transition-colors placeholder:normal-case focus:border-border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
                 <button
@@ -222,7 +222,7 @@ export function CouponSelectorModal({
                   onClick={handleManualApply}
                   disabled={validate.isPending || !code.trim()}
                   aria-label="Apply code"
-                  className="flex items-center gap-1.5 rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-text-secondary hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-text-secondary hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {validate.isPending && (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -254,16 +254,16 @@ export function CouponSelectorModal({
                   {manualSelected.map((c) => (
                     <div
                       key={c.code}
-                      className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2"
+                      className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-400/20 dark:bg-emerald-500/15"
                     >
-                      <span className="flex items-center gap-2 text-sm font-medium text-emerald-800">
-                        <Check className="h-4 w-4 text-emerald-700" />
+                      <span className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                        <Check className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
                         {c.code}
                       </span>
                       <button
                         type="button"
                         onClick={() => removeFromDraft(c.code)}
-                        className="rounded p-0.5 text-emerald-700 hover:bg-emerald-100"
+                        className="rounded p-0.5 text-emerald-700 hover:bg-emerald-100 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
                         aria-label={`Remove voucher ${c.code}`}
                       >
                         <X className="h-4 w-4" />
@@ -338,7 +338,7 @@ export function CouponSelectorModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg border border-border-default px-4 py-2 text-sm font-medium text-text-secondary hover:bg-neutral-100"
+                  className="rounded-lg border border-border-default px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-hover"
                 >
                   Cancel
                 </button>

@@ -9,6 +9,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <title>Nook — E-commerce</title>
+  <script>
+    // Apply persisted theme before first paint to avoid a light flash (FOUC).
+    // Mirrors src/common/theme: storage key 'theme', Zustand persist shape.
+    (function () {
+      try {
+        var mode = 'system';
+        var raw = localStorage.getItem('theme');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && parsed.state && parsed.state.mode) mode = parsed.state.mode;
+        }
+        var dark = mode === 'dark' ||
+          (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+      } catch (e) { /* default: light */ }
+    })();
+  </script>
 </head>
 
 <body>

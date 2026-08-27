@@ -85,7 +85,7 @@ export default function ProductListPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setFilterDrawerOpen(true)}
-                className="flex items-center gap-2 rounded-lg border border-border-default bg-white px-3 py-2 text-sm font-medium text-text-secondary hover:border-border-strong transition-colors lg:hidden"
+                className="flex items-center gap-2 rounded-lg border border-border-default bg-surface px-3 py-2 text-sm font-medium text-text-secondary hover:border-border-strong transition-colors lg:hidden"
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 Filters
@@ -102,7 +102,7 @@ export default function ProductListPage() {
               className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 !filters.category_id
                   ? 'bg-brand text-white'
-                  : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200 hover:text-text-primary'
+                  : 'bg-surface-hover text-text-secondary hover:bg-border-default hover:text-text-primary'
               }`}
             >
               All
@@ -114,7 +114,7 @@ export default function ProductListPage() {
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                   filters.category_id === cat.id
                     ? 'bg-brand text-white'
-                    : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200 hover:text-text-primary'
+                    : 'bg-surface-hover text-text-secondary hover:bg-border-default hover:text-text-primary'
                 }`}
               >
                 {cat.name}
@@ -213,7 +213,7 @@ function VisualSearchBanner({ tags, onClear }: { tags: VisualSearchResult['tags'
         {tagEntries.map((tag) => (
           <span
             key={tag.label}
-            className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-medium text-text-primary border border-primary-200 shadow-xs"
+            className="inline-flex items-center gap-1 rounded-full bg-surface px-3 py-1 text-xs font-medium text-text-primary border border-primary-200 dark:border-primary-400/30 shadow-xs"
           >
             <span className="text-text-muted">{tag.label}:</span> {tag.value}
           </span>
@@ -221,7 +221,7 @@ function VisualSearchBanner({ tags, onClear }: { tags: VisualSearchResult['tags'
         {tags.keywords.length > 0 && tags.keywords.map((kw) => (
           <span
             key={kw}
-            className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-medium text-text-secondary border border-neutral-200 shadow-xs"
+            className="inline-flex rounded-full bg-surface px-3 py-1 text-xs font-medium text-text-secondary border border-border-default shadow-xs"
           >
             {kw}
           </span>

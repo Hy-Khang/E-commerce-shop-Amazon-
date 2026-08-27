@@ -58,13 +58,13 @@ export default function AdminUserDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
       </div>
     );
   }
 
   if (!user) {
-    return <div className="text-slate-500">User not found.</div>;
+    return <div className="text-slate-500 dark:text-slate-400">User not found.</div>;
   }
 
   const initials = user.full_name
@@ -80,7 +80,7 @@ export default function AdminUserDetailPage() {
     <div className="space-y-6">
       <Link
         to={ROUTES.ADMIN_USERS}
-        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Users
@@ -88,12 +88,12 @@ export default function AdminUserDetailPage() {
 
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-700">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-lg font-bold text-teal-700 dark:bg-teal-500/15 dark:text-teal-300">
             {initials}
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{user.full_name}</h1>
-            <p className="text-sm text-slate-500">{user.email}</p>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{user.full_name}</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
           </div>
         </div>
         <UserStatusBadge isActive={user.is_active} />
@@ -101,52 +101,52 @@ export default function AdminUserDetailPage() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="admin-card p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Profile</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Profile</h2>
           <dl className="mt-4 space-y-3">
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Full Name</dt>
-              <dd className="text-sm font-medium text-slate-900">{user.full_name}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Full Name</dt>
+              <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">{user.full_name}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Email</dt>
-              <dd className="text-sm font-medium text-slate-900">{user.email}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Email</dt>
+              <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">{user.email}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Phone</dt>
-              <dd className="text-sm font-medium text-slate-900">{user.phone ?? '—'}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Phone</dt>
+              <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">{user.phone ?? '—'}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Created</dt>
-              <dd className="text-sm font-medium text-slate-900">{formatDate(user.created_at)}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Created</dt>
+              <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">{formatDate(user.created_at)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Updated</dt>
-              <dd className="text-sm font-medium text-slate-900">{formatDate(user.updated_at)}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Updated</dt>
+              <dd className="text-sm font-medium text-slate-900 dark:text-slate-100">{formatDate(user.updated_at)}</dd>
             </div>
           </dl>
         </div>
 
         <div className="admin-card p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Statistics</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Statistics</h2>
           <dl className="mt-4 space-y-3">
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Orders</dt>
-              <dd className="text-2xl font-bold text-slate-900">{user.orderCount}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Orders</dt>
+              <dd className="text-2xl font-bold text-slate-900 dark:text-slate-100">{user.orderCount}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-sm text-slate-500">Reviews</dt>
-              <dd className="text-2xl font-bold text-slate-900">{user.reviewCount}</dd>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">Reviews</dt>
+              <dd className="text-2xl font-bold text-slate-900 dark:text-slate-100">{user.reviewCount}</dd>
             </div>
           </dl>
         </div>
       </div>
 
       <div className="admin-card p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Admin Actions</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Admin Actions</h2>
 
         <div className="mt-4 flex flex-wrap items-end gap-6">
           <div>
-            <label htmlFor="user-role" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="user-role" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Role
             </label>
             <select

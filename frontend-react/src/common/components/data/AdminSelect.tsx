@@ -175,10 +175,10 @@ export function AdminSelect({
         className={`admin-input flex w-full items-center justify-between gap-2 text-left ${LeadingIcon ? 'pl-9' : ''}`}
       >
         {LeadingIcon && (
-          <LeadingIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <LeadingIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         )}
-        <span className={`truncate ${selected ? 'text-slate-900' : 'text-slate-400'}`}>{displayLabel}</span>
-        <ChevronDown className={`h-4 w-4 flex-shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <span className={`truncate ${selected ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>{displayLabel}</span>
+        <ChevronDown className={`h-4 w-4 flex-shrink-0 text-slate-400 transition-transform dark:text-slate-500 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       <AnimatePresence>
@@ -192,7 +192,7 @@ export function AdminSelect({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.12 }}
-            className="absolute left-0 top-full z-30 mt-1 max-h-64 w-max min-w-full max-w-[16rem] overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+            className="absolute left-0 top-full z-30 mt-1 max-h-64 w-max min-w-full max-w-[16rem] overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-white/10"
           >
             {options.map((opt, i) => {
               const isSelected = opt.value === value;
@@ -208,14 +208,14 @@ export function AdminSelect({
                   onClick={() => commit(i)}
                   className={`flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm ${
                     opt.disabled
-                      ? 'cursor-not-allowed text-slate-300'
+                      ? 'cursor-not-allowed text-slate-300 dark:text-slate-600'
                       : isActive
-                        ? 'bg-slate-50'
+                        ? 'bg-slate-50 dark:bg-slate-800'
                         : ''
-                  } ${isSelected ? 'font-medium text-teal-700' : 'text-slate-700'}`}
+                  } ${isSelected ? 'font-medium text-teal-700 dark:text-teal-300' : 'text-slate-700 dark:text-slate-300'}`}
                 >
                   <span className="truncate">{opt.label}</span>
-                  {isSelected && <Check className="h-4 w-4 flex-shrink-0 text-teal-600" />}
+                  {isSelected && <Check className="h-4 w-4 flex-shrink-0 text-teal-600 dark:text-teal-400" />}
                 </li>
               );
             })}

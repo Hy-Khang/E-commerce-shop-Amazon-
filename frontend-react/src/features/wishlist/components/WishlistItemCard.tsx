@@ -16,7 +16,7 @@ export function WishlistItemCard({ item, onRemove, isRemoving }: Props) {
       <div className="flex gap-4 items-start">
         <Link
           to={ROUTES.PRODUCT_DETAIL(item.product_slug)}
-          className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-border-default bg-neutral-50"
+          className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-border-default bg-surface-hover"
         >
           {item.product_thumbnail_url ? (
             <img
@@ -42,7 +42,7 @@ export function WishlistItemCard({ item, onRemove, isRemoving }: Props) {
               </Link>
 
               {!item.product_is_active && (
-                <span className="mt-1.5 inline-flex items-center rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-bold text-text-muted uppercase tracking-wider">
+                <span className="mt-1.5 inline-flex items-center rounded bg-surface-hover px-1.5 py-0.5 text-[10px] font-bold text-text-muted uppercase tracking-wider">
                   Unavailable
                 </span>
               )}
@@ -76,7 +76,7 @@ export function WishlistItemCard({ item, onRemove, isRemoving }: Props) {
             <button
               onClick={() => onRemove(item.product_id)}
               disabled={isRemoving}
-              className="rounded-full p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-colors disabled:opacity-50 shrink-0"
+              className="rounded-full p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/15 transition-colors disabled:opacity-50 shrink-0"
               aria-label="Remove from wishlist"
             >
               <Heart className="h-4.5 w-4.5 fill-current" />

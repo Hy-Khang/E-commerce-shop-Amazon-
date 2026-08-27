@@ -88,13 +88,13 @@ function PickerDropdown({ items, isLoading, selectedIds, onChange, search, setSe
           {selectedDisplay.map((item) => (
             <span
               key={item.id}
-              className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
+              className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-500/15 dark:text-blue-300"
             >
               {item.label}
               <button
                 type="button"
                 onClick={() => handleRemove(item.id)}
-                className="rounded-full p-0.5 hover:bg-blue-200"
+                className="rounded-full p-0.5 hover:bg-blue-200 dark:hover:bg-blue-500/25"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -104,7 +104,7 @@ function PickerDropdown({ items, isLoading, selectedIds, onChange, search, setSe
       )}
 
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <input
           type="text"
           value={search}
@@ -114,17 +114,17 @@ function PickerDropdown({ items, isLoading, selectedIds, onChange, search, setSe
           }}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         />
         {isLoading && (
-          <Loader2 className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
+          <Loader2 className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400 dark:text-slate-500" />
         )}
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
+        <div className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
           {availableItems.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-slate-500">
+            <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
               {isLoading ? 'Loading...' : 'No results found'}
             </div>
           ) : (
@@ -133,13 +133,13 @@ function PickerDropdown({ items, isLoading, selectedIds, onChange, search, setSe
                 key={item.id}
                 type="button"
                 onClick={() => handleSelect(item.id)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-blue-50"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-500/10"
               >
-                <span className="font-medium text-slate-900">{item.label}</span>
+                <span className="font-medium text-slate-900 dark:text-slate-100">{item.label}</span>
                 {item.sublabel && (
-                  <span className="text-xs text-slate-500">{item.sublabel}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{item.sublabel}</span>
                 )}
-                <span className="ml-auto text-xs text-slate-400">#{item.id}</span>
+                <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">#{item.id}</span>
               </button>
             ))
           )}

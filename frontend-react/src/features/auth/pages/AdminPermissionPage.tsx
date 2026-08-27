@@ -30,15 +30,15 @@ export default function AdminPermissionPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Permissions</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Permissions</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Manage role-based access control across the platform
           </p>
         </div>
       </div>
 
       <div className="mt-6">
-        <div className="flex gap-1 border-b border-slate-200">
+        <div className="flex gap-1 border-b border-slate-200 dark:border-slate-800">
           <TabButton
             active={activeTab === 'matrix'}
             onClick={() => setActiveTab('matrix')}
@@ -68,8 +68,8 @@ function TabButton({ active, onClick, label }: { active: boolean; onClick: () =>
       className={`
         border-b-2 px-4 py-2.5 text-sm font-medium transition-colors
         ${active
-          ? 'border-teal-600 text-teal-600'
-          : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+          ? 'border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400'
+          : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-200'
         }
       `}
     >
@@ -173,8 +173,8 @@ function MatrixTab() {
   if (!permissionData || !roles || roles.length === 0) {
     return (
       <div className="admin-card px-6 py-12 text-center">
-        <Shield className="mx-auto h-10 w-10 text-slate-300" />
-        <p className="mt-3 text-sm text-slate-500">No permissions or roles found. Run database seeds first.</p>
+        <Shield className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
+        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">No permissions or roles found. Run database seeds first.</p>
       </div>
     );
   }
@@ -254,7 +254,7 @@ function ManageTab() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           {permissionData?.flat.length ?? 0} permissions across {resources.length} resources
         </p>
         <Button icon={Plus} onClick={() => setShowCreateForm(true)}>
@@ -265,33 +265,33 @@ function ManageTab() {
       <div className="space-y-4">
         {resources.map((resource) => (
           <div key={resource} className="admin-card overflow-hidden">
-            <div className="flex items-center gap-2 bg-slate-50 px-4 py-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded bg-slate-900 text-[10px] font-bold text-white">
+            <div className="flex items-center gap-2 bg-slate-50 px-4 py-2.5 dark:bg-slate-800/50">
+              <span className="flex h-6 w-6 items-center justify-center rounded bg-slate-900 text-[10px] font-bold text-white dark:bg-slate-700">
                 {resource[0].toUpperCase()}
               </span>
-              <span className="text-sm font-semibold capitalize text-slate-900">{resource}</span>
-              <span className="text-xs text-slate-400">({grouped[resource].length})</span>
+              <span className="text-sm font-semibold capitalize text-slate-900 dark:text-slate-100">{resource}</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">({grouped[resource].length})</span>
             </div>
             <table className="w-full">
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {grouped[resource]
                   .sort((a, b) => a.action.localeCompare(b.action))
                   .map((permission) => (
-                    <tr key={permission.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={permission.id} className="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50">
                       <td className="px-4 py-2.5">
                         <ActionBadge action={permission.action} />
                       </td>
-                      <td className="px-4 py-2.5 text-sm font-medium text-slate-900">
+                      <td className="px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100">
                         {permission.name}
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-slate-400">
+                      <td className="px-4 py-2.5 text-xs text-slate-400 dark:text-slate-500">
                         {permission.description ?? '—'}
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => setEditingPermission(permission)}
-                            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                             aria-label="Edit permission"
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -299,7 +299,7 @@ function ManageTab() {
                           <button
                             onClick={() => setDeleteTarget(permission)}
                             disabled={deleteMutation.isPending}
-                            className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition-colors"
+                            className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition-colors dark:text-slate-500 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                             aria-label="Delete permission"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -349,14 +349,14 @@ function ManageTab() {
 
 function ActionBadge({ action }: { action: string }) {
   const colors: Record<string, string> = {
-    create: 'bg-emerald-50 text-emerald-700',
-    read: 'bg-sky-50 text-sky-700',
-    update: 'bg-amber-50 text-amber-700',
-    delete: 'bg-rose-50 text-rose-700',
+    create: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+    read: 'bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+    update: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    delete: 'bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
   };
   return (
     <span
-      className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${colors[action] ?? 'bg-slate-100 text-slate-600'}`}
+      className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${colors[action] ?? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}
     >
       {action}
     </span>
@@ -367,23 +367,23 @@ function MatrixSkeleton() {
   return (
     <div className="admin-card overflow-hidden">
       <div className="animate-pulse">
-        <div className="flex border-b border-slate-200 bg-slate-50 px-4 py-3">
-          <div className="h-4 w-40 rounded bg-slate-200" />
+        <div className="flex border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50">
+          <div className="h-4 w-40 rounded bg-slate-200 dark:bg-slate-800" />
           <div className="ml-auto flex gap-8">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-4 w-20 rounded bg-slate-200" />
+              <div key={i} className="h-4 w-20 rounded bg-slate-200 dark:bg-slate-800" />
             ))}
           </div>
         </div>
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex border-t border-slate-100 px-4 py-3">
+          <div key={i} className="flex border-t border-slate-100 px-4 py-3 dark:border-slate-800">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-md bg-slate-200" />
-              <div className="h-4 w-24 rounded bg-slate-200" />
+              <div className="h-8 w-8 rounded-md bg-slate-200 dark:bg-slate-800" />
+              <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800" />
             </div>
             <div className="ml-auto flex gap-8">
               {[1, 2, 3].map((j) => (
-                <div key={j} className="h-5 w-14 rounded-full bg-slate-200" />
+                <div key={j} className="h-5 w-14 rounded-full bg-slate-200 dark:bg-slate-800" />
               ))}
             </div>
           </div>
@@ -397,17 +397,17 @@ function ManageSkeleton() {
   return (
     <div className="animate-pulse space-y-4">
       <div className="flex items-center justify-between">
-        <div className="h-4 w-48 rounded bg-slate-200" />
-        <div className="h-9 w-32 rounded-md bg-slate-200" />
+        <div className="h-4 w-48 rounded bg-slate-200 dark:bg-slate-800" />
+        <div className="h-9 w-32 rounded-md bg-slate-200 dark:bg-slate-800" />
       </div>
       {[1, 2, 3].map((i) => (
         <div key={i} className="admin-card overflow-hidden">
-          <div className="bg-slate-50 px-4 py-2.5">
-            <div className="h-4 w-24 rounded bg-slate-200" />
+          <div className="bg-slate-50 px-4 py-2.5 dark:bg-slate-800/50">
+            <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800" />
           </div>
           <div className="space-y-2 p-4">
             {[1, 2, 3].map((j) => (
-              <div key={j} className="h-4 w-full rounded bg-slate-100" />
+              <div key={j} className="h-4 w-full rounded bg-slate-100 dark:bg-slate-800/60" />
             ))}
           </div>
         </div>

@@ -8,6 +8,7 @@ import { CartBadge } from '@/features/cart';
 import { WishlistBadge } from '@/features/wishlist';
 import { NotificationBell } from '@/features/notification';
 import { ROUTES } from '@/common/constants/routes';
+import { ThemeToggle } from '@/common/components/ui/ThemeToggle';
 import { UserDropdown } from './UserDropdown';
 import { MobileNav } from './MobileNav';
 
@@ -17,11 +18,11 @@ export function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border-default/80 bg-white/95 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border-default/80 bg-surface/95 backdrop-blur-md">
       <div className="shop-container flex h-16 items-center gap-4 md:h-[72px] md:gap-8">
         <button
           onClick={() => setMobileNavOpen(true)}
-          className="rounded-lg p-2 text-text-secondary hover:bg-neutral-100 transition-colors md:hidden"
+          className="rounded-lg p-2 text-text-secondary hover:bg-surface-hover transition-colors md:hidden"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
@@ -37,6 +38,7 @@ export function Header() {
 
         <div className="flex items-center gap-0.5 md:gap-1">
           <PortalLinks role={user?.role} />
+          <ThemeToggle />
           {isAuthenticated && <WishlistBadge />}
           {isAuthenticated && <NotificationBell />}
           <CartBadge />
@@ -47,7 +49,7 @@ export function Header() {
               <div className="flex items-center gap-2">
                 <Link
                   to={ROUTES.LOGIN}
-                  className="rounded-lg px-4 py-2 text-sm font-semibold text-text-secondary hover:bg-neutral-50 transition-colors"
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-text-secondary hover:bg-surface-hover transition-colors"
                 >
                   Sign in
                 </Link>
@@ -83,7 +85,7 @@ function NavBar() {
             `shrink-0 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
               isActive
                 ? 'bg-brand-light text-text-brand'
-                : 'text-text-primary hover:bg-neutral-100/50'
+                : 'text-text-primary hover:bg-surface-hover'
             }`
           }
         >
@@ -97,7 +99,7 @@ function NavBar() {
               `shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                 isActive
                   ? 'bg-brand-light font-semibold text-text-brand'
-                  : 'text-text-secondary hover:bg-neutral-100/50 hover:text-text-primary'
+                  : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
               }`
             }
           >
@@ -107,7 +109,7 @@ function NavBar() {
         <div className="ml-auto">
           <Link
             to="#"
-            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-text-muted hover:bg-neutral-100/50 hover:text-text-secondary transition-colors"
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-text-muted hover:bg-surface-hover hover:text-text-secondary transition-colors"
           >
             <HelpCircle className="h-3.5 w-3.5" />
             Help
@@ -119,9 +121,9 @@ function NavBar() {
 }
 
 const portalConfig: Array<{ role: string; to: string; label: string; icon: LucideIcon; color: string }> = [
-  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin', icon: Shield, color: 'text-slate-600 hover:bg-slate-50' },
-  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller', icon: Store, color: 'text-amber-700 hover:bg-amber-50' },
-  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper', icon: Truck, color: 'text-emerald-700 hover:bg-emerald-50' },
+  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin', icon: Shield, color: 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-surface-hover' },
+  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller', icon: Store, color: 'text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10' },
+  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper', icon: Truck, color: 'text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10' },
 ];
 
 function PortalLinks({ role }: { role?: string }) {

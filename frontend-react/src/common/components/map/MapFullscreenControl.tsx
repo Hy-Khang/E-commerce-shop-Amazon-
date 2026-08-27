@@ -26,6 +26,9 @@ export function MapFullscreenControl({ isFullscreen, onToggle }: { isFullscreen:
             e.preventDefault();
             onToggle();
           }}
+          // Stays white in both themes to match Leaflet's native zoom controls, which
+          // sit on the light OSM basemap. (A `dark:` variant would be inert anyway —
+          // Tailwind's zero-specificity `:where(.dark,…)` loses to leaflet.css `.leaflet-bar a`.)
           className="bg-white text-slate-700 hover:bg-slate-50"
           // Inline layout beats Leaflet's `.leaflet-bar a` block/26px rules without !important.
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30 }}

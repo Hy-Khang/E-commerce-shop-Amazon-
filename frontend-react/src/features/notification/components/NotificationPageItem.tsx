@@ -17,8 +17,8 @@ export function NotificationPageItem({ notification, onMarkAsRead, orderDetailPa
     <div
       className={`rounded-xl border p-4 transition-colors ${
         !notification.is_read
-          ? 'border-primary-200 bg-primary-50/30'
-          : 'border-border-default bg-white'
+          ? 'border-primary-200 dark:border-primary-400/30 bg-brand-light/30'
+          : 'border-border-default bg-surface'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -27,7 +27,7 @@ export function NotificationPageItem({ notification, onMarkAsRead, orderDetailPa
             {!notification.is_read ? (
               <span className="block h-2.5 w-2.5 rounded-full bg-primary-500" />
             ) : (
-              <span className="block h-2.5 w-2.5 rounded-full bg-neutral-200" />
+              <span className="block h-2.5 w-2.5 rounded-full bg-neutral-200 dark:bg-neutral-600" />
             )}
           </div>
           <div className="min-w-0 flex-1">
@@ -58,7 +58,7 @@ export function NotificationPageItem({ notification, onMarkAsRead, orderDetailPa
               {orderLink && (
                 <Link
                   to={orderLink}
-                  className="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                  className="text-xs font-medium text-text-brand hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
                 >
                   View Order
                 </Link>

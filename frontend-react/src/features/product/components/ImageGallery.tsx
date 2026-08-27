@@ -40,7 +40,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
     if (thumbnailUrl) {
       return (
         <div className="space-y-3">
-          <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100">
+          <div className="aspect-square overflow-hidden rounded-xl bg-surface-hover">
             <img src={getImageUrl(thumbnailUrl)} alt={productName} className="h-full w-full object-cover" />
           </div>
         </div>
@@ -48,7 +48,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
     }
 
     return (
-      <div className="flex aspect-square items-center justify-center rounded-xl bg-neutral-100 text-text-muted">
+      <div className="flex aspect-square items-center justify-center rounded-xl bg-surface-hover text-text-muted">
         No images
       </div>
     );
@@ -58,7 +58,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
 
   return (
     <div className="space-y-3">
-      <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100">
+      <div className="aspect-square overflow-hidden rounded-xl bg-surface-hover">
         <img
           src={getImageUrl(activeImage.image_url)}
           alt={`${productName} - ${clampedIndex + 1}`}
