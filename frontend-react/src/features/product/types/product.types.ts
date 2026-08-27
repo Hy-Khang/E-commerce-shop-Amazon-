@@ -241,7 +241,10 @@ export const createProductSchema = z.object({
     .refine(
       (val) => {
         if (!val) return true;
-        if (/^\/uploads\/products\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp)$/.test(val)) return true;
+        // Accept any uploaded image path under /uploads/products/ — nested
+        // subfolders + free-form filenames (matches both real uploads and seed
+        // data), not just the UUID filename form.
+        if (/^\/uploads\/products\/[\w./-]+\.(jpg|jpeg|png|webp)$/i.test(val)) return true;
         try { const u = new URL(val); return u.protocol === 'http:' || u.protocol === 'https:'; } catch { return false; }
       },
       'Must be a valid image URL or uploaded image',
