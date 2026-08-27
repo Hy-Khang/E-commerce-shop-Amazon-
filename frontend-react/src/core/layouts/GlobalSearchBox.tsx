@@ -115,7 +115,7 @@ export function GlobalSearchBox({
   return (
     <div ref={containerRef} className="relative w-full max-w-md">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <input
           ref={inputRef}
           type="text"
@@ -127,28 +127,28 @@ export function GlobalSearchBox({
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-16 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-colors"
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-16 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
           aria-label={placeholder}
         />
-        <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:flex">
+        <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:flex dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500">
           ⌘K
         </kbd>
       </div>
 
       {showDropdown && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-slate-200 bg-white py-2 shadow-lg ring-1 ring-slate-900/5">
+        <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-slate-200 bg-white py-2 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-white/10">
           {isLoading && flatItems.length === 0 ? (
-            <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-slate-400">
+            <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-slate-400 dark:text-slate-500">
               <Loader2 className="h-4 w-4 animate-spin" /> Searching…
             </div>
           ) : flatItems.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-slate-400">
+            <div className="px-4 py-6 text-center text-sm text-slate-400 dark:text-slate-500">
               No results for “{q}”
             </div>
           ) : (
             groups.map((group) => (
               <div key={group.label} className="mb-1 last:mb-0">
-                <p className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                <p className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                   {group.label}
                 </p>
                 {group.items.map((item) => {
@@ -162,26 +162,26 @@ export function GlobalSearchBox({
                       onMouseEnter={() => setActiveIndex(idx)}
                       onClick={() => select(item)}
                       className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-colors ${
-                        isActive ? 'bg-slate-50' : 'hover:bg-slate-50'
+                        isActive ? 'bg-slate-50 dark:bg-slate-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
                       {item.thumbnail ? (
                         <img
                           src={getImageUrl(item.thumbnail)}
                           alt=""
-                          className="h-8 w-8 shrink-0 rounded object-cover ring-1 ring-slate-900/5"
+                          className="h-8 w-8 shrink-0 rounded object-cover ring-1 ring-slate-900/5 dark:ring-white/10"
                         />
                       ) : (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-slate-100 text-slate-400">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
                           <Icon className="h-4 w-4" />
                         </span>
                       )}
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-slate-900">
+                        <span className="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                           {item.label}
                         </span>
                         {item.sublabel && (
-                          <span className="block truncate text-xs text-slate-400">
+                          <span className="block truncate text-xs text-slate-400 dark:text-slate-500">
                             {item.sublabel}
                           </span>
                         )}

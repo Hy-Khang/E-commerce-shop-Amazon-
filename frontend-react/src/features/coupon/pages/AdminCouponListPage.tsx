@@ -127,9 +127,9 @@ export default function AdminCouponListPage() {
       header: 'Code',
       render: (coupon) => (
         <div>
-          <span className="font-mono text-sm font-medium text-slate-900">{coupon.code}</span>
+          <span className="font-mono text-sm font-medium text-slate-900 dark:text-slate-100">{coupon.code}</span>
           {coupon.description && (
-            <p className="mt-0.5 text-xs text-slate-500">{coupon.description}</p>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{coupon.description}</p>
           )}
         </div>
       ),
@@ -139,11 +139,11 @@ export default function AdminCouponListPage() {
       header: 'Owner',
       render: (coupon) =>
         coupon.shop ? (
-          <span className="inline-flex rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+          <span className="inline-flex rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
             {coupon.shop.name}
           </span>
         ) : (
-          <span className="inline-flex rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">
+          <span className="inline-flex rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
             Platform
           </span>
         ),
@@ -152,7 +152,7 @@ export default function AdminCouponListPage() {
       key: 'discount',
       header: 'Discount',
       render: (coupon) => (
-        <span className="text-slate-700">
+        <span className="text-slate-700 dark:text-slate-300">
           <DiscountDisplay type={coupon.discount_type} value={coupon.discount_value} />
         </span>
       ),
@@ -161,7 +161,7 @@ export default function AdminCouponListPage() {
       key: 'scope',
       header: 'Scope',
       render: (coupon) => (
-        <span className="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+        <span className="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
           {SCOPE_LABELS[coupon.scope]}
         </span>
       ),
@@ -170,7 +170,7 @@ export default function AdminCouponListPage() {
       key: 'usage',
       header: 'Usage',
       render: (coupon) => (
-        <span className="text-slate-600">
+        <span className="text-slate-600 dark:text-slate-300">
           {coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` : ' / ∞'}
         </span>
       ),
@@ -179,7 +179,7 @@ export default function AdminCouponListPage() {
       key: 'period',
       header: 'Period',
       render: (coupon) => (
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-slate-500 dark:text-slate-400">
           <div>{formatDate(coupon.starts_at)}</div>
           <div>{formatDate(coupon.expires_at)}</div>
         </div>
@@ -190,13 +190,13 @@ export default function AdminCouponListPage() {
       header: 'Status',
       render: (coupon) =>
         coupon.admin_disabled ? (
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700 dark:text-rose-400">
             <Lock className="h-3 w-3" />
             Locked
           </span>
         ) : (
           <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-            coupon.is_active ? 'text-emerald-700' : 'text-rose-700'
+            coupon.is_active ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
           }`}>
             <span className={`h-1.5 w-1.5 rounded-full ${coupon.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
             {coupon.is_active ? 'Active' : 'Inactive'}
@@ -259,8 +259,8 @@ export default function AdminCouponListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Coupons</h1>
-          <p className="mt-1 text-sm text-slate-500">Manage discount codes and promotions</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Coupons</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage discount codes and promotions</p>
         </div>
         <button
           type="button"
@@ -286,7 +286,7 @@ export default function AdminCouponListPage() {
             <div className="flex flex-wrap gap-3">
               <form onSubmit={handleSearch} className="flex flex-1 gap-2">
                 <div className="relative min-w-[200px] flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                   <input
                     name="search"
                     type="text"

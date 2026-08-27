@@ -18,7 +18,7 @@ export function PeriodSelector({ value, onChange }: Props) {
     <div
       role="radiogroup"
       aria-label="Select time period"
-      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
+      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900"
     >
       {OPTIONS.map((opt) => {
         const active = opt.value === value;
@@ -32,7 +32,7 @@ export function PeriodSelector({ value, onChange }: Props) {
             className={`rounded-md px-3 py-1.5 text-xs font-semibold tabular-nums transition-colors ${
               active
                 ? 'bg-teal-600 text-white shadow-sm'
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
             }`}
           >
             {opt.label}

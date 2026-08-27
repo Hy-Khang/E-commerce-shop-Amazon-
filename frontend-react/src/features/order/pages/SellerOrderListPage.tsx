@@ -46,7 +46,7 @@ export default function SellerOrderListPage() {
     {
       key: 'order',
       header: 'Order',
-      render: (order) => <span className="font-mono font-medium text-slate-900">#{order.id}</span>,
+      render: (order) => <span className="font-mono font-medium text-slate-900 dark:text-slate-100">#{order.id}</span>,
     },
     {
       key: 'status',
@@ -70,12 +70,12 @@ export default function SellerOrderListPage() {
     {
       key: 'total',
       header: 'Total',
-      render: (order) => <span className="font-medium text-slate-900">{formatPrice(order.total_amount)}</span>,
+      render: (order) => <span className="font-medium text-slate-900 dark:text-slate-100">{formatPrice(order.total_amount)}</span>,
     },
     {
       key: 'date',
       header: 'Date',
-      render: (order) => <span className="text-slate-500">{formatDate(order.created_at)}</span>,
+      render: (order) => <span className="text-slate-500 dark:text-slate-400">{formatDate(order.created_at)}</span>,
     },
     {
       key: 'actions',
@@ -84,7 +84,7 @@ export default function SellerOrderListPage() {
       render: (order) => (
         <Link
           to={ROUTES.SELLER_ORDER_DETAIL(order.id)}
-          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
+          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
           aria-label="View order"
         >
           <Eye className="h-4 w-4" />
@@ -96,8 +96,8 @@ export default function SellerOrderListPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Orders</h1>
-        <p className="mt-1 text-sm text-slate-500">Orders containing your products</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Orders</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Orders containing your products</p>
       </div>
 
       <AdminDataTable

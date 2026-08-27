@@ -6,16 +6,16 @@ interface Props {
 }
 
 const roleConfig: Record<string, { icon: typeof Shield; bg: string; text: string; label: string }> = {
-  admin: { icon: Shield, bg: 'bg-rose-50', text: 'text-rose-600', label: 'Admin' },
-  seller: { icon: Store, bg: 'bg-orange-50', text: 'text-orange-600', label: 'Seller' },
-  shipper: { icon: Truck, bg: 'bg-cyan-50', text: 'text-cyan-600', label: 'Shipper' },
-  customer: { icon: User, bg: 'bg-blue-50', text: 'text-blue-600', label: 'Customer' },
+  admin: { icon: Shield, bg: 'bg-rose-50 dark:bg-rose-500/10', text: 'text-rose-600 dark:text-rose-400', label: 'Admin' },
+  seller: { icon: Store, bg: 'bg-orange-50 dark:bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', label: 'Seller' },
+  shipper: { icon: Truck, bg: 'bg-cyan-50 dark:bg-cyan-500/10', text: 'text-cyan-600 dark:text-cyan-400', label: 'Shipper' },
+  customer: { icon: User, bg: 'bg-blue-50 dark:bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', label: 'Customer' },
 };
 
 export function UserRoleBreakdown({ roles }: Props) {
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
-      <h2 className="mb-3 font-jakarta text-lg font-bold text-slate-900">
+    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-900 dark:ring-white/10">
+      <h2 className="mb-3 font-jakarta text-lg font-bold text-slate-900 dark:text-slate-100">
         Users by Role
       </h2>
       <div className="grid grid-cols-2 gap-3">
@@ -30,8 +30,8 @@ export function UserRoleBreakdown({ roles }: Props) {
             >
               <Icon className={`h-4 w-4 ${config.text}`} />
               <div className="min-w-0">
-                <p className="text-xs text-slate-500">{config.label}</p>
-                <p className="text-lg font-bold tabular-nums text-slate-900">
+                <p className="text-xs text-slate-500 dark:text-slate-400">{config.label}</p>
+                <p className="text-lg font-bold tabular-nums text-slate-900 dark:text-slate-100">
                   {role.count}
                 </p>
               </div>

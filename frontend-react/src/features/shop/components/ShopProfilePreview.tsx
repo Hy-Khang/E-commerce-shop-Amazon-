@@ -40,7 +40,7 @@ export function ShopProfilePreview({ name, logoUrl, bannerUrl, slug, status }: S
 
       <div className="px-6 pb-5">
         <div className="flex items-end gap-4">
-          <div className="relative z-10 -mt-12 h-24 w-24 flex-shrink-0 overflow-hidden rounded-full bg-white shadow-lg ring-4 ring-white">
+          <div className="relative z-10 -mt-12 h-24 w-24 flex-shrink-0 overflow-hidden rounded-full bg-white shadow-lg ring-4 ring-white dark:bg-slate-800 dark:ring-slate-900">
             {logo ? (
               <img src={logo} alt={name} className="h-full w-full object-cover" />
             ) : (
@@ -56,13 +56,13 @@ export function ShopProfilePreview({ name, logoUrl, bannerUrl, slug, status }: S
 
           <div className="min-w-0 flex-1 pb-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="truncate text-xl font-bold text-slate-900">
+              <h2 className="truncate text-xl font-bold text-slate-900 dark:text-slate-100">
                 {name || 'Your Shop'}
               </h2>
               {status && <ShopStatusBadge status={status} />}
             </div>
             {slug && (
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
                 <span className="font-mono">/{slug}</span>
                 {canViewPublic && (
                   <a

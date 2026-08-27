@@ -42,15 +42,15 @@ function SellerVariantForm({ productId, option1Label, option2Label }: { productI
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 rounded-xl bg-slate-50 p-4">
-      <h4 className="text-sm font-semibold text-slate-900">Add Variant</h4>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
+      <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Add Variant</h4>
       {addVariant.error instanceof ApiError && (
-        <div className="text-xs text-rose-600">{addVariant.error.message}</div>
+        <div className="text-xs text-rose-600 dark:text-rose-400">{addVariant.error.message}</div>
       )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>
           <input {...register('sku')} placeholder="SKU" className="admin-input" />
-          {errors.sku && <p className="mt-0.5 text-xs text-rose-600">{errors.sku.message}</p>}
+          {errors.sku && <p className="mt-0.5 text-xs text-rose-600 dark:text-rose-400">{errors.sku.message}</p>}
         </div>
         {option1Label && (
           <input {...register('option1')} placeholder={option1Label} className="admin-input" />
@@ -60,12 +60,12 @@ function SellerVariantForm({ productId, option1Label, option2Label }: { productI
         )}
         <div>
           <input {...register('price', { valueAsNumber: true })} type="number" step="0.01" placeholder="Price" className="admin-input" />
-          {errors.price && <p className="mt-0.5 text-xs text-rose-600">{errors.price.message}</p>}
+          {errors.price && <p className="mt-0.5 text-xs text-rose-600 dark:text-rose-400">{errors.price.message}</p>}
         </div>
         <input {...register('sale_price', { valueAsNumber: true })} type="number" step="0.01" placeholder="Sale price" className="admin-input" />
         <div>
           <input {...register('stock_quantity', { valueAsNumber: true })} type="number" placeholder="Stock" className="admin-input" />
-          {errors.stock_quantity && <p className="mt-0.5 text-xs text-rose-600">{errors.stock_quantity.message}</p>}
+          {errors.stock_quantity && <p className="mt-0.5 text-xs text-rose-600 dark:text-rose-400">{errors.stock_quantity.message}</p>}
         </div>
       </div>
       <button type="submit" disabled={addVariant.isPending} className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">
@@ -97,7 +97,7 @@ function SellerImageForm({ productId, variants, option1Label }: { productId: num
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 rounded-xl bg-slate-50 p-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
       <ImageUpload
         label="Gallery Image"
         value={imageUrl || undefined}
@@ -106,12 +106,12 @@ function SellerImageForm({ productId, variants, option1Label }: { productId: num
       />
       <div className="flex flex-wrap items-end gap-2">
         <div>
-          <label className="block text-xs text-slate-500">Sort order</label>
+          <label className="block text-xs text-slate-500 dark:text-slate-400">Sort order</label>
           <input {...register('sort_order', { valueAsNumber: true })} type="number" className="admin-input w-20" />
         </div>
         {option1Values.length > 0 && (
           <div>
-            <label className="block text-xs text-slate-500">{option1Label}</label>
+            <label className="block text-xs text-slate-500 dark:text-slate-400">{option1Label}</label>
             <select {...register('variant_option1')} className="admin-input">
               <option value="">Shared (all variants)</option>
               {option1Values.map((val) => (
@@ -173,52 +173,52 @@ export default function SellerProductEditPage() {
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-8 w-48 rounded bg-slate-200" />
-        <div className="h-64 rounded bg-slate-200" />
+        <div className="h-8 w-48 rounded bg-slate-200 dark:bg-slate-800" />
+        <div className="h-64 rounded bg-slate-200 dark:bg-slate-800" />
       </div>
     );
   }
 
   if (!product) {
-    return <div className="py-12 text-center text-slate-500">Product not found.</div>;
+    return <div className="py-12 text-center text-slate-500 dark:text-slate-400">Product not found.</div>;
   }
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Edit: {product.name}</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Edit: {product.name}</h1>
         <div className="flex items-center gap-3">
           <button
             onClick={() => toggleActive.mutate(productId)}
             disabled={toggleActive.isPending}
             className={`rounded-full px-3 py-1 text-xs font-medium ${
-              product.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+              product.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300'
             }`}
           >
             {product.is_active ? 'Active' : 'Inactive'}
           </button>
-          <Link to={ROUTES.SELLER_PRODUCTS} className="text-sm text-slate-600 hover:text-slate-900">
+          <Link to={ROUTES.SELLER_PRODUCTS} className="text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
             Back to list
           </Link>
         </div>
       </div>
 
       {updateProduct.error instanceof ApiError && (
-        <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700">{updateProduct.error.message}</div>
+        <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{updateProduct.error.message}</div>
       )}
 
       <div className="admin-card p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-slate-700">Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
               <input id="name" {...register('name')} className="admin-input mt-1" />
-              {errors.name && <p className="mt-1 text-xs text-rose-600">{errors.name.message}</p>}
+              {errors.name && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.name.message}</p>}
             </div>
             <div>
-              <label htmlFor="slug" className="block text-sm font-medium text-slate-700">Slug</label>
+              <label htmlFor="slug" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Slug</label>
               <input id="slug" {...register('slug')} className="admin-input mt-1" />
-              {errors.slug && <p className="mt-1 text-xs text-rose-600">{errors.slug.message}</p>}
+              {errors.slug && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.slug.message}</p>}
             </div>
           </div>
           <CategoryCascader
@@ -228,16 +228,16 @@ export default function SellerProductEditPage() {
             error={errors.category_id?.message}
           />
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>
+            <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
             <textarea id="description" rows={4} {...register('description')} className="admin-input mt-1" />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="option1_label" className="block text-sm font-medium text-slate-700">Variant Option 1</label>
+              <label htmlFor="option1_label" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Variant Option 1</label>
               <input id="option1_label" {...register('option1_label')} placeholder="e.g. Color, RAM, Connectivity" className="admin-input mt-1" />
             </div>
             <div>
-              <label htmlFor="option2_label" className="block text-sm font-medium text-slate-700">Variant Option 2</label>
+              <label htmlFor="option2_label" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Variant Option 2</label>
               <input id="option2_label" {...register('option2_label')} placeholder="e.g. Size, Storage, DPI" className="admin-input mt-1" />
             </div>
           </div>
@@ -248,7 +248,7 @@ export default function SellerProductEditPage() {
               onUploaded={(url) => setValue('thumbnail_url', url, { shouldValidate: true })}
               onClear={() => setValue('thumbnail_url', '', { shouldValidate: true })}
             />
-            {errors.thumbnail_url && <p className="mt-1 text-xs text-rose-600">{errors.thumbnail_url.message}</p>}
+            {errors.thumbnail_url && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.thumbnail_url.message}</p>}
           </div>
           <button type="submit" disabled={updateProduct.isPending} className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50">
             {updateProduct.isPending ? 'Saving...' : 'Save Changes'}
@@ -257,7 +257,7 @@ export default function SellerProductEditPage() {
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Variants ({product.variants.length})</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Variants ({product.variants.length})</h2>
         {product.variants.length > 0 && (
           <div className="admin-card overflow-hidden">
             <div className="overflow-x-auto">
@@ -273,20 +273,20 @@ export default function SellerProductEditPage() {
                     <th className="px-6 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {product.variants.map((v) => (
-                    <tr key={v.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-mono text-sm text-slate-700">{v.sku}</td>
-                      {product.option1_label && <td className="px-6 py-4 text-sm text-slate-700">{v.option1 || '—'}</td>}
-                      {product.option2_label && <td className="px-6 py-4 text-sm text-slate-700">{v.option2 || '—'}</td>}
-                      <td className="px-6 py-4 text-sm text-slate-700">{formatPrice(v.price)}</td>
-                      <td className="px-6 py-4 text-sm text-slate-700">{v.sale_price ? formatPrice(v.sale_price) : '—'}</td>
-                      <td className="px-6 py-4 text-sm text-slate-700">{v.stock_quantity}</td>
+                    <tr key={v.id} className="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50">
+                      <td className="px-6 py-4 font-mono text-sm text-slate-700 dark:text-slate-300">{v.sku}</td>
+                      {product.option1_label && <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{v.option1 || '—'}</td>}
+                      {product.option2_label && <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{v.option2 || '—'}</td>}
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{formatPrice(v.price)}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{v.sale_price ? formatPrice(v.sale_price) : '—'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{v.stock_quantity}</td>
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => deleteVariant.mutate(v.id)}
                           disabled={deleteVariant.isPending}
-                          className="text-xs text-rose-600 hover:text-rose-800"
+                          className="text-xs text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300"
                         >
                           Delete
                         </button>
@@ -302,11 +302,11 @@ export default function SellerProductEditPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Images ({product.images.length})</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Images ({product.images.length})</h2>
         {product.images.length > 0 && (
           <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
             {[...product.images].sort((a, b) => a.sort_order - b.sort_order).map((img) => (
-              <div key={img.id} className="group relative overflow-hidden rounded-lg ring-1 ring-slate-900/5">
+              <div key={img.id} className="group relative overflow-hidden rounded-lg ring-1 ring-slate-900/5 dark:ring-white/10">
                 <button
                   type="button"
                   onClick={() => setZoomSrc(getImageUrl(img.image_url))}

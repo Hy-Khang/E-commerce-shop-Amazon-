@@ -14,9 +14,9 @@ export type PortalLink = {
 };
 
 export const portalLinks: PortalLink[] = [
-  { role: 'admin', permission: PERMISSIONS.PORTAL_ADMIN, to: ROUTES.ADMIN_DASHBOARD, pathPrefix: '/admin', label: 'Admin Portal', icon: Shield, accent: 'text-slate-600' },
-  { role: 'seller', permission: PERMISSIONS.PORTAL_SELLER, to: ROUTES.SELLER_DASHBOARD, pathPrefix: '/seller', label: 'Seller Center', icon: Store, accent: 'text-amber-700' },
-  { role: 'shipper', permission: PERMISSIONS.PORTAL_SHIPPER, to: ROUTES.SHIPPER_DASHBOARD, pathPrefix: '/shipper', label: 'Shipper Portal', icon: Truck, accent: 'text-emerald-700' },
+  { role: 'admin', permission: PERMISSIONS.PORTAL_ADMIN, to: ROUTES.ADMIN_DASHBOARD, pathPrefix: '/admin', label: 'Admin Portal', icon: Shield, accent: 'text-slate-600 dark:text-slate-300' },
+  { role: 'seller', permission: PERMISSIONS.PORTAL_SELLER, to: ROUTES.SELLER_DASHBOARD, pathPrefix: '/seller', label: 'Seller Center', icon: Store, accent: 'text-amber-700 dark:text-amber-400' },
+  { role: 'shipper', permission: PERMISSIONS.PORTAL_SHIPPER, to: ROUTES.SHIPPER_DASHBOARD, pathPrefix: '/shipper', label: 'Shipper Portal', icon: Truck, accent: 'text-emerald-700 dark:text-emerald-400' },
 ];
 
 export function getVisiblePortals(hasPermission: (p: string) => boolean): PortalLink[] {

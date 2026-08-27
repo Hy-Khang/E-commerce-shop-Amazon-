@@ -367,15 +367,34 @@ This project has **two distinct visual systems**:
 - Green brand accent
 - `rounded-xl` cards, `rounded-lg` buttons/inputs
 
-### Admin Dashboard
+### Admin / Seller / Shipper Portals
 
 - Raw Tailwind: `text-slate-900`, `bg-teal-600`, `border-slate-200`
 - Cool neutrals: `slate-*` ramp
 - CSS utilities: `.admin-card`, `.admin-input`, `.admin-table-header`
-- Teal accent
-- Dark sidebar: `bg-gradient-to-b from-slate-950 to-slate-900`
+- Accent per portal: admin `teal-*` (sidebar `from-slate-950 to-slate-900`), seller `amber-*` (`bg-amber-900`), shipper `emerald-*` (`bg-emerald-900`)
 
-**Do not mix** — admin pages should not use semantic tokens; storefront pages should not use `slate-*` or `teal-*`.
+**Do not mix** — portal pages should not use semantic tokens; storefront pages should not use `slate-*` or `teal-*`.
+
+#### Dark mode (Phase 2)
+
+The portals keep the `slate/teal` identity but **support dark via `dark:` variants** — they are NOT tokenized. The global `.dark` class (set by the storefront theme system, `common/theme`) drives them; a theme switch also lives in `PortalAccountDropdown`. When adding portal UI, pair every light class with its dark counterpart using this mapping:
+
+| Light | Add |
+|---|---|
+| `bg-white` (card/header/popup) | `dark:bg-slate-900` |
+| `bg-slate-50` (page / hover) | `dark:bg-slate-950` (page) · `dark:bg-slate-800` (hover) |
+| `text-slate-900` / `-700` / `-600` | `dark:text-slate-100` / `-300` / `-300` |
+| `text-slate-500` / `-400` | `dark:text-slate-400` / `-500` |
+| `border-slate-200` / `-100` | `dark:border-slate-800` |
+| `ring-slate-900/5` | `dark:ring-white/10` |
+| `divide-slate-100` | `dark:divide-slate-800` |
+| `hover:bg-slate-50` / `-100` | `dark:hover:bg-slate-800` |
+| accent tint `bg-<c>-50/100`, `text-<c>-700` (badges) | `dark:bg-<c>-500/15 dark:text-<c>-300` |
+
+- The 3 `.admin-*` utilities already carry their dark forms (via `:root.dark .admin-*` overrides in `globals.css`) — use them and most chrome flips for free.
+- **Sidebars stay as-is** (already dark-level in both themes).
+- **Recharts** can't use `dark:` (literal color props) — pull axis/grid colors from `useChartTheme` (`features/dashboard/utils/useChartTheme.ts`), which resolves the active theme reactively.
 
 ---
 

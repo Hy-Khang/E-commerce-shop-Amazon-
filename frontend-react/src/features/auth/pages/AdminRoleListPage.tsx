@@ -52,17 +52,17 @@ export default function AdminRoleListPage() {
     {
       key: 'id',
       header: 'ID',
-      render: (role) => <span className="font-mono text-slate-500">{role.id}</span>,
+      render: (role) => <span className="font-mono text-slate-500 dark:text-slate-400">{role.id}</span>,
     },
     {
       key: 'name',
       header: 'Name',
-      render: (role) => <span className="font-medium text-slate-900">{role.name}</span>,
+      render: (role) => <span className="font-medium text-slate-900 dark:text-slate-100">{role.name}</span>,
     },
     {
       key: 'users',
       header: 'Users',
-      render: (role) => <span className="text-slate-500">{role.userCount}</span>,
+      render: (role) => <span className="text-slate-500 dark:text-slate-400">{role.userCount}</span>,
     },
     {
       key: 'actions',
@@ -95,8 +95,8 @@ export default function AdminRoleListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Roles</h1>
-          <p className="mt-1 text-sm text-slate-500">Manage user roles and access levels</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Roles</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage user roles and access levels</p>
         </div>
         <Button icon={Plus} onClick={handleCreate}>
           Create Role

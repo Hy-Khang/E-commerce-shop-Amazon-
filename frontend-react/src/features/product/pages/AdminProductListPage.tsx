@@ -35,13 +35,13 @@ export default function AdminProductListPage() {
       render: (product) => (
         <div className="flex items-center gap-3">
           {product.thumbnail_url ? (
-            <img src={getImageUrl(product.thumbnail_url)} alt="" className="h-10 w-10 rounded-lg object-cover ring-1 ring-slate-900/5" />
+            <img src={getImageUrl(product.thumbnail_url)} alt="" className="h-10 w-10 rounded-lg object-cover ring-1 ring-slate-900/5 dark:ring-white/10" />
           ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 ring-1 ring-slate-900/5">
-              <Package className="h-4 w-4 text-slate-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 ring-1 ring-slate-900/5 dark:bg-slate-800 dark:ring-white/10">
+              <Package className="h-4 w-4 text-slate-400 dark:text-slate-500" />
             </div>
           )}
-          <span className="font-medium text-slate-900">{product.name}</span>
+          <span className="font-medium text-slate-900 dark:text-slate-100">{product.name}</span>
         </div>
       ),
     },
@@ -52,13 +52,13 @@ export default function AdminProductListPage() {
         product.shop ? (
           <Link
             to={ROUTES.ADMIN_SHOP_DETAIL(product.shop.id)}
-            className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-teal-700 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-teal-700 transition-colors dark:text-slate-300 dark:hover:text-teal-400"
           >
-            <Store className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <Store className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
             <span className="truncate">{product.shop.name}</span>
           </Link>
         ) : (
-          <span className="text-slate-400">—</span>
+          <span className="text-slate-400 dark:text-slate-500">—</span>
         ),
     },
     {
@@ -67,16 +67,16 @@ export default function AdminProductListPage() {
       render: (product) => {
         const range = getPriceRange(product.variants);
         return range ? (
-          <span className="text-slate-600">{formatPrice(range.min)} — {formatPrice(range.max)}</span>
+          <span className="text-slate-600 dark:text-slate-300">{formatPrice(range.min)} — {formatPrice(range.max)}</span>
         ) : (
-          <span className="text-slate-400">—</span>
+          <span className="text-slate-400 dark:text-slate-500">—</span>
         );
       },
     },
     {
       key: 'variants',
       header: 'Variants',
-      render: (product) => <span className="text-slate-600">{product.variants.length}</span>,
+      render: (product) => <span className="text-slate-600 dark:text-slate-300">{product.variants.length}</span>,
     },
     {
       key: 'status',
@@ -84,7 +84,7 @@ export default function AdminProductListPage() {
       render: (product) => (
         <span
           className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-            product.is_active ? 'text-emerald-700' : 'text-rose-700'
+            product.is_active ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
           }`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${product.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
@@ -95,7 +95,7 @@ export default function AdminProductListPage() {
     {
       key: 'created',
       header: 'Created',
-      render: (product) => <span className="text-slate-500">{formatDate(product.created_at)}</span>,
+      render: (product) => <span className="text-slate-500 dark:text-slate-400">{formatDate(product.created_at)}</span>,
     },
     {
       key: 'actions',
@@ -105,24 +105,24 @@ export default function AdminProductListPage() {
         <div className="flex items-center justify-end gap-1">
           <Link
             to={ROUTES.ADMIN_PRODUCT_DETAIL(product.id)}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             aria-label="View product"
           >
             <Eye className="h-4 w-4" />
           </Link>
           <Link
             to={ROUTES.ADMIN_PRODUCT_EDIT(product.id)}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors inline-flex dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             aria-label="Edit product"
           >
             <Pencil className="h-4 w-4" />
           </Link>
           <button
             onClick={() => setToggleTarget(product)}
-            className={`inline-flex rounded-lg p-2 text-slate-400 transition-colors ${
+            className={`inline-flex rounded-lg p-2 text-slate-400 transition-colors dark:text-slate-500 ${
               product.is_active
-                ? 'hover:bg-rose-50 hover:text-rose-600'
-                : 'hover:bg-emerald-50 hover:text-emerald-600'
+                ? 'hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400'
+                : 'hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400'
             }`}
             aria-label={product.is_active ? 'Hide product' : 'Show product'}
             title={product.is_active ? 'Hide product' : 'Show product'}
@@ -138,8 +138,8 @@ export default function AdminProductListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Products</h1>
-          <p className="mt-1 text-sm text-slate-500">Manage your product catalog</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Products</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your product catalog</p>
         </div>
         <Link
           to={ROUTES.ADMIN_PRODUCT_CREATE}

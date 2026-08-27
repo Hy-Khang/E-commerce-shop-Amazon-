@@ -49,8 +49,8 @@ export function ShipperLayout() {
           </Link>
         </div>
       </aside>
-      <main className="flex flex-1 flex-col bg-slate-50/50">
-        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-slate-200 bg-white px-4 py-3 md:px-6">
+      <main className="flex flex-1 flex-col bg-slate-50/50 dark:bg-slate-950">
+        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-slate-200 bg-white px-4 py-3 md:px-6 dark:border-slate-800 dark:bg-slate-900">
           <NotificationBell />
           <PortalAccountDropdown />
         </header>

@@ -35,16 +35,16 @@ export default function SellerOrderDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
       </div>
     );
   }
 
   if (isError || !order) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+      <div className="flex flex-col items-center justify-center py-16 text-slate-500 dark:text-slate-400">
         <p>Order not found or does not contain your products.</p>
-        <Link to={ROUTES.SELLER_ORDERS} className="mt-4 text-sm text-teal-600 hover:text-teal-700">
+        <Link to={ROUTES.SELLER_ORDERS} className="mt-4 text-sm text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">
           Back to orders
         </Link>
       </div>
@@ -74,7 +74,7 @@ export default function SellerOrderDetailPage() {
     <div className="space-y-6">
       <Link
         to={ROUTES.SELLER_ORDERS}
-        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to orders
@@ -82,8 +82,8 @@ export default function SellerOrderDetailPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Order #{order.id}</h1>
-          <p className="mt-1 text-sm text-slate-500">{formatDate(order.created_at)}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Order #{order.id}</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatDate(order.created_at)}</p>
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
@@ -91,31 +91,31 @@ export default function SellerOrderDetailPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
               Your Items ({order.seller_items_count})
             </h2>
             {order.order_items.map((item) => (
               <OrderItemRow key={item.id} item={item} />
             ))}
-            <div className="mt-4 flex justify-between border-t border-slate-100 pt-4 text-sm font-semibold text-slate-900">
+            <div className="mt-4 flex justify-between border-t border-slate-100 pt-4 text-sm font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
               <span>Your Items Total</span>
               <span>{formatPrice(order.seller_items_total)}</span>
             </div>
           </div>
 
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Customer</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Customer</h2>
             <dl className="space-y-2 text-sm">
               {order.user_full_name && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Name</dt>
-                  <dd className="font-medium text-slate-900">{order.user_full_name}</dd>
+                  <dt className="text-slate-500 dark:text-slate-400">Name</dt>
+                  <dd className="font-medium text-slate-900 dark:text-slate-100">{order.user_full_name}</dd>
                 </div>
               )}
               {order.user_email && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Email</dt>
-                  <dd className="text-slate-900">{order.user_email}</dd>
+                  <dt className="text-slate-500 dark:text-slate-400">Email</dt>
+                  <dd className="text-slate-900 dark:text-slate-100">{order.user_email}</dd>
                 </div>
               )}
             </dl>
@@ -123,14 +123,14 @@ export default function SellerOrderDetailPage() {
 
           {tracking && tracking.timeline.length > 0 && (
             <div className="admin-card p-6">
-              <h2 className="mb-4 text-lg font-semibold text-slate-900">Order Timeline</h2>
+              <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Order Timeline</h2>
               <OrderTimeline timeline={tracking.timeline} />
             </div>
           )}
 
           {tracking?.shipperLocation && (
             <div className="admin-card p-6">
-              <h2 className="mb-4 text-lg font-semibold text-slate-900">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {order.status === 'shipping' ? 'Live Tracking' : 'Last Known Shipper Location'}
               </h2>
               <OrderTrackingMap
@@ -143,7 +143,7 @@ export default function SellerOrderDetailPage() {
 
         <div className="space-y-6">
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Update Status</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Update Status</h2>
             {nextStatuses.length > 0 ? (
               <div className="space-y-2">
                 {nextStatuses.map((status) => (
@@ -159,22 +159,22 @@ export default function SellerOrderDetailPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">No further status transitions available for sellers.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No further status transitions available for sellers.</p>
             )}
           </div>
 
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Payment</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Payment</h2>
             <div className="mb-3 flex items-center justify-between text-sm">
-              <span className="text-slate-500">Status</span>
+              <span className="text-slate-500 dark:text-slate-400">Status</span>
               <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${payTextColor}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${payDotColor}`} />
                 {PAYMENT_STATUS_LABELS[order.payment_status]}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Method</span>
-              <span className="font-medium text-slate-900">
+              <span className="text-slate-500 dark:text-slate-400">Method</span>
+              <span className="font-medium text-slate-900 dark:text-slate-100">
                 {PAYMENT_METHOD_LABELS[order.payment_method]}
               </span>
             </div>
@@ -203,9 +203,9 @@ export default function SellerOrderDetailPage() {
           </div>
 
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Shipping Address</h2>
-            <div className="text-sm text-slate-700">
-              <p className="font-medium text-slate-900">{order.shipping_address.full_name}</p>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Shipping Address</h2>
+            <div className="text-sm text-slate-700 dark:text-slate-300">
+              <p className="font-medium text-slate-900 dark:text-slate-100">{order.shipping_address.full_name}</p>
               <p>{order.shipping_address.phone}</p>
               <p>{order.shipping_address.address_line}</p>
               <p>{order.shipping_address.city}</p>
@@ -213,28 +213,28 @@ export default function SellerOrderDetailPage() {
           </div>
 
           <div className="admin-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Order Summary</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Order Summary</h2>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-slate-600">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Order Total</span>
                 <span>{formatPrice(order.total_amount)}</span>
               </div>
               {order.applied_coupons && order.applied_coupons.length > 0 ? (
                 order.applied_coupons.map((c) => (
-                  <div key={c.code} className="flex justify-between text-emerald-600">
+                  <div key={c.code} className="flex justify-between text-emerald-600 dark:text-emerald-400">
                     <span>Coupon ({c.code})</span>
                     <span>-{formatPrice(c.discount_amount)}</span>
                   </div>
                 ))
               ) : (
                 order.coupon_code && (
-                  <div className="flex justify-between text-emerald-600">
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                     <span>Coupon ({order.coupon_code})</span>
                     <span>-{formatPrice(order.discount_amount)}</span>
                   </div>
                 )
               )}
-              <div className="flex justify-between border-t border-slate-100 pt-2 font-semibold text-slate-900">
+              <div className="flex justify-between border-t border-slate-100 pt-2 font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
                 <span>Your Revenue</span>
                 <span>{formatPrice(order.seller_items_total)}</span>
               </div>

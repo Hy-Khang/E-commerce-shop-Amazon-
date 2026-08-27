@@ -29,11 +29,11 @@ export function ShopSettingsForm() {
   const isNew = !shop && fetchError instanceof ApiError && fetchError.code === 'SHOP_004';
 
   if (isLoading) {
-    return <div className="py-12 text-center text-slate-500">Loading shop settings...</div>;
+    return <div className="py-12 text-center text-slate-500 dark:text-slate-400">Loading shop settings...</div>;
   }
 
   if (!shop && !isNew) {
-    return <div className="py-12 text-center text-slate-500">Unable to load shop data.</div>;
+    return <div className="py-12 text-center text-slate-500 dark:text-slate-400">Unable to load shop data.</div>;
   }
 
   if (isNew) {
@@ -69,14 +69,14 @@ function CreateShopView({ create }: { create: ReturnType<typeof useCreateMyShop>
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Set Up Your Shop</h1>
-        <p className="mt-1 text-sm text-slate-500">Create your shop profile to start selling.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Set Up Your Shop</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Create your shop profile to start selling.</p>
       </div>
 
       <ShopProfilePreview name={name} logoUrl={logoUrl} bannerUrl={bannerUrl} />
 
       {create.error instanceof ApiError && (
-        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{create.error.message}</div>
+        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{create.error.message}</div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="admin-card space-y-5 p-6">
@@ -135,8 +135,8 @@ function UpdateShopView({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Shop Settings</h1>
-        <p className="mt-1 text-sm text-slate-500">Manage how your storefront appears to shoppers.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Shop Settings</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage how your storefront appears to shoppers.</p>
       </div>
 
       <ShopProfilePreview
@@ -148,11 +148,11 @@ function UpdateShopView({
       />
 
       {update.error instanceof ApiError && (
-        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{update.error.message}</div>
+        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{update.error.message}</div>
       )}
 
       {update.isSuccess && (
-        <div className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">Shop updated successfully.</div>
+        <div className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Shop updated successfully.</div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="admin-card space-y-5 p-6">
@@ -192,19 +192,19 @@ function ShopFormFields({
   return (
     <>
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-slate-700">Shop Name</label>
+        <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Shop Name</label>
         <input
           id="name"
           {...register('name')}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         />
-        {errors.name?.message && <p className="mt-1 text-xs text-rose-600">{errors.name.message}</p>}
+        {errors.name?.message && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.name.message}</p>}
       </div>
 
       <div>
         <div className="flex items-center justify-between">
-          <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>
-          <span className={`text-xs ${description.length > DESCRIPTION_MAX ? 'text-rose-600' : 'text-slate-400'}`}>
+          <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
+          <span className={`text-xs ${description.length > DESCRIPTION_MAX ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500'}`}>
             {description.length}{DESCRIPTION_MAX ? ` / ${DESCRIPTION_MAX}` : ''}
           </span>
         </div>
@@ -213,9 +213,9 @@ function ShopFormFields({
           rows={4}
           {...register('description')}
           placeholder="Tell shoppers what your shop is about..."
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         />
-        {errors.description?.message && <p className="mt-1 text-xs text-rose-600">{errors.description.message}</p>}
+        {errors.description?.message && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.description.message}</p>}
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

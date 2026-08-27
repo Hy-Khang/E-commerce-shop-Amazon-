@@ -121,9 +121,9 @@ function NavBar() {
 }
 
 const portalConfig: Array<{ role: string; to: string; label: string; icon: LucideIcon; color: string }> = [
-  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin', icon: Shield, color: 'text-slate-600 hover:bg-slate-50' },
-  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller', icon: Store, color: 'text-amber-700 hover:bg-amber-50' },
-  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper', icon: Truck, color: 'text-emerald-700 hover:bg-emerald-50' },
+  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin', icon: Shield, color: 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-surface-hover' },
+  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller', icon: Store, color: 'text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10' },
+  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper', icon: Truck, color: 'text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10' },
 ];
 
 function PortalLinks({ role }: { role?: string }) {

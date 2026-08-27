@@ -44,12 +44,12 @@ export function CouponForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="code" className="block text-sm font-medium text-slate-700">
-            Code {isEdit && <span className="text-xs text-slate-400">(immutable)</span>}
+          <label htmlFor="code" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Code {isEdit && <span className="text-xs text-slate-400 dark:text-slate-500">(immutable)</span>}
           </label>
           {codePrefix && !isEdit ? (
             <div className="mt-1 flex items-stretch">
-              <span className="inline-flex items-center rounded-l-md border border-r-0 border-slate-300 bg-slate-100 px-2.5 font-mono text-sm text-slate-500">
+              <span className="inline-flex items-center rounded-l-md border border-r-0 border-slate-300 bg-slate-100 px-2.5 font-mono text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                 {codePrefix}-
               </span>
               <input
@@ -65,22 +65,22 @@ export function CouponForm({
               {...register('code')}
               readOnly={isEdit}
               placeholder="e.g. SUMMER2026"
-              className={`admin-input mt-1 uppercase ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500' : ''}`}
+              className={`admin-input mt-1 uppercase ${isEdit ? 'cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' : ''}`}
             />
           )}
           {codePrefix && !isEdit && (
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
               Final code:{' '}
-              <span className="font-mono font-medium text-slate-600">
+              <span className="font-mono font-medium text-slate-600 dark:text-slate-300">
                 {codePrefix}-{(codeValue || '').toUpperCase()}
               </span>
             </p>
           )}
-          {errors.code && <p className="mt-1 text-xs text-rose-600">{errors.code.message}</p>}
+          {errors.code && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.code.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>
+          <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
           <input
             id="description"
             {...register('description')}
@@ -92,7 +92,7 @@ export function CouponForm({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
-          <label htmlFor="discount_type" className="block text-sm font-medium text-slate-700">Discount Type</label>
+          <label htmlFor="discount_type" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Discount Type</label>
           <select
             id="discount_type"
             {...register('discount_type')}
@@ -104,7 +104,7 @@ export function CouponForm({
         </div>
 
         <div>
-          <label htmlFor="discount_value" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="discount_value" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Discount Value {discountType === 'percentage' ? '(%)' : '(VND)'}
           </label>
           <input
@@ -114,11 +114,11 @@ export function CouponForm({
             {...register('discount_value', { valueAsNumber: true })}
             className="admin-input mt-1"
           />
-          {errors.discount_value && <p className="mt-1 text-xs text-rose-600">{errors.discount_value.message}</p>}
+          {errors.discount_value && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.discount_value.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="scope" className="block text-sm font-medium text-slate-700">Scope</label>
+          <label htmlFor="scope" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Scope</label>
           <select
             id="scope"
             {...register('scope')}
@@ -133,7 +133,7 @@ export function CouponForm({
 
       {scope === 'categories' && (
         <div>
-          <label className="block text-sm font-medium text-slate-700">Categories</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Categories</label>
           <div className="mt-1">
             <MultiItemPicker
               type="categories"
@@ -141,13 +141,13 @@ export function CouponForm({
               onChange={(ids) => setValue('category_ids', ids)}
             />
           </div>
-          {errors.category_ids && <p className="mt-1 text-xs text-rose-600">{errors.category_ids.message}</p>}
+          {errors.category_ids && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.category_ids.message}</p>}
         </div>
       )}
 
       {scope === 'products' && (
         <div>
-          <label className="block text-sm font-medium text-slate-700">Products</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Products</label>
           <div className="mt-1">
             <MultiItemPicker
               type="products"
@@ -156,14 +156,14 @@ export function CouponForm({
               onChange={(ids) => setValue('product_ids', ids)}
             />
           </div>
-          {errors.product_ids && <p className="mt-1 text-xs text-rose-600">{errors.product_ids.message}</p>}
+          {errors.product_ids && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.product_ids.message}</p>}
         </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="min_order_amount" className="block text-sm font-medium text-slate-700">
-            Min Order Amount <span className="text-xs text-slate-400">(optional)</span>
+          <label htmlFor="min_order_amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Min Order Amount <span className="text-xs text-slate-400 dark:text-slate-500">(optional)</span>
           </label>
           <input
             id="min_order_amount"
@@ -176,8 +176,8 @@ export function CouponForm({
 
         {discountType === 'percentage' && (
           <div>
-            <label htmlFor="max_discount_amount" className="block text-sm font-medium text-slate-700">
-              Max Discount Amount <span className="text-xs text-slate-400">(optional)</span>
+            <label htmlFor="max_discount_amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Max Discount Amount <span className="text-xs text-slate-400 dark:text-slate-500">(optional)</span>
             </label>
             <input
               id="max_discount_amount"
@@ -192,8 +192,8 @@ export function CouponForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="max_uses" className="block text-sm font-medium text-slate-700">
-            Max Total Uses <span className="text-xs text-slate-400">(empty = unlimited)</span>
+          <label htmlFor="max_uses" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Max Total Uses <span className="text-xs text-slate-400 dark:text-slate-500">(empty = unlimited)</span>
           </label>
           <input
             id="max_uses"
@@ -204,7 +204,7 @@ export function CouponForm({
         </div>
 
         <div>
-          <label htmlFor="max_uses_per_user" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="max_uses_per_user" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Max Uses Per User
           </label>
           <input
@@ -218,30 +218,30 @@ export function CouponForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="starts_at" className="block text-sm font-medium text-slate-700">Start Date</label>
+          <label htmlFor="starts_at" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Start Date</label>
           <input
             id="starts_at"
             type="datetime-local"
             {...register('starts_at')}
             className="admin-input mt-1"
           />
-          {errors.starts_at && <p className="mt-1 text-xs text-rose-600">{errors.starts_at.message}</p>}
+          {errors.starts_at && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.starts_at.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="expires_at" className="block text-sm font-medium text-slate-700">End Date</label>
+          <label htmlFor="expires_at" className="block text-sm font-medium text-slate-700 dark:text-slate-300">End Date</label>
           <input
             id="expires_at"
             type="datetime-local"
             {...register('expires_at')}
             className="admin-input mt-1"
           />
-          {errors.expires_at && <p className="mt-1 text-xs text-rose-600">{errors.expires_at.message}</p>}
+          {errors.expires_at && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.expires_at.message}</p>}
         </div>
       </div>
 
       {Object.keys(errors).length > 0 && (
-        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
+        <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
           Please fix the errors above before submitting.
         </div>
       )}

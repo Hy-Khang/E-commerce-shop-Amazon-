@@ -34,8 +34,8 @@ export default function AdminReviewListPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Reviews</h1>
-        <p className="mt-1 text-sm text-slate-500">Moderate customer reviews</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Reviews</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Moderate customer reviews</p>
       </div>
 
       <ReviewFilters />

@@ -12,8 +12,8 @@ import { getPriceRange } from '../utils/product.util';
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 py-2.5">
-      <span className="text-sm text-slate-500">{label}</span>
-      <span className="text-right text-sm font-medium text-slate-900">{children}</span>
+      <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="text-right text-sm font-medium text-slate-900 dark:text-slate-100">{children}</span>
     </div>
   );
 }
@@ -29,13 +29,13 @@ export default function AdminProductDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
       </div>
     );
   }
 
   if (!product) {
-    return <div className="py-12 text-center text-slate-500">Product not found.</div>;
+    return <div className="py-12 text-center text-slate-500 dark:text-slate-400">Product not found.</div>;
   }
 
   const range = getPriceRange(product.variants);
@@ -45,7 +45,7 @@ export default function AdminProductDetailPage() {
     <div className="space-y-8">
       <Link
         to={ROUTES.ADMIN_PRODUCTS}
-        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Products
@@ -53,10 +53,10 @@ export default function AdminProductDetailPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{product.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{product.name}</h1>
           <span
             className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-              product.is_active ? 'text-emerald-700' : 'text-rose-700'
+              product.is_active ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
             }`}
           >
             <span className={`h-1.5 w-1.5 rounded-full ${product.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`} />
@@ -68,8 +68,8 @@ export default function AdminProductDetailPage() {
             onClick={() => setConfirmToggle(true)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
               product.is_active
-                ? 'text-rose-600 hover:bg-rose-50'
-                : 'text-emerald-600 hover:bg-emerald-50'
+                ? 'text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10'
+                : 'text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10'
             }`}
           >
             {product.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -92,7 +92,7 @@ export default function AdminProductDetailPage() {
             <button
               type="button"
               onClick={() => setZoomSrc(getImageUrl(product.thumbnail_url!))}
-              className="group relative block w-full cursor-zoom-in overflow-hidden rounded-lg ring-1 ring-slate-900/5"
+              className="group relative block w-full cursor-zoom-in overflow-hidden rounded-lg ring-1 ring-slate-900/5 dark:ring-white/10"
               aria-label="Zoom thumbnail"
             >
               <img src={getImageUrl(product.thumbnail_url)} alt="" className="aspect-square w-full object-cover" />
@@ -101,31 +101,31 @@ export default function AdminProductDetailPage() {
               </span>
             </button>
           ) : (
-            <div className="flex aspect-square w-full items-center justify-center rounded-lg bg-slate-100 ring-1 ring-slate-900/5">
-              <Package className="h-10 w-10 text-slate-300" />
+            <div className="flex aspect-square w-full items-center justify-center rounded-lg bg-slate-100 ring-1 ring-slate-900/5 dark:bg-slate-800 dark:ring-white/10">
+              <Package className="h-10 w-10 text-slate-300 dark:text-slate-600" />
             </div>
           )}
         </div>
 
         {/* Meta */}
         <div className="admin-card p-6 lg:col-span-2">
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             <MetaRow label="Shop">
               {product.shop ? (
                 <Link
                   to={ROUTES.ADMIN_SHOP_DETAIL(product.shop.id)}
-                  className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-800 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-800 transition-colors dark:text-teal-400 dark:hover:text-teal-300"
                 >
-                  <Store className="h-3.5 w-3.5 text-slate-400" />
+                  <Store className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   {product.shop.name}
                 </Link>
               ) : (
-                <span className="text-slate-400">No shop</span>
+                <span className="text-slate-400 dark:text-slate-500">No shop</span>
               )}
             </MetaRow>
             <MetaRow label="Category">{product.category?.name ?? '—'}</MetaRow>
             <MetaRow label="Slug">
-              <span className="font-mono text-xs text-slate-500">{product.slug}</span>
+              <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{product.slug}</span>
             </MetaRow>
             <MetaRow label="Price range">
               {range ? `${formatPrice(range.min)} — ${formatPrice(range.max)}` : '—'}
@@ -135,7 +135,7 @@ export default function AdminProductDetailPage() {
               <span className="inline-flex items-center gap-1.5">
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                 {product.avgRating ? product.avgRating.toFixed(1) : '0.0'}
-                <span className="text-slate-400">({product.reviewCount ?? 0})</span>
+                <span className="text-slate-400 dark:text-slate-500">({product.reviewCount ?? 0})</span>
               </span>
             </MetaRow>
             <MetaRow label="Created">{formatDate(product.created_at)}</MetaRow>
@@ -145,14 +145,14 @@ export default function AdminProductDetailPage() {
 
       {product.description && (
         <div className="admin-card p-6">
-          <h2 className="text-sm font-semibold text-slate-900">Description</h2>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">{product.description}</p>
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Description</h2>
+          <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">{product.description}</p>
         </div>
       )}
 
       {/* Variants */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Variants ({product.variants.length})</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Variants ({product.variants.length})</h2>
         {product.variants.length > 0 ? (
           <div className="admin-card overflow-hidden">
             <div className="overflow-x-auto">
@@ -167,15 +167,15 @@ export default function AdminProductDetailPage() {
                     <th className="px-6 py-3.5 text-left">Stock</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {product.variants.map((v) => (
-                    <tr key={v.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-mono text-sm text-slate-700">{v.sku}</td>
-                      {product.option1_label && <td className="px-6 py-4 text-sm text-slate-700">{v.option1 || '—'}</td>}
-                      {product.option2_label && <td className="px-6 py-4 text-sm text-slate-700">{v.option2 || '—'}</td>}
-                      <td className="px-6 py-4 text-sm text-slate-700">{formatPrice(v.price)}</td>
-                      <td className="px-6 py-4 text-sm text-slate-700">{v.sale_price ? formatPrice(v.sale_price) : '—'}</td>
-                      <td className="px-6 py-4 text-sm text-slate-700">{v.stock_quantity}</td>
+                    <tr key={v.id} className="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50">
+                      <td className="px-6 py-4 font-mono text-sm text-slate-700 dark:text-slate-300">{v.sku}</td>
+                      {product.option1_label && <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{v.option1 || '—'}</td>}
+                      {product.option2_label && <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{v.option2 || '—'}</td>}
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{formatPrice(v.price)}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{v.sale_price ? formatPrice(v.sale_price) : '—'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{v.stock_quantity}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -183,21 +183,21 @@ export default function AdminProductDetailPage() {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">No variants.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">No variants.</p>
         )}
       </section>
 
       {/* Gallery */}
       {images.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-slate-900">Images ({images.length})</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Images ({images.length})</h2>
           <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
             {images.map((img) => (
               <button
                 key={img.id}
                 type="button"
                 onClick={() => setZoomSrc(getImageUrl(img.image_url))}
-                className="group relative block cursor-zoom-in overflow-hidden rounded-lg ring-1 ring-slate-900/5"
+                className="group relative block cursor-zoom-in overflow-hidden rounded-lg ring-1 ring-slate-900/5 dark:ring-white/10"
                 aria-label="Zoom image"
               >
                 <img src={getImageUrl(img.image_url)} alt="" className="aspect-square w-full object-cover" />

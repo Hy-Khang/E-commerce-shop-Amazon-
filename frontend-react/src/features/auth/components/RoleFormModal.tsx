@@ -41,13 +41,13 @@ export function RoleFormModal({ role, isOpen, isPending, error, onSubmit, onClos
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {error && (
-          <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-600">
+          <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
             {error instanceof ApiError ? error.message : 'An unexpected error occurred'}
           </div>
         )}
 
         <div>
-          <label htmlFor="role-name" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="role-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Role Name
           </label>
           <input
@@ -58,7 +58,7 @@ export function RoleFormModal({ role, isOpen, isPending, error, onSubmit, onClos
             placeholder="e.g. seller, moderator"
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-rose-600">{errors.name.message}</p>
+            <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">{errors.name.message}</p>
           )}
         </div>
 

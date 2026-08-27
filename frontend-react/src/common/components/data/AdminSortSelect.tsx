@@ -61,7 +61,7 @@ export function AdminSortSelect({ options, label = 'Sort by', bare = false, clas
 
   return (
     <div className={className ?? 'w-52'}>
-      <label htmlFor="admin-sort" className="block text-sm font-medium text-slate-700">
+      <label htmlFor="admin-sort" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
         {label}
       </label>
       <div className="mt-1">{select}</div>
