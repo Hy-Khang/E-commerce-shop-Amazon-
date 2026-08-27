@@ -174,7 +174,7 @@ export interface CreateProductRequest {
   thumbnail_url?: string;
   option1_label?: string;
   option2_label?: string;
-  shop_id?: number;
+  shop_id?: number | null;
 }
 
 export interface UpdateProductRequest {
@@ -185,7 +185,8 @@ export interface UpdateProductRequest {
   thumbnail_url?: string;
   option1_label?: string;
   option2_label?: string;
-  shop_id?: number;
+  // `null` unassigns the shop (admin only); omitting leaves it unchanged.
+  shop_id?: number | null;
 }
 
 export interface CreateVariantRequest {
@@ -249,7 +250,8 @@ export const createProductSchema = z.object({
     .or(z.literal('')),
   option1_label: z.string().max(50).optional().or(z.literal('')),
   option2_label: z.string().max(50).optional().or(z.literal('')),
-  shop_id: z.number().int().positive().optional(),
+  // null = explicitly unassigned (admin can orphan a product); undefined = not set.
+  shop_id: z.number().int().positive().nullable().optional(),
 });
 
 export type CreateProductFormData = z.infer<typeof createProductSchema>;
