@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import request from 'supertest';
 import { AuthService } from '../auth.service';
 import { AuthController } from '../auth.controller';
@@ -34,6 +35,10 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
             logoutAll: jest.fn(),
             getMe: jest.fn(),
           },
+        },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn((_key: string, def?: unknown) => def) },
         },
       ],
     }).compile();

@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import {
   NotFoundException,
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
 import { ProductService } from '../product.service';
+import { ShopService } from '../../shop/shop.service';
 import { CategoryRepository } from '../repositories/category.repository';
 import { ProductRepository } from '../repositories/product.repository';
 import { ProductVariantRepository } from '../repositories/product-variant.repository';
@@ -86,6 +88,25 @@ describe('ProductService', () => {
             updateSortOrder: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
+          },
+        },
+        {
+          // ProductService reads `app.uploadDir` at construction time; return a
+          // stub for any config key the service asks for.
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue('uploads'),
+          },
+        },
+        {
+          // Shop resolution/validation collaborators — seller CRUD + admin
+          // shop_id checks + suggestShops delegate here.
+          provide: ShopService,
+          useValue: {
+            suggestShops: jest.fn(),
+            findShopById: jest.fn(),
+            resolveShopByUserId: jest.fn(),
+            assertShopIsActive: jest.fn(),
           },
         },
       ],
@@ -604,6 +625,7 @@ describe('ProductService', () => {
       expect(result).toEqual(image);
       expect(productImageRepository.create).toHaveBeenCalledWith({
         ...dto,
+        variant_option1: null, // service normalizes an absent variant_option1 to null
         product_id: 1,
       });
     });

@@ -608,7 +608,7 @@ describe('OrderService', () => {
 
       // Assert
       expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
-        1, 1, 20, undefined, undefined,
+        1, 1, 20, undefined, undefined, undefined,
       );
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
@@ -625,7 +625,7 @@ describe('OrderService', () => {
 
       // Assert
       expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
-        1, 1, 20, undefined, undefined,
+        1, 1, 20, undefined, undefined, undefined,
       );
     });
 
@@ -641,7 +641,7 @@ describe('OrderService', () => {
 
       // Assert
       expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
-        1, 2, 10, 'created_at', 'desc',
+        1, 2, 10, 'created_at', 'desc', undefined,
       );
     });
   });
@@ -909,7 +909,7 @@ describe('OrderService', () => {
       );
     });
 
-    it('should not emit event for non-cancel transitions', async () => {
+    it('should emit status_updated but not order.cancelled for non-cancel transitions', async () => {
       // Arrange
       const order = mockOrderWithUser({ status: OrderStatus.Pending });
       orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
@@ -917,8 +917,16 @@ describe('OrderService', () => {
       // Act
       await service.updateOrderStatus(1, { status: OrderStatus.Confirmed });
 
-      // Assert
-      expect(eventEmitter.emit).not.toHaveBeenCalled();
+      // Assert — a status change notifies the customer, but only a cancel
+      // triggers the stock-restoring order.cancelled event.
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'order.status_updated',
+        expect.objectContaining({ orderId: 1, newStatus: OrderStatus.Confirmed }),
+      );
+      expect(eventEmitter.emit).not.toHaveBeenCalledWith(
+        'order.cancelled',
+        expect.anything(),
+      );
     });
 
     it('should reject invalid status transition (delivered → pending)', async () => {
@@ -948,8 +956,11 @@ describe('OrderService', () => {
 
   describe('updatePaymentStatus', () => {
     it('should update payment status successfully', async () => {
-      // Arrange
-      const order = mockOrderWithUser({ payment_status: PaymentStatus.Unpaid });
+      // Arrange — a COD order may only be marked paid once shipping/delivered.
+      const order = mockOrderWithUser({
+        payment_status: PaymentStatus.Unpaid,
+        status: OrderStatus.Delivered,
+      });
       orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
 
       // Act

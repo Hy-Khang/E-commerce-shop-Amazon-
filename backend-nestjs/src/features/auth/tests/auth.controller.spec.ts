@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 
@@ -18,7 +19,14 @@ describe('AuthController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        {
+          // OAuth redirect handlers read FRONTEND_URL; return the supplied default.
+          provide: ConfigService,
+          useValue: { get: jest.fn((_key: string, def?: unknown) => def) },
+        },
+      ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);

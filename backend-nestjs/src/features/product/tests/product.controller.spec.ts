@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { ProductController } from '../product.controller';
 import { ProductService } from '../product.service';
 import {
@@ -26,7 +27,12 @@ describe('ProductController', () => {
           },
         },
       ],
-    }).compile();
+    })
+      // search-by-image route is rate-limited; stub the throttler guard so the
+      // controller compiles without the ThrottlerModule wiring.
+      .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<ProductController>(ProductController);
     service = module.get(ProductService);
