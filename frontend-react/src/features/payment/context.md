@@ -11,7 +11,8 @@ Online payment via VNPay and MoMo gateways. Handles payment creation (redirect t
 
 ## API Dependencies
 - `POST /payments/create` — create payment URL for an order (returns `payment_url`)
-- `GET /payments/order/:orderId` — list payment transactions for an order
+- `GET /payments/order/:orderId` — list payment transactions for an order (customer, owner-scoped)
+- `GET /payments/admin/order/:orderId` — same, admin-only/unscoped (guard `payments:read`; admin variant `usePaymentsByOrder(id, { admin: true })`)
 
 ## State
 - Server state via TanStack Query (staleTime: 1 min)

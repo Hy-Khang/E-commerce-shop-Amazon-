@@ -18,7 +18,8 @@ Integrates VNPay and MoMo payment gateways for online checkout. Handles payment 
 | GET | `/payments/vnpay/return` | Public | VNPay return → redirect to FE |
 | POST | `/payments/momo/ipn` | Public | MoMo IPN callback |
 | GET | `/payments/momo/return` | Public | MoMo return → redirect to FE |
-| GET | `/payments/order/:orderId` | Customer | List transactions for order |
+| GET | `/payments/order/:orderId` | Customer | List transactions for order (owner-scoped) |
+| GET | `/payments/admin/order/:orderId` | `payments:read` | List transactions for any order (admin-only, unscoped; seller/shipper lack `payments:read`) |
 
 ## Design Decisions
 - Payment is a separate module from Order — owns its own entity and external API integrations

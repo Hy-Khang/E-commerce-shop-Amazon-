@@ -14,6 +14,8 @@ import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { PERMISSIONS } from '../../common/constants/permissions.constant';
 import type { ICurrentUser } from '../../common/interfaces/current-user.interface';
 import type { IMomoIpnPayload } from './types/payment.types';
 import type { Request, Response } from 'express';
@@ -86,5 +88,19 @@ export class PaymentController {
     @Param('orderId', ParseIntPipe) orderId: number,
   ) {
     return this.paymentService.getPaymentsByOrder(orderId, user.id);
+  }
+
+  @Get('admin/order/:orderId')
+  @Permissions(PERMISSIONS.PAYMENTS_READ)
+  @ApiOperation({
+    summary: 'Get payment transactions for any order (admin-only)',
+  })
+  @ApiResponse({ status: 200, description: 'Returns payment transactions' })
+  @ApiResponse({ status: 403, description: 'AUTH_004: Missing payments:read' })
+  @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
+  async getPaymentsByOrderForAdmin(
+    @Param('orderId', ParseIntPipe) orderId: number,
+  ) {
+    return this.paymentService.getPaymentsByOrderForAdmin(orderId);
   }
 }

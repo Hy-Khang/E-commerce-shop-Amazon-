@@ -1074,6 +1074,12 @@ export class OrderService {
     return this.orderRepository.findByIdAndUserId(orderId, userId);
   }
 
+  // Privileged (admin) lookup — no owner scope. Used by the payment feature so
+  // admins can view an order's transactions without being the order owner.
+  async findOrderForPaymentAdmin(orderId: number): Promise<Order | null> {
+    return this.orderRepository.findByIdWithItems(orderId);
+  }
+
   async findOrdersByGroupIdForPayment(
     groupId: string,
     userId: number,

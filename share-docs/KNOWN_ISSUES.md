@@ -8,9 +8,23 @@
 ## ISSUE-001 — Admin/Seller order detail gọi endpoint payment customer-scoped → 404
 
 - **Ngày phát hiện:** 2026-08-19
-- **Trạng thái:** OPEN (chưa sửa)
+- **Trạng thái:** ✅ FIXED (2026-08-28, hướng A)
 - **Mức độ:** Thấp (chỉ ồn Console + panel giao dịch không load cho admin; không làm vỡ trang)
 - **Khu vực:** `payment` (BE) × `order` (FE admin/seller order detail)
+
+> **Đã sửa (hướng A — backend cho admin xem):** thêm endpoint
+> `GET /payments/admin/order/:orderId` (service tra order **không ép owner** qua
+> `OrderService.findOrderForPaymentAdmin`). Theo đúng pattern `admin/orders/:id`
+> sẵn có (route riêng + service unscoped).
+> FE: `payment.service.getByOrderAdmin` + `usePaymentsByOrder(orderId, { admin })`;
+> `PaymentTransactionList variant="admin"` giờ gọi endpoint admin → hết 404.
+> Endpoint customer cũ (`/payments/order/:id`) giữ nguyên owner-scope.
+>
+> **Siết scope (2026-08-28):** guard đổi `ORDERS_READ` → **`PAYMENTS_READ`**. Vì
+> `payments:read` **chỉ admin** giữ (không có trong `SELLER_PERMISSIONS`/
+> `SHIPPER_PERMISSIONS` tại `auth.seed.ts`), seller/shipper gọi endpoint này bị
+> chặn `AUTH_004 (403)` — đóng lỗ over-exposure của guard `orders:read` (seller/
+> shipper cùng giữ). FE chỉ `AdminOrderDetailPage` gọi → admin không ảnh hưởng.
 - **KHÔNG liên quan** tới việc order-tracking map / 17 type-fix vừa làm (đã kiểm chứng bằng
   `git show` commit `5e6b1b9`: commit đó chỉ thêm `OrderTrackingMap`, không đụng
   `PaymentTransactionList`). Đây là bug có sẵn từ trước.

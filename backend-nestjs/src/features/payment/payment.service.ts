@@ -430,13 +430,38 @@ export class PaymentService {
       });
     }
 
+    return this.collectOrderTransactions(orderId, order.order_group_id);
+  }
+
+  // Admin-only variant — resolves the order without owner scope so an admin can
+  // view an order's transactions without being the order owner. The controller
+  // gates this with `payments:read` (held only by admin), so seller/shipper —
+  // who hold `orders:read` but not `payments:read` — are blocked at the guard.
+  async getPaymentsByOrderForAdmin(
+    orderId: number,
+  ): Promise<PaymentTransactionResponseDto[]> {
+    const order = await this.orderService.findOrderForPaymentAdmin(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_001',
+        message: 'Order not found',
+      });
+    }
+
+    return this.collectOrderTransactions(orderId, order.order_group_id);
+  }
+
+  // Merges an order's own transactions with any group-payment transactions
+  // (deduplicated, newest first).
+  private async collectOrderTransactions(
+    orderId: number,
+    orderGroupId: string,
+  ): Promise<PaymentTransactionResponseDto[]> {
     const orderTransactions =
       await this.paymentTransactionRepository.findByOrderId(orderId);
 
     const groupTransactions =
-      await this.paymentTransactionRepository.findByGroupId(
-        order.order_group_id,
-      );
+      await this.paymentTransactionRepository.findByGroupId(orderGroupId);
 
     const seenIds = new Set(orderTransactions.map((t) => t.id));
     const merged = [...orderTransactions];
@@ -446,9 +471,7 @@ export class PaymentService {
       }
     }
 
-    merged.sort(
-      (a, b) => b.created_at.getTime() - a.created_at.getTime(),
-    );
+    merged.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 
     return merged.map(toPaymentTransactionResponse);
   }
