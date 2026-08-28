@@ -28,7 +28,9 @@ const GATEWAY_LABELS: Record<PaymentGateway, string> = {
 };
 
 export function PaymentTransactionList({ orderId, variant = 'customer' }: Props) {
-  const { data: transactions, isLoading } = usePaymentsByOrder(orderId);
+  const { data: transactions, isLoading } = usePaymentsByOrder(orderId, {
+    admin: variant === 'admin',
+  });
 
   if (isLoading) {
     return (

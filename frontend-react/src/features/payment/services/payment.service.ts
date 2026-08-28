@@ -12,4 +12,11 @@ export const paymentService = {
 
   getByOrder: (orderId: number) =>
     api.get<SuccessResponse<PaymentTransaction[]>>(`/payments/order/${orderId}`),
+
+  // Privileged (admin) variant — resolves the order without owner scope so an
+  // admin can view an order's transactions on the admin order detail page.
+  getByOrderAdmin: (orderId: number) =>
+    api.get<SuccessResponse<PaymentTransaction[]>>(
+      `/payments/admin/order/${orderId}`,
+    ),
 };

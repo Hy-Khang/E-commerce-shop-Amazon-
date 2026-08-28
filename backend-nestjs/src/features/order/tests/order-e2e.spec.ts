@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   INestApplication,
   UnauthorizedException,
   ValidationPipe,
@@ -11,8 +12,8 @@ import { OrderController } from '../order.controller';
 import { AdminOrderController } from '../admin-order.controller';
 import { OrderService } from '../order.service';
 import { PaymentMethod, OrderStatus, PaymentStatus } from '../../../common/constants';
-import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from '../../../common/guards/roles.guard';
+import { APP_GUARD, Reflector } from '@nestjs/core';
+import { PERMISSIONS_KEY } from '../../../common/decorators/permissions.decorator';
 
 class MockJwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
@@ -25,6 +26,27 @@ class MockJwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing or invalid token');
     }
     return true;
+  }
+}
+
+// Admin endpoints are permission-guarded (@Permissions), not role-guarded.
+// This stub mirrors the real PermissionsGuard for the test's purpose without
+// the permission-cache/DB wiring: admin holds every permission, any other role
+// is denied on a permissioned route; unpermissioned routes pass through.
+class MockPermissionsGuard implements CanActivate {
+  constructor(private readonly reflector: Reflector) {}
+  canActivate(context: ExecutionContext): boolean {
+    const metadata = this.reflector.getAllAndOverride(PERMISSIONS_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (!metadata) return true;
+    const req = context.switchToHttp().getRequest();
+    if (req.user?.role === 'admin') return true;
+    throw new ForbiddenException({
+      code: 'AUTH_004',
+      message: 'Insufficient permissions',
+    });
   }
 }
 
@@ -50,7 +72,11 @@ describe('Order (e2e)', () => {
           },
         },
         { provide: APP_GUARD, useClass: MockJwtAuthGuard },
-        { provide: APP_GUARD, useClass: RolesGuard },
+        {
+          provide: APP_GUARD,
+          useFactory: (reflector: Reflector) => new MockPermissionsGuard(reflector),
+          inject: [Reflector],
+        },
       ],
     }).compile();
 

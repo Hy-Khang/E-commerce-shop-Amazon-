@@ -174,7 +174,7 @@ export interface CreateProductRequest {
   thumbnail_url?: string;
   option1_label?: string;
   option2_label?: string;
-  shop_id?: number;
+  shop_id?: number | null;
 }
 
 export interface UpdateProductRequest {
@@ -185,7 +185,8 @@ export interface UpdateProductRequest {
   thumbnail_url?: string;
   option1_label?: string;
   option2_label?: string;
-  shop_id?: number;
+  // `null` unassigns the shop (admin only); omitting leaves it unchanged.
+  shop_id?: number | null;
 }
 
 export interface CreateVariantRequest {
@@ -240,7 +241,10 @@ export const createProductSchema = z.object({
     .refine(
       (val) => {
         if (!val) return true;
-        if (/^\/uploads\/products\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp)$/.test(val)) return true;
+        // Accept any uploaded image path under /uploads/products/ — nested
+        // subfolders + free-form filenames (matches both real uploads and seed
+        // data), not just the UUID filename form.
+        if (/^\/uploads\/products\/[\w./-]+\.(jpg|jpeg|png|webp)$/i.test(val)) return true;
         try { const u = new URL(val); return u.protocol === 'http:' || u.protocol === 'https:'; } catch { return false; }
       },
       'Must be a valid image URL or uploaded image',
@@ -249,7 +253,8 @@ export const createProductSchema = z.object({
     .or(z.literal('')),
   option1_label: z.string().max(50).optional().or(z.literal('')),
   option2_label: z.string().max(50).optional().or(z.literal('')),
-  shop_id: z.number().int().positive().optional(),
+  // null = explicitly unassigned (admin can orphan a product); undefined = not set.
+  shop_id: z.number().int().positive().nullable().optional(),
 });
 
 export type CreateProductFormData = z.infer<typeof createProductSchema>;

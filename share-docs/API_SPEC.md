@@ -287,12 +287,15 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | POST | `/payments/momo/ipn` | MoMo IPN callback (verify HMAC-SHA256 + update) | Public |
 | GET | `/payments/momo/return` | MoMo return → redirect to FE result page | Public |
 | GET | `/payments/order/:orderId` | Get payment transactions for an order (includes group transactions) | Customer |
+| GET | `/payments/admin/order/:orderId` | Get payment transactions for **any** order (admin-only, no owner scope) | `payments:read` |
 
 > **Payment flow:** Customer selects VNPay/MoMo at checkout → `POST /orders` creates N orders (1 per shop, all `payment_status=unpaid`, linked by `order_group_id`) → `POST /payments/create` with `{ order_group_id }` sums all non-cancelled orders' `total_amount` into one gateway transaction → returns `{ payment_url }` → frontend redirects to gateway → user pays → gateway calls IPN endpoint → backend verifies signature + updates `payment_transactions.status` + emits `payment.completed` event with `orderGroupId` → `OrderPaymentListener` sets ALL orders in the group to `payment_status = paid` (single DB transaction) → gateway redirects user to return URL → backend redirects to frontend `/checkout/payment-result?orderGroupId=xxx&status=success`.
 >
 > **`POST /payments/create` accepts:** `{ order_id?: number, order_group_id?: string }` — at least one required. `order_group_id` creates a single payment covering all active orders in the group. `order_id` pays for a single order (legacy/fallback).
 >
 > **`GET /payments/order/:orderId`:** Returns transactions for the order itself PLUS any group transactions (via `order_group_id`), merged and deduplicated.
+>
+> **`GET /payments/admin/order/:orderId`:** Same merged/deduplicated result, but resolves the order **without owner scope** (`OrderService.findOrderForPaymentAdmin`) so an admin can view any order's transactions from the admin order detail page. Guarded by **`payments:read`** — a permission held **only by admin** (not seller/shipper, who hold `orders:read`), so seller/shipper are locked out (`AUTH_004 (403)`) even though the route lives under `/payments`. Unknown order → `ORDER_001 (404)`.
 >
 > **Retry:** If payment fails or times out, customer can call `POST /payments/create` again — creates a new `payment_transactions` record. Each order/group can have multiple transactions.
 >

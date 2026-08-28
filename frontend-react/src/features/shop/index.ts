@@ -12,6 +12,7 @@ export { ShopHeader } from './components/ShopHeader';
 export { ShopSettingsForm } from './components/ShopSettingsForm';
 export { ShopStatusBadge } from './components/ShopStatusBadge';
 export { ShopFilters } from './components/ShopFilters';
+export { AdminShopSelect } from './components/AdminShopSelect';
 
 // Types
 export type {

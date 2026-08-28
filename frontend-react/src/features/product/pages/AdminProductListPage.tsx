@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Pencil, Plus, Package, Eye, EyeOff, Store } from 'lucide-react';
+import { Pencil, Plus, Package, Eye, ToggleLeft, ToggleRight, Store } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
@@ -127,7 +127,7 @@ export default function AdminProductListPage() {
             aria-label={product.is_active ? 'Hide product' : 'Show product'}
             title={product.is_active ? 'Hide product' : 'Show product'}
           >
-            {product.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {product.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
           </button>
         </div>
       ),

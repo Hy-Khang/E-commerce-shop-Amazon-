@@ -8,11 +8,12 @@ import { ReviewService } from '../review.service';
 import { ReviewRepository } from '../repositories/review.repository';
 import { OrderService } from '../../order/order.service';
 import { ProductService } from '../../product/product.service';
+import { ShopService } from '../../shop/shop.service';
 import { OrderStatus } from '../../../common/constants';
 import {
   mockReview,
   mockReviewWithUser,
-  mockDeliveredOrderForReview,
+  mockCompletedOrderForReview,
   mockVariantInfo,
   mockReviewStats,
   mockPaginatedReviews,
@@ -53,6 +54,11 @@ describe('ReviewService', () => {
           provide: ProductService,
           useValue: { findVariantById: jest.fn() },
         },
+        {
+          // Used by seller-scoped review listing to resolve the caller's shop.
+          provide: ShopService,
+          useValue: { resolveShopByUserId: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -68,9 +74,9 @@ describe('ReviewService', () => {
     const userId = 1;
     const dto = { product_id: 10, order_id: 42, rating: 5, comment: 'Great' };
 
-    it('should create a review for a delivered order', async () => {
+    it('should create a review for a completed order', async () => {
       // Arrange
-      const order = mockDeliveredOrderForReview({
+      const order = mockCompletedOrderForReview({
         order_items: [{ id: 1, product_variant_id: 20 }],
       });
       const variant = mockProductVariant({ id: 20, product_id: 10 });
@@ -106,7 +112,7 @@ describe('ReviewService', () => {
     it('should set comment to null when not provided', async () => {
       // Arrange
       const dtoNoComment = { product_id: 10, order_id: 42, rating: 4 };
-      const order = mockDeliveredOrderForReview();
+      const order = mockCompletedOrderForReview();
       const variant = mockProductVariant({ id: 20, product_id: 10 });
       const created = mockReview({ comment: null, rating: 4 });
 
@@ -136,7 +142,7 @@ describe('ReviewService', () => {
 
     it('should throw ForbiddenException when order does not belong to user', async () => {
       // Arrange
-      const order = mockDeliveredOrderForReview({ user_id: 999 });
+      const order = mockCompletedOrderForReview({ user_id: 999 });
       orderService.findOrderByIdForReview.mockResolvedValue(order as any);
 
       // Act & Assert
@@ -145,9 +151,9 @@ describe('ReviewService', () => {
       );
     });
 
-    it('should throw ForbiddenException when order is not delivered', async () => {
+    it('should throw ForbiddenException when order is not completed', async () => {
       // Arrange
-      const order = mockDeliveredOrderForReview({
+      const order = mockCompletedOrderForReview({
         status: OrderStatus.Pending,
       });
       orderService.findOrderByIdForReview.mockResolvedValue(order as any);
@@ -160,7 +166,7 @@ describe('ReviewService', () => {
 
     it('should throw ForbiddenException when product is not in the order', async () => {
       // Arrange
-      const order = mockDeliveredOrderForReview({
+      const order = mockCompletedOrderForReview({
         order_items: [{ id: 1, product_variant_id: 20 }],
       });
       const variantForDifferentProduct = mockProductVariant({
@@ -181,7 +187,7 @@ describe('ReviewService', () => {
 
     it('should throw ForbiddenException when variant is not found for any order item', async () => {
       // Arrange
-      const order = mockDeliveredOrderForReview({
+      const order = mockCompletedOrderForReview({
         order_items: [{ id: 1, product_variant_id: 20 }],
       });
 
@@ -196,7 +202,7 @@ describe('ReviewService', () => {
 
     it('should skip order items with null product_variant_id', async () => {
       // Arrange
-      const order = mockDeliveredOrderForReview({
+      const order = mockCompletedOrderForReview({
         order_items: [
           { id: 1, product_variant_id: null as any },
           { id: 2, product_variant_id: 20 },
@@ -220,7 +226,7 @@ describe('ReviewService', () => {
 
     it('should throw ConflictException when duplicate review exists', async () => {
       // Arrange
-      const order = mockDeliveredOrderForReview();
+      const order = mockCompletedOrderForReview();
       const variant = mockProductVariant({ id: 20, product_id: 10 });
 
       orderService.findOrderByIdForReview.mockResolvedValue(order as any);
@@ -474,8 +480,11 @@ describe('ReviewService', () => {
       // Act
       await service.findAllReviews(query);
 
-      // Assert
-      expect(reviewRepository.findAllPaginated).toHaveBeenCalledWith(query);
+      // Assert — admin listing passes no shop/category scoping.
+      expect(reviewRepository.findAllPaginated).toHaveBeenCalledWith(query, {
+        shopId: undefined,
+        categoryIds: undefined,
+      });
     });
   });
 

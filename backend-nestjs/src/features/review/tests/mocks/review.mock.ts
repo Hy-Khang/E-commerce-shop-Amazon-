@@ -30,7 +30,9 @@ export const mockReviewWithProduct = (overrides: Partial<Review> = {}): Review =
     ...overrides,
   });
 
-export const mockDeliveredOrderForReview = (
+// Represents an order that is eligible for review. Eligibility now requires
+// `completed` (not `delivered`) — the customer must have confirmed receipt.
+export const mockCompletedOrderForReview = (
   overrides: Partial<{
     id: number;
     user_id: number;
@@ -40,7 +42,7 @@ export const mockDeliveredOrderForReview = (
 ) => ({
   id: 42,
   user_id: 1,
-  status: OrderStatus.Delivered,
+  status: OrderStatus.Completed,
   order_items: [
     { id: 1, product_variant_id: 20 },
   ],

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
-import { useAdminShops } from '@/features/shop';
+import { AdminShopSelect } from '@/features/shop';
 import { useCategories } from '../hooks/useCategories';
 import { useCreateProduct } from '../hooks/useCreateProduct';
 import { generateSlug } from '../utils/product.util';
@@ -15,9 +15,7 @@ import { ApiError } from '@/core/api/api.types';
 
 export default function AdminProductCreatePage() {
   const { data: categories } = useCategories();
-  const { data: shopData } = useAdminShops({ page: 1, limit: 100 });
   const createProduct = useCreateProduct();
-  const shopOptions = shopData?.data ?? [];
 
   const {
     register,
@@ -48,6 +46,7 @@ export default function AdminProductCreatePage() {
       thumbnail_url: data.thumbnail_url || undefined,
       option1_label: data.option1_label || undefined,
       option2_label: data.option2_label || undefined,
+      shop_id: data.shop_id ?? undefined,
     });
   }
 
@@ -92,17 +91,12 @@ export default function AdminProductCreatePage() {
 
           <div>
             <label htmlFor="shop_id" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Shop</label>
-            <select
+            <AdminShopSelect
               id="shop_id"
-              className="admin-input mt-1"
-              value={shopId ?? ''}
-              onChange={(e) => setValue('shop_id', e.target.value ? Number(e.target.value) : undefined)}
-            >
-              <option value="">— No shop —</option>
-              {shopOptions.map((shop) => (
-                <option key={shop.id} value={shop.id}>{shop.name}</option>
-              ))}
-            </select>
+              className="mt-1"
+              value={shopId ?? null}
+              onChange={(id) => setValue('shop_id', id)}
+            />
           </div>
 
           <div>

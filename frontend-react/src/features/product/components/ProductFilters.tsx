@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { AdminSortSelect, type SortOption } from '@/common/components/data/AdminSortSelect';
 import { AdminSelect } from '@/common/components/data/AdminSelect';
 import { Button } from '@/common/components/ui/Button';
-import { useAdminShops } from '@/features/shop';
+import { AdminShopSelect } from '@/features/shop';
 import { useCategories } from '../hooks/useCategories';
 import { flattenCategoryTree } from '../utils/product.util';
 
@@ -28,13 +28,8 @@ interface ProductFiltersProps {
 export function ProductFilters({ showShopFilter = false }: ProductFiltersProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: categories } = useCategories();
-  const { data: shopData } = useAdminShops(
-    { page: 1, limit: 100 },
-    { enabled: showShopFilter },
-  );
 
   const categoryOptions = categories ? flattenCategoryTree(categories) : [];
-  const shopOptions = shopData?.data ?? [];
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -101,15 +96,12 @@ export function ProductFilters({ showShopFilter = false }: ProductFiltersProps) 
             <label htmlFor="product-shop" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Shop
             </label>
-            <AdminSelect
+            <AdminShopSelect
               id="product-shop"
               className="mt-1"
-              value={searchParams.get('shop_id') || ''}
-              onChange={(v) => updateParam('shop_id', v)}
-              options={[
-                { value: '', label: 'All shops' },
-                ...shopOptions.map((shop) => ({ value: String(shop.id), label: shop.name })),
-              ]}
+              noneLabel="All shops"
+              value={searchParams.get('shop_id') ? Number(searchParams.get('shop_id')) : null}
+              onChange={(shopId) => updateParam('shop_id', shopId ? String(shopId) : '')}
             />
           </div>
         )}
