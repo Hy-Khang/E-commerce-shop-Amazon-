@@ -14,6 +14,7 @@ const SELLER_PERMISSIONS = [
   'uploads:create',
   'dashboard:read',
   'shops:create', 'shops:read', 'shops:update',
+  'flash_registrations:create', 'flash_registrations:read', 'flash_registrations:update', 'flash_registrations:delete',
   'portal:seller',
 ];
 
@@ -54,6 +55,14 @@ const SEED_PERMISSIONS = [
   { resource: 'uploads', action: 'create', name: 'Upload Files' },
   { resource: 'payments', action: 'create', name: 'Create Payment' },
   { resource: 'payments', action: 'read', name: 'Read Payments' },
+  { resource: 'flash_sales', action: 'create', name: 'Create Flash Sale' },
+  { resource: 'flash_sales', action: 'read', name: 'Read Flash Sales' },
+  { resource: 'flash_sales', action: 'update', name: 'Update Flash Sale' },
+  { resource: 'flash_sales', action: 'delete', name: 'Delete Flash Sale' },
+  { resource: 'flash_registrations', action: 'create', name: 'Register Flash Sale Product' },
+  { resource: 'flash_registrations', action: 'read', name: 'Read Flash Sale Registrations' },
+  { resource: 'flash_registrations', action: 'update', name: 'Update Flash Sale Registration' },
+  { resource: 'flash_registrations', action: 'delete', name: 'Withdraw Flash Sale Registration' },
   { resource: 'dashboard', action: 'read', name: 'Read Dashboard' },
   { resource: 'shops', action: 'create', name: 'Create Shop' },
   { resource: 'shops', action: 'read', name: 'Read Shops' },

@@ -1,6 +1,7 @@
 export enum NotificationType {
   ORDER_STATUS_CHANGED = 'ORDER_STATUS_CHANGED',
   NEW_ORDER = 'NEW_ORDER',
+  FLASH_SALE_REGISTRATION_REVIEWED = 'FLASH_SALE_REGISTRATION_REVIEWED',
 }
 
 export enum ActorType {
@@ -33,4 +34,15 @@ export interface OrderPlacedEvent {
   sellerUserIds: number[];
   totalAmount: number;
   itemCount: number;
+}
+
+export interface FlashRegistrationReviewedEvent {
+  itemId: number;
+  campaignId: number;
+  campaignName: string;
+  shopId: number;
+  sellerUserId: number;
+  productName: string | null;
+  decision: 'approved' | 'rejected';
+  reason?: string | null;
 }

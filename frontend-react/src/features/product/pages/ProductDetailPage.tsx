@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Zap } from 'lucide-react';
 import { formatPrice } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
 import { Breadcrumb } from '@/common/components/ui/Breadcrumb';
 import { AddToCartButton, useAddToCart } from '@/features/cart';
+import { useFlashPriceMaps } from '@/features/flash-sale';
 import { ReviewList } from '@/features/review';
 import { WishlistButton } from '@/features/wishlist';
 import { ShopInfoCard } from '@/features/shop/components/ShopInfoCard';
@@ -25,6 +26,7 @@ export default function ProductDetailPage() {
   const { data: product, isLoading, error } = useProduct(slug!);
   const { data: categories } = useCategories();
   const { mutate: addToCart, isPending: isAdding } = useAddToCart();
+  const { byVariant: flashByVariant } = useFlashPriceMaps();
 
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -40,6 +42,7 @@ export default function ProductDetailPage() {
   }
 
   const active = selectedVariant ?? product.variants[0] ?? null;
+  const activeFlash = active ? flashByVariant.get(active.id) ?? null : null;
 
   // Helper to find category by ID in tree
   function findCategoryById(cats: Category[], id: number): Category | null {
@@ -94,14 +97,28 @@ export default function ProductDetailPage() {
                 <WishlistButton productId={product.id} />
               </div>
               {active && (
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-text-price">
-                    {formatPrice(getEffectivePrice(active))}
-                  </span>
-                  {active.sale_price && (
-                    <span className="text-lg text-text-muted line-through">
-                      {formatPrice(active.price)}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {activeFlash && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-600 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white">
+                      <Zap className="h-3 w-3 fill-current" />
+                      Flash Sale
                     </span>
+                  )}
+                  <span
+                    className={`text-2xl font-bold ${activeFlash ? 'text-amber-600 dark:text-amber-400' : 'text-text-price'}`}
+                  >
+                    {formatPrice(activeFlash ? activeFlash.flash_price : getEffectivePrice(active))}
+                  </span>
+                  {activeFlash ? (
+                    <span className="text-lg text-text-muted line-through">
+                      {formatPrice(activeFlash.original_price ?? active.price)}
+                    </span>
+                  ) : (
+                    active.sale_price && (
+                      <span className="text-lg text-text-muted line-through">
+                        {formatPrice(active.price)}
+                      </span>
+                    )
                   )}
                 </div>
               )}

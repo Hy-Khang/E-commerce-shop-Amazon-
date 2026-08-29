@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Heart,
   Tag,
+  Zap,
   Store,
   PanelLeftClose,
   PanelLeftOpen,
@@ -45,6 +46,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
       { to: '/admin/orders', label: 'Orders', icon: ShoppingCart, permission: PERMISSIONS.ORDERS_READ },
       { to: '/admin/shops', label: 'Shops', icon: Store, permission: PERMISSIONS.SHOPS_READ },
       { to: '/admin/coupons', label: 'Coupons', icon: Tag, permission: PERMISSIONS.COUPONS_READ },
+      { to: '/admin/flash-sales', label: 'Flash Sale', icon: Zap, permission: PERMISSIONS.FLASH_SALES_READ },
     ],
   },
   {

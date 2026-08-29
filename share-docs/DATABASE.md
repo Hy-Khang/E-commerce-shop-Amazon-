@@ -471,6 +471,49 @@
 
 ---
 
+### 2.12 Flash Sale Feature
+
+#### `flash_sales` — Campaign
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| name | NVARCHAR(150) | NOT NULL |
+| registration_starts_at | DATETIME2 | NOT NULL — seller registration window opens |
+| registration_ends_at | DATETIME2 | NOT NULL — registration deadline (≤ `starts_at`) |
+| starts_at | DATETIME2 | NOT NULL — deal goes live |
+| ends_at | DATETIME2 | NOT NULL |
+| min_discount_percent | DECIMAL(5,2) | NOT NULL, DEFAULT `0` — mandatory minimum discount for registrations |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'scheduled'` — `scheduled` / `active` / `ended` (cron-driven) |
+| is_active | BIT | NOT NULL, DEFAULT `1` |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> **Registration/approval model:** Admin creates empty campaigns (time slots). Sellers register their products during `[registration_starts_at, registration_ends_at)`; admin approves/rejects. Window invariant enforced in the service: `registration_starts_at < registration_ends_at ≤ starts_at < ends_at`. Indexes: `idx_flash_sales_status`, `idx_flash_sales_starts_at`, `idx_flash_sales_ends_at`.
+
+#### `flash_sale_items` — Registration ⚠️ also the sale-price/stock record
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| flash_sale_id | INT | FK → `flash_sales.id` ON DELETE CASCADE, NOT NULL |
+| product_variant_id | INT | FK → `product_variants.id` ON DELETE CASCADE, NOT NULL |
+| shop_id | INT | FK → `shops.id`, NOT NULL — owning shop (the seller who registered) |
+| flash_price | DECIMAL(10,2) | NOT NULL — sale price during the campaign |
+| flash_quantity | INT | NOT NULL — units available at the flash price |
+| sold_quantity | INT | NOT NULL, DEFAULT `0` — atomic guard prevents oversell |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `pending` / `approved` / `rejected` |
+| created_by | INT | FK → `users.id` ON DELETE SET NULL, NULL — seller who registered (audit) |
+| reviewed_by | INT | NULL — admin who reviewed (audit) |
+| reviewed_at | DATETIME2 | NULL |
+| reject_reason | NVARCHAR(255) | NULL |
+
+> **One "registration" = one `flash_sale_items` row.** No separate registrations table — this keeps `order_items.flash_sale_item_id`, `consume`/`reverse`, and coupon stacking unchanged. Only `status='approved'` items are priced/sold (enforced in `findActiveByVariantIds` + `consume`).
+> **Indexes:** `idx_flash_sale_items_flash_sale_id`, `idx_flash_sale_items_variant_id`, `idx_flash_sale_items_shop_id`, `idx_flash_sale_items_sale_status (flash_sale_id, status)`. **Filtered UNIQUE** `uq_flash_sale_items_sale_variant (flash_sale_id, product_variant_id) WHERE status <> 'rejected'` — one non-rejected registration per (campaign, variant); a rejected row is retained for audit and lets the seller re-register.
+> **`order_items.flash_sale_item_id`** (INT NULL, FK → `flash_sale_items.id` ON DELETE SET NULL) snapshots which flash item a purchased line consumed, so `sold_quantity` can be reversed on cancel.
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid

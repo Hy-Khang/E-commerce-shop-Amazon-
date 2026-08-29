@@ -68,6 +68,7 @@ export const mockCartResponse = (
         sku: 'ELEC-BLK-M',
         price: 250000,
         sale_price: null,
+        flash_price: null,
         option1: 'Black',
         option2: 'M',
         option1_label: 'Color',

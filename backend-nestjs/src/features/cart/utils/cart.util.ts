@@ -22,7 +22,10 @@ export function pickVariantThumbnail(
   return fallback;
 }
 
-export function toCartResponse(cart: Cart): CartResponseDto {
+export function toCartResponse(
+  cart: Cart,
+  flashPrices?: Map<number, number>,
+): CartResponseDto {
   return {
     id: cart.id,
     items: (cart.items || []).map((item) => ({
@@ -35,6 +38,7 @@ export function toCartResponse(cart: Cart): CartResponseDto {
         sku: item.product_variant.sku,
         price: item.product_variant.price,
         sale_price: item.product_variant.sale_price,
+        flash_price: flashPrices?.get(item.product_variant_id) ?? null,
         option1: item.product_variant.option1,
         option2: item.product_variant.option2,
         option1_label: item.product_variant.product?.option1_label ?? null,

@@ -8,10 +8,12 @@ import {
 import type {
   OrderStatusUpdatedEvent,
   OrderPlacedEvent,
+  FlashRegistrationReviewedEvent,
 } from './types/notification.types';
 import {
   buildOrderStatusMessage,
   buildNewOrderMessage,
+  buildFlashRegistrationReviewedMessage,
 } from './utils/notification.util';
 
 @Injectable()
@@ -54,6 +56,43 @@ export class NotificationListener {
           error instanceof Error ? error.stack : String(error),
         );
       }
+    }
+  }
+
+  @OnEvent('flash_sale.registration_reviewed')
+  async handleFlashRegistrationReviewed(
+    payload: FlashRegistrationReviewedEvent,
+  ): Promise<void> {
+    try {
+      const { title, message } = buildFlashRegistrationReviewedMessage(
+        payload.campaignName,
+        payload.productName,
+        payload.decision,
+        payload.reason,
+      );
+
+      await this.notificationService.createNotification({
+        user_id: payload.sellerUserId,
+        type: NotificationType.FLASH_SALE_REGISTRATION_REVIEWED,
+        title,
+        message,
+        data: JSON.stringify({
+          itemId: payload.itemId,
+          campaignId: payload.campaignId,
+          decision: payload.decision,
+          reason: payload.reason ?? null,
+        }),
+        context: NotificationContext.Seller,
+      });
+
+      this.logger.log(
+        `Flash registration ${payload.decision} notification created for seller ${payload.sellerUserId}: item #${payload.itemId}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to create flash registration notification for seller ${payload.sellerUserId}, item #${payload.itemId}`,
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 

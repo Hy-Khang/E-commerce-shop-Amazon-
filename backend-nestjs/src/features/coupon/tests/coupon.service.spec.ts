@@ -12,6 +12,7 @@ import { Category } from '../../product/entities/category.entity';
 import { Product } from '../../product/entities/product.entity';
 import { ShopService } from '../../shop/shop.service';
 import { CartService } from '../../cart/cart.service';
+import { FlashSaleService } from '../../flash-sale/flash-sale.service';
 import { CartEmptyException } from '../../../common/exceptions/cart-empty.exception';
 import { CouponScope, DiscountType } from '../types/coupon.types';
 import { ShopStatus } from '../../../common/constants';
@@ -71,6 +72,7 @@ describe('CouponService', () => {
   let productRepo: any;
   let shopService: any;
   let cartService: any;
+  let flashSaleService: any;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -106,6 +108,9 @@ describe('CouponService', () => {
     cartService = {
       getCartWithItems: jest.fn(),
     };
+    flashSaleService = {
+      getActiveFlashPriceMap: jest.fn().mockResolvedValue(new Map()),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -116,6 +121,7 @@ describe('CouponService', () => {
         { provide: getRepositoryToken(Product), useValue: productRepo },
         { provide: ShopService, useValue: shopService },
         { provide: CartService, useValue: cartService },
+        { provide: FlashSaleService, useValue: flashSaleService },
       ],
     }).compile();
 

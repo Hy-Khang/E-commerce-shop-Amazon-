@@ -7,11 +7,14 @@ import { CartItem } from './entities/cart-item.entity';
 import { CartRepository } from './repositories/cart.repository';
 import { CartItemRepository } from './repositories/cart-item.repository';
 import { ProductModule } from '../product/product.module';
+import { FlashSaleModule } from '../flash-sale/flash-sale.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Cart, CartItem]),
     ProductModule,
+    // Overlay active flash price on cart items (acyclic: FlashSale → Product only).
+    FlashSaleModule,
   ],
   controllers: [CartController],
   providers: [

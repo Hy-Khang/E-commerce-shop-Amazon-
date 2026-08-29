@@ -20,6 +20,7 @@ const HomePage = lazy(() => import('@/features/product/pages/HomePage'));
 const ProductListPage = lazy(() => import('@/features/product/pages/ProductListPage'));
 const ProductDetailPage = lazy(() => import('@/features/product/pages/ProductDetailPage'));
 const CategoryPage = lazy(() => import('@/features/product/pages/CategoryPage'));
+const FlashSalePage = lazy(() => import('@/features/flash-sale/pages/FlashSalePage'));
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
@@ -60,6 +61,7 @@ const AdminReviewListPage = lazy(() => import('@/features/review/pages/AdminRevi
 const AdminWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/AdminWishlistPopularPage'));
 
 const AdminCouponListPage = lazy(() => import('@/features/coupon/pages/AdminCouponListPage'));
+const AdminFlashSaleListPage = lazy(() => import('@/features/flash-sale/pages/AdminFlashSaleListPage'));
 
 const SellerDashboardPage = lazy(() => import('@/features/dashboard/pages/SellerDashboardPage'));
 const SellerProductListPage = lazy(() => import('@/features/product/pages/SellerProductListPage'));
@@ -71,6 +73,7 @@ const SellerOrderDetailPage = lazy(() => import('@/features/order/pages/SellerOr
 const ShopProfilePage = lazy(() => import('@/features/shop/pages/ShopProfilePage'));
 const SellerShopSettingsPage = lazy(() => import('@/features/shop/pages/SellerShopSettingsPage'));
 const SellerCouponListPage = lazy(() => import('@/features/coupon/pages/SellerCouponListPage'));
+const SellerFlashSaleListPage = lazy(() => import('@/features/flash-sale/pages/SellerFlashSaleListPage'));
 const SellerReviewListPage = lazy(() => import('@/features/review/pages/SellerReviewListPage'));
 const SellerWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/SellerWishlistPopularPage'));
 const AdminShopListPage = lazy(() => import('@/features/shop/pages/AdminShopListPage'));
@@ -100,6 +103,7 @@ export const router = createBrowserRouter([
       { path: 'products/:slug', element: <SuspenseWrapper><ProductDetailPage /></SuspenseWrapper> },
       { path: 'categories/:slug', element: <SuspenseWrapper><CategoryPage /></SuspenseWrapper> },
       { path: 'shops/:slug', element: <SuspenseWrapper><ShopProfilePage /></SuspenseWrapper> },
+      { path: 'flash-sale', element: <SuspenseWrapper><FlashSalePage /></SuspenseWrapper> },
       { path: 'cart', element: <SuspenseWrapper><CartPage /></SuspenseWrapper> },
 
       {
@@ -165,6 +169,7 @@ export const router = createBrowserRouter([
               { path: 'admin/reviews', element: <SuspenseWrapper><AdminReviewListPage /></SuspenseWrapper> },
               { path: 'admin/wishlist', element: <SuspenseWrapper><AdminWishlistPopularPage /></SuspenseWrapper> },
               { path: 'admin/coupons', element: <SuspenseWrapper><AdminCouponListPage /></SuspenseWrapper> },
+              { path: 'admin/flash-sales', element: <SuspenseWrapper><AdminFlashSaleListPage /></SuspenseWrapper> },
               { path: 'admin/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },
@@ -189,6 +194,7 @@ export const router = createBrowserRouter([
               { path: 'seller/orders/:id', element: <SuspenseWrapper><SellerOrderDetailPage /></SuspenseWrapper> },
               { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
               { path: 'seller/coupons', element: <SuspenseWrapper><SellerCouponListPage /></SuspenseWrapper> },
+              { path: 'seller/flash-sales', element: <SuspenseWrapper><SellerFlashSaleListPage /></SuspenseWrapper> },
               { path: 'seller/reviews', element: <SuspenseWrapper><SellerReviewListPage /></SuspenseWrapper> },
               { path: 'seller/wishlist', element: <SuspenseWrapper><SellerWishlistPopularPage /></SuspenseWrapper> },
               { path: 'seller/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },

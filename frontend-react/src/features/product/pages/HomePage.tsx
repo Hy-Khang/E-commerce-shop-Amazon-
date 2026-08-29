@@ -15,6 +15,7 @@ import { PromotionalBanner } from '../components/PromotionalBanner';
 import { BestSellersSection } from '../components/BestSellersSection';
 import { TrendingSection } from '../components/TrendingSection';
 import { DiscoverMoreSection } from '../components/DiscoverMoreSection';
+import { FlashSaleSection } from '@/features/flash-sale';
 
 const HERO_SLIDES = [
   {
@@ -178,6 +179,9 @@ export default function HomePage() {
           );
         })}
       </div>
+
+      {/* ── Flash Sale ── */}
+      <FlashSaleSection />
 
       {/* ── 3. Special Offers ── */}
       <SpecialOffersSection

@@ -111,6 +111,7 @@ describe('Cart (e2e)', () => {
               sku: 'SKU-1',
               price: 250000,
               sale_price: null,
+              flash_price: null,
               option1: 'Black',
               option2: 'M',
               option1_label: 'Color',

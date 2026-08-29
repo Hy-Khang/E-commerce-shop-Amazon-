@@ -49,6 +49,8 @@ import { IPaginatedResult } from '../../common/interfaces/paginated-result.inter
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { CartService } from '../cart/cart.service';
 import { CartEmptyException } from '../../common/exceptions/cart-empty.exception';
+import { FlashSaleService } from '../flash-sale/flash-sale.service';
+import { IActiveFlashPrice } from '../flash-sale/types/flash-sale.types';
 
 @Injectable()
 export class CouponService {
@@ -63,7 +65,22 @@ export class CouponService {
     private readonly productRepo: Repository<Product>,
     private readonly shopService: ShopService,
     private readonly cartService: CartService,
+    private readonly flashSaleService: FlashSaleService,
   ) {}
+
+  /**
+   * Active flash prices for every variant in the cart, so applicable totals are
+   * computed on exactly the price checkout will charge. Coupon discount stacks
+   * ON TOP of the flash price.
+   */
+  private buildFlashPriceMap(
+    cartItems: CartItem[],
+  ): Promise<Map<number, IActiveFlashPrice>> {
+    const variantIds = cartItems
+      .map((item) => item.product_variant?.id)
+      .filter((id): id is number => id != null);
+    return this.flashSaleService.getActiveFlashPriceMap(variantIds);
+  }
 
   // ─── Customer ───
 
@@ -118,6 +135,9 @@ export class CouponService {
       new Date(),
     );
 
+    // One flash-price lookup for the whole cart, shared across all candidates.
+    const flashPriceMap = await this.buildFlashPriceMap(cartItems);
+
     const platform: CouponOptionDto[] = [];
     const shopOptions = new Map<number, CouponOptionDto[]>();
 
@@ -125,6 +145,7 @@ export class CouponService {
       const applicableByShop = await this.getApplicableTotalsByShop(
         candidate,
         cartItems,
+        flashPriceMap,
       );
       const applicableTotal = [...applicableByShop.values()].reduce(
         (sum, v) => sum + v,
@@ -212,6 +233,9 @@ export class CouponService {
     let platformSeen = false;
     const shopSeen = new Set<number>();
 
+    // Shared flash-price snapshot for the whole cart (same price checkout uses).
+    const flashPriceMap = await this.buildFlashPriceMap(cartItems);
+
     for (const code of uniqueCodes) {
       const coupon = await this.validateCoupon(userId, code);
 
@@ -237,6 +261,7 @@ export class CouponService {
       const applicableByShop = await this.getApplicableTotalsByShop(
         coupon,
         cartItems,
+        flashPriceMap,
       );
       const applicableTotal = [...applicableByShop.values()].reduce(
         (sum, v) => sum + v,
@@ -937,6 +962,7 @@ export class CouponService {
   private async getApplicableTotalsByShop(
     coupon: Coupon,
     cartItems: CartItem[],
+    flashPriceMap: Map<number, IActiveFlashPrice>,
   ): Promise<Map<number, number>> {
     const productIdSet =
       coupon.scope === CouponScope.Products
@@ -976,7 +1002,12 @@ export class CouponService {
         if (categoryId == null || !categoryIdSet!.has(categoryId)) continue;
       }
 
-      const price = Number(variant.sale_price ?? variant.price);
+      // Flash price wins when the variant is on an active flash sale; the
+      // coupon then discounts on top of it (matches checkout pricing).
+      const flash = flashPriceMap.get(variant.id);
+      const price = flash
+        ? flash.flashPrice
+        : Number(variant.sale_price ?? variant.price);
       const line = price * item.quantity;
       totals.set(shopId, (totals.get(shopId) ?? 0) + line);
     }

@@ -8,6 +8,7 @@ import { EntityManager } from 'typeorm';
 import { CartRepository } from './repositories/cart.repository';
 import { CartItemRepository } from './repositories/cart-item.repository';
 import { ProductService } from '../product/product.service';
+import { FlashSaleService } from '../flash-sale/flash-sale.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 import { MergeCartDto } from './dto/merge-cart.dto';
@@ -25,6 +26,7 @@ export class CartService {
     private readonly cartRepository: CartRepository,
     private readonly cartItemRepository: CartItemRepository,
     private readonly productService: ProductService,
+    private readonly flashSaleService: FlashSaleService,
   ) {}
 
   // ─── Customer / Guest endpoints ───
@@ -34,7 +36,7 @@ export class CartService {
     if (!cart) {
       return { id: 0, items: [] };
     }
-    return toCartResponse(cart);
+    return this.buildResponse(cart);
   }
 
   async addItem(owner: ICartOwner, dto: AddCartItemDto): Promise<CartResponseDto> {
@@ -92,7 +94,7 @@ export class CartService {
     this.logger.log(
       `Item added to cart ${cart.id}: variant ${dto.product_variant_id} x${dto.quantity}`,
     );
-    return toCartResponse(updatedCart!);
+    return this.buildResponse(updatedCart!);
   }
 
   async updateItemQuantity(
@@ -127,7 +129,7 @@ export class CartService {
 
     const updatedCart = await this.findCart(owner);
     this.logger.log(`Cart item ${itemId} quantity updated to ${dto.quantity}`);
-    return toCartResponse(updatedCart!);
+    return this.buildResponse(updatedCart!);
   }
 
   async removeItem(owner: ICartOwner, itemId: number): Promise<void> {
@@ -192,7 +194,7 @@ export class CartService {
     this.logger.log(
       `Guest cart ${guestCart.id} merged into user cart ${mergedCart!.id}`,
     );
-    return toCartResponse(mergedCart!);
+    return this.buildResponse(mergedCart!);
   }
 
   // ─── Cross-feature: consumed by order ───
@@ -214,6 +216,22 @@ export class CartService {
   }
 
   // ─── Private helpers ───
+
+  /**
+   * Maps a cart to its response and overlays the active flash-sale unit price
+   * per variant, so the cart shows (and totals with) the same price checkout
+   * will charge. The flash price is the single source of truth from
+   * FlashSaleService — cart display never drifts from checkout.
+   */
+  private async buildResponse(cart: Cart): Promise<CartResponseDto> {
+    const variantIds = (cart.items || []).map((i) => i.product_variant_id);
+    const flashMap = await this.flashSaleService.getActiveFlashPriceMap(
+      variantIds,
+    );
+    const flashPrices = new Map<number, number>();
+    flashMap.forEach((v, variantId) => flashPrices.set(variantId, v.flashPrice));
+    return toCartResponse(cart, flashPrices);
+  }
 
   private async findCart(owner: ICartOwner): Promise<Cart | null> {
     if (owner.userId) {

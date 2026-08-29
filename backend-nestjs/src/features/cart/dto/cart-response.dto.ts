@@ -10,6 +10,11 @@ export class CartItemVariantResponseDto {
   @ApiPropertyOptional()
   sale_price: number | null;
 
+  @ApiPropertyOptional({
+    description: 'Active flash-sale unit price (null when not on flash sale)',
+  })
+  flash_price: number | null;
+
   @ApiPropertyOptional()
   option1: string | null;
 

@@ -4,6 +4,7 @@ export const ROUTES = {
   PRODUCT_DETAIL: (slug: string) => `/products/${slug}`,
   CATEGORY: (slug: string) => `/categories/${slug}`,
   SHOP_PROFILE: (slug: string) => `/shops/${slug}`,
+  FLASH_SALE: '/flash-sale',
 
   LOGIN: '/login',
   REGISTER: '/register',
@@ -43,6 +44,7 @@ export const ROUTES = {
   ADMIN_SHOP_DETAIL: (id: number) => `/admin/shops/${id}`,
   ADMIN_NOTIFICATIONS: '/admin/notifications',
   ADMIN_COUPONS: '/admin/coupons',
+  ADMIN_FLASH_SALES: '/admin/flash-sales',
 
   SELLER_DASHBOARD: '/seller/dashboard',
   SELLER_PRODUCTS: '/seller/products',
@@ -53,6 +55,7 @@ export const ROUTES = {
   SELLER_ORDER_DETAIL: (id: number) => `/seller/orders/${id}`,
   SELLER_SHOP: '/seller/shop',
   SELLER_COUPONS: '/seller/coupons',
+  SELLER_FLASH_SALES: '/seller/flash-sales',
   SELLER_REVIEWS: '/seller/reviews',
   SELLER_WISHLIST: '/seller/wishlist',
 

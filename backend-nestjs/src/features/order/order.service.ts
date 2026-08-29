@@ -62,6 +62,7 @@ import { OrderStatus, PaymentMethod, PaymentStatus } from '../../common/constant
 import { InsufficientStockException } from '../../common/exceptions/insufficient-stock.exception';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { ShopService } from '../shop/shop.service';
+import { FlashSaleService } from '../flash-sale/flash-sale.service';
 import { ActorType } from '../notification/types/notification.types';
 
 @Injectable()
@@ -78,6 +79,7 @@ export class OrderService {
     private readonly userProfileService: UserProfileService,
     private readonly couponService: CouponService,
     private readonly shopService: ShopService,
+    private readonly flashSaleService: FlashSaleService,
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
   ) { }
@@ -92,6 +94,12 @@ export class OrderService {
 
     const cart = await this.cartService.getCartWithItems(userId);
 
+    // Active flash prices for the cart — the single source of truth reused for
+    // pricing, the sold-quantity pre-check, and the in-transaction consume.
+    const flashPriceMap = await this.flashSaleService.getActiveFlashPriceMap(
+      cart.items.map((item) => item.product_variant_id),
+    );
+
     for (const item of cart.items) {
       const variant = await this.productService.findVariantById(
         item.product_variant_id,
@@ -100,6 +108,15 @@ export class OrderService {
         throw new InsufficientStockException(
           variant?.sku || `variant_${item.product_variant_id}`,
         );
+      }
+
+      // Flash items also gate on remaining flash quantity (not just stock).
+      const flash = flashPriceMap.get(item.product_variant_id);
+      if (flash && flash.remaining < item.quantity) {
+        throw new BadRequestException({
+          code: 'FLASH_SALE_006',
+          message: `Flash sale item ${variant.sku} is sold out or has insufficient quantity`,
+        });
       }
     }
 
@@ -130,7 +147,10 @@ export class OrderService {
     const orderItemsData = cart.items.map((item) => {
       const variant = item.product_variant;
       const product = variant.product;
-      const price = Number(variant.sale_price ?? variant.price);
+      const flash = flashPriceMap.get(variant.id);
+      const price = flash
+        ? flash.flashPrice
+        : Number(variant.sale_price ?? variant.price);
       itemsTotal += price * item.quantity;
 
       return {
@@ -150,6 +170,8 @@ export class OrderService {
         variant_option2_value: variant.option2 ?? null,
         shop_id: product?.shop_id ?? null,
         shop_name: product?.shop?.name ?? null,
+        // Snapshot the flash item so sold_quantity can be reversed on cancel.
+        flash_sale_item_id: flash ? flash.flashItemId : null,
       };
     });
 
@@ -271,6 +293,18 @@ export class OrderService {
         createdOrders.push(order);
       }
 
+      // Reserve flash-sale quantities INSIDE the transaction — an oversell here
+      // must roll back the whole checkout (unlike stock, which is eventual).
+      for (const item of orderItemsData) {
+        if (item.flash_sale_item_id != null) {
+          await this.flashSaleService.consume(
+            item.flash_sale_item_id,
+            item.quantity,
+            queryRunner.manager,
+          );
+        }
+      }
+
       await this.cartService.clearCart(userId, queryRunner.manager);
 
       await queryRunner.commitTransaction();
@@ -347,6 +381,11 @@ export class OrderService {
     };
     if (!cart.items || cart.items.length === 0) return empty;
 
+    // Same flash-price source as checkout so the preview matches what is charged.
+    const flashPriceMap = await this.flashSaleService.getActiveFlashPriceMap(
+      cart.items.map((item) => item.product_variant_id),
+    );
+
     // Group by shop (skip items with no shop — they can't form a valid order).
     const shopGroups = new Map<number, { shopName: string; itemsTotal: number }>();
     for (const item of cart.items) {
@@ -354,7 +393,11 @@ export class OrderService {
       const product = variant.product;
       const shopId = product?.shop_id;
       if (shopId == null) continue;
-      const line = Number(variant.sale_price ?? variant.price) * item.quantity;
+      const flash = flashPriceMap.get(variant.id);
+      const unitPrice = flash
+        ? flash.flashPrice
+        : Number(variant.sale_price ?? variant.price);
+      const line = unitPrice * item.quantity;
       const group = shopGroups.get(shopId);
       if (group) {
         group.itemsTotal += line;
@@ -626,6 +669,7 @@ export class OrderService {
     order.status = OrderStatus.Cancelled;
 
     await this.handleCouponReversalOnCancel(order);
+    await this.handleFlashReversalOnCancel(order);
 
     this.eventEmitter.emit('order.cancelled', {
       orderId: order.id,
@@ -726,6 +770,7 @@ export class OrderService {
 
     if (dto.status === OrderStatus.Cancelled) {
       await this.handleCouponReversalOnCancel(order);
+      await this.handleFlashReversalOnCancel(order);
 
       this.eventEmitter.emit('order.cancelled', {
         orderId: order.id,
@@ -1245,6 +1290,23 @@ export class OrderService {
     );
     if (allCancelled) {
       await this.couponService.reverseGroupPlatformCoupon(order.order_group_id);
+    }
+  }
+
+  /**
+   * Give back flash-sale quantities for a cancelled sub-order. Each order_item
+   * carries the flash_sale_item_id it was purchased under, so reversal is exact
+   * regardless of later flash-price changes. Idempotent at the flow level: a
+   * given order only transitions into `cancelled` once.
+   */
+  private async handleFlashReversalOnCancel(order: Order): Promise<void> {
+    for (const item of order.order_items) {
+      if (item.flash_sale_item_id != null) {
+        await this.flashSaleService.reverse(
+          item.flash_sale_item_id,
+          item.quantity,
+        );
+      }
     }
   }
 

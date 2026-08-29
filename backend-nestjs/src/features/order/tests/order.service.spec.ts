@@ -16,6 +16,7 @@ import { ProductService } from '../../product/product.service';
 import { UserProfileService } from '../../user-profile/user-profile.service';
 import { CouponService } from '../../coupon/coupon.service';
 import { ShopService } from '../../shop/shop.service';
+import { FlashSaleService } from '../../flash-sale/flash-sale.service';
 import { PaymentMethod, OrderStatus, PaymentStatus } from '../../../common/constants';
 import { InsufficientStockException } from '../../../common/exceptions/insufficient-stock.exception';
 import {
@@ -118,6 +119,14 @@ describe('OrderService', () => {
           useValue: {
             resolveShopByUserId: jest.fn(),
             findShopById: jest.fn(),
+          },
+        },
+        {
+          provide: FlashSaleService,
+          useValue: {
+            getActiveFlashPriceMap: jest.fn().mockResolvedValue(new Map()),
+            consume: jest.fn(),
+            reverse: jest.fn(),
           },
         },
         {

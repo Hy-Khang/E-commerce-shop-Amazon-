@@ -129,7 +129,9 @@
 | **Shipper Dashboard** |
 | Danh sách đơn giao | — | — | — | ✅ | — |
 | **Flash Sale** |
-| Quản lý Flash Sale (CRUD) | — | — | — | — | ✅ |
+| Tạo & quản lý chiến dịch (khung giờ) | — | — | — | — | ✅ |
+| Duyệt / từ chối đăng ký sản phẩm | — | — | — | — | ✅ |
+| Đăng ký sản phẩm vào chiến dịch | — | — | ✅ | — | — |
 | Xem / mua sản phẩm Flash Sale | ✅ | ✅ | — | — | — |
 | **Chat Realtime** |
 | Chat với Seller | — | ✅ | — | — | — |
@@ -743,34 +745,37 @@ Theo dõi đơn hàng trực quan: timeline trạng thái + bản đồ vị tr�
 
 Chương trình giảm giá theo khung giờ, tạo hiệu ứng FOMO thúc đẩy mua sắm — tính năng đặc trưng của các sàn e-commerce lớn.
 
-### Chức năng
+### Chức năng — mô hình Đăng ký + Duyệt (Shopee-style)
 
-- Admin tạo **chiến dịch Flash Sale** với khung giờ bắt đầu/kết thúc
-- Thêm sản phẩm vào Flash Sale với **giá sale riêng** và **số lượng giới hạn**
-- Hiển thị **countdown timer** đếm ngược thời gian còn lại
-- **Progress bar** "Đã bán X%" — hiển thị tỷ lệ sản phẩm đã được mua
-- Trang Flash Sale riêng hiển thị tất cả deal đang diễn ra
-- Banner Flash Sale trên trang chủ khi có chiến dịch đang active
+- Admin tạo **chiến dịch Flash Sale** trống với **cửa sổ đăng ký** (`registration_starts_at`/`registration_ends_at`), **khung giờ diễn ra** (`starts_at`/`ends_at`) và **% giảm tối thiểu** (`min_discount_percent`)
+- **Seller đăng ký** sản phẩm của shop mình vào chiến dịch (giá sale riêng + số lượng giới hạn), chỉ trong cửa sổ đăng ký và phải đạt sàn giảm giá
+- **Admin duyệt / từ chối** từng đăng ký (kèm lý do). Admin **không** tự thêm sản phẩm
+- Chỉ đăng ký **đã duyệt (`approved`)** mới lên giá & hiển thị trên storefront
+- Hiển thị **countdown timer** + **progress bar** "Đã bán X%"
+- Trang Flash Sale riêng + banner trang chủ khi có chiến dịch active
 
-### Trạng thái chiến dịch
+### Trạng thái chiến dịch & đăng ký
 
 ```
-scheduled → active → ended
+Campaign:   scheduled → active → ended
+Đăng ký:    pending → approved | rejected   (approved → rejected: admin thu hồi)
 ```
 
-| Trạng thái | Mô tả |
+| Campaign | Mô tả |
 |------------|--------|
-| `scheduled` | Chưa đến giờ bắt đầu, hiển thị "Sắp diễn ra" |
-| `active` | Đang diễn ra, khách có thể mua |
+| `scheduled` | Chưa đến giờ diễn ra; đang/đã mở cửa sổ đăng ký |
+| `active` | Đang diễn ra, khách có thể mua (chỉ item `approved`) |
 | `ended` | Hết giờ hoặc hết hàng |
 
 ### Ghi chú kỹ thuật
 
-- Bảng `flash_sales` (id, name, starts_at, ends_at, status) + `flash_sale_items` (flash_sale_id, product_variant_id, flash_price, flash_quantity, sold_quantity)
-- Khi checkout sản phẩm Flash Sale: kiểm tra thời gian còn hiệu lực + số lượng còn lại
-- Cron job tự động chuyển trạng thái `scheduled → active → ended` theo thời gian
-- Optimistic locking trên `sold_quantity` để tránh oversell khi nhiều người mua đồng thời
-- **Redis cache**: cache Flash Sale data (danh sách deal, countdown, stock) → giảm tải DB trong khung giờ cao điểm
+- Bảng `flash_sales` (thêm `registration_starts_at`, `registration_ends_at`, `min_discount_percent`) + `flash_sale_items` (thêm `shop_id`, `status`, `created_by`, `reviewed_by`, `reviewed_at`, `reject_reason`). Một "đăng ký" = một `flash_sale_item` — không có bảng riêng, giữ nguyên `order_items.flash_sale_item_id` / consume / reverse / coupon stacking
+- Permission tách namespace: admin dùng `flash_sales:*` (quản lý + duyệt), seller dùng `flash_registrations:*` (đăng ký)
+- Filtered UNIQUE `(flash_sale_id, product_variant_id) WHERE status <> 'rejected'` → cho phép đăng ký lại sau khi bị từ chối, giữ row rejected làm audit
+- `FlashSaleService.getActiveFlashPriceMap` lọc thêm `status='approved'` → nguồn chân lý giá cho checkout/preview/coupon; `consume` chống oversell + yêu cầu `approved` + campaign còn live
+- Cron chuyển trạng thái campaign `scheduled → active → ended`; item duyệt lúc campaign `active` lên giá ngay
+- Event `flash_sale.registration_reviewed` → `NotificationListener` báo seller khi được duyệt/từ chối
+- **Redis cache** (dự kiến): cache Flash Sale data trong khung giờ cao điểm
 
 ---
 
