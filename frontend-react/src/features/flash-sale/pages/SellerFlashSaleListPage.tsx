@@ -220,7 +220,7 @@ function EditRegistrationRow({ item, onClose }: { item: FlashSaleItem; onClose: 
       <div className="space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Giá Flash Sale</label>
-          <input type="number" min={1} step="1000" className="admin-input" value={price} onChange={(e) => setPrice(e.target.value)} />
+          <input type="number" min={1} step="any" className="admin-input" value={price} onChange={(e) => setPrice(e.target.value)} />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Số lượng</label>

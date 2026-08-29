@@ -150,7 +150,7 @@ function RegisterBody({ campaign, onClose }: { campaign: FlashSale; onClose: () 
           <input
             type="number"
             min={1}
-            step="1000"
+            step="any"
             className="admin-input"
             {...rhf('flash_price', { valueAsNumber: true })}
           />
