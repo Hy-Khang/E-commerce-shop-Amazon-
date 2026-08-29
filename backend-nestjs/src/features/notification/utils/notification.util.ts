@@ -144,3 +144,24 @@ export function buildNewOrderMessage(
     message: `Order #${orderId} placed — ${itemCount} item${itemCount !== 1 ? 's' : ''}, ${formattedAmount}₫.`,
   };
 }
+
+export function buildFlashRegistrationReviewedMessage(
+  campaignName: string,
+  productName: string | null,
+  decision: 'approved' | 'rejected',
+  reason?: string | null,
+): { title: string; message: string } {
+  const product = productName ? `"${productName}"` : 'Sản phẩm';
+  if (decision === 'approved') {
+    return {
+      title: 'Đăng ký Flash Sale được duyệt',
+      message: `${product} đã được duyệt vào chương trình "${campaignName}".`,
+    };
+  }
+  return {
+    title: 'Đăng ký Flash Sale bị từ chối',
+    message: reason
+      ? `${product} bị từ chối khỏi "${campaignName}": ${reason}`
+      : `${product} bị từ chối khỏi "${campaignName}".`,
+  };
+}

@@ -55,6 +55,12 @@ export class OrderItem {
   @Column({ type: 'nvarchar', length: 100, nullable: true })
   shop_name: string | null;
 
+  // Snapshot of the flash_sale_item this line was purchased under (NULL = not a
+  // flash purchase). Needed to reverse sold_quantity on cancel — the cancel
+  // event payload alone cannot tell which flash item was consumed.
+  @Column({ type: 'int', nullable: true })
+  flash_sale_item_id: number | null;
+
   @ManyToOne(() => Order, (order) => order.order_items)
   @JoinColumn({ name: 'order_id' })
   order: Order;

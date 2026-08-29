@@ -138,6 +138,19 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | PAYMENT_004 | 400 | Invalid gateway signature |
 | PAYMENT_005 | 400 | Amount mismatch |
 | PAYMENT_006 | 502 | Gateway API error |
+| FLASH_SALE_001 | 404 | Flash sale campaign not found |
+| FLASH_SALE_002 | 404 | Flash sale item/registration not found |
+| FLASH_SALE_003 | 400 | Invalid window (require registration_starts < registration_ends ≤ starts < ends) |
+| FLASH_SALE_004 | 409 | Variant already registered (non-rejected) in the campaign |
+| FLASH_SALE_005 | 400 | Variant already in an overlapping campaign |
+| FLASH_SALE_006 | 400 | Flash item sold out or insufficient quantity |
+| FLASH_SALE_007 | 400 | flash_quantity below already-sold quantity |
+| FLASH_SALE_008 | 403 | Registration not owned by the seller's shop |
+| FLASH_SALE_009 | 400 | Campaign not open for registration (outside window / not scheduled) |
+| FLASH_SALE_010 | 400 | Variant does not belong to the seller's shop |
+| FLASH_SALE_011 | 400 | Flash price ≥ original, or below the campaign's minimum discount |
+| FLASH_SALE_012 | 400 | Cannot approve: variant already approved in an overlapping campaign |
+| FLASH_SALE_013 | 400 | Invalid registration status (edit/withdraw/approve requires the right state) |
 
 ---
 
@@ -276,6 +289,15 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | PATCH | `/notifications/read-all` | Mark all notifications as read (HTTP 204) | Customer |
 
 > **Polling-based delivery:** Frontend polls `GET /notifications/unread-count` every 30s. No WebSocket infrastructure. Notifications are created automatically via `order.status_updated` event. Admin/seller status changes notify the customer. Customer-initiated confirm receipt and return requests notify the seller(s). Customer-initiated order placement and cancellation do **not** create notifications.
+
+### Flash Sale — `/api/v1/flash-sales`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/flash-sales/active` | List currently-live campaigns (only `approved` items) | Public |
+| GET | `/flash-sales/:id` | Get a live campaign detail (only `approved` items; 404 if not live) | Public |
+
+> **Storefront shows only `approved` registrations.** Campaigns with zero approved items are hidden from the active feed. Flash pricing everywhere (product cards, checkout, preview, coupons) is sourced from `FlashSaleService.getActiveFlashPriceMap`, which returns only approved items of a live campaign.
 
 ### Payment Gateway — `/api/v1/payments`
 
@@ -419,6 +441,23 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 >
 > **Admin lock (sticky moderation):** Deactivating a **shop** coupon via `DELETE` sets `admin_disabled = 1` (in addition to `is_active = false`). While locked, the owning seller cannot edit or re-enable it (`COUPON_013`), and it validates as inactive (`COUPON_006`). `PATCH /admin/coupons/:id/unlock` clears **only** the lock (`admin_disabled = 0`) — it does **not** reactivate the coupon (`is_active` is left as-is). Unlocking means "stop moderating"; the owning seller then decides whether to turn the coupon back on. Platform coupons keep the plain `is_active` toggle (no lock).
 
+### Admin: Flash Sale — `/api/v1/admin/flash-sales`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/flash-sales` | List campaigns (paginated, `?search=&status=&is_active=`) | `flash_sales:read` |
+| POST | `/admin/flash-sales` | Create an empty campaign (registration window + `min_discount_percent`) | `flash_sales:create` |
+| GET | `/admin/flash-sales/registrations` | Global moderation queue (`?status=pending`) | `flash_sales:read` |
+| PATCH | `/admin/flash-sales/items/:itemId/approve` | Approve a seller registration | `flash_sales:update` |
+| PATCH | `/admin/flash-sales/items/:itemId/reject` | Reject a registration (`{ reason? }`) | `flash_sales:update` |
+| DELETE | `/admin/flash-sales/items/:itemId` | Remove a registration (hard delete) | `flash_sales:update` |
+| GET | `/admin/flash-sales/:id` | Campaign detail with ALL registrations (any status) | `flash_sales:read` |
+| GET | `/admin/flash-sales/:id/items` | List a campaign's registrations (moderation) | `flash_sales:read` |
+| PATCH | `/admin/flash-sales/:id` | Update campaign (window, `min_discount_percent`, `is_active`) | `flash_sales:update` |
+| DELETE | `/admin/flash-sales/:id` | Delete campaign (cascades registrations) | `flash_sales:delete` |
+
+> **Admin creates empty campaigns and moderates only** — it never adds products directly. Approving runs an overlap guard (`FLASH_SALE_012`) so a variant can't be approved into two time-overlapping campaigns. Approve/reject emit `flash_sale.registration_reviewed` → the owning seller is notified.
+
 ### Admin: Upload — `/api/v1/upload`
 
 | Method | Path | Description | Permission |
@@ -500,6 +539,19 @@ All seller endpoints use **permission-based access control** via `@Permissions()
 > **Validity:** A shop coupon only validates while its owning shop is `active` (suspended/banned → `COUPON_006`). An admin-locked coupon (`admin_disabled = 1`) also validates as inactive (`COUPON_006`) and cannot be edited or re-enabled by the seller (`COUPON_013`).
 >
 > **Checkout (multi-coupon):** A customer may stack **one platform coupon + one coupon per shop** (`coupon_codes[]`; violations → `COUPON_011`). A shop coupon discounts **only its own shop's items**; its whole discount lands on that shop's sub-order. A platform coupon is split across shops by each shop's applicable subtotal (largest-remainder rounding so parts sum exactly), filling only the headroom left after any shop coupon. Per-user usage counts distinct `order_group_id`. On cancel: a shop coupon is reversed as soon as its sub-order is cancelled; a platform coupon only when all group orders are cancelled (both idempotent).
+
+### Seller: Flash Sale — `/api/v1/seller/flash-sales`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/seller/flash-sales` | List campaigns currently open for registration | `flash_registrations:read` |
+| GET | `/seller/flash-sales/registrations` | List the shop's own registrations (paginated, `?status=`) | `flash_registrations:read` |
+| GET | `/seller/flash-sales/:id` | Campaign detail with the shop's own registrations | `flash_registrations:read` |
+| POST | `/seller/flash-sales/:id/register` | Register a variant of the shop (`{ product_variant_id, flash_price, flash_quantity }`) | `flash_registrations:create` |
+| PATCH | `/seller/flash-sales/items/:itemId` | Edit a **pending** registration (price/quantity, own shop only) | `flash_registrations:update` |
+| DELETE | `/seller/flash-sales/items/:itemId` | Withdraw a **pending** registration (own shop only) | `flash_registrations:delete` |
+
+> **Seller-only namespace `flash_registrations:*`** (separate from admin `flash_sales:*` so sellers can't reach `/admin/flash-sales`). Every endpoint resolves the caller's shop (`SHOP_004` if none) and hard-scopes to it. Registration is validated at `POST`: campaign must be open (`FLASH_SALE_009`), the variant must belong to the shop (`FLASH_SALE_010`), and `flash_price` must clear the campaign's `min_discount_percent` (`FLASH_SALE_011`). Only `pending` registrations can be edited/withdrawn (`FLASH_SALE_013`); touching another shop's registration → `FLASH_SALE_008`. Sellers are notified when a registration is approved/rejected.
 
 ---
 

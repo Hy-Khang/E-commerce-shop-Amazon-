@@ -25,7 +25,7 @@
 | 14 | Seller Dashboard & Analytics | 5 | 100% | 100% | **100%** | Hoàn chỉnh (Recharts) |
 | 15 | Shipper Dashboard | 5 | 100% | 100% | **100%** | Hoàn chỉnh (order accept/deliver, dashboard stats, seed data) |
 | 16 | Order Tracking | 5 | 0% | 0% | **0%** | Chưa làm |
-| 17 | Flash Sale | 6 | 0% | 0% | **0%** | Chưa làm |
+| 17 | Flash Sale | 6 | 100% | 100% | **100%** | Hoàn chỉnh (admin CRUD + campaign/items, cron trạng thái, checkout áp giá flash + chống oversell, coupon stack trên giá flash, storefront countdown/progress) |
 | 18 | Recently Viewed | 6 | 0% | 0% | **0%** | Chưa làm |
 | 19 | Product Comparison | 6 | 0% | 0% | **0%** | Chưa làm — FE-only (Zustand), không cần BE |
 | 20 | Chat Realtime | 6 | 0% | 0% | **0%** | Chưa làm — cần Socket.IO |
@@ -40,7 +40,7 @@
 |------------|:---------:|-----------|
 | Hoàn chỉnh (100%) | **14** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard |
 | Gần hoàn chỉnh (80-99%) | **1** | Search & Filter (95%) |
-| Chưa làm (0%) | **7** | Order Tracking, Flash Sale, Recently Viewed, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
+| Chưa làm (0%) | **6** | Order Tracking, Recently Viewed, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
 
 **Tổng tiến độ ước tính: ~73% (15/22 modules hoạt động)**
 
@@ -150,9 +150,15 @@ Hoàn chỉnh. Shipper order management: list available orders (confirmed, no sh
 
 ### Phase 6 — Tính năng nâng cao
 
-#### Module 17: Flash Sale — 0% ❌
+#### Module 17: Flash Sale — 100% ✅
 
-Chưa làm. Không có entity/controller/service/migration. Không có bảng `flash_sales`, `flash_sale_items`.
+Hoàn chỉnh (Admin-only, full-stack).
+
+**Backend:** entity `flash_sales` + `flash_sale_items` (+ cột snapshot `order_items.flash_sale_item_id`), migration `CreateFlashSaleTables`, feature `flash-sale/` (service/repos/DTO/controllers admin + public), cron chuyển trạng thái `scheduled → active → ended` mỗi phút, permissions `flash_sales:*` (admin), seed 2 campaign mẫu.
+- **Checkout hook:** giá flash tập trung tại `FlashSaleService.getActiveFlashPriceMap` — dùng chung cho checkout, `POST /orders/preview` và coupon. Tăng `sold_quantity` **trong transaction** (atomic guard chống oversell → rollback cả đơn). Hoàn `sold_quantity` khi huỷ đơn (customer + admin/seller) qua `flash_sale_item_id`.
+- **Coupon:** `getApplicableTotalsByShop` định giá theo giá flash → coupon giảm **trên** giá flash, preview khớp checkout.
+
+**Frontend:** feature `flash-sale/` — trang public `/flash-sale` + `FlashSaleSection` trên homepage (countdown + progress "đã bán X%"), admin `/admin/flash-sales` (CRUD campaign + quản lý items), route/nav/permission đã nối.
 
 #### Module 18: Recently Viewed — 0% ❌
 

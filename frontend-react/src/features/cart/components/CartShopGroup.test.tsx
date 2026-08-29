@@ -24,6 +24,7 @@ function grouping(): CartShopGrouping {
           option2_label: null,
           price: 100000,
           sale_price: null,
+          flash_price: null,
           stock_quantity: 10,
           product_name: 'Product One',
           thumbnail_url: null,

@@ -6,6 +6,8 @@ export interface CartVariant {
   option2_label: string | null;
   price: number;
   sale_price: number | null;
+  // Active flash-sale unit price (null when not on flash sale). Wins over sale_price.
+  flash_price: number | null;
   stock_quantity: number;
   product_name: string;
   thumbnail_url: string | null;

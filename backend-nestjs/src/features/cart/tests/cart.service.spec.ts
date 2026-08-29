@@ -4,6 +4,7 @@ import { CartService } from '../cart.service';
 import { CartRepository } from '../repositories/cart.repository';
 import { CartItemRepository } from '../repositories/cart-item.repository';
 import { ProductService } from '../../product/product.service';
+import { FlashSaleService } from '../../flash-sale/flash-sale.service';
 import { CartEmptyException } from '../../../common/exceptions/cart-empty.exception';
 import {
   mockCart,
@@ -47,6 +48,12 @@ describe('CartService', () => {
           provide: ProductService,
           useValue: {
             findVariantById: jest.fn(),
+          },
+        },
+        {
+          provide: FlashSaleService,
+          useValue: {
+            getActiveFlashPriceMap: jest.fn().mockResolvedValue(new Map()),
           },
         },
       ],

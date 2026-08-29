@@ -18,6 +18,7 @@ import { ShopModule } from './features/shop/shop.module';
 import { NotificationModule } from './features/notification/notification.module';
 import { PaymentModule } from './features/payment/payment.module';
 import { HomepageModule } from './features/homepage/homepage.module';
+import { FlashSaleModule } from './features/flash-sale/flash-sale.module';
 import { MailModule } from './core/mail/mail.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -43,6 +44,7 @@ import { AppService } from './app.service';
     NotificationModule,
     PaymentModule,
     HomepageModule,
+    FlashSaleModule,
     MailModule,
   ],
   controllers: [AppController],

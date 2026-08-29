@@ -14,6 +14,7 @@ import { Category } from '../product/entities/category.entity';
 import { Product } from '../product/entities/product.entity';
 import { ShopModule } from '../shop/shop.module';
 import { CartModule } from '../cart/cart.module';
+import { FlashSaleModule } from '../flash-sale/flash-sale.module';
 
 @Module({
   imports: [
@@ -29,6 +30,9 @@ import { CartModule } from '../cart/cart.module';
     // Read the caller's cart to build the availability catalog. Acyclic:
     // CartModule imports only ProductModule, never CouponModule.
     CartModule,
+    // Price cart items at their active flash price so coupon math matches
+    // checkout. Acyclic: FlashSaleModule imports only ProductModule.
+    FlashSaleModule,
   ],
   controllers: [
     CouponController,

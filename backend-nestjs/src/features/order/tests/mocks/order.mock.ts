@@ -31,6 +31,7 @@ export const mockOrderItem = (overrides: Partial<OrderItem> = {}): OrderItem => 
   variant_option2_value: null,
   shop_id: null,
   shop_name: null,
+  flash_sale_item_id: null,
   order: null as any,
   product_variant: mockProductVariant(),
   ...overrides,

@@ -1,18 +1,16 @@
 import type { CartItem } from '../types/cart.types';
 
 export function calculateSubtotal(items: CartItem[]): number {
-  return items.reduce((sum, item) => {
-    const price = item.variant.sale_price ?? item.variant.price;
-    return sum + price * item.quantity;
-  }, 0);
+  return items.reduce((sum, item) => sum + getEffectivePrice(item) * item.quantity, 0);
 }
 
 export function isCartEmpty(items: CartItem[]): boolean {
   return items.length === 0;
 }
 
+/** Flash price wins, then sale price, then list price — matches checkout pricing. */
 export function getEffectivePrice(item: CartItem): number {
-  return item.variant.sale_price ?? item.variant.price;
+  return item.variant.flash_price ?? item.variant.sale_price ?? item.variant.price;
 }
 
 export function getItemTotal(item: CartItem): number {
@@ -58,10 +56,7 @@ export function groupItemsByShop(items: CartItem[]): CartShopGrouping[] {
  */
 export function cartSignature(items: CartItem[]): string {
   return items
-    .map(
-      (i) =>
-        `${i.product_variant_id}:${i.quantity}:${i.variant.sale_price ?? i.variant.price}`,
-    )
+    .map((i) => `${i.product_variant_id}:${i.quantity}:${getEffectivePrice(i)}`)
     .join('|');
 }
 

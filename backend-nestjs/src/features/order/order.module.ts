@@ -21,6 +21,7 @@ import { ProductModule } from '../product/product.module';
 import { UserProfileModule } from '../user-profile/user-profile.module';
 import { CouponModule } from '../coupon/coupon.module';
 import { ShopModule } from '../shop/shop.module';
+import { FlashSaleModule } from '../flash-sale/flash-sale.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ShopModule } from '../shop/shop.module';
     UserProfileModule,
     CouponModule,
     ShopModule,
+    FlashSaleModule,
   ],
   controllers: [OrderController, AdminOrderController, SellerOrderController, ShipperOrderController],
   providers: [

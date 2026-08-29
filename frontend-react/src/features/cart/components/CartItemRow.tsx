@@ -1,4 +1,4 @@
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, Zap } from 'lucide-react';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import type { CartItem } from '../types/cart.types';
 import { getEffectivePrice, getItemTotal } from '../utils/cart.util';
@@ -12,7 +12,8 @@ interface Props {
 
 export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Props) {
   const effectivePrice = getEffectivePrice(item);
-  const hasSalePrice = item.variant.sale_price !== null;
+  const isFlash = item.variant.flash_price !== null;
+  const hasDiscount = isFlash || item.variant.sale_price !== null;
   const maxStock = item.variant.stock_quantity;
 
   return (
@@ -45,8 +46,18 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
           <span>SKU: {item.variant.sku}</span>
         </div>
         <div className="mt-1 flex items-center gap-2">
-          <span className="text-sm font-semibold text-text-primary">{formatPrice(effectivePrice)}</span>
-          {hasSalePrice && (
+          {isFlash && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              <Zap className="h-2.5 w-2.5 fill-current" />
+              Flash
+            </span>
+          )}
+          <span
+            className={`text-sm font-semibold ${isFlash ? 'text-amber-600 dark:text-amber-400' : 'text-text-primary'}`}
+          >
+            {formatPrice(effectivePrice)}
+          </span>
+          {hasDiscount && (
             <span className="text-xs text-text-muted line-through">{formatPrice(item.variant.price)}</span>
           )}
         </div>

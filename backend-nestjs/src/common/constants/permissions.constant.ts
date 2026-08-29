@@ -44,6 +44,16 @@ export const PERMISSIONS = {
   // Payments
   PAYMENTS_CREATE: 'payments:create',
   PAYMENTS_READ: 'payments:read',
+  // Flash Sales (admin-only: campaign management + registration moderation)
+  FLASH_SALES_CREATE: 'flash_sales:create',
+  FLASH_SALES_READ: 'flash_sales:read',
+  FLASH_SALES_UPDATE: 'flash_sales:update',
+  FLASH_SALES_DELETE: 'flash_sales:delete',
+  // Flash Sale Registrations (seller-only: register own products into campaigns)
+  FLASH_REGISTRATIONS_CREATE: 'flash_registrations:create',
+  FLASH_REGISTRATIONS_READ: 'flash_registrations:read',
+  FLASH_REGISTRATIONS_UPDATE: 'flash_registrations:update',
+  FLASH_REGISTRATIONS_DELETE: 'flash_registrations:delete',
   // Dashboard
   DASHBOARD_READ: 'dashboard:read',
   // Portal Access
