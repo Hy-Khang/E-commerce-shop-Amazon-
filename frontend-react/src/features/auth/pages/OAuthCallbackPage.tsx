@@ -5,6 +5,7 @@ import { authService } from '../services/auth.service';
 import { useAuthStore } from '../stores/auth.store';
 import { useMergeCart } from '@/features/cart/hooks/useMergeCart';
 import { cartKeys } from '@/features/cart/hooks/useCart';
+import { useMergeRecentlyViewed } from '@/features/recently-viewed/hooks/useMergeRecentlyViewed';
 import { ROUTES } from '@/common/constants/routes';
 import { Loader2 } from 'lucide-react';
 
@@ -13,6 +14,7 @@ export default function OAuthCallbackPage() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const { mutateAsync: mergeCart } = useMergeCart();
+  const { mutateAsync: mergeRecentlyViewed } = useMergeRecentlyViewed();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const exchanged = useRef(false);
@@ -38,6 +40,12 @@ export default function OAuthCallbackPage() {
           }
         }
 
+        try {
+          await mergeRecentlyViewed();
+        } catch {
+          // recently-viewed merge is best-effort
+        }
+
         const role = userData.user.role;
         if (role === 'admin') {
           navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
@@ -53,7 +61,7 @@ export default function OAuthCallbackPage() {
         setTimeout(() => navigate(ROUTES.LOGIN, { replace: true }), 3000);
       }
     })();
-  }, [searchParams, login, mergeCart, queryClient, navigate]);
+  }, [searchParams, login, mergeCart, mergeRecentlyViewed, queryClient, navigate]);
 
   if (error) {
     return (

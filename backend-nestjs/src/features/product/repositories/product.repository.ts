@@ -10,6 +10,7 @@ export interface IProductFilter {
   search?: string;
   category_id?: number;
   category_ids?: number[];
+  ids?: number[];
   min_price?: number;
   max_price?: number;
   min_rating?: number;
@@ -81,6 +82,21 @@ export class ProductRepository {
         totalPages: Math.ceil(total / filter.limit),
       },
     };
+  }
+
+  /** Active products (active shop only) for a set of ids — no pagination, no ordering. */
+  async findActiveByIds(ids: number[]): Promise<Product[]> {
+    if (ids.length === 0) return [];
+
+    return this.repo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.variants', 'variant')
+      .leftJoinAndSelect('product.images', 'image')
+      .leftJoinAndSelect('product.category', 'category')
+      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .where('product.id IN (:...ids)', { ids })
+      .andWhere('product.is_active = :isActive', { isActive: true })
+      .getMany();
   }
 
   async findAllPaginated(filter: IProductFilter): Promise<IPaginatedResult<Product>> {
@@ -335,6 +351,10 @@ export class ProductRepository {
           search: `%${filter.search}%`,
         });
       }
+    }
+
+    if (filter.ids && filter.ids.length > 0) {
+      qb.andWhere('product.id IN (:...ids)', { ids: filter.ids });
     }
 
     if (filter.category_ids && filter.category_ids.length > 0) {

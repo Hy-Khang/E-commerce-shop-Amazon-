@@ -33,6 +33,7 @@ import { OrderStatusHistory } from '../../features/order/entities/order-status-h
 import { OrderTrackingLocation } from '../../features/order/entities/order-tracking-location.entity';
 import { FlashSale } from '../../features/flash-sale/entities/flash-sale.entity';
 import { FlashSaleItem } from '../../features/flash-sale/entities/flash-sale-item.entity';
+import { RecentlyViewed } from '../../features/recently-viewed/entities/recently-viewed.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -71,6 +72,7 @@ export const AppDataSource = new DataSource({
     OrderTrackingLocation,
     FlashSale,
     FlashSaleItem,
+    RecentlyViewed,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   options: {

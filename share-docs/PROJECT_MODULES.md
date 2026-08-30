@@ -799,10 +799,11 @@ Lưu và hiển thị lịch sử sản phẩm mà khách hàng đã xem, giúp 
 
 ### Ghi chú kỹ thuật
 
-- Guest: lưu danh sách `product_id` + `viewed_at` vào `localStorage`
-- Customer: lưu vào bảng `recently_viewed` (user_id, product_id, viewed_at) — UPSERT khi xem lại sản phẩm đã có
-- API endpoint: `GET /api/v1/products/recently-viewed` — trả về danh sách sản phẩm đã xem (Customer)
-- Merge localStorage → DB khi đăng nhập (tương tự cart merge)
+- Guest: lưu danh sách `{ product_id, viewed_at }` vào `localStorage` (Zustand persist); carousel hydrate dữ liệu tươi qua `GET /api/v1/products?ids=1,2,3`
+- Customer: lưu vào bảng `recently_viewed` (user_id, product_id, viewed_at) — UPSERT khi xem lại sản phẩm đã có (bump `viewed_at`), giữ tối đa 20 mới nhất
+- API endpoints (Customer): `GET /api/v1/recently-viewed` (danh sách), `POST /api/v1/recently-viewed` (ghi nhận view), `POST /api/v1/recently-viewed/merge` (merge)
+- Response cùng shape với `GET /products` (Product + variants/images) → guest & customer render chung `ProductCard`; lọc visibility (is_active + shop active)
+- Merge localStorage → DB khi đăng nhập (tương tự cart merge — gọi ở useLogin/useVerifyEmail/OAuthCallback)
 
 ---
 

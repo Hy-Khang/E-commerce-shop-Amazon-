@@ -514,6 +514,23 @@
 
 ---
 
+### 2.13 Recently Viewed Feature
+
+#### `recently_viewed`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| product_id | INT | FK → `products.id` ON DELETE CASCADE, NOT NULL |
+| viewed_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` — **updated** on re-view (not write-once) |
+
+**Constraints:** UNIQUE `(user_id, product_id)` — `uq_recently_viewed_user_product`
+
+> **Design decision:** Links to `products`, not `product_variants` (a view is at the product level). The UNIQUE pair makes a re-view an **UPSERT** that bumps `viewed_at` (raw `SYSUTCDATETIME()` to stay UTC-consistent) instead of inserting a duplicate; the service trims each user to the newest 20 rows after every write. Only `viewed_at` mutates after insert. Customer-only — guests keep their history in localStorage and merge it in on login. Reads are visibility-filtered via `ProductService.findActiveByIds` (active product + active shop), shared with the bulk `GET /products?ids=` endpoint. Indexes: `idx_recently_viewed_user_id`, `idx_recently_viewed_user_viewed (user_id, viewed_at)`.
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -532,6 +549,7 @@ erDiagram
     users ||--o{ wishlist_items : "has wishlist"
     users ||--o{ coupon_usages : "used coupons"
     users ||--o{ notifications : "has notifications"
+    users ||--o{ recently_viewed : "viewed products"
 
     shops ||--o{ products : "sells"
     shops ||--o{ orders : "has orders"
@@ -546,6 +564,7 @@ erDiagram
     products ||--o{ reviews : "has reviews"
     products ||--o{ wishlist_items : "wishlisted by"
     products ||--o{ coupon_products : "targeted by"
+    products ||--o{ recently_viewed : "viewed as"
 
     product_variants ||--o{ cart_items : "added to cart"
     product_variants ||--o{ order_items : "purchased as"
@@ -614,6 +633,9 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | wishlist_items | `uq_wishlist_items_user_product` | user_id, product_id | Unique constraint + "is wishlisted?" check |
 | wishlist_items | `idx_wishlist_items_user_id` | user_id | User's wishlist listing |
 | wishlist_items | `idx_wishlist_items_product_id` | product_id | Admin analytics: count per product |
+| recently_viewed | `uq_recently_viewed_user_product` | user_id, product_id | UNIQUE — UPSERT target for a view |
+| recently_viewed | `idx_recently_viewed_user_id` | user_id | User's recently-viewed listing |
+| recently_viewed | `idx_recently_viewed_user_viewed` | user_id, viewed_at | Top-20 newest-first ordering |
 | coupons | `idx_coupons_is_active` | is_active | Filter active coupons |
 | coupons | `idx_coupons_expires_at` | expires_at | Expiration queries / cleanup |
 | coupons | `idx_coupons_shop_id` | shop_id | Filter coupons by owning shop (seller listing / admin filter) |

@@ -26,7 +26,7 @@
 | 15 | Shipper Dashboard | 5 | 100% | 100% | **100%** | Hoàn chỉnh (order accept/deliver, dashboard stats, seed data) |
 | 16 | Order Tracking | 5 | 0% | 0% | **0%** | Chưa làm |
 | 17 | Flash Sale | 6 | 100% | 100% | **100%** | Hoàn chỉnh (admin CRUD + campaign/items, cron trạng thái, checkout áp giá flash + chống oversell, coupon stack trên giá flash, storefront countdown/progress) |
-| 18 | Recently Viewed | 6 | 0% | 0% | **0%** | Chưa làm |
+| 18 | Recently Viewed | 6 | 100% | 100% | **100%** | Hoàn chỉnh (guest localStorage + customer DB, merge on login, carousel Home/Detail/Cart) |
 | 19 | Product Comparison | 6 | 0% | 0% | **0%** | Chưa làm — FE-only (Zustand), không cần BE |
 | 20 | Chat Realtime | 6 | 0% | 0% | **0%** | Chưa làm — cần Socket.IO |
 | 21 | AI Chatbox | 6 | 0% | 0% | **0%** | Chưa làm — cần Grok API |
@@ -38,11 +38,11 @@
 
 | Trạng thái | Số module | Danh sách |
 |------------|:---------:|-----------|
-| Hoàn chỉnh (100%) | **14** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard |
+| Hoàn chỉnh (100%) | **15** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard, Recently Viewed |
 | Gần hoàn chỉnh (80-99%) | **1** | Search & Filter (95%) |
-| Chưa làm (0%) | **6** | Order Tracking, Recently Viewed, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
+| Chưa làm (0%) | **5** | Order Tracking, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
 
-**Tổng tiến độ ước tính: ~73% (15/22 modules hoạt động)**
+**Tổng tiến độ ước tính: ~77% (16/22 modules hoạt động)**
 
 ---
 
@@ -160,9 +160,9 @@ Hoàn chỉnh (Admin-only, full-stack).
 
 **Frontend:** feature `flash-sale/` — trang public `/flash-sale` + `FlashSaleSection` trên homepage (countdown + progress "đã bán X%"), admin `/admin/flash-sales` (CRUD campaign + quản lý items), route/nav/permission đã nối.
 
-#### Module 18: Recently Viewed — 0% ❌
+#### Module 18: Recently Viewed — 100% ✅
 
-Chưa làm. Không có tracking (cả localStorage FE lẫn DB BE). Không có bảng `recently_viewed`.
+Hoàn chỉnh. **BE:** feature module `recently-viewed/` (entity/table `recently_viewed` với UNIQUE `(user_id, product_id)` + bump `viewed_at`, migration, repo UPSERT + prune-20), 3 endpoint Customer-only `GET/POST /recently-viewed` + `/merge`. Thêm bulk `GET /products?ids=` + `ProductService.findActiveByIds` (dùng chung, lọc visibility). **FE:** Zustand persist store (guest lưu id + viewed_at), hooks `useRecentlyViewed`/`useTrackView`/`useMergeRecentlyViewed`, `RecentlyViewedCarousel` (tái dùng `ProductCard`) hiển thị ở Home/Product Detail/Cart, merge localStorage → DB khi đăng nhập (useLogin/useVerifyEmail/OAuthCallback).
 
 #### Module 19: Product Comparison — 0% ❌
 
