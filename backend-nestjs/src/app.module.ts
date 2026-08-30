@@ -19,6 +19,7 @@ import { NotificationModule } from './features/notification/notification.module'
 import { PaymentModule } from './features/payment/payment.module';
 import { HomepageModule } from './features/homepage/homepage.module';
 import { FlashSaleModule } from './features/flash-sale/flash-sale.module';
+import { RecentlyViewedModule } from './features/recently-viewed/recently-viewed.module';
 import { MailModule } from './core/mail/mail.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -45,6 +46,7 @@ import { AppService } from './app.service';
     PaymentModule,
     HomepageModule,
     FlashSaleModule,
+    RecentlyViewedModule,
     MailModule,
   ],
   controllers: [AppController],

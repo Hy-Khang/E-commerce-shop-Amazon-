@@ -9,6 +9,7 @@ import { AddToCartButton, useAddToCart } from '@/features/cart';
 import { useFlashPriceMaps } from '@/features/flash-sale';
 import { ReviewList } from '@/features/review';
 import { WishlistButton } from '@/features/wishlist';
+import { RecentlyViewedCarousel, useTrackView } from '@/features/recently-viewed';
 import { ShopInfoCard } from '@/features/shop/components/ShopInfoCard';
 import { useProduct } from '../hooks/useProduct';
 import { useCategories } from '../hooks/useCategories';
@@ -30,6 +31,9 @@ export default function ProductDetailPage() {
 
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
+
+  // Record the view (DB for customers, localStorage for guests).
+  useTrackView(product?.id);
 
   if (isLoading) return <ProductDetailSkeleton />;
 
@@ -235,6 +239,8 @@ export default function ProductDetailPage() {
           categoryId={product.category_id}
           currentProductId={product.id}
         />
+
+        <RecentlyViewedCarousel excludeProductId={product.id} />
       </div>
     </div>
   );

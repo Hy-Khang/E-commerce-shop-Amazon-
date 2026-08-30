@@ -690,6 +690,11 @@ export class ProductService {
     return this.productRepository.findById(id);
   }
 
+  /** Active products (active shop only) for a set of ids — used by bulk `?ids=` and recently-viewed. */
+  async findActiveByIds(ids: number[]): Promise<Product[]> {
+    return this.productRepository.findActiveByIds(ids);
+  }
+
   // ─── Event Listeners ───
 
   @OnEvent('order.created')

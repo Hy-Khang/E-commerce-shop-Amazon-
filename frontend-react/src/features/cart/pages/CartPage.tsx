@@ -7,6 +7,7 @@ import {
   CouponSelectorModal,
   useAppliedCouponsStore,
 } from '@/features/coupon';
+import { RecentlyViewedCarousel } from '@/features/recently-viewed';
 import { useCart } from '../hooks/useCart';
 import { useUpdateCartItem } from '../hooks/useUpdateCartItem';
 import { useRemoveCartItem } from '../hooks/useRemoveCartItem';
@@ -62,16 +63,19 @@ export default function CartPage() {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <ShoppingCart className="h-16 w-16 text-text-muted/60" />
-        <h2 className="mt-4 text-lg font-semibold text-text-primary">Your cart is empty</h2>
-        <p className="mt-1 text-sm text-text-muted">Browse products and add items to your cart.</p>
-        <Link
-          to={ROUTES.PRODUCTS}
-          className="mt-6 rounded-lg bg-brand px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
-        >
-          Browse Products
-        </Link>
+      <div className="space-y-10">
+        <div className="flex flex-col items-center justify-center py-16">
+          <ShoppingCart className="h-16 w-16 text-text-muted/60" />
+          <h2 className="mt-4 text-lg font-semibold text-text-primary">Your cart is empty</h2>
+          <p className="mt-1 text-sm text-text-muted">Browse products and add items to your cart.</p>
+          <Link
+            to={ROUTES.PRODUCTS}
+            className="mt-6 rounded-lg bg-brand px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
+          >
+            Browse Products
+          </Link>
+        </div>
+        <RecentlyViewedCarousel />
       </div>
     );
   }
@@ -118,6 +122,10 @@ export default function CartPage() {
             }
           />
         </div>
+      </div>
+
+      <div className="mt-10">
+        <RecentlyViewedCarousel />
       </div>
 
       {isAuthenticated && (

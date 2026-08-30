@@ -195,7 +195,7 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 |--------|------|-------------|------|
 | GET | `/categories` | List category tree | Public |
 | GET | `/categories/:slug` | Get category with products (paginated) | Public |
-| GET | `/products` | List active products (paginated, filtered, sorted) | Public |
+| GET | `/products` | List active products (paginated, filtered, sorted). Accepts `?ids=1,2,3` (CSV, max 100) to bulk-fetch a specific set of active products — used by Recently Viewed (guest) and Product Comparison | Public |
 | GET | `/products/:slug` | Get product detail (variants + images + shop info) | Public |
 
 ### Shop — `/api/v1/shops`
@@ -265,6 +265,16 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | GET | `/wishlist` | List my wishlist (paginated) | Customer |
 | GET | `/wishlist/check/:productId` | Check if single product is in wishlist | Customer |
 | POST | `/wishlist/check` | Bulk check multiple products (body: `product_ids[]`, max 50) | Customer |
+
+### Recently Viewed — `/api/v1/recently-viewed`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/recently-viewed` | List my recently-viewed products (newest first, max 20) | Customer |
+| POST | `/recently-viewed` | Record a product view (`{ product_id }`; 204) | Customer |
+| POST | `/recently-viewed/merge` | Merge guest (localStorage) history (`{ items: [{ product_id, viewed_at }] }`, max 50) | Customer |
+
+> **Guest vs customer:** Guests are tracked entirely on the frontend (localStorage, newest 20). On login the list is POSTed to `/recently-viewed/merge` (mirrors cart merge) and cleared. The carousel renders on Home, Product Detail, and Cart. All three endpoints return the same **product-list-item** shape as `GET /products` (Product + variants/images), so the guest path (hydrated via `GET /products?ids=`) and the customer path render identically. `GET /recently-viewed` and merge are visibility-filtered (only `is_active` products of `active` shops), so a product deactivated after viewing drops out. Recording a view UPSERTs on `(user_id, product_id)` — a re-view bumps `viewed_at` (no duplicate) and the list is trimmed to the newest 20. Unknown/inactive product on record → `PRODUCT_001 (404)`.
 
 ### Coupon — `/api/v1/coupons`
 

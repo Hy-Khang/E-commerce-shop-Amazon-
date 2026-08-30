@@ -4,6 +4,7 @@ import { authService } from '../services/auth.service';
 import { useAuthStore } from '../stores/auth.store';
 import { useMergeCart } from '@/features/cart/hooks/useMergeCart';
 import { cartKeys } from '@/features/cart/hooks/useCart';
+import { useMergeRecentlyViewed } from '@/features/recently-viewed/hooks/useMergeRecentlyViewed';
 import type { VerifyEmailRequest } from '../types/auth.types';
 import { ROUTES } from '@/common/constants/routes';
 
@@ -11,6 +12,7 @@ export function useVerifyEmail() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
   const { mutateAsync: mergeCart } = useMergeCart();
+  const { mutateAsync: mergeRecentlyViewed } = useMergeRecentlyViewed();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -27,6 +29,12 @@ export function useVerifyEmail() {
         } catch {
           // cart merge is best-effort
         }
+      }
+
+      try {
+        await mergeRecentlyViewed();
+      } catch {
+        // recently-viewed merge is best-effort
       }
 
       navigate(ROUTES.HOME, { replace: true });

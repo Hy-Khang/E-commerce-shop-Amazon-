@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsNumber, IsOptional, IsPositive, IsString, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { ArrayMaxSize, IsArray, IsEnum, IsInt, IsNumber, IsOptional, IsPositive, IsString, Max, Min } from 'class-validator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 export enum ProductSortBy {
@@ -23,6 +23,20 @@ export class ProductQueryDto extends PaginationDto {
   @IsInt()
   @IsPositive()
   category_id?: number;
+
+  @ApiPropertyOptional({ description: 'Filter by a set of product IDs (CSV, e.g. 1,2,3). Max 100.' })
+  @IsOptional()
+  @Transform(({ value }) =>
+    String(value)
+      .split(',')
+      .map((v) => Number(v.trim()))
+      .filter((n) => Number.isInteger(n) && n > 0),
+  )
+  @IsArray()
+  @ArrayMaxSize(100)
+  @IsInt({ each: true })
+  @IsPositive({ each: true })
+  ids?: number[];
 
   @ApiPropertyOptional({ description: 'Minimum price filter' })
   @IsOptional()

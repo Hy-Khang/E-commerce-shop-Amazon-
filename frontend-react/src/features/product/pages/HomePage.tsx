@@ -16,6 +16,7 @@ import { BestSellersSection } from '../components/BestSellersSection';
 import { TrendingSection } from '../components/TrendingSection';
 import { DiscoverMoreSection } from '../components/DiscoverMoreSection';
 import { FlashSaleSection } from '@/features/flash-sale';
+import { RecentlyViewedCarousel } from '@/features/recently-viewed';
 
 const HERO_SLIDES = [
   {
@@ -212,6 +213,9 @@ export default function HomePage() {
         products={homepage?.discoverMore ?? []}
         isLoading={isLoadingHomepage}
       />
+
+      {/* ── Recently Viewed ── */}
+      <RecentlyViewedCarousel />
 
       {/* ── 9. New Arrivals ── */}
       <motion.section
