@@ -1,12 +1,10 @@
 import { Link } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
-import { useChatUnreadCount } from '../hooks/useChat';
-import { useChatStore } from '../stores/chat.store';
+import { useChatUnreadBadge } from '../hooks/useChat';
 
 export function ChatBadge() {
-  useChatUnreadCount();
-  const unreadTotal = useChatStore((s) => s.unreadTotal);
+  const unreadTotal = useChatUnreadBadge();
 
   return (
     <Link

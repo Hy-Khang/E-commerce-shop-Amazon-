@@ -4,6 +4,8 @@ import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { NotificationBell } from '@/features/notification';
+import { useChatUnreadBadge } from '@/features/chat';
+import { ROUTES } from '@/common/constants/routes';
 import { PortalAccountDropdown } from './PortalAccountDropdown';
 import { SellerGlobalSearch } from './SellerGlobalSearch';
 
@@ -21,6 +23,7 @@ const sellerLinks: Array<{ to: string; label: string; icon: LucideIcon; permissi
 
 export function SellerLayout() {
   const { hasPermission } = usePermissions();
+  const chatUnread = useChatUnreadBadge();
 
   const visibleLinks = sellerLinks.filter((link) => hasPermission(link.permission));
 
@@ -31,6 +34,7 @@ export function SellerLayout() {
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {visibleLinks.map((link) => {
             const Icon = link.icon;
+            const badge = link.to === ROUTES.SELLER_CHAT ? chatUnread : 0;
             return (
               <NavLink
                 key={link.to}
@@ -40,7 +44,12 @@ export function SellerLayout() {
                 }
               >
                 <Icon className="h-4 w-4 opacity-70" />
-                {link.label}
+                <span className="flex-1">{link.label}</span>
+                {badge > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-bold text-amber-950">
+                    {badge > 99 ? '99+' : badge}
+                  </span>
+                )}
               </NavLink>
             );
           })}

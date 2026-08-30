@@ -38,9 +38,11 @@ from Module 11 (Notifications) — one connection, not a second socket.
   rolled back on error), modeled on `useAddToCart`.
 
 ## Integration points
-- `ChatBadge` in `Header.tsx` (gated `isAuthenticated`) and a nav link in
-  `SellerLayout`.
-- `ChatWithShopButton` in `ShopInfoCard` / `ShopHeader` (guests → login).
+- `ChatBadge` in `Header.tsx` (gated `isAuthenticated`). Seller portal shows the
+  unread count on the `SellerLayout` "Messages" nav link via `useChatUnreadBadge`.
+- `ChatWithShopButton` in `ShopInfoCard` / `ShopHeader`. Guests → login with
+  `state.from` so `useLogin` returns them to the page; `ShopHeader` hides the
+  button on the viewer's own shop.
 
 ## Design note
 Seller chat reuses the storefront-styled components inside the amber portal —

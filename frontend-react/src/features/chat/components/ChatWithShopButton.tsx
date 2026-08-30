@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/features/auth';
@@ -13,12 +13,14 @@ interface Props {
 
 export function ChatWithShopButton({ shopId, className = '' }: Props) {
   const navigate = useNavigate();
+  const location = useLocation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const startConversation = useStartConversation();
 
   const handleClick = () => {
     if (!isAuthenticated) {
-      navigate(ROUTES.LOGIN);
+      // Preserve the current page so login returns here (useLogin reads state.from).
+      navigate(ROUTES.LOGIN, { state: { from: location } });
       return;
     }
     startConversation.mutate(shopId, {

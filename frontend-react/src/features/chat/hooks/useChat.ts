@@ -58,6 +58,15 @@ export function useChatUnreadCount() {
   });
 }
 
+/**
+ * Mounts the unread-count query (poll + store sync) and returns the live total.
+ * Used by any badge — storefront header and the seller portal alike.
+ */
+export function useChatUnreadBadge(): number {
+  useChatUnreadCount();
+  return useChatStore((s) => s.unreadTotal);
+}
+
 export function useStartConversation() {
   const queryClient = useQueryClient();
   return useMutation({
