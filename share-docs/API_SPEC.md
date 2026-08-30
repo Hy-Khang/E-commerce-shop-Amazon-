@@ -132,6 +132,10 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | SHOP_004 | 400 | Shop not set up (seller tries product CRUD without a shop) |
 | SHOP_005 | 403 | Shop is not active (status != 'active') |
 | NOTIFICATION_001 | 404 | Notification not found |
+| CHAT_001 | 404 | Conversation not found |
+| CHAT_002 | 403 | Not a participant in this conversation |
+| CHAT_003 | 400 | Cannot start a conversation with your own shop |
+| CHAT_004 | 400 | Message content empty or exceeds 2000 characters |
 | PAYMENT_001 | 400 | Order not eligible for payment (COD, cancelled, already paid) |
 | PAYMENT_002 | 400 | Active payment already pending for this order |
 | PAYMENT_003 | 404 | Payment transaction not found |
@@ -299,6 +303,23 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | PATCH | `/notifications/read-all` | Mark all notifications as read (HTTP 204) | Customer |
 
 > **Polling-based delivery:** Frontend polls `GET /notifications/unread-count` every 30s. No WebSocket infrastructure. Notifications are created automatically via `order.status_updated` event. Admin/seller status changes notify the customer. Customer-initiated confirm receipt and return requests notify the seller(s). Customer-initiated order placement and cancellation do **not** create notifications.
+
+### Chat — `/api/v1/chat`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/chat/conversations` | Start or get a conversation with a shop (`{ shop_id }`; idempotent) | Customer |
+| GET | `/chat/conversations` | List my conversations (customer + seller sides), each with counterpart, last message + unread | Customer/Seller |
+| GET | `/chat/conversations/:id/messages` | Paginated message history (newest-first; membership enforced) | Customer/Seller |
+| POST | `/chat/conversations/:id/messages` | Send a message (`{ content }`, ≤2000 chars) | Customer/Seller |
+| PATCH | `/chat/conversations/:id/read` | Mark conversation read — reset unread, emit receipts (204) | Customer/Seller |
+| GET | `/chat/unread-count` | Total unread messages for the header badge (`{ count }`) | Customer/Seller |
+
+> **Realtime Customer ↔ Seller chat** (Module 20). All endpoints are JWT-auth only (no RBAC permission) — access is gated by **membership**: the caller must be the conversation's `customer_id` or own its `shop_id` (`CHAT_002` otherwise). A customer cannot chat with their own shop (`CHAT_003`). `sender_type` (`customer`/`seller`) is derived server-side, never trusted from the client.
+>
+> **Shared Socket.IO gateway** (default namespace `/`, JWT verified in the WS handshake — the same shared client socket as Notifications, not a second connection). The `ChatGateway` runs its own handshake verify. Rooms: `user:{id}` (personal, drives the badge) and `conversation:{id}` (per thread). **Persist-then-emit:** the REST call persists the message, then the gateway emits it. Initial receipt status is resolved from the recipient's live presence — in the conversation room ⇒ `read`, merely online ⇒ `delivered`, else `sent`; `PATCH …/read` promotes to `read`.
+>
+> **Socket events:** `chat:new_message` (server → conversation room + recipient `user:{id}`) carries the message DTO; `chat:read` `{ conversationId, status }`; `chat:typing` `{ conversationId, userId, isTyping }` (client ↔ server); `chat:presence` `{ conversationId, userId, online }`; `chat:join` / `chat:leave` `{ conversationId }` (client → server, membership-checked). Chat unread is **independent** of notifications — no `notifications` rows are created for chat; the badge cold-loads from `GET /chat/unread-count`.
 
 ### Flash Sale — `/api/v1/flash-sales`
 

@@ -4,9 +4,11 @@ import { queryClient } from './query-client';
 import { ToastProvider } from '@/common/components/feedback/toast';
 import { useThemeSync } from '@/common/theme';
 import { useRealtimeNotifications } from '@/features/notification';
+import { useRealtimeChat } from '@/features/chat';
 
 function RealtimeLayer() {
   useRealtimeNotifications();
+  useRealtimeChat();
   return null;
 }
 

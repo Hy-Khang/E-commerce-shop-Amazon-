@@ -51,6 +51,8 @@ const AdminOrderDetailPage = lazy(() => import('@/features/order/pages/AdminOrde
 const MyReviewsPage = lazy(() => import('@/features/review/pages/MyReviewsPage'));
 const WishlistPage = lazy(() => import('@/features/wishlist/pages/WishlistPage'));
 const NotificationPage = lazy(() => import('@/features/notification/pages/NotificationPage'));
+const ChatPage = lazy(() => import('@/features/chat/pages/ChatPage'));
+const SellerChatPage = lazy(() => import('@/features/chat/pages/SellerChatPage'));
 
 const AdminRoleListPage = lazy(() => import('@/features/auth/pages/AdminRoleListPage'));
 const AdminPermissionPage = lazy(() => import('@/features/auth/pages/AdminPermissionPage'));
@@ -113,6 +115,8 @@ export const router = createBrowserRouter([
           { path: 'checkout/success', element: <SuspenseWrapper><CheckoutSuccessPage /></SuspenseWrapper> },
           { path: 'checkout/payment-result', element: <SuspenseWrapper><PaymentResultPage /></SuspenseWrapper> },
           { path: 'orders/:id', element: <SuspenseWrapper><OrderDetailPage /></SuspenseWrapper> },
+          { path: 'chat', element: <SuspenseWrapper><ChatPage /></SuspenseWrapper> },
+          { path: 'chat/:conversationId', element: <SuspenseWrapper><ChatPage /></SuspenseWrapper> },
           {
             element: <SuspenseWrapper><AccountLayout /></SuspenseWrapper>,
             children: [
@@ -193,6 +197,7 @@ export const router = createBrowserRouter([
               { path: 'seller/orders', element: <SuspenseWrapper><SellerOrderListPage /></SuspenseWrapper> },
               { path: 'seller/orders/:id', element: <SuspenseWrapper><SellerOrderDetailPage /></SuspenseWrapper> },
               { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
+              { path: 'seller/chat', element: <SuspenseWrapper><SellerChatPage /></SuspenseWrapper> },
               { path: 'seller/coupons', element: <SuspenseWrapper><SellerCouponListPage /></SuspenseWrapper> },
               { path: 'seller/flash-sales', element: <SuspenseWrapper><SellerFlashSaleListPage /></SuspenseWrapper> },
               { path: 'seller/reviews', element: <SuspenseWrapper><SellerReviewListPage /></SuspenseWrapper> },

@@ -531,6 +531,43 @@
 
 ---
 
+### 2.14 Chat Feature
+
+#### `conversations`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| customer_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL — the buyer |
+| shop_id | INT | FK → `shops.id` ON DELETE CASCADE, NOT NULL — the seller storefront |
+| last_message_at | DATETIME2 | NULL — sort key for the conversation list |
+| last_message_preview | NVARCHAR(255) | NULL — denormalized snippet for the list |
+| customer_unread | INT | NOT NULL, DEFAULT `0` — unread counter (customer side) |
+| seller_unread | INT | NOT NULL, DEFAULT `0` — unread counter (seller side) |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Constraints:** UNIQUE `(customer_id, shop_id)` — `uq_conversations_customer_shop`. Indexes: `idx_conversations_customer_id`, `idx_conversations_shop_id`.
+
+> **One row per (customer, shop) pair** — the UNIQUE pair makes `POST /chat/conversations` idempotent. Two per-side unread counters are maintained by the chat service: the sender's message atomically increments the **recipient** side's counter (skipped when the recipient is actively viewing the thread, so the message lands as `read`), and marking a conversation read resets the caller's own side. Access is by **membership** (customer or shop owner), not RBAC.
+
+#### `messages`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| conversation_id | INT | FK → `conversations.id` ON DELETE CASCADE, NOT NULL |
+| sender_id | INT | FK → `users.id` (NO ACTION), NOT NULL |
+| sender_type | NVARCHAR(20) | NOT NULL — `customer` / `seller` (derived server-side, never trusted from client) |
+| content | NVARCHAR(2000) | NOT NULL — text only (image support later) |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'sent'` — `sent` / `delivered` / `read` |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:** `idx_messages_conversation_id`, `idx_messages_conversation_created (conversation_id, created_at)`.
+
+> **`sender_id` FK is NO ACTION** (not CASCADE): SQL Server forbids multiple cascade paths to `messages` (`users → conversations → messages` already cascades on the customer side). Users are soft-banned (`is_active`), not hard-deleted, so this is safe. Receipt status advances `sent → delivered → read` based on the recipient's live socket presence at send time; `PATCH /chat/conversations/:id/read` promotes the counterpart's messages to `read`.
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -550,10 +587,15 @@ erDiagram
     users ||--o{ coupon_usages : "used coupons"
     users ||--o{ notifications : "has notifications"
     users ||--o{ recently_viewed : "viewed products"
+    users ||--o{ conversations : "chats as customer"
+    users ||--o{ messages : "sends"
 
     shops ||--o{ products : "sells"
     shops ||--o{ orders : "has orders"
     shops ||--o{ coupons : "owns shop coupons"
+    shops ||--o{ conversations : "chats with customers"
+
+    conversations ||--o{ messages : "contains"
 
     categories ||--o{ categories : "parent → children"
     categories ||--o{ products : "contains"
@@ -648,3 +690,8 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | payment_transactions | `idx_payment_transactions_order_group_id` | order_group_id | Lookup transactions by order group |
 | payment_transactions | `idx_payment_transactions_status` | status | Timeout cron: find pending transactions |
 | payment_transactions | `uq_payment_transactions_transaction_ref` | transaction_ref | UNIQUE — IPN lookup by gateway ref |
+| conversations | `uq_conversations_customer_shop` | customer_id, shop_id | UNIQUE — one conversation per (customer, shop); idempotent start |
+| conversations | `idx_conversations_customer_id` | customer_id | Customer's conversation list |
+| conversations | `idx_conversations_shop_id` | shop_id | Seller's conversation list |
+| messages | `idx_messages_conversation_id` | conversation_id | Load a conversation's messages |
+| messages | `idx_messages_conversation_created` | conversation_id, created_at | Paginated newest-first history |
