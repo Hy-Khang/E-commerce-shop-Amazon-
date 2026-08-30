@@ -25,6 +25,8 @@ export const ROUTES = {
   MY_REVIEWS: '/profile/reviews',
   WISHLIST: '/wishlist',
   NOTIFICATIONS: '/notifications',
+  CHAT: '/chat',
+  CHAT_CONVERSATION: (id: number) => `/chat/${id}`,
 
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_PRODUCTS: '/admin/products',
@@ -54,6 +56,7 @@ export const ROUTES = {
   SELLER_ORDERS: '/seller/orders',
   SELLER_ORDER_DETAIL: (id: number) => `/seller/orders/${id}`,
   SELLER_SHOP: '/seller/shop',
+  SELLER_CHAT: '/seller/chat',
   SELLER_COUPONS: '/seller/coupons',
   SELLER_FLASH_SALES: '/seller/flash-sales',
   SELLER_REVIEWS: '/seller/reviews',

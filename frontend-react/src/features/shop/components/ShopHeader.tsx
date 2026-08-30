@@ -1,4 +1,6 @@
 import { Store, Package, Star, ShoppingBag } from 'lucide-react';
+import { useAuthStore } from '@/features/auth';
+import { ChatWithShopButton } from '@/features/chat';
 import type { ShopProfile } from '../types/shop.types';
 
 interface Props {
@@ -6,6 +8,9 @@ interface Props {
 }
 
 export function ShopHeader({ shop }: Props) {
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const isOwnShop = currentUserId != null && currentUserId === shop.user_id;
+
   return (
     <div className="overflow-hidden rounded-xl border border-border-default bg-elevated shadow-sm">
       {shop.banner_url ? (
@@ -36,6 +41,11 @@ export function ShopHeader({ shop }: Props) {
           <div className="mb-1 min-w-0 flex-1">
             <h1 className="truncate text-xl font-bold text-text-primary">{shop.name}</h1>
           </div>
+          {!isOwnShop && (
+            <div className="mb-1 flex-shrink-0">
+              <ChatWithShopButton shopId={shop.id} />
+            </div>
+          )}
         </div>
 
         <div className="mt-4 flex flex-wrap gap-6 text-sm text-text-secondary">

@@ -7,6 +7,7 @@ import { useCategories, SearchBarWithSuggestions } from '@/features/product';
 import { CartBadge } from '@/features/cart';
 import { WishlistBadge } from '@/features/wishlist';
 import { NotificationBell } from '@/features/notification';
+import { ChatBadge } from '@/features/chat';
 import { ROUTES } from '@/common/constants/routes';
 import { ThemeToggle } from '@/common/components/ui/ThemeToggle';
 import { UserDropdown } from './UserDropdown';
@@ -40,6 +41,7 @@ export function Header() {
           <PortalLinks role={user?.role} />
           <ThemeToggle />
           {isAuthenticated && <WishlistBadge />}
+          {isAuthenticated && <ChatBadge />}
           {isAuthenticated && <NotificationBell />}
           <CartBadge />
           <div className="hidden md:flex md:items-center md:ml-2">

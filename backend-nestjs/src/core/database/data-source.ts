@@ -34,6 +34,8 @@ import { OrderTrackingLocation } from '../../features/order/entities/order-track
 import { FlashSale } from '../../features/flash-sale/entities/flash-sale.entity';
 import { FlashSaleItem } from '../../features/flash-sale/entities/flash-sale-item.entity';
 import { RecentlyViewed } from '../../features/recently-viewed/entities/recently-viewed.entity';
+import { Conversation } from '../../features/chat/entities/conversation.entity';
+import { Message } from '../../features/chat/entities/message.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -73,6 +75,8 @@ export const AppDataSource = new DataSource({
     FlashSale,
     FlashSaleItem,
     RecentlyViewed,
+    Conversation,
+    Message,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   options: {

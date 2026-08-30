@@ -33,6 +33,11 @@ export class ShopService {
     return shop;
   }
 
+  /** Non-throwing variant — returns the caller's shop or null (no SHOP_004). */
+  async findShopByUserIdOrNull(userId: number): Promise<Shop | null> {
+    return this.shopRepository.findByUserId(userId);
+  }
+
   assertShopIsActive(shop: Shop): void {
     if (shop.status !== ShopStatus.Active) {
       throw new ForbiddenException({

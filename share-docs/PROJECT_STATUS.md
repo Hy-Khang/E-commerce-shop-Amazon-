@@ -28,7 +28,7 @@
 | 17 | Flash Sale | 6 | 100% | 100% | **100%** | Hoàn chỉnh (admin CRUD + campaign/items, cron trạng thái, checkout áp giá flash + chống oversell, coupon stack trên giá flash, storefront countdown/progress) |
 | 18 | Recently Viewed | 6 | 100% | 100% | **100%** | Hoàn chỉnh (guest localStorage + customer DB, merge on login, carousel Home/Detail/Cart) |
 | 19 | Product Comparison | 6 | 0% | 0% | **0%** | Chưa làm — FE-only (Zustand), không cần BE |
-| 20 | Chat Realtime | 6 | 0% | 0% | **0%** | Chưa làm — cần Socket.IO |
+| 20 | Chat Realtime | 6 | 100% | 100% | **100%** | Hoàn chỉnh (Customer ↔ Seller realtime chat trên shared Socket.IO gateway; typing/presence/read-receipts; unread badge) |
 | 21 | AI Chatbox | 6 | 0% | 0% | **0%** | Chưa làm — cần Grok API |
 | 22 | Smart Recommendations | 6 | 0% | 0% | **0%** | Chưa làm |
 
@@ -38,11 +38,11 @@
 
 | Trạng thái | Số module | Danh sách |
 |------------|:---------:|-----------|
-| Hoàn chỉnh (100%) | **15** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard, Recently Viewed |
+| Hoàn chỉnh (100%) | **16** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard, Recently Viewed, Chat Realtime |
 | Gần hoàn chỉnh (80-99%) | **1** | Search & Filter (95%) |
-| Chưa làm (0%) | **5** | Order Tracking, Product Comparison, Chat Realtime, AI Chatbox, Smart Recommendations |
+| Chưa làm (0%) | **4** | Order Tracking, Product Comparison, AI Chatbox, Smart Recommendations |
 
-**Tổng tiến độ ước tính: ~77% (16/22 modules hoạt động)**
+**Tổng tiến độ ước tính: ~81% (17/22 modules hoạt động)**
 
 ---
 
@@ -168,9 +168,9 @@ Hoàn chỉnh. **BE:** feature module `recently-viewed/` (entity/table `recently
 
 Chưa làm. Module này chủ yếu FE (Zustand store + comparison page). Không cần nhiều BE.
 
-#### Module 20: Chat Realtime — 0% ❌
+#### Module 20: Chat Realtime — 100% ✅
 
-Chưa làm. Không có Socket.IO Gateway, không có bảng `conversations`/`messages`. Package `socket.io` chưa install.
+Hoàn chỉnh. Nhắn tin realtime Customer ↔ Seller trên **shared Socket.IO gateway** (`ChatGateway`, cùng namespace `/` với `NotificationGateway`, tự verify JWT trong handshake — không mở socket thứ 2). Bảng `conversations` (1 dòng / cặp customer–shop, 2 bộ đếm unread) + `messages` (`sent`/`delivered`/`read`). BE: REST `/api/v1/chat` (start/list conversation, message history, send, mark-read, unread-count), membership guard (`CHAT_002`), persist-then-emit, receipt theo presence. FE: feature `chat/` — service + TanStack Query hooks (optimistic send), `useRealtimeChat` (listeners) + `useChatRoom` (join/typing), Zustand `chat.store`, `ChatPage` (customer) + `SellerChatPage` (seller), `ChatBadge` ở Header, `ChatWithShopButton` ở ShopInfoCard/ShopHeader. Có typing indicator, online presence, read receipts.
 
 #### Module 21: AI Chatbox — 0% ❌
 
@@ -202,7 +202,7 @@ Dựa trên dependency map, thứ tự hoàn thành hợp lý cho các module c�
 7. **Flash Sale** — cần BE + FE
 8. **Recently Viewed** — đơn giản, FE localStorage + BE optional
 9. **Product Comparison** — chủ yếu FE
-10. **Chat Realtime** — cần Socket.IO Gateway (tái sử dụng cho Notifications)
+10. ~~**Chat Realtime**~~ — ✅ hoàn thành (shared Socket.IO gateway, Customer ↔ Seller)
 11. **AI Chatbox** — cần Grok API
 12. **Smart Recommendations** — cần activity logging + scoring
 
@@ -212,8 +212,8 @@ Dựa trên dependency map, thứ tự hoàn thành hợp lý cho các module c�
 
 | Package | Cho module | Side |
 |---------|-----------|------|
-| `socket.io` + `@nestjs/websockets` + `@nestjs/platform-socket.io` | ~~Notifications~~, Chat | BE ✅ |
-| `socket.io-client` | ~~Notifications~~, Chat | FE ✅ |
+| `socket.io` + `@nestjs/websockets` + `@nestjs/platform-socket.io` | ~~Notifications~~, ~~Chat~~ | BE ✅ |
+| `socket.io-client` | ~~Notifications~~, ~~Chat~~ | FE ✅ |
 | `leaflet` + `react-leaflet` + `@types/leaflet` | Order Tracking | FE |
 | OpenRouter / vision API key | AI Chatbox, Visual Search | BE (đã có code, cần API key) |
 | `@nestjs/cache-manager` + `cache-manager-redis-store` | Flash Sale, Recommendations | BE |

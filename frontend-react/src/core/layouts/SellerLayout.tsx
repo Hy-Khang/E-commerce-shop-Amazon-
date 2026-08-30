@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Store, Tag, Zap, Star, Heart, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Store, Tag, Zap, Star, Heart, MessageCircle, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
@@ -12,6 +12,7 @@ const sellerLinks: Array<{ to: string; label: string; icon: LucideIcon; permissi
   { to: '/seller/shop', label: 'Shop Settings', icon: Store, permission: PERMISSIONS.SHOPS_READ },
   { to: '/seller/products', label: 'Products', icon: Package, permission: PERMISSIONS.PRODUCTS_READ },
   { to: '/seller/orders', label: 'Orders', icon: ShoppingCart, permission: PERMISSIONS.ORDERS_READ },
+  { to: '/seller/chat', label: 'Messages', icon: MessageCircle, permission: PERMISSIONS.SHOPS_READ },
   { to: '/seller/coupons', label: 'Coupons', icon: Tag, permission: PERMISSIONS.COUPONS_READ },
   { to: '/seller/flash-sales', label: 'Flash Sale', icon: Zap, permission: PERMISSIONS.FLASH_REGISTRATIONS_READ },
   { to: '/seller/reviews', label: 'Reviews', icon: Star, permission: PERMISSIONS.REVIEWS_READ },
