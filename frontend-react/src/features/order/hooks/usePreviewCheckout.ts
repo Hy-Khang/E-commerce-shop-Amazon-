@@ -16,11 +16,16 @@ import { orderKeys } from './useOrders';
 export function usePreviewCheckout(
   codes: string[],
   cartSig: string,
+  coins = 0,
   enabled = true,
 ) {
   return useQuery({
-    queryKey: orderKeys.preview(codes, cartSig),
-    queryFn: () => orderService.preview({ coupon_codes: codes }),
+    queryKey: orderKeys.preview(codes, cartSig, coins),
+    queryFn: () =>
+      orderService.preview({
+        coupon_codes: codes,
+        coins_to_redeem: coins > 0 ? coins : undefined,
+      }),
     enabled,
     staleTime: 0,
     retry: false,

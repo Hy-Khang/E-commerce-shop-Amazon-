@@ -10,6 +10,7 @@ import { ShopSeed } from './seeds/shop.seed';
 import { OrderTrackingSeed } from './seeds/order-tracking.seed';
 import { FlashSaleSeed } from './seeds/flash-sale.seed';
 import { ChatSeed } from './seeds/chat.seed';
+import { CoinSeed } from './seeds/coin.seed';
 
 const ALL_SEEDS: ISeed[] = [
   AuthSeed,
@@ -22,10 +23,14 @@ const ALL_SEEDS: ISeed[] = [
   CouponSeed,
   FlashSaleSeed,
   ChatSeed,
+  CoinSeed,
 ].sort((a, b) => a.order - b.order);
 
 // Global delete order: reverse of FK dependency (children before parents, cross-seed aware)
 const DELETE_ORDER = [
+  'coin_transactions',
+  'coin_batches',
+  'app_settings',
   'messages',
   'conversations',
   'coupon_products',

@@ -67,6 +67,8 @@ export interface Order {
   shipping_fee: number;
   coupon_code: string | null;
   discount_amount: number;
+  /** Xu (Hoàn Xu) redeemed against this order. */
+  coin_discount: number;
   // Full breakdown of coupons applied to this order (platform + shop).
   applied_coupons?: AppliedCoupon[];
   total_amount: number;
@@ -87,6 +89,7 @@ export interface OrderListItem {
   shipping_fee: number;
   coupon_code: string | null;
   discount_amount: number;
+  coin_discount: number;
   total_amount: number;
   delivered_at: string | null;
   created_at: string;
@@ -105,6 +108,7 @@ export interface CheckoutPreviewShop {
   shop_name: string;
   items_total: number;
   discount_amount: number;
+  coin_discount: number;
   shipping_fee: number;
   total: number;
   coupons: AppliedCoupon[];
@@ -113,6 +117,10 @@ export interface CheckoutPreviewShop {
 export interface CheckoutPreview {
   subtotal: number;
   discount_total: number;
+  /** Total Xu redeemed across all shops (actually applied). */
+  coin_discount: number;
+  /** Xu actually applied — may be < requested when coupons leave little headroom. */
+  coins_applied: number;
   shipping_total: number;
   grand_total: number;
   shops: CheckoutPreviewShop[];
@@ -122,6 +130,7 @@ export interface CheckoutPreview {
 export interface PreviewOrderRequest {
   coupon_code?: string;
   coupon_codes?: string[];
+  coins_to_redeem?: number;
 }
 
 export interface OrderListItemWithItems extends OrderListItem {
@@ -178,6 +187,8 @@ export interface CreateOrderRequest {
   coupon_code?: string;
   /** Multi-coupon: ≤1 platform + ≤1 per shop. */
   coupon_codes?: string[];
+  /** Xu (Hoàn Xu) to redeem — capped at 50% of items total & balance. */
+  coins_to_redeem?: number;
 }
 
 export interface UpdateOrderStatusRequest {

@@ -12,6 +12,8 @@ import { OrderModule } from './features/order/order.module';
 import { ReviewModule } from './features/review/review.module';
 import { WishlistModule } from './features/wishlist/wishlist.module';
 import { CouponModule } from './features/coupon/coupon.module';
+import { CoinModule } from './features/coin/coin.module';
+import { SettingsModule } from './features/settings/settings.module';
 import { UploadModule } from './features/upload/upload.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { ShopModule } from './features/shop/shop.module';
@@ -40,6 +42,8 @@ import { AppService } from './app.service';
     ReviewModule,
     WishlistModule,
     CouponModule,
+    CoinModule,
+    SettingsModule,
     UploadModule,
     DashboardModule,
     ShopModule,

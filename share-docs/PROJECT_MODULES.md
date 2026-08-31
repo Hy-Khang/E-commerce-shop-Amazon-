@@ -47,7 +47,7 @@
 
 ---
 
-## Mục lục Module (22 modules)
+## Mục lục Module (23 modules)
 
 | # | Module | Phase | Mô tả ngắn |
 |:-:|--------|:-----:|-------------|
@@ -73,6 +73,7 @@
 | 20 | [Chat Realtime](#module-20--chat-realtime) | 6 | Nhắn tin Customer ↔ Seller |
 | 21 | [AI Chatbox](#module-21--ai-chatbox-gợi-ý-thông-minh) | 6 | Gợi ý sản phẩm bằng AI, FAQ |
 | 22 | [Smart Recommendations](#module-22--smart-recommendations-gợi-ý-thông-minh) | 6 | Gợi ý cá nhân hóa dựa trên hành vi người dùng |
+| 23 | [Hoàn Xu (Cashback Coins)](#module-23--hoàn-xu-cashback-coins) | 6 | Tích/tiêu Xu hoàn tiền, hết hạn theo lô, cấu hình động |
 
 ---
 
@@ -140,6 +141,11 @@
 | Sử dụng AI Chatbox | ✅ | ✅ | — | — | — |
 | **Smart Recommendations** |
 | Xem gợi ý cá nhân hóa | ✅ (session) | ✅ | — | — | — |
+| **Hoàn Xu (Cashback)** |
+| Tích Xu khi đơn hoàn thành | — | ✅ | — | — | — |
+| Dùng Xu khi thanh toán | — | ✅ | — | — | — |
+| Xem ví Xu / lịch sử | — | ✅ | — | — | — |
+| Cấu hình Xu (rate/cap/expiry/bật-tắt) | — | — | — | — | ✅ |
 
 > **Lưu ý:** Đây là permission mặc định. Dynamic RBAC cho phép Admin tạo custom role với tập permission tùy ý.
 
@@ -182,7 +188,8 @@ Phase 6 — Tính năng nâng cao (phụ thuộc Phase 2-3, triển khai độc 
   ├── Module 19: So sánh sản phẩm       ← Product Catalog
   ├── Module 20: Chat Realtime           ← Auth, Shop (tái sử dụng Socket.IO Gateway từ Module 11)
   ├── Module 21: AI Chatbox              ← Product Catalog
-  └── Module 22: Smart Recommendations  ← Product Catalog, AI Chatbox (optional)
+  ├── Module 22: Smart Recommendations  ← Product Catalog, AI Chatbox (optional)
+  └── Module 23: Hoàn Xu (Cashback)     ← Order (earn on completed, redeem at checkout)
 ```
 
 ---
@@ -955,6 +962,42 @@ Hệ thống gợi ý sản phẩm cá nhân hóa dựa trên hành vi người 
 - **Redis cache**: cache scoring result per user (TTL ~30 phút) → tránh tính lại mỗi lần load trang chủ
 - Kết hợp Module 18 (Recently Viewed) — không gợi ý lại SP đã xem gần đây
 - Seed data: tạo ~50-100 activity records mẫu cho 3-5 user để demo có ý nghĩa
+
+---
+
+## Module 23 — Hoàn Xu (Cashback Coins)
+
+> **Phase 6** · Phụ thuộc: Module 7 (Order) · *Triển khai độc lập*
+
+### Mô tả
+
+Hệ thống **hoàn Xu** (cashback) kiểu Shopee Xu / Lazada: khách hàng **tích Xu** khi đơn hoàn thành, **dùng Xu** khi thanh toán để giảm giá, và Xu **hết hạn** theo lô sau N ngày. **1 Xu = 1 ₫**, Xu là số nguyên. Tăng retention, khuyến khích mua lại.
+
+### Chức năng
+
+- **Tích Xu (earn):** khi đơn chuyển `completed` (khách xác nhận nhận hàng, admin/seller cập nhật, hoặc cron auto-complete) → cộng Xu = `floor(base × earn_rate%)`, với `base = tổng tiền hàng sau giảm giá, KHÔNG tính phí ship & phần đã trả bằng Xu` (chống farm Xu). Idempotent theo đơn.
+- **Dùng Xu (redeem):** khi checkout, khách chọn số Xu dùng — giới hạn **tối đa 50%** tổng tiền hàng (sau coupon) mỗi đơn và không vượt số dư. Xu được tiêu **FIFO** (lô sắp hết hạn trước), phân bổ xuống các sub-order đa-shop theo headroom.
+- **Hết hạn (expiry):** mỗi lô Xu có `expires_at = now + expiry_days` (mặc định 90 ngày); cron hằng ngày đánh dấu lô quá hạn thành `expired`, loại khỏi số dư.
+- **Hoàn Xu khi hủy đơn:** hủy đơn đã dùng Xu → tạo lô Xu mới hoàn lại (reset hạn); hủy đơn đã tích Xu → thu hồi phần Xu **chưa tiêu** của lô đó (không ép số dư âm). Idempotent.
+- **Ví Xu (customer):** trang xem số dư, "Xu sắp hết hạn", và lịch sử giao dịch (sổ cái phân trang).
+- **Cấu hình động (admin):** bật/tắt tính năng, `earn_rate_percent`, `redeem_max_percent`, `expiry_days` chỉnh runtime qua Admin UI (lưu ở bảng `app_settings` key/value — pattern mới, không cần deploy lại).
+
+### Trạng thái lô Xu & giao dịch
+
+```
+Lô (coin_batches):        active → depleted | expired | reversed
+Giao dịch (ledger types): earn / redeem / expire / reverse_earn / refund
+```
+
+### Ghi chú kỹ thuật
+
+- **3 bảng mới:** `app_settings` (config key/value), `coin_batches` (lô Xu — nguồn chân lý số dư + FIFO + hết hạn), `coin_transactions` (sổ cái bất biến). Thêm cột `orders.coin_discount` (snapshot Xu đã dùng mỗi sub-order).
+- **⚠️ Cascade path (SQL Server 1785):** `coin_transactions.batch_id` FK là **NO ACTION** (không CASCADE/SET NULL) — nếu không sẽ có 2 đường cascade từ `users` (trực tiếp + qua `coin_batches`). Cùng cách `messages.sender_id` (Module 20) đã né.
+- **Không dùng listener** cho earn/reverse: `CoinService` được `OrderService`/`OrderScheduler` gọi **đồng bộ** (mirror `handleCouponReversalOnCancel` của coupon) — tránh circular dep vì `CoinModule` không thể import `OrderModule`.
+- **Phân bổ Xu đa-shop:** tái dùng `allocateWithCaps` (từ coupon-distribution.util) — weights/caps = headroom mỗi shop (`itemsTotal − couponDiscount`), đảm bảo `total_amount ≥ 0`; số Xu thực dùng = Σ allocation (có thể < yêu cầu khi coupon lớn).
+- **Earn base = `total_amount − shipping_fee`** (total đã trừ coupon & Xu) → tự động loại ship và phần trả bằng Xu.
+- **Permission:** `settings:read` / `settings:update` (admin-only) cho cấu hình; endpoint Xu của customer chỉ JWT.
+- **Cron:** `@Cron(EVERY_DAY_AT_1AM)` quét lô hết hạn. **Redis cache** (dự kiến): cache số dư/scoring nếu cần.
 
 ---
 

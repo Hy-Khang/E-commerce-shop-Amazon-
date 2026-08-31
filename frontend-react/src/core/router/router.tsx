@@ -50,6 +50,7 @@ const AdminOrderDetailPage = lazy(() => import('@/features/order/pages/AdminOrde
 
 const MyReviewsPage = lazy(() => import('@/features/review/pages/MyReviewsPage'));
 const WishlistPage = lazy(() => import('@/features/wishlist/pages/WishlistPage'));
+const CoinWalletPage = lazy(() => import('@/features/coin/pages/CoinWalletPage'));
 const NotificationPage = lazy(() => import('@/features/notification/pages/NotificationPage'));
 const ChatPage = lazy(() => import('@/features/chat/pages/ChatPage'));
 const SellerChatPage = lazy(() => import('@/features/chat/pages/SellerChatPage'));
@@ -63,6 +64,7 @@ const AdminReviewListPage = lazy(() => import('@/features/review/pages/AdminRevi
 const AdminWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/AdminWishlistPopularPage'));
 
 const AdminCouponListPage = lazy(() => import('@/features/coupon/pages/AdminCouponListPage'));
+const AdminCoinSettingsPage = lazy(() => import('@/features/coin/pages/AdminCoinSettingsPage'));
 const AdminFlashSaleListPage = lazy(() => import('@/features/flash-sale/pages/AdminFlashSaleListPage'));
 
 const SellerDashboardPage = lazy(() => import('@/features/dashboard/pages/SellerDashboardPage'));
@@ -126,6 +128,7 @@ export const router = createBrowserRouter([
               { path: 'notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
               { path: 'profile/reviews', element: <SuspenseWrapper><MyReviewsPage /></SuspenseWrapper> },
               { path: 'wishlist', element: <SuspenseWrapper><WishlistPage /></SuspenseWrapper> },
+              { path: 'wallet', element: <SuspenseWrapper><CoinWalletPage /></SuspenseWrapper> },
             ],
           },
         ],
@@ -174,6 +177,7 @@ export const router = createBrowserRouter([
               { path: 'admin/wishlist', element: <SuspenseWrapper><AdminWishlistPopularPage /></SuspenseWrapper> },
               { path: 'admin/coupons', element: <SuspenseWrapper><AdminCouponListPage /></SuspenseWrapper> },
               { path: 'admin/flash-sales', element: <SuspenseWrapper><AdminFlashSaleListPage /></SuspenseWrapper> },
+              { path: 'admin/settings/coins', element: <SuspenseWrapper><AdminCoinSettingsPage /></SuspenseWrapper> },
               { path: 'admin/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },

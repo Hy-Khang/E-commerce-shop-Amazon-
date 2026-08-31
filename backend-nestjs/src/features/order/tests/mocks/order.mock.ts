@@ -51,6 +51,7 @@ export const mockOrder = (overrides: Partial<Order> = {}): Order => ({
   shipping_address: JSON.stringify(mockShippingAddress()),
   coupon_code: null,
   discount_amount: 0,
+  coin_discount: 0,
   created_at: new Date('2026-01-15T10:00:00Z'),
   delivered_at: null,
   shipper_id: null,

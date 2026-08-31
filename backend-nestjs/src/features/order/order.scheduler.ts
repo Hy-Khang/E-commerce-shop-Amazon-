@@ -4,6 +4,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderRepository } from './repositories/order.repository';
 import { OrderStatus } from '../../common/constants';
 import { ActorType } from '../notification/types/notification.types';
+import { CoinService } from '../coin/coin.service';
+import { SettingsService } from '../settings/settings.service';
 
 const AUTO_COMPLETE_DAYS = 7;
 
@@ -13,6 +15,8 @@ export class OrderScheduler {
 
   constructor(
     private readonly orderRepository: OrderRepository,
+    private readonly coinService: CoinService,
+    private readonly settingsService: SettingsService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -28,7 +32,20 @@ export class OrderScheduler {
     const ids = orders.map((o) => o.id);
     await this.orderRepository.bulkCompleteOrders(ids);
 
+    // Earn Xu for each auto-completed order (best-effort, idempotent). Fetch the
+    // config once for the whole batch.
+    const coinConfig = await this.settingsService.getCoinConfig();
+
     for (const order of orders) {
+      try {
+        await this.coinService.awardForOrder(order, coinConfig);
+      } catch (error) {
+        this.logger.error(
+          `Coin award failed for auto-completed order #${order.id}`,
+          error instanceof Error ? error.stack : String(error),
+        );
+      }
+
       this.eventEmitter.emit('order.status_updated', {
         orderId: order.id,
         userId: order.user_id,

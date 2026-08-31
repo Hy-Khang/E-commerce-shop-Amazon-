@@ -36,6 +36,8 @@ export const PERMISSIONS = {
   WISHLIST_READ: 'wishlist:read',
   UPLOADS_CREATE: 'uploads:create',
   DASHBOARD_READ: 'dashboard:read',
+  SETTINGS_READ: 'settings:read',
+  SETTINGS_UPDATE: 'settings:update',
   SHOPS_CREATE: 'shops:create',
   SHOPS_READ: 'shops:read',
   SHOPS_UPDATE: 'shops:update',

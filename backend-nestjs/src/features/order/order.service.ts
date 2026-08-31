@@ -16,7 +16,13 @@ import { CartService } from '../cart/cart.service';
 import { ProductService } from '../product/product.service';
 import { UserProfileService } from '../user-profile/user-profile.service';
 import { CouponService } from '../coupon/coupon.service';
-import { distributeCheckoutDiscounts } from './utils/coupon-distribution.util';
+import { CoinService } from '../coin/coin.service';
+import { SettingsService } from '../settings/settings.service';
+import type { CoinConfig } from '../settings/types/settings.types';
+import {
+  distributeCheckoutDiscounts,
+  allocateWithCaps,
+} from './utils/coupon-distribution.util';
 import { pickVariantThumbnail } from '../cart/utils/cart.util';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -78,6 +84,8 @@ export class OrderService {
     private readonly productService: ProductService,
     private readonly userProfileService: UserProfileService,
     private readonly couponService: CouponService,
+    private readonly coinService: CoinService,
+    private readonly settingsService: SettingsService,
     private readonly shopService: ShopService,
     private readonly flashSaleService: FlashSaleService,
     private readonly eventEmitter: EventEmitter2,
@@ -230,6 +238,33 @@ export class OrderService {
       0,
     );
 
+    // ── Coin (Hoàn Xu) redemption: validate + distribute across sub-orders ──
+    // Cap is on the items total AFTER coupons; the per-shop share is capped at
+    // each shop's remaining headroom so no sub-order total can go negative. The
+    // actual redeemed amount = Σ allocation (may be < requested when a large
+    // coupon leaves little headroom).
+    const coinConfig = await this.settingsService.getCoinConfig();
+    const itemsTotalAfterCoupon = [...shopItemsTotals.entries()].reduce(
+      (sum, [shopId, total]) =>
+        sum + (total - (discountByShop.get(shopId)?.discount ?? 0)),
+      0,
+    );
+    const validatedCoins = await this.coinService.validateRedemption(
+      userId,
+      dto.coins_to_redeem ?? 0,
+      itemsTotalAfterCoupon,
+      coinConfig,
+    );
+    const coinByShop = this.allocateCoinDiscount(
+      shopItemsTotals,
+      discountByShop,
+      validatedCoins,
+    );
+    const totalCoinDiscount = [...coinByShop.values()].reduce(
+      (sum, c) => sum + c,
+      0,
+    );
+
     // ── Transaction: create N orders (1 per shop) + items, clear cart ──
 
     const orderGroupId = randomUUID();
@@ -249,7 +284,9 @@ export class OrderService {
         const shopItemsTotal = shopItemsTotals.get(shopId)!;
         const { discount: shopDiscount, couponCode: snapshotCode, usages } =
           discountByShop.get(shopId)!;
-        const shopTotal = shopItemsTotal - shopDiscount + shippingFee;
+        const shopCoinDiscount = coinByShop.get(shopId) ?? 0;
+        const shopTotal =
+          shopItemsTotal - shopDiscount - shopCoinDiscount + shippingFee;
 
         const order = await queryRunner.manager.save(
           queryRunner.manager.create(Order, {
@@ -263,6 +300,7 @@ export class OrderService {
             shipping_fee: shippingFee,
             coupon_code: snapshotCode,
             discount_amount: shopDiscount,
+            coin_discount: shopCoinDiscount,
             total_amount: shopTotal,
             shipping_address: JSON.stringify(shippingSnapshot),
           }),
@@ -303,6 +341,18 @@ export class OrderService {
             queryRunner.manager,
           );
         }
+      }
+
+      // Consume Xu FIFO inside the transaction — atomic with order creation, so
+      // a failure rolls the whole checkout back.
+      if (totalCoinDiscount > 0) {
+        await this.coinService.redeemForCheckout(
+          userId,
+          totalCoinDiscount,
+          createdOrders[0]?.id ?? null,
+          orderGroupId,
+          queryRunner.manager,
+        );
       }
 
       await this.cartService.clearCart(userId, queryRunner.manager);
@@ -374,6 +424,8 @@ export class OrderService {
     const empty: CheckoutPreviewResponseDto = {
       subtotal: 0,
       discount_total: 0,
+      coin_discount: 0,
+      coins_applied: 0,
       shipping_total: 0,
       grand_total: 0,
       shops: [],
@@ -429,23 +481,46 @@ export class OrderService {
       couponItems,
     );
 
+    // Coin redemption (advisory — same rules as checkout, writes nothing).
+    const coinConfig = await this.settingsService.getCoinConfig();
+    const itemsTotalAfterCoupon = [...shopItemsTotals.entries()].reduce(
+      (sum, [shopId, total]) =>
+        sum + (total - (discountByShop.get(shopId)?.discount ?? 0)),
+      0,
+    );
+    const validatedCoins = await this.coinService.validateRedemption(
+      userId,
+      dto.coins_to_redeem ?? 0,
+      itemsTotalAfterCoupon,
+      coinConfig,
+    );
+    const coinByShop = this.allocateCoinDiscount(
+      shopItemsTotals,
+      discountByShop,
+      validatedCoins,
+    );
+
     const shippingFee = DEFAULT_SHIPPING_FEE;
     const shops: CheckoutPreviewShopDto[] = [];
     let subtotal = 0;
     let discountTotal = 0;
+    let coinDiscountTotal = 0;
     let shippingTotal = 0;
 
     for (const [shopId, group] of shopGroups) {
       const d = discountByShop.get(shopId)!;
-      const total = group.itemsTotal - d.discount + shippingFee;
+      const coin = coinByShop.get(shopId) ?? 0;
+      const total = group.itemsTotal - d.discount - coin + shippingFee;
       subtotal += group.itemsTotal;
       discountTotal += d.discount;
+      coinDiscountTotal += coin;
       shippingTotal += shippingFee;
       shops.push({
         shop_id: shopId,
         shop_name: group.shopName,
         items_total: group.itemsTotal,
         discount_amount: d.discount,
+        coin_discount: coin,
         shipping_fee: shippingFee,
         total,
         coupons: d.usages.map((u) => ({
@@ -466,8 +541,10 @@ export class OrderService {
     return {
       subtotal,
       discount_total: discountTotal,
+      coin_discount: coinDiscountTotal,
+      coins_applied: coinDiscountTotal,
       shipping_total: shippingTotal,
-      grand_total: subtotal - discountTotal + shippingTotal,
+      grand_total: subtotal - discountTotal - coinDiscountTotal + shippingTotal,
       shops,
       applied_coupons: [...perCoupon.entries()].map(([code, discount_amount]) => ({
         code,
@@ -574,6 +651,9 @@ export class OrderService {
     const oldStatus = order.status;
     order.status = OrderStatus.Completed;
 
+    // Earn Xu on completion (best-effort, idempotent).
+    await this.awardCoinsForOrderSafe(order);
+
     const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
 
     this.eventEmitter.emit('order.status_updated', {
@@ -670,6 +750,7 @@ export class OrderService {
 
     await this.handleCouponReversalOnCancel(order);
     await this.handleFlashReversalOnCancel(order);
+    await this.reverseCoinsForOrderSafe(order);
 
     this.eventEmitter.emit('order.cancelled', {
       orderId: order.id,
@@ -771,6 +852,7 @@ export class OrderService {
     if (dto.status === OrderStatus.Cancelled) {
       await this.handleCouponReversalOnCancel(order);
       await this.handleFlashReversalOnCancel(order);
+      await this.reverseCoinsForOrderSafe(order);
 
       this.eventEmitter.emit('order.cancelled', {
         orderId: order.id,
@@ -779,6 +861,11 @@ export class OrderService {
           quantity: item.quantity,
         })),
       });
+    }
+
+    // Earn Xu when an order reaches completed (best-effort, idempotent).
+    if (dto.status === OrderStatus.Completed) {
+      await this.awardCoinsForOrderSafe(order);
     }
 
     this.eventEmitter.emit('order.status_updated', {
@@ -1276,6 +1363,69 @@ export class OrderService {
           ? [dto.coupon_code]
           : [];
     return [...new Set(raw.map((c) => c.toUpperCase().trim()).filter(Boolean))];
+  }
+
+  /**
+   * Distribute redeemed Xu across shop sub-orders. Weights and caps are each
+   * shop's post-coupon headroom (`itemsTotal − couponDiscount`), floored to whole
+   * Xu, so no sub-order total goes negative and leftover from a low-headroom shop
+   * waterfalls to shops with room. Reuses the coupon distributor's pure
+   * `allocateWithCaps`. Integer-only (1 Xu = 1 VND).
+   */
+  private allocateCoinDiscount(
+    shopItemsTotals: Map<number, number>,
+    discountByShop: Map<number, { discount: number }>,
+    coins: number,
+  ): Map<number, number> {
+    const result = new Map<number, number>();
+    for (const shopId of shopItemsTotals.keys()) result.set(shopId, 0);
+    if (coins <= 0) return result;
+
+    const weights = new Map<number, number>();
+    const caps = new Map<number, number>();
+    for (const [shopId, itemsTotal] of shopItemsTotals) {
+      const headroom = Math.max(
+        0,
+        Math.floor(itemsTotal - (discountByShop.get(shopId)?.discount ?? 0)),
+      );
+      weights.set(shopId, headroom);
+      caps.set(shopId, headroom);
+    }
+
+    return allocateWithCaps(Math.trunc(coins), weights, caps);
+  }
+
+  /**
+   * Award Xu when an order completes. Best-effort: coin failures are logged and
+   * never break the status transition. Idempotency is enforced in CoinService.
+   */
+  private async awardCoinsForOrderSafe(order: Order): Promise<void> {
+    try {
+      const config = await this.settingsService.getCoinConfig();
+      await this.coinService.awardForOrder(order, config);
+    } catch (error) {
+      this.logger.error(
+        `Coin award failed for order #${order.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  /**
+   * On cancel: reverse any earned Xu (unspent remainder only) and refund Xu the
+   * customer redeemed. Best-effort; idempotent in CoinService.
+   */
+  private async reverseCoinsForOrderSafe(order: Order): Promise<void> {
+    try {
+      const config = await this.settingsService.getCoinConfig();
+      await this.coinService.reverseEarnForOrder(order);
+      await this.coinService.refundRedemptionForOrder(order, config);
+    } catch (error) {
+      this.logger.error(
+        `Coin reversal/refund failed for order #${order.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
   }
 
   private async handleCouponReversalOnCancel(order: Order): Promise<void> {

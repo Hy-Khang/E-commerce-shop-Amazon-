@@ -234,6 +234,12 @@ export default function SellerOrderDetailPage() {
                   </div>
                 )
               )}
+              {order.coin_discount > 0 && (
+                <div className="flex justify-between text-amber-600 dark:text-amber-400">
+                  <span>Coins</span>
+                  <span>-{formatPrice(order.coin_discount)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-slate-100 pt-2 font-semibold text-slate-900 dark:border-slate-800 dark:text-slate-100">
                 <span>Your Revenue</span>
                 <span>{formatPrice(order.seller_items_total)}</span>

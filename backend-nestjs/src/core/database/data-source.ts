@@ -36,6 +36,9 @@ import { FlashSaleItem } from '../../features/flash-sale/entities/flash-sale-ite
 import { RecentlyViewed } from '../../features/recently-viewed/entities/recently-viewed.entity';
 import { Conversation } from '../../features/chat/entities/conversation.entity';
 import { Message } from '../../features/chat/entities/message.entity';
+import { AppSetting } from '../../features/settings/entities/app-setting.entity';
+import { CoinBatch } from '../../features/coin/entities/coin-batch.entity';
+import { CoinTransaction } from '../../features/coin/entities/coin-transaction.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -77,6 +80,9 @@ export const AppDataSource = new DataSource({
     RecentlyViewed,
     Conversation,
     Message,
+    AppSetting,
+    CoinBatch,
+    CoinTransaction,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   options: {
