@@ -40,7 +40,7 @@ export default function SellerChatPage() {
           )}
         </aside>
 
-        <section className={active ? 'block' : 'hidden md:block'}>
+        <section className={`min-h-0 ${active ? 'block' : 'hidden md:block'}`}>
           {active ? (
             <MessageThread conversation={active} />
           ) : (

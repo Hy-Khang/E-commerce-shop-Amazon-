@@ -27,7 +27,7 @@ export function MessageThread({ conversation }: Props) {
   const isOnline = useChatStore((s) => s.onlineByConversation[conversationId]);
   const setActiveConversationId = useChatStore((s) => s.setActiveConversationId);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const messages = data?.data ?? [];
   const lastMessage = messages[messages.length - 1];
 
@@ -45,9 +45,12 @@ export function MessageThread({ conversation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, lastMessage?.id, myId]);
 
-  // Auto-scroll to the newest message / typing indicator.
+  // Auto-scroll to the newest message / typing indicator — scroll only the
+  // messages container (never scrollIntoView, which also scrolls the window
+  // and would yank the whole page + header out of view).
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length, isTyping]);
 
   return (
@@ -75,7 +78,10 @@ export function MessageThread({ conversation }: Props) {
         </div>
       </header>
 
-      <div className="flex-1 space-y-2 overflow-y-auto bg-page px-4 py-4">
+      <div
+        ref={scrollRef}
+        className="scrollbar-grab min-h-0 flex-1 space-y-2 overflow-y-scroll bg-page px-4 py-4"
+      >
         {isLoading ? (
           <p className="py-8 text-center text-sm text-text-muted">Loading…</p>
         ) : messages.length === 0 ? (
@@ -88,7 +94,6 @@ export function MessageThread({ conversation }: Props) {
           ))
         )}
         {isTyping && <TypingIndicator />}
-        <div ref={bottomRef} />
       </div>
 
       <MessageInput

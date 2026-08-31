@@ -193,6 +193,52 @@
   }
 }
 
+/* Always-visible, easy-to-grab scrollbar (drag manually when the wheel fails).
+   Chunky grey thumb over a visible track channel; no reliance on the mouse wheel. */
+@utility scrollbar-grab {
+  scrollbar-width: auto;
+  scrollbar-color: var(--color-neutral-400) var(--color-neutral-100);
+  scrollbar-gutter: stable;
+  &::-webkit-scrollbar {
+    width: 14px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--color-neutral-100);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--color-neutral-400);
+    border-radius: 9999px;
+    border: 3px solid var(--color-neutral-100);
+    min-height: 44px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-neutral-500);
+  }
+  &::-webkit-scrollbar-thumb:active {
+    background-color: var(--color-neutral-600);
+  }
+}
+
+/* Dark mode: the neutral ramp is not inverted, so the light track/thumb above
+   would glare on a dark surface — remap to dark neutrals. */
+:root.dark .scrollbar-grab {
+  scrollbar-color: var(--color-neutral-500) var(--color-neutral-800);
+}
+:root.dark .scrollbar-grab::-webkit-scrollbar-track {
+  background: var(--color-neutral-800);
+}
+:root.dark .scrollbar-grab::-webkit-scrollbar-thumb {
+  background-color: var(--color-neutral-600);
+  border-color: var(--color-neutral-800);
+}
+:root.dark .scrollbar-grab::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-neutral-500);
+}
+:root.dark .scrollbar-grab::-webkit-scrollbar-thumb:active {
+  background-color: var(--color-neutral-400);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-in,
   .animate-slide-up {
