@@ -41,6 +41,26 @@ vi.mock('../components/OrderItemRow', () => ({ OrderItemRow: () => <div /> }));
 vi.mock('../components/CheckoutShopGroup', () => ({
   CheckoutShopGroup: () => <div />,
 }));
+// Coin (Hoàn Xu): stub the card + balance, back the redemption pick with a real
+// tiny zustand store so the page behaves as in production (default: no Xu).
+vi.mock('@/features/coin', async () => {
+  const { create } = await import('zustand');
+  interface CoinStore {
+    coins: number;
+    setCoins: (n: number) => void;
+    clear: () => void;
+  }
+  const useCoinRedemptionStore = create<CoinStore>((set) => ({
+    coins: 0,
+    setCoins: (n) => set({ coins: Math.max(0, Math.trunc(n || 0)) }),
+    clear: () => set({ coins: 0 }),
+  }));
+  return {
+    CoinRedeemCard: () => <div />,
+    useCoinBalance: () => ({ data: { balance: 0, expiring_soon: [] } }),
+    useCoinRedemptionStore,
+  };
+});
 // Stub the voucher modal so a test can drive apply/remove without the real modal,
 // but back the applied-coupons state with a real (tiny) zustand store so the
 // page re-renders on apply/remove exactly as in production.

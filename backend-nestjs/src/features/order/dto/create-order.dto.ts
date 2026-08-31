@@ -9,6 +9,7 @@ import {
   IsPositive,
   IsString,
   MaxLength,
+  Min,
 } from 'class-validator';
 import { PaymentMethod } from '../../../common/constants';
 
@@ -48,4 +49,13 @@ export class CreateOrderDto {
       : value,
   )
   coupon_codes?: string[];
+
+  @ApiPropertyOptional({
+    example: 5000,
+    description: 'Xu (Hoàn Xu) to redeem — capped at 50% of items total & balance',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  coins_to_redeem?: number;
 }

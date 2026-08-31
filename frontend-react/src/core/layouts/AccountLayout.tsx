@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { User, MapPin, ShoppingCart, MessageSquare, Heart, Bell } from 'lucide-react';
+import { User, MapPin, ShoppingCart, MessageSquare, Heart, Bell, Coins } from 'lucide-react';
 import { useProfile } from '@/features/user-profile';
 import { useOrders } from '@/features/order';
 import { useWishlist } from '@/features/wishlist';
@@ -63,6 +63,12 @@ export default function AccountLayout() {
       label: 'My Wishlist',
       icon: Heart,
       count: wishlistCount,
+    },
+    {
+      to: '/wallet',
+      label: 'My Coins',
+      icon: Coins,
+      // No count badge — a raw balance (e.g. 15000) doesn't belong in a count pill.
     },
   ];
 

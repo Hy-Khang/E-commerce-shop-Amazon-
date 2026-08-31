@@ -103,6 +103,9 @@ export class OrderResponseDto {
   @ApiProperty()
   discount_amount: number;
 
+  @ApiProperty({ description: 'Xu (Hoàn Xu) redeemed against this order' })
+  coin_discount: number;
+
   @ApiPropertyOptional({
     type: [AppliedCouponResponseDto],
     description: 'All coupons applied to this order (platform + shop breakdown)',
@@ -155,6 +158,9 @@ export class OrderListItemResponseDto {
 
   @ApiProperty()
   discount_amount: number;
+
+  @ApiProperty({ description: 'Xu (Hoàn Xu) redeemed against this order' })
+  coin_discount: number;
 
   @ApiProperty()
   total_amount: number;
@@ -223,10 +229,13 @@ export class CheckoutPreviewShopDto {
   @ApiProperty({ description: 'Total discount applied to this shop' })
   discount_amount: number;
 
+  @ApiProperty({ description: 'Xu redeemed against this shop sub-order' })
+  coin_discount: number;
+
   @ApiProperty()
   shipping_fee: number;
 
-  @ApiProperty({ description: 'items_total − discount_amount + shipping_fee' })
+  @ApiProperty({ description: 'items_total − discount_amount − coin_discount + shipping_fee' })
   total: number;
 
   @ApiProperty({
@@ -248,10 +257,18 @@ export class CheckoutPreviewResponseDto {
   @ApiProperty({ description: 'Total discount across all coupons' })
   discount_total: number;
 
+  @ApiProperty({ description: 'Total Xu redeemed across all shops (actually applied)' })
+  coin_discount: number;
+
+  @ApiProperty({
+    description: 'Xu actually applied — may be < requested when coupons leave little headroom',
+  })
+  coins_applied: number;
+
   @ApiProperty({ description: 'Total shipping across all shops' })
   shipping_total: number;
 
-  @ApiProperty({ description: 'subtotal − discount_total + shipping_total' })
+  @ApiProperty({ description: 'subtotal − discount_total − coin_discount + shipping_total' })
   grand_total: number;
 
   @ApiProperty({ type: [CheckoutPreviewShopDto] })

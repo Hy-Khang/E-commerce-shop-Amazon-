@@ -270,6 +270,7 @@
 | shipping_address | NVARCHAR(MAX) | NOT NULL — **JSON snapshot**, NOT FK to addresses |
 | coupon_code | NVARCHAR(50) | NULL — **snapshot** of applied coupon code |
 | discount_amount | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
+| coin_discount | DECIMAL(10,2) | NOT NULL, DEFAULT `0` — **snapshot** of Xu (Hoàn Xu) redeemed against this sub-order (Module 23) |
 | shipper_id | INT | FK → `users.id` ON DELETE SET NULL, NULL — assigned shipper for delivery |
 | delivered_at | DATETIME2 | NULL — set when order transitions to `delivered`, used by auto-complete cron |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
@@ -280,7 +281,7 @@
 > - `shipping_address` is a JSON snapshot — preserves the address at order time even if the user edits/deletes their address later.
 > - `payment_status` is independent from `status` — a paid order can still be cancelled (triggers refund flow).
 > - `coupon_code` and `discount_amount` are snapshots — immune to coupon edits/deletions after checkout. Discount is proportionally distributed across sub-orders: `shopDiscount = (shopItemsTotal / totalItemsAmount) × discountAmount`.
-> - **Formula:** `total_amount = shopItemsTotal - discount_amount + shipping_fee` (per sub-order)
+> - **Formula:** `total_amount = shopItemsTotal - discount_amount - coin_discount + shipping_fee` (per sub-order). `coin_discount` (Module 23) is the Xu redeemed on this sub-order, distributed by headroom; reversed as a fresh Xu batch on cancel.
 > - Enums stored as string columns for readability and easy migration.
 > - **Order completion flow:** `delivered` is no longer terminal. Customer can confirm receipt (`completed`) or request return (`return_requested`). Orders auto-complete 7 days after `delivered_at` via hourly cron. Revenue (dashboard) and review eligibility require `completed` status.
 > - **`delivered_at`** is set when order transitions to `delivered` (admin, seller, or shipper). Used by auto-complete cron to find orders past the 7-day window.
@@ -568,6 +569,58 @@
 
 ---
 
+### 2.15 Coin Feature (Hoàn Xu — Module 23)
+
+#### `app_settings` — runtime key/value config
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| key | NVARCHAR(100) | NOT NULL, UNIQUE — e.g. `coin.enabled`, `coin.earn_rate_percent` |
+| value | NVARCHAR(500) | NOT NULL — stored as string; the service casts to type |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| updated_by | INT | FK → `users.id` ON DELETE SET NULL, NULL — admin who last changed it |
+
+**Constraints:** UNIQUE `(key)` — `uq_app_settings_key`
+
+> **Runtime config (new pattern).** Admin-editable settings without a redeploy (unlike ENV). Coin keys: `coin.enabled` (`'true'`/`'false'`), `coin.earn_rate_percent`, `coin.redeem_max_percent`, `coin.expiry_days`. `SettingsService.getCoinConfig()` resolves them, falling back to defaults for missing keys. Managed via `GET/PATCH /admin/settings/coins` (`settings:read`/`settings:update`). Reusable for other runtime toggles later.
+
+#### `coin_batches` — earned Xu lots (balance source of truth, FIFO, expiry)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| source_order_id | INT | FK → `orders.id` ON DELETE SET NULL, NULL — the order that earned it (NULL for refund batches) |
+| amount_earned | INT | NOT NULL — original Xu of the lot |
+| amount_remaining | INT | NOT NULL — unspent Xu (atomic guard on redeem) |
+| earned_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| expires_at | DATETIME2 | NOT NULL |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'active'` — `active` / `depleted` / `expired` / `reversed` |
+
+**Indexes:** `idx_coin_batches_user_status (user_id, status)`, `idx_coin_batches_user_expiry (user_id, expires_at)`.
+
+> **Balance** = `SUM(amount_remaining) WHERE user_id=? AND status='active' AND expires_at > now`. Consumed **FIFO** (soonest-to-expire first) via an atomic decrement guard (`amount_remaining >= n`) → flips to `depleted` at zero. Earn creates a lot (`expires_at = now + expiry_days`); cancel of an earning order sets it `reversed` and claws back only the unspent remainder. A **refund** batch (`source_order_id = NULL`) is minted when a Xu-paying order is cancelled, so it is never mistaken for an earn batch on reversal.
+
+#### `coin_transactions` — immutable Xu ledger (audit)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| type | NVARCHAR(20) | NOT NULL — `earn` / `redeem` / `expire` / `reverse_earn` / `refund` |
+| amount | INT | NOT NULL — positive magnitude; sign implied by `type` |
+| order_id | INT | FK → `orders.id` ON DELETE SET NULL, NULL |
+| batch_id | INT | FK → `coin_batches.id` **ON DELETE NO ACTION**, NULL |
+| note | NVARCHAR(255) | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:** `idx_coin_transactions_user_created (user_id, created_at)`, `idx_coin_transactions_order (order_id)`.
+
+> **⚠️ `batch_id` FK is NO ACTION** (not CASCADE/SET NULL): SQL Server forbids multiple cascade paths to `coin_transactions` (`users → coin_transactions` already cascades, and `users → coin_batches → coin_transactions` would be a second) — error 1785, same fix as `messages.sender_id`. Users are soft-banned (`is_active`), never hard-deleted, so this is safe. **Idempotency:** earn/reverse_earn/refund check for an existing `(order_id, type)` row before writing, so replays (multiple completion paths, retries) never double-count.
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -589,6 +642,12 @@ erDiagram
     users ||--o{ recently_viewed : "viewed products"
     users ||--o{ conversations : "chats as customer"
     users ||--o{ messages : "sends"
+    users ||--o{ coin_batches : "earns Xu"
+    users ||--o{ coin_transactions : "Xu ledger"
+    users ||--o{ app_settings : "updates config"
+
+    orders ||--o{ coin_batches : "source of earned Xu"
+    coin_batches ||--o{ coin_transactions : "ledger entries"
 
     shops ||--o{ products : "sells"
     shops ||--o{ orders : "has orders"
@@ -695,3 +754,8 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | conversations | `idx_conversations_shop_id` | shop_id | Seller's conversation list |
 | messages | `idx_messages_conversation_id` | conversation_id | Load a conversation's messages |
 | messages | `idx_messages_conversation_created` | conversation_id, created_at | Paginated newest-first history |
+| app_settings | `uq_app_settings_key` | key | UNIQUE — config lookup by key |
+| coin_batches | `idx_coin_batches_user_status` | user_id, status | Balance sum (active batches) |
+| coin_batches | `idx_coin_batches_user_expiry` | user_id, expires_at | FIFO consumption + expiring-soon |
+| coin_transactions | `idx_coin_transactions_user_created` | user_id, created_at | Paginated ledger (newest first) |
+| coin_transactions | `idx_coin_transactions_order` | order_id | Idempotency check by (order, type) |

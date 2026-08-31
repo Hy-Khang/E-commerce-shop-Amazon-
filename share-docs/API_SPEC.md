@@ -155,6 +155,11 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | FLASH_SALE_011 | 400 | Flash price ≥ original, or below the campaign's minimum discount |
 | FLASH_SALE_012 | 400 | Cannot approve: variant already approved in an overlapping campaign |
 | FLASH_SALE_013 | 400 | Invalid registration status (edit/withdraw/approve requires the right state) |
+| COIN_001 | 400 | Insufficient coin balance at redemption time (concurrency race in `redeemForCheckout`; validation otherwise clamps) |
+| COIN_003 | 400 | Invalid coin amount (must be a non-negative integer) |
+| SETTINGS_001 | 400 | Invalid settings value |
+
+> **Coin redemption clamps, it does not reject.** The requested `coins_to_redeem` is resolved to `min(requested, cap, balance)` (cap = 50% of the post-coupon items total). Exceeding the cap or balance is **not** an error — the client's cap is an estimate (computed without flash prices / exact multi-coupon allocation), so an over-request is silently clamped and the applied amount is echoed as `coins_applied`. A disabled feature (`coin.enabled=false`) silently ignores redemption (redeems 0). Only a non-integer request is a hard error (`COIN_003`, defensive — the DTO already enforces `@IsInt`), plus the rare `COIN_001` if the balance is spent by a concurrent checkout between validation and consumption.
 
 ---
 
@@ -249,7 +254,9 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 >
 > **Platform-discount waterfall:** When a shop coupon consumes most of a shop's headroom, that shop's platform share is capped at `min(applicable, headroom)` and the **leftover is redistributed** to shops that still have room (largest-remainder rounding). The platform discount is never silently lost — the total given equals `min(nominal, Σ per-shop caps)`. `checkout` and `POST /orders/preview` share the same pure distributor, so the preview always matches what checkout charges.
 >
-> **`POST /orders/preview`** returns `CheckoutPreviewResponseDto { subtotal, discount_total, shipping_total, grand_total, shops[], applied_coupons[] }`. Body is `{ coupon_code?, coupon_codes? }` (same coupon fields as checkout). It is **advisory, exact-at-the-time — NOT a reservation**: it writes nothing (no `coupon_usages`, no stock/usage hold), and `POST /orders` re-validates and remains the sole source of truth (a coupon may run out or expire in between). Invalid coupons return the same `COUPON_0xx` errors as checkout.
+> **`POST /orders/preview`** returns `CheckoutPreviewResponseDto { subtotal, discount_total, coin_discount, coins_applied, shipping_total, grand_total, shops[], applied_coupons[] }`. Body is `{ coupon_code?, coupon_codes?, coins_to_redeem? }` (same coupon fields as checkout, plus Xu). It is **advisory, exact-at-the-time — NOT a reservation**: it writes nothing (no `coupon_usages`, no coin consumption, no stock/usage hold), and `POST /orders` re-validates and remains the sole source of truth (a coupon may run out, or the balance change, in between). Invalid coupons return the same `COUPON_0xx` errors as checkout.
+>
+> **Coin redemption (Module 23):** `POST /orders` and `POST /orders/preview` accept `coins_to_redeem?: number` (integer Xu). The amount is **clamped** to `min(requested, 50% of the post-coupon items total, balance)` — an over-request is not an error (see COIN codes above), a disabled feature ignores it, and only a non-integer is rejected (`COIN_003`). The accepted Xu is distributed across shop sub-orders by headroom (`itemsTotal − couponDiscount`) with the same `allocateWithCaps` distributor as the platform coupon, so the **actually-applied** total (`coins_applied`, echoed by preview) may be **less** than requested when a large coupon leaves little room. Each order snapshots its share in `orders.coin_discount`; the sub-order formula becomes `total_amount = shopItemsTotal − discount_amount − coin_discount + shipping_fee`. Redemption is consumed FIFO (soonest-to-expire batch first) atomically inside the checkout transaction.
 
 ### Review — `/api/v1/reviews`
 
@@ -279,6 +286,15 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | POST | `/recently-viewed/merge` | Merge guest (localStorage) history (`{ items: [{ product_id, viewed_at }] }`, max 50) | Customer |
 
 > **Guest vs customer:** Guests are tracked entirely on the frontend (localStorage, newest 20). On login the list is POSTed to `/recently-viewed/merge` (mirrors cart merge) and cleared. The carousel renders on Home, Product Detail, and Cart. All three endpoints return the same **product-list-item** shape as `GET /products` (Product + variants/images), so the guest path (hydrated via `GET /products?ids=`) and the customer path render identically. `GET /recently-viewed` and merge are visibility-filtered (only `is_active` products of `active` shops), so a product deactivated after viewing drops out. Recording a view UPSERTs on `(user_id, product_id)` — a re-view bumps `viewed_at` (no duplicate) and the list is trimmed to the newest 20. Unknown/inactive product on record → `PRODUCT_001 (404)`.
+
+### Coin (Hoàn Xu) — `/api/v1/coins`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/coins/balance` | My spendable Xu balance + batches expiring within 30 days | Customer |
+| GET | `/coins/transactions` | My Xu ledger (paginated, newest first) | Customer |
+
+> **Cashback coins (Module 23).** 1 Xu = 1 ₫ (integer). Customers **earn** Xu when an order reaches `completed` (`floor((total_amount − shipping_fee) × earn_rate%)`), **redeem** Xu at checkout via `coins_to_redeem` on `POST /orders` (and `/orders/preview`), and Xu **expires** per batch after `expiry_days`. `GET /coins/balance` returns `{ balance, expiring_soon: [{ amount, expires_at }] }`; `GET /coins/transactions` returns rows `{ id, type, amount, order_id, note, created_at }` where `type ∈ { earn, redeem, expire, reverse_earn, refund }` and `amount` is a positive magnitude (sign implied by type). Config is admin-controlled — see `/admin/settings/coins`.
 
 ### Coupon — `/api/v1/coupons`
 
@@ -506,6 +522,15 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 | PATCH | `/admin/shops/:id/status` | Change shop status (active/suspended/banned) | `shops:update` |
 
 > **Status transitions:** Admin can set status to `active`, `suspended`, or `banned`. Setting to `active` populates `verified_at`/`verified_by` if not already set. `suspended_at`/`banned_at` are updated on each respective status change.
+
+### Admin: Settings — `/api/v1/admin/settings`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/settings/coins` | Read coin (Hoàn Xu) config | `settings:read` |
+| PATCH | `/admin/settings/coins` | Update coin config (partial) | `settings:update` |
+
+> **Runtime config via `app_settings`.** `GET` returns `{ enabled, earn_rate_percent, redeem_max_percent, expiry_days }`. `PATCH` accepts any subset of those fields and only writes the keys present (idempotent upsert on `app_settings.key`). `enabled=false` blocks both earning and redemption (`COIN_004` at checkout). Missing keys fall back to defaults (`enabled=true`, `earn_rate_percent=1`, `redeem_max_percent=50`, `expiry_days=90`). Admin-only — these are the only two permissions in the `settings` namespace.
 
 ### Admin: Dashboard — `/api/v1/admin/dashboard`
 

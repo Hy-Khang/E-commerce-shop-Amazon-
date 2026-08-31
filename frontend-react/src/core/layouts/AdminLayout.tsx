@@ -13,6 +13,7 @@ import {
   Tag,
   Zap,
   Store,
+  Coins,
   PanelLeftClose,
   PanelLeftOpen,
   ExternalLink,
@@ -62,6 +63,12 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { to: '/admin/reviews', label: 'Reviews', icon: MessageSquare, permission: PERMISSIONS.REVIEWS_READ },
       { to: '/admin/wishlist', label: 'Wishlist', icon: Heart, permission: PERMISSIONS.WISHLIST_READ },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { to: '/admin/settings/coins', label: 'Coin Settings', icon: Coins, permission: PERMISSIONS.SETTINGS_READ },
     ],
   },
 ];

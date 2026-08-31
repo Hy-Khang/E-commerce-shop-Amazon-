@@ -23,6 +23,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   ADDRESSES: '/profile/addresses',
   MY_REVIEWS: '/profile/reviews',
+  WALLET: '/wallet',
   WISHLIST: '/wishlist',
   NOTIFICATIONS: '/notifications',
   CHAT: '/chat',
@@ -47,6 +48,7 @@ export const ROUTES = {
   ADMIN_NOTIFICATIONS: '/admin/notifications',
   ADMIN_COUPONS: '/admin/coupons',
   ADMIN_FLASH_SALES: '/admin/flash-sales',
+  ADMIN_COIN_SETTINGS: '/admin/settings/coins',
 
   SELLER_DASHBOARD: '/seller/dashboard',
   SELLER_PRODUCTS: '/seller/products',

@@ -63,6 +63,8 @@ const SEED_PERMISSIONS = [
   { resource: 'flash_registrations', action: 'read', name: 'Read Flash Sale Registrations' },
   { resource: 'flash_registrations', action: 'update', name: 'Update Flash Sale Registration' },
   { resource: 'flash_registrations', action: 'delete', name: 'Withdraw Flash Sale Registration' },
+  { resource: 'settings', action: 'read', name: 'Read Settings' },
+  { resource: 'settings', action: 'update', name: 'Update Settings' },
   { resource: 'dashboard', action: 'read', name: 'Read Dashboard' },
   { resource: 'shops', action: 'create', name: 'Create Shop' },
   { resource: 'shops', action: 'read', name: 'Read Shops' },

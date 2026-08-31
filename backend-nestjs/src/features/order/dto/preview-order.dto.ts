@@ -3,9 +3,11 @@ import { Transform } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsInt,
   IsOptional,
   IsString,
   MaxLength,
+  Min,
 } from 'class-validator';
 
 /**
@@ -40,4 +42,13 @@ export class PreviewOrderDto {
       : value,
   )
   coupon_codes?: string[];
+
+  @ApiPropertyOptional({
+    example: 5000,
+    description: 'Xu to redeem in the estimate (capped at 50% of items total & balance)',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  coins_to_redeem?: number;
 }

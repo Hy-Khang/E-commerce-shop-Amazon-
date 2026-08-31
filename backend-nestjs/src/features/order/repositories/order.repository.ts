@@ -251,12 +251,22 @@ export class OrderRepository {
     await this.repo.update(id, { payment_status: paymentStatus });
   }
 
-  async findExpiredDeliveredOrders(
-    cutoff: Date,
-  ): Promise<{ id: number; user_id: number }[]> {
+  async findExpiredDeliveredOrders(cutoff: Date): Promise<
+    {
+      id: number;
+      user_id: number;
+      total_amount: number;
+      shipping_fee: number;
+    }[]
+  > {
     return this.repo
       .createQueryBuilder('order')
-      .select(['order.id', 'order.user_id'])
+      .select([
+        'order.id',
+        'order.user_id',
+        'order.total_amount',
+        'order.shipping_fee',
+      ])
       .where('order.status = :status', { status: OrderStatus.Delivered })
       .andWhere('order.delivered_at <= :cutoff', { cutoff })
       .getMany();

@@ -15,6 +15,8 @@ import { CartService } from '../../cart/cart.service';
 import { ProductService } from '../../product/product.service';
 import { UserProfileService } from '../../user-profile/user-profile.service';
 import { CouponService } from '../../coupon/coupon.service';
+import { CoinService } from '../../coin/coin.service';
+import { SettingsService } from '../../settings/settings.service';
 import { ShopService } from '../../shop/shop.service';
 import { FlashSaleService } from '../../flash-sale/flash-sale.service';
 import { PaymentMethod, OrderStatus, PaymentStatus } from '../../../common/constants';
@@ -112,6 +114,27 @@ describe('OrderService', () => {
             recordUsage: jest.fn(),
             reverseOrderShopCoupons: jest.fn(),
             reverseGroupPlatformCoupon: jest.fn(),
+          },
+        },
+        {
+          provide: CoinService,
+          useValue: {
+            validateRedemption: jest.fn().mockResolvedValue(0),
+            redeemForCheckout: jest.fn().mockResolvedValue(0),
+            awardForOrder: jest.fn(),
+            reverseEarnForOrder: jest.fn(),
+            refundRedemptionForOrder: jest.fn(),
+          },
+        },
+        {
+          provide: SettingsService,
+          useValue: {
+            getCoinConfig: jest.fn().mockResolvedValue({
+              enabled: true,
+              earn_rate_percent: 1,
+              redeem_max_percent: 50,
+              expiry_days: 90,
+            }),
           },
         },
         {
