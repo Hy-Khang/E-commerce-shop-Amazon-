@@ -57,6 +57,9 @@ export const PERMISSIONS = {
   // Settings (admin-only: runtime app config, e.g. coin/Hoàn Xu)
   SETTINGS_READ: 'settings:read',
   SETTINGS_UPDATE: 'settings:update',
+  // AI Chatbox (admin-only: view conversation history + toggle/settings)
+  AI_CHATBOX_READ: 'ai_chatbox:read',
+  AI_CHATBOX_UPDATE: 'ai_chatbox:update',
   // Dashboard
   DASHBOARD_READ: 'dashboard:read',
   // Portal Access

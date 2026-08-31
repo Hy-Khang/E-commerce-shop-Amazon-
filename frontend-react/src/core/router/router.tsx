@@ -65,6 +65,9 @@ const AdminWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/Ad
 
 const AdminCouponListPage = lazy(() => import('@/features/coupon/pages/AdminCouponListPage'));
 const AdminCoinSettingsPage = lazy(() => import('@/features/coin/pages/AdminCoinSettingsPage'));
+const AdminAiConversationListPage = lazy(() => import('@/features/ai-chat/pages/AdminAiConversationListPage'));
+const AdminAiConversationDetailPage = lazy(() => import('@/features/ai-chat/pages/AdminAiConversationDetailPage'));
+const AdminAiSettingsPage = lazy(() => import('@/features/ai-chat/pages/AdminAiSettingsPage'));
 const AdminFlashSaleListPage = lazy(() => import('@/features/flash-sale/pages/AdminFlashSaleListPage'));
 
 const SellerDashboardPage = lazy(() => import('@/features/dashboard/pages/SellerDashboardPage'));
@@ -178,6 +181,9 @@ export const router = createBrowserRouter([
               { path: 'admin/coupons', element: <SuspenseWrapper><AdminCouponListPage /></SuspenseWrapper> },
               { path: 'admin/flash-sales', element: <SuspenseWrapper><AdminFlashSaleListPage /></SuspenseWrapper> },
               { path: 'admin/settings/coins', element: <SuspenseWrapper><AdminCoinSettingsPage /></SuspenseWrapper> },
+              { path: 'admin/ai-conversations', element: <SuspenseWrapper><AdminAiConversationListPage /></SuspenseWrapper> },
+              { path: 'admin/ai-conversations/:id', element: <SuspenseWrapper><AdminAiConversationDetailPage /></SuspenseWrapper> },
+              { path: 'admin/ai-settings', element: <SuspenseWrapper><AdminAiSettingsPage /></SuspenseWrapper> },
               { path: 'admin/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },

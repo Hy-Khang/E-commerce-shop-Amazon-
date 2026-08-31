@@ -49,6 +49,9 @@ export const ROUTES = {
   ADMIN_COUPONS: '/admin/coupons',
   ADMIN_FLASH_SALES: '/admin/flash-sales',
   ADMIN_COIN_SETTINGS: '/admin/settings/coins',
+  ADMIN_AI_CONVERSATIONS: '/admin/ai-conversations',
+  ADMIN_AI_CONVERSATION_DETAIL: (id: number) => `/admin/ai-conversations/${id}`,
+  ADMIN_AI_SETTINGS: '/admin/ai-settings',
 
   SELLER_DASHBOARD: '/seller/dashboard',
   SELLER_PRODUCTS: '/seller/products',

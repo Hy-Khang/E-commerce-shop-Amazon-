@@ -65,6 +65,8 @@ const SEED_PERMISSIONS = [
   { resource: 'flash_registrations', action: 'delete', name: 'Withdraw Flash Sale Registration' },
   { resource: 'settings', action: 'read', name: 'Read Settings' },
   { resource: 'settings', action: 'update', name: 'Update Settings' },
+  { resource: 'ai_chatbox', action: 'read', name: 'Read AI Chatbox' },
+  { resource: 'ai_chatbox', action: 'update', name: 'Update AI Chatbox' },
   { resource: 'dashboard', action: 'read', name: 'Read Dashboard' },
   { resource: 'shops', action: 'create', name: 'Create Shop' },
   { resource: 'shops', action: 'read', name: 'Read Shops' },

@@ -23,6 +23,7 @@ import { HomepageModule } from './features/homepage/homepage.module';
 import { FlashSaleModule } from './features/flash-sale/flash-sale.module';
 import { RecentlyViewedModule } from './features/recently-viewed/recently-viewed.module';
 import { ChatModule } from './features/chat/chat.module';
+import { AiChatModule } from './features/ai-chat/ai-chat.module';
 import { MailModule } from './core/mail/mail.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -53,6 +54,7 @@ import { AppService } from './app.service';
     FlashSaleModule,
     RecentlyViewedModule,
     ChatModule,
+    AiChatModule,
     MailModule,
   ],
   controllers: [AppController],

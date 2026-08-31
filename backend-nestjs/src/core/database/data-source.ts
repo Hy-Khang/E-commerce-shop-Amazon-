@@ -39,6 +39,9 @@ import { Message } from '../../features/chat/entities/message.entity';
 import { AppSetting } from '../../features/settings/entities/app-setting.entity';
 import { CoinBatch } from '../../features/coin/entities/coin-batch.entity';
 import { CoinTransaction } from '../../features/coin/entities/coin-transaction.entity';
+import { AiConversation } from '../../features/ai-chat/entities/ai-conversation.entity';
+import { AiMessage } from '../../features/ai-chat/entities/ai-message.entity';
+import { AiSetting } from '../../features/ai-chat/entities/ai-setting.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -83,6 +86,9 @@ export const AppDataSource = new DataSource({
     AppSetting,
     CoinBatch,
     CoinTransaction,
+    AiConversation,
+    AiMessage,
+    AiSetting,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   options: {

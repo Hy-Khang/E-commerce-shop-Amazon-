@@ -136,6 +136,11 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | CHAT_002 | 403 | Not a participant in this conversation |
 | CHAT_003 | 400 | Cannot start a conversation with your own shop |
 | CHAT_004 | 400 | Message content empty or exceeds 2000 characters |
+| CHATBOT_001 | 404 | AI conversation not found |
+| CHATBOT_002 | 400 | Message empty or exceeds 2000 characters (or missing session/JWT) |
+| CHATBOT_003 | 403 | Conversation does not belong to the caller (owner mismatch) |
+| CHATBOT_004 | 503 | AI chatbox not configured (missing OpenRouter API key) |
+| CHATBOT_005 | 400 | AI chatbox is disabled by admin |
 | PAYMENT_001 | 400 | Order not eligible for payment (COD, cancelled, already paid) |
 | PAYMENT_002 | 400 | Active payment already pending for this order |
 | PAYMENT_003 | 404 | Payment transaction not found |
@@ -337,6 +342,22 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 >
 > **Socket events:** `chat:new_message` (server → conversation room + recipient `user:{id}`) carries the message DTO; `chat:read` `{ conversationId, status }`; `chat:typing` `{ conversationId, userId, isTyping }` (client ↔ server); `chat:presence` `{ conversationId, userId, online }`; `chat:join` / `chat:leave` `{ conversationId }` (client → server, membership-checked). Chat unread is **independent** of notifications — no `notifications` rows are created for chat; the badge cold-loads from `GET /chat/unread-count`.
 
+### AI Chatbox — `/api/v1/ai`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/ai/config` | Whether the storefront chatbox is enabled (FE gate) | Public |
+| POST | `/ai/chat` | Send a message → `{ conversation_id, reply, products[] }` | Public (guest `x-session-id` / customer JWT) |
+| GET | `/ai/conversations/:id` | Get a conversation (own only) to resume | Public (owner-scoped) |
+
+> **AI Chatbox (Module 21).** Floating storefront assistant for **guest + customer**: product suggestions via **RAG** (retrieve from the catalog → single LLM call) + policy FAQ + product summaries. `POST /ai/chat` body is `{ message: string(≤2000), conversation_id?: number }`; the assistant reply plus any suggested products (same shape as `GET /products`) are returned and both turns are **persisted** (`ai_conversations` / `ai_messages`) so Admin can review them and the thread can resume.
+>
+> **Ownership:** a conversation is owned by the customer (`user_id` from JWT) or the guest (`session_id` from the `x-session-id` header, auto-attached by the axios interceptor like the cart). Touching someone else's conversation → `CHATBOT_003 (403)`; unknown id → `CHATBOT_001 (404)`.
+>
+> **Rate limit:** `POST /ai/chat` is throttled to **10 requests/min** (in-memory `@nestjs/throttler` — the repo has no Redis, see `share-docs/TECH_DEBT.md` TD-001) → `429` on exceed.
+>
+> **Provider + fallback:** reuses the OpenRouter key/baseUrl from Visual Search with a text model (`OPENROUTER_CHAT_MODEL`, a Grok model). A provider/timeout error returns a **polite fallback reply with HTTP 200** (still persisted), not an error. A missing API key → `CHATBOT_004 (503)`; a disabled chatbox → `CHATBOT_005 (400)`; the system prompt constrains the model to only recommend products present in the retrieved context (no hallucinated products).
+
 ### Flash Sale — `/api/v1/flash-sales`
 
 | Method | Path | Description | Auth |
@@ -531,6 +552,17 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 | PATCH | `/admin/settings/coins` | Update coin config (partial) | `settings:update` |
 
 > **Runtime config via `app_settings`.** `GET` returns `{ enabled, earn_rate_percent, redeem_max_percent, expiry_days }`. `PATCH` accepts any subset of those fields and only writes the keys present (idempotent upsert on `app_settings.key`). `enabled=false` blocks both earning and redemption (`COIN_004` at checkout). Missing keys fall back to defaults (`enabled=true`, `earn_rate_percent=1`, `redeem_max_percent=50`, `expiry_days=90`). Admin-only — these are the only two permissions in the `settings` namespace.
+
+### Admin: AI Chatbox — `/api/v1/admin/ai`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/ai/conversations` | List AI conversations (paginated, newest activity) | `ai_chatbox:read` |
+| GET | `/admin/ai/conversations/:id` | Get a conversation with its messages (+ hydrated products) | `ai_chatbox:read` |
+| GET | `/admin/ai/settings` | Read AI chatbox settings | `ai_chatbox:read` |
+| PATCH | `/admin/ai/settings` | Update settings (`{ chatbox_enabled?, system_prompt? }`) | `ai_chatbox:update` |
+
+> **Admin AI Chatbox (Module 13 × 21).** `ai_chatbox:*` are admin-only permissions (admin holds all). `chatbox_enabled=false` hides the storefront widget (via `GET /ai/config`) and makes `POST /ai/chat` return `CHATBOT_005`. `system_prompt` (nullable) overrides the built-in default prompt; blank/omitted keeps the default. Settings live in the single-row `ai_settings` table.
 
 ### Admin: Dashboard — `/api/v1/admin/dashboard`
 
