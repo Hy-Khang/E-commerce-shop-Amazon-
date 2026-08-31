@@ -54,6 +54,9 @@ export const PERMISSIONS = {
   FLASH_REGISTRATIONS_READ: 'flash_registrations:read',
   FLASH_REGISTRATIONS_UPDATE: 'flash_registrations:update',
   FLASH_REGISTRATIONS_DELETE: 'flash_registrations:delete',
+  // Settings (admin-only: runtime app config, e.g. coin/Hoàn Xu)
+  SETTINGS_READ: 'settings:read',
+  SETTINGS_UPDATE: 'settings:update',
   // Dashboard
   DASHBOARD_READ: 'dashboard:read',
   // Portal Access

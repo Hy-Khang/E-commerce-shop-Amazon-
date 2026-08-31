@@ -57,6 +57,11 @@ export class Order {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   discount_amount: number;
 
+  // Xu (Hoàn Xu) redeemed against this sub-order — snapshot so it can be refunded
+  // on cancel. `total_amount = shopItemsTotal − discount_amount − coin_discount + shipping_fee`.
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  coin_discount: number;
+
   @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
   created_at: Date;
 

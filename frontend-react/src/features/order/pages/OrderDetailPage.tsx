@@ -255,7 +255,14 @@ export default function OrderDetailPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-text-secondary">
                 <span>Subtotal</span>
-                <span>{formatPrice(order.total_amount + order.discount_amount - order.shipping_fee)}</span>
+                <span>
+                  {formatPrice(
+                    order.total_amount +
+                      order.discount_amount +
+                      order.coin_discount -
+                      order.shipping_fee,
+                  )}
+                </span>
               </div>
               {order.applied_coupons && order.applied_coupons.length > 0 ? (
                 order.applied_coupons.map((c) => (
@@ -271,6 +278,12 @@ export default function OrderDetailPage() {
                     <span>-{formatPrice(order.discount_amount)}</span>
                   </div>
                 )
+              )}
+              {order.coin_discount > 0 && (
+                <div className="flex justify-between font-medium text-amber-600">
+                  <span>Coins</span>
+                  <span>-{formatPrice(order.coin_discount)}</span>
+                </div>
               )}
               <div className="flex justify-between text-text-secondary">
                 <span>Shipping</span>
