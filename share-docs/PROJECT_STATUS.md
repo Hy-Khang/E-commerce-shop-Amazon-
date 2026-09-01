@@ -1,6 +1,6 @@
 # Project Status — E-Commerce Platform
 
-> **Cập nhật:** 2026-08-01
+> **Cập nhật:** 2026-09-01
 > **Tổng quan:** 22 modules theo PROJECT_MODULES.md
 
 ---
@@ -29,7 +29,7 @@
 | 18 | Recently Viewed | 6 | 100% | 100% | **100%** | Hoàn chỉnh (guest localStorage + customer DB, merge on login, carousel Home/Detail/Cart) |
 | 19 | Product Comparison | 6 | 0% | 0% | **0%** | Chưa làm — FE-only (Zustand), không cần BE |
 | 20 | Chat Realtime | 6 | 100% | 100% | **100%** | Hoàn chỉnh (Customer ↔ Seller realtime chat trên shared Socket.IO gateway; typing/presence/read-receipts; unread badge) |
-| 21 | AI Chatbox | 6 | 0% | 0% | **0%** | Chưa làm — cần Grok API |
+| 21 | AI Chatbox | 6 | 100% | 100% | **100%** | Hoàn chỉnh (RAG 1-call LLM qua OpenRouter, widget nổi guest+customer, FAQ chính sách, admin xem lịch sử + bật/tắt/prompt; throttle 10/phút in-memory) |
 | 22 | Smart Recommendations | 6 | 0% | 0% | **0%** | Chưa làm |
 
 ---
@@ -38,11 +38,11 @@
 
 | Trạng thái | Số module | Danh sách |
 |------------|:---------:|-----------|
-| Hoàn chỉnh (100%) | **16** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard, Recently Viewed, Chat Realtime |
+| Hoàn chỉnh (100%) | **17** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard, Recently Viewed, Chat Realtime, AI Chatbox |
 | Gần hoàn chỉnh (80-99%) | **1** | Search & Filter (95%) |
-| Chưa làm (0%) | **4** | Order Tracking, Product Comparison, AI Chatbox, Smart Recommendations |
+| Chưa làm (0%) | **3** | Order Tracking, Product Comparison, Smart Recommendations |
 
-**Tổng tiến độ ước tính: ~81% (17/22 modules hoạt động)**
+**Tổng tiến độ ước tính: ~86% (18/22 modules hoạt động)**
 
 ---
 

@@ -621,6 +621,51 @@
 
 ---
 
+### 2.16 AI Chatbox Feature (Module 21)
+
+#### `ai_conversations` — one chatbox thread
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE SET NULL, NULL — customer owner |
+| session_id | NVARCHAR(100) | NULL — guest owner (mirrors `carts.session_id`) |
+| title | NVARCHAR(255) | NULL — snapshot of the first user message |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` — bumped on each new turn |
+
+**Indexes:** `idx_ai_conversations_user_id`, `idx_ai_conversations_session_id`.
+
+> **Owner = customer (`user_id`) or guest (`session_id`).** `user_id` FK is **SET NULL** so a thread survives account removal (users are soft-banned, not hard-deleted). Access is by ownership match (`CHATBOT_003` otherwise). Admin (Module 13) lists all threads newest-activity first.
+
+#### `ai_messages` — turns in a thread
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| conversation_id | INT | FK → `ai_conversations.id` ON DELETE CASCADE, NOT NULL |
+| role | NVARCHAR(20) | NOT NULL — `user` / `assistant` |
+| content | NVARCHAR(MAX) | NOT NULL |
+| product_ids | NVARCHAR(MAX) | NULL — JSON array of suggested product ids (assistant turns) |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:** `idx_ai_messages_conversation_created (conversation_id, created_at)`.
+
+> **`product_ids`** snapshots which products the assistant suggested for that turn; on read they are hydrated via `ProductService.findActiveByIds` (active product + active shop) so cards re-render on resume / in the admin view, dropping any product deactivated since.
+
+#### `ai_settings` — single-row admin config
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| chatbox_enabled | BIT | NOT NULL, DEFAULT `1` — gates the storefront widget |
+| system_prompt | NVARCHAR(MAX) | NULL — optional override of the built-in default prompt |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> **One row (id = 1), seeded.** Read on `GET /ai/config` (widget gate) and every `POST /ai/chat` (disabled → `CHATBOT_005`). Managed via `GET/PATCH /admin/ai/settings` (`ai_chatbox:read`/`ai_chatbox:update`). Reads self-heal (create defaults if empty).
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -645,6 +690,8 @@ erDiagram
     users ||--o{ coin_batches : "earns Xu"
     users ||--o{ coin_transactions : "Xu ledger"
     users ||--o{ app_settings : "updates config"
+    users ||--o{ ai_conversations : "AI chat threads"
+    ai_conversations ||--o{ ai_messages : "contains"
 
     orders ||--o{ coin_batches : "source of earned Xu"
     coin_batches ||--o{ coin_transactions : "ledger entries"
@@ -759,3 +806,6 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | coin_batches | `idx_coin_batches_user_expiry` | user_id, expires_at | FIFO consumption + expiring-soon |
 | coin_transactions | `idx_coin_transactions_user_created` | user_id, created_at | Paginated ledger (newest first) |
 | coin_transactions | `idx_coin_transactions_order` | order_id | Idempotency check by (order, type) |
+| ai_conversations | `idx_ai_conversations_user_id` | user_id | Customer's AI threads |
+| ai_conversations | `idx_ai_conversations_session_id` | session_id | Guest's AI threads |
+| ai_messages | `idx_ai_messages_conversation_created` | conversation_id, created_at | Ordered thread history |

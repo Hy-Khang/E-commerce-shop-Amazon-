@@ -14,6 +14,7 @@ import {
   Zap,
   Store,
   Coins,
+  Bot,
   PanelLeftClose,
   PanelLeftOpen,
   ExternalLink,
@@ -63,12 +64,14 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { to: '/admin/reviews', label: 'Reviews', icon: MessageSquare, permission: PERMISSIONS.REVIEWS_READ },
       { to: '/admin/wishlist', label: 'Wishlist', icon: Heart, permission: PERMISSIONS.WISHLIST_READ },
+      { to: '/admin/ai-conversations', label: 'AI Conversations', icon: Bot, permission: PERMISSIONS.AI_CHATBOX_READ },
     ],
   },
   {
     label: 'System',
     items: [
       { to: '/admin/settings/coins', label: 'Coin Settings', icon: Coins, permission: PERMISSIONS.SETTINGS_READ },
+      { to: '/admin/ai-settings', label: 'AI Chatbox', icon: Bot, permission: PERMISSIONS.AI_CHATBOX_UPDATE },
     ],
   },
 ];

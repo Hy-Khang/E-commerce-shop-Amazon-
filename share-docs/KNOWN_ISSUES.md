@@ -2,6 +2,8 @@
 
 > File tổng hợp các bug đã phát hiện nhưng **cố ý chưa sửa** để tránh mở rộng scope
 > ngoài task đang làm. Mỗi mục ghi rõ nguyên nhân + hướng sửa để lần sau xử lý nhanh.
+>
+> 📌 Nợ **hạ tầng/kiến trúc** (không phải bug) ghi ở `TECH_DEBT.md` — vd Redis (TD-001).
 
 ---
 

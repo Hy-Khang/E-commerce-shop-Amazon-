@@ -38,6 +38,8 @@ export const PERMISSIONS = {
   DASHBOARD_READ: 'dashboard:read',
   SETTINGS_READ: 'settings:read',
   SETTINGS_UPDATE: 'settings:update',
+  AI_CHATBOX_READ: 'ai_chatbox:read',
+  AI_CHATBOX_UPDATE: 'ai_chatbox:update',
   SHOPS_CREATE: 'shops:create',
   SHOPS_READ: 'shops:read',
   SHOPS_UPDATE: 'shops:update',
