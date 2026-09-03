@@ -44,7 +44,10 @@ export async function analyzeProductImage(
           role: 'user',
           content: [
             { type: 'image_url', image_url: { url: dataUrl } },
-            { type: 'text', text: 'Analyze this product image and return the JSON attributes.' },
+            {
+              type: 'text',
+              text: 'Analyze this product image and return the JSON attributes.',
+            },
           ],
         },
       ],
@@ -88,7 +91,9 @@ function parseAttributes(content: string): VisualSearchAttributes {
         : [],
     };
   } catch {
-    logger.warn(`Failed to parse visual search response: ${content.slice(0, 200)}`);
+    logger.warn(
+      `Failed to parse visual search response: ${content.slice(0, 200)}`,
+    );
     return defaults;
   }
 }

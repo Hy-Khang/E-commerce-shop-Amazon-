@@ -31,7 +31,13 @@ describe('AdminUserController', () => {
   describe('findAll', () => {
     it('should call authService.findAllUsers with query params', async () => {
       // Arrange
-      const query = { page: 1, limit: 20, search: 'test', sort: 'created_at', order: 'desc' as const };
+      const query = {
+        page: 1,
+        limit: 20,
+        search: 'test',
+        sort: 'created_at',
+        order: 'desc' as const,
+      };
       const expected = {
         data: [mockUser()],
         meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
@@ -39,7 +45,7 @@ describe('AdminUserController', () => {
       service.findAllUsers.mockResolvedValue(expected);
 
       // Act
-      const result = await controller.findAll(query as any);
+      const result = await controller.findAll(query);
 
       // Assert
       expect(service.findAllUsers).toHaveBeenCalledWith(query);
@@ -56,7 +62,7 @@ describe('AdminUserController', () => {
       service.findAllUsers.mockResolvedValue(expected);
 
       // Act
-      const result = await controller.findAll(query as any);
+      const result = await controller.findAll(query);
 
       // Assert
       expect(result.data).toHaveLength(0);
@@ -67,7 +73,11 @@ describe('AdminUserController', () => {
   describe('findOne', () => {
     it('should call authService.findUserById with correct id', async () => {
       // Arrange
-      const userWithStats = mockUserWithStats({ id: 1, orderCount: 5, reviewCount: 3 });
+      const userWithStats = mockUserWithStats({
+        id: 1,
+        orderCount: 5,
+        reviewCount: 3,
+      });
       service.findUserById.mockResolvedValue(userWithStats);
 
       // Act

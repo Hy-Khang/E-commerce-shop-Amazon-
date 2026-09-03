@@ -9,17 +9,26 @@ export class AdminUserQueryDto extends PaginationDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by role name', example: 'customer' })
+  @ApiPropertyOptional({
+    description: 'Filter by role name',
+    example: 'customer',
+  })
   @IsOptional()
   @IsString()
   role?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by active status', enum: ['true', 'false'] })
+  @ApiPropertyOptional({
+    description: 'Filter by active status',
+    enum: ['true', 'false'],
+  })
   @IsOptional()
   @IsString()
   is_active?: string;
 
-  @ApiPropertyOptional({ default: 'created_at', enum: ['created_at', 'email', 'full_name'] })
+  @ApiPropertyOptional({
+    default: 'created_at',
+    enum: ['created_at', 'email', 'full_name'],
+  })
   @IsOptional()
   @IsIn(['created_at', 'email', 'full_name'])
   sort?: string = 'created_at';

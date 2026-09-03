@@ -45,7 +45,10 @@ export class CreateCouponDto {
   @IsEnum(CouponScope)
   scope?: CouponScope;
 
-  @ApiPropertyOptional({ example: [5, 12], description: 'Required when scope = categories' })
+  @ApiPropertyOptional({
+    example: [5, 12],
+    description: 'Required when scope = categories',
+  })
   @ValidateIf((o) => o.scope === CouponScope.Categories)
   @IsArray()
   @ArrayMinSize(1, { message: 'At least one category must be selected' })
@@ -54,7 +57,10 @@ export class CreateCouponDto {
   @Type(() => Number)
   category_ids?: number[];
 
-  @ApiPropertyOptional({ example: [101, 102], description: 'Required when scope = products' })
+  @ApiPropertyOptional({
+    example: [101, 102],
+    description: 'Required when scope = products',
+  })
   @ValidateIf((o) => o.scope === CouponScope.Products)
   @IsArray()
   @ArrayMinSize(1, { message: 'At least one product must be selected' })
@@ -69,13 +75,19 @@ export class CreateCouponDto {
   @IsPositive()
   min_order_amount?: number;
 
-  @ApiPropertyOptional({ example: 100000, description: 'Max discount for percentage type' })
+  @ApiPropertyOptional({
+    example: 100000,
+    description: 'Max discount for percentage type',
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   max_discount_amount?: number;
 
-  @ApiPropertyOptional({ example: 100, description: 'Total usage limit (null = unlimited)' })
+  @ApiPropertyOptional({
+    example: 100,
+    description: 'Total usage limit (null = unlimited)',
+  })
   @IsOptional()
   @IsInt()
   @IsPositive()

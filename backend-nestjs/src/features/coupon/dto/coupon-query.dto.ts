@@ -19,7 +19,8 @@ export class CouponQueryDto extends PaginationDto {
 
   @ApiPropertyOptional({
     enum: ['platform', 'shop'],
-    description: 'Filter by ownership: platform (shop_id NULL) or shop (any shop coupon)',
+    description:
+      'Filter by ownership: platform (shop_id NULL) or shop (any shop coupon)',
   })
   @IsOptional()
   @IsIn(['platform', 'shop'])
@@ -42,7 +43,9 @@ export class CouponQueryDto extends PaginationDto {
   @IsEnum(DiscountType)
   discount_type?: DiscountType;
 
-  @ApiPropertyOptional({ description: 'Filter by active status: true or false' })
+  @ApiPropertyOptional({
+    description: 'Filter by active status: true or false',
+  })
   @IsOptional()
   @IsString()
   is_active?: string;

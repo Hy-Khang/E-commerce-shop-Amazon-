@@ -76,14 +76,18 @@ export class AdminCouponController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Permissions(PERMISSIONS.COUPONS_DELETE)
-  @ApiOperation({ summary: 'Deactivate coupon (soft delete; sticky lock for shop coupons)' })
+  @ApiOperation({
+    summary: 'Deactivate coupon (soft delete; sticky lock for shop coupons)',
+  })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.couponService.deactivateCoupon(id);
   }
 
   @Patch(':id/unlock')
   @Permissions(PERMISSIONS.COUPONS_UPDATE)
-  @ApiOperation({ summary: 'Unlock a shop coupon (clear admin lock + reactivate)' })
+  @ApiOperation({
+    summary: 'Unlock a shop coupon (clear admin lock + reactivate)',
+  })
   @ApiResponse({ status: 200, type: CouponResponseDto })
   async unlock(@Param('id', ParseIntPipe) id: number) {
     return this.couponService.unlockCoupon(id);
@@ -96,10 +100,6 @@ export class AdminCouponController {
     @Param('id', ParseIntPipe) id: number,
     @Query() query: PaginationDto,
   ) {
-    return this.couponService.findCouponUsages(
-      id,
-      query.page,
-      query.limit,
-    );
+    return this.couponService.findCouponUsages(id, query.page, query.limit);
   }
 }

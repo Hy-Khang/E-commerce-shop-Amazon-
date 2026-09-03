@@ -29,7 +29,9 @@ export class CouponValidationResponseDto {
   @ApiPropertyOptional({ type: [Number] })
   applicable_product_ids: number[] | null;
 
-  @ApiPropertyOptional({ description: 'NULL = platform coupon; otherwise the owning shop id' })
+  @ApiPropertyOptional({
+    description: 'NULL = platform coupon; otherwise the owning shop id',
+  })
   shop_id: number | null;
 }
 
@@ -48,10 +50,15 @@ export class CouponResponseDto {
   @ApiProperty()
   code: string;
 
-  @ApiPropertyOptional({ description: 'NULL = platform coupon; otherwise the owning shop id' })
+  @ApiPropertyOptional({
+    description: 'NULL = platform coupon; otherwise the owning shop id',
+  })
   shop_id: number | null;
 
-  @ApiPropertyOptional({ type: CouponShopSummaryDto, description: 'Owning shop (NULL for platform coupons)' })
+  @ApiPropertyOptional({
+    type: CouponShopSummaryDto,
+    description: 'Owning shop (NULL for platform coupons)',
+  })
   shop: CouponShopSummaryDto | null;
 
   @ApiPropertyOptional()
@@ -96,7 +103,9 @@ export class CouponResponseDto {
   @ApiProperty()
   is_active: boolean;
 
-  @ApiProperty({ description: 'Sticky admin lock (shop coupons); seller cannot re-enable' })
+  @ApiProperty({
+    description: 'Sticky admin lock (shop coupons); seller cannot re-enable',
+  })
   admin_disabled: boolean;
 
   @ApiProperty()
@@ -127,7 +136,9 @@ export class CouponOptionDto {
   @ApiProperty()
   scope: string;
 
-  @ApiPropertyOptional({ description: 'NULL = platform coupon; otherwise the owning shop id' })
+  @ApiPropertyOptional({
+    description: 'NULL = platform coupon; otherwise the owning shop id',
+  })
   shop_id: number | null;
 
   @ApiPropertyOptional()
@@ -136,10 +147,15 @@ export class CouponOptionDto {
   @ApiPropertyOptional()
   max_discount_amount: number | null;
 
-  @ApiProperty({ description: 'Applicable items subtotal for this coupon in the current cart' })
+  @ApiProperty({
+    description:
+      'Applicable items subtotal for this coupon in the current cart',
+  })
   applicable_total: number;
 
-  @ApiProperty({ description: 'Discount this coupon would yield now (0 when ineligible)' })
+  @ApiProperty({
+    description: 'Discount this coupon would yield now (0 when ineligible)',
+  })
   discount_preview: number;
 
   @ApiProperty()
@@ -151,7 +167,10 @@ export class CouponOptionDto {
   })
   reason?: CouponIneligibleReason;
 
-  @ApiPropertyOptional({ description: 'Amount still needed to reach min_order_amount (below_min only)' })
+  @ApiPropertyOptional({
+    description:
+      'Amount still needed to reach min_order_amount (below_min only)',
+  })
   short_of_min?: number;
 
   @ApiProperty()

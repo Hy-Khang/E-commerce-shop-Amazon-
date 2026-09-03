@@ -21,7 +21,7 @@ export class CouponUsageRepository {
       .createQueryBuilder('usage')
       .innerJoin('usage.order', 'order')
       .select(
-        "COUNT(DISTINCT COALESCE(order.order_group_id, CAST(order.id AS NVARCHAR(36))))",
+        'COUNT(DISTINCT COALESCE(order.order_group_id, CAST(order.id AS NVARCHAR(36))))',
         'count',
       )
       .where('usage.user_id = :userId', { userId })

@@ -58,10 +58,10 @@ describe('OrderController', () => {
         data: [],
         meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
       };
-      service.findMyOrders.mockResolvedValue(mockResult as any);
+      service.findMyOrders.mockResolvedValue(mockResult);
 
       // Act
-      const result = await controller.findMyOrders(mockUser, query as any);
+      const result = await controller.findMyOrders(mockUser, query);
 
       // Assert
       expect(service.findMyOrders).toHaveBeenCalledWith(mockUser.id, query);

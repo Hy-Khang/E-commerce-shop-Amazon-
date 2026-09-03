@@ -2,14 +2,9 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { CoinBatchRepository } from './repositories/coin-batch.repository';
 import { CoinTransactionRepository } from './repositories/coin-transaction.repository';
-import {
-  CoinBalanceResponseDto,
-} from './dto/coin-balance-response.dto';
+import { CoinBalanceResponseDto } from './dto/coin-balance-response.dto';
 import { CoinTransactionResponseDto } from './dto/coin-transaction-response.dto';
-import {
-  CoinBatchStatus,
-  CoinTransactionType,
-} from './types/coin.types';
+import { CoinBatchStatus, CoinTransactionType } from './types/coin.types';
 import {
   computeEarnAmount,
   computeExpiryDate,
@@ -145,7 +140,11 @@ export class CoinService {
     for (const batch of batches) {
       if (remaining <= 0) break;
       const take = Math.min(remaining, batch.amount_remaining);
-      const ok = await this.coinBatchRepository.consume(batch.id, take, manager);
+      const ok = await this.coinBatchRepository.consume(
+        batch.id,
+        take,
+        manager,
+      );
       if (ok) remaining -= take;
     }
 
@@ -183,7 +182,10 @@ export class CoinService {
    * shipping and any Xu-paid portion — which equals `total_amount − shipping_fee`
    * (total already nets out coupon discount and coin discount).
    */
-  async awardForOrder(order: OrderEarnContext, config: CoinConfig): Promise<void> {
+  async awardForOrder(
+    order: OrderEarnContext,
+    config: CoinConfig,
+  ): Promise<void> {
     if (!config.enabled) return;
 
     const already = await this.coinTransactionRepository.existsByOrderAndType(

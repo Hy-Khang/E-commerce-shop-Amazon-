@@ -24,10 +24,15 @@ export class RolePermissionRepository {
       .where('rp.role_id = :roleId', { roleId })
       .getMany();
 
-    return results.map((rp) => `${rp.permission.resource}:${rp.permission.action}`);
+    return results.map(
+      (rp) => `${rp.permission.resource}:${rp.permission.action}`,
+    );
   }
 
-  async syncPermissions(roleId: number, permissionIds: number[]): Promise<void> {
+  async syncPermissions(
+    roleId: number,
+    permissionIds: number[],
+  ): Promise<void> {
     await this.repo.delete({ role_id: roleId });
 
     if (permissionIds.length > 0) {
@@ -53,7 +58,10 @@ export class RolePermissionRepository {
     }
   }
 
-  async removePermissions(roleId: number, permissionIds: number[]): Promise<void> {
+  async removePermissions(
+    roleId: number,
+    permissionIds: number[],
+  ): Promise<void> {
     await this.repo.delete({
       role_id: roleId,
       permission_id: In(permissionIds),

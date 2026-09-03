@@ -188,7 +188,9 @@ export class FlashSaleService {
     const regEnd = dto.registration_ends_at
       ? new Date(dto.registration_ends_at)
       : campaign.registration_ends_at;
-    const startsAt = dto.starts_at ? new Date(dto.starts_at) : campaign.starts_at;
+    const startsAt = dto.starts_at
+      ? new Date(dto.starts_at)
+      : campaign.starts_at;
     const endsAt = dto.ends_at ? new Date(dto.ends_at) : campaign.ends_at;
     this.assertValidWindow(regStart, regEnd, startsAt, endsAt);
 
@@ -234,9 +236,12 @@ export class FlashSaleService {
   async listRegistrations(
     query: FlashRegistrationQueryDto,
   ): Promise<IPaginatedResult<FlashSaleItemResponseDto>> {
-    const result = await this.flashSaleItemRepository.findRegistrationsPaginated(
-      { page: query.page, limit: query.limit, status: query.status },
-    );
+    const result =
+      await this.flashSaleItemRepository.findRegistrationsPaginated({
+        page: query.page,
+        limit: query.limit,
+        status: query.status,
+      });
     return {
       data: result.data.map(toFlashSaleItemResponse),
       meta: result.meta,
@@ -287,7 +292,9 @@ export class FlashSaleService {
       reviewed_at: new Date(),
       reject_reason: null,
     });
-    this.logger.log(`Flash registration approved: item=${itemId} by ${adminId}`);
+    this.logger.log(
+      `Flash registration approved: item=${itemId} by ${adminId}`,
+    );
     this.emitReviewed(item, 'approved');
 
     return this.reloadItemResponse(itemId);
@@ -312,7 +319,9 @@ export class FlashSaleService {
       reviewed_at: new Date(),
       reject_reason: reason ?? null,
     });
-    this.logger.log(`Flash registration rejected: item=${itemId} by ${adminId}`);
+    this.logger.log(
+      `Flash registration rejected: item=${itemId} by ${adminId}`,
+    );
     this.emitReviewed(item, 'rejected', reason);
 
     return this.reloadItemResponse(itemId);
@@ -349,14 +358,13 @@ export class FlashSaleService {
     query: FlashRegistrationQueryDto,
   ): Promise<IPaginatedResult<FlashSaleItemResponseDto>> {
     const shop = await this.shopService.resolveShopByUserId(userId);
-    const result = await this.flashSaleItemRepository.findRegistrationsPaginated(
-      {
+    const result =
+      await this.flashSaleItemRepository.findRegistrationsPaginated({
         page: query.page,
         limit: query.limit,
         status: query.status,
         forceShopId: shop.id,
-      },
-    );
+      });
     return {
       data: result.data.map(toFlashSaleItemResponse),
       meta: result.meta,
@@ -376,12 +384,14 @@ export class FlashSaleService {
       });
     }
     // Show only this shop's registrations for the campaign.
-    const items = await this.flashSaleItemRepository.findRegistrationsPaginated({
-      page: 1,
-      limit: 200,
-      forceShopId: shop.id,
-      flashSaleId: campaignId,
-    });
+    const items = await this.flashSaleItemRepository.findRegistrationsPaginated(
+      {
+        page: 1,
+        limit: 200,
+        forceShopId: shop.id,
+        flashSaleId: campaignId,
+      },
+    );
     campaign.items = items.data;
     return toFlashSaleResponse(campaign);
   }

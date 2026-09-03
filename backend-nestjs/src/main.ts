@@ -20,7 +20,10 @@ async function bootstrap() {
   const config = app.get(ConfigService);
   const port = config.get<number>('app.port', 3000);
   const prefix = config.get<string>('app.prefix', 'api/v1');
-  const corsOrigin = config.get<string>('app.corsOrigin', 'http://localhost:5173');
+  const corsOrigin = config.get<string>(
+    'app.corsOrigin',
+    'http://localhost:5173',
+  );
   const nodeEnv = config.get<string>('app.nodeEnv', 'development');
 
   app.setGlobalPrefix(prefix);
@@ -68,7 +71,6 @@ async function bootstrap() {
   }
 
   await app.listen(port);
-
 
   console.log('CORS_ORIGIN =', corsOrigin);
   const logger = new Logger('Bootstrap');

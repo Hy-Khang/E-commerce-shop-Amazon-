@@ -16,10 +16,14 @@ export class WishlistItemResponseDto {
   @ApiProperty()
   product_is_active: boolean;
 
-  @ApiPropertyOptional({ description: 'Lowest current price across all variants' })
+  @ApiPropertyOptional({
+    description: 'Lowest current price across all variants',
+  })
   min_price: number | null;
 
-  @ApiPropertyOptional({ description: 'Lowest sale price across all variants (if any)' })
+  @ApiPropertyOptional({
+    description: 'Lowest sale price across all variants (if any)',
+  })
   min_sale_price: number | null;
 
   @ApiProperty()

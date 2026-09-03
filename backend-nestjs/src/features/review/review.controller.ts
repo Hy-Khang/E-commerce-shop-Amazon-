@@ -35,8 +35,15 @@ export class ReviewController {
 
   @Post('reviews')
   @ApiOperation({ summary: 'Create review (purchase-verified)' })
-  @ApiResponse({ status: 201, description: 'Review created', type: ReviewResponseDto })
-  @ApiResponse({ status: 403, description: 'REVIEW_001: Product not purchased' })
+  @ApiResponse({
+    status: 201,
+    description: 'Review created',
+    type: ReviewResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'REVIEW_001: Product not purchased',
+  })
   @ApiResponse({ status: 409, description: 'REVIEW_002: Duplicate review' })
   async create(
     @CurrentUser() user: ICurrentUser,
@@ -48,7 +55,11 @@ export class ReviewController {
   @Public()
   @Get('products/:productId/reviews')
   @ApiOperation({ summary: 'List reviews for a product (paginated)' })
-  @ApiResponse({ status: 200, description: 'Returns paginated review list', type: [ReviewWithUserResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated review list',
+    type: [ReviewWithUserResponseDto],
+  })
   async findProductReviews(
     @Param('productId', ParseIntPipe) productId: number,
     @Query() query: ReviewQueryDto,
@@ -58,7 +69,11 @@ export class ReviewController {
 
   @Get('reviews/me')
   @ApiOperation({ summary: 'List my reviews (paginated)' })
-  @ApiResponse({ status: 200, description: 'Returns paginated review list', type: [ReviewResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated review list',
+    type: [ReviewResponseDto],
+  })
   async findMyReviews(
     @CurrentUser() user: ICurrentUser,
     @Query() query: ReviewQueryDto,

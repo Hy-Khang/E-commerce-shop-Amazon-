@@ -30,7 +30,10 @@ import { IPaginatedResult } from '../../common/interfaces/paginated-result.inter
 import { ConfigService } from '@nestjs/config';
 import { ShopService } from '../shop/shop.service';
 import { Shop } from '../shop/entities/shop.entity';
-import { analyzeProductImage, VisualSearchAttributes } from './utils/grok-visual-search.util';
+import {
+  analyzeProductImage,
+  VisualSearchAttributes,
+} from './utils/grok-visual-search.util';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 
@@ -75,7 +78,9 @@ export class ProductService {
       });
     }
 
-    const categoryIds = await this.categoryRepository.findDescendantIds(category.id);
+    const categoryIds = await this.categoryRepository.findDescendantIds(
+      category.id,
+    );
 
     const products = await this.productRepository.findProductsByCategoryIds(
       categoryIds,
@@ -88,22 +93,33 @@ export class ProductService {
 
   // ─── Public: Products ───
 
-  async findActiveProducts(query: ProductQueryDto): Promise<IPaginatedResult<Product>> {
+  async findActiveProducts(
+    query: ProductQueryDto,
+  ): Promise<IPaginatedResult<Product>> {
     // Bulk `?ids=` path (Recently Viewed guest hydration, Product Comparison): return the
     // full requested set in one call, enriched with review stats. No pagination/sorting —
     // callers order client-side by their own id list.
     if (query.ids && query.ids.length > 0) {
-      const data = await this.productRepository.findActiveByIdsWithStats(query.ids);
+      const data = await this.productRepository.findActiveByIdsWithStats(
+        query.ids,
+      );
       return {
         data,
-        meta: { page: 1, limit: query.ids.length, total: data.length, totalPages: 1 },
+        meta: {
+          page: 1,
+          limit: query.ids.length,
+          total: data.length,
+          totalPages: 1,
+        },
       };
     }
 
     const filter: any = { ...query };
 
     if (query.category_id) {
-      const categoryIds = await this.categoryRepository.findDescendantIds(query.category_id);
+      const categoryIds = await this.categoryRepository.findDescendantIds(
+        query.category_id,
+      );
       filter.category_ids = categoryIds;
     }
 
@@ -124,7 +140,10 @@ export class ProductService {
     file: Express.Multer.File,
     page: number = 1,
     limit: number = 20,
-  ): Promise<{ tags: VisualSearchAttributes; products: IPaginatedResult<Product> }> {
+  ): Promise<{
+    tags: VisualSearchAttributes;
+    products: IPaginatedResult<Product>;
+  }> {
     const apiKey = this.configService.get<string>('visualSearch.apiKey');
     if (!apiKey) {
       throw new BadRequestException({
@@ -139,10 +158,18 @@ export class ProductService {
       model: this.configService.get<string>('visualSearch.model')!,
     };
 
-    const tags = await analyzeProductImage(file.buffer, file.mimetype, vsConfig);
+    const tags = await analyzeProductImage(
+      file.buffer,
+      file.mimetype,
+      vsConfig,
+    );
     this.logger.log(`Visual search tags: ${JSON.stringify(tags)}`);
 
-    const products = await this.productRepository.findByVisualAttributes(tags, page, limit);
+    const products = await this.productRepository.findByVisualAttributes(
+      tags,
+      page,
+      limit,
+    );
 
     return { tags, products };
   }
@@ -160,7 +187,9 @@ export class ProductService {
 
   // ─── Admin: Categories ───
 
-  async findAllCategories(query: CategoryQueryDto): Promise<IPaginatedResult<Category>> {
+  async findAllCategories(
+    query: CategoryQueryDto,
+  ): Promise<IPaginatedResult<Category>> {
     return this.categoryRepository.findAllPaginated(query);
   }
 
@@ -209,7 +238,10 @@ export class ProductService {
     }
 
     if (dto.slug && dto.slug !== category.slug) {
-      const slugExists = await this.categoryRepository.existsBySlugExcludingId(dto.slug, id);
+      const slugExists = await this.categoryRepository.existsBySlugExcludingId(
+        dto.slug,
+        id,
+      );
       if (slugExists) {
         throw new ConflictException({
           code: 'PRODUCT_005',
@@ -248,7 +280,8 @@ export class ProductService {
       });
     }
 
-    const hasProductsOrChildren = await this.categoryRepository.hasProductsOrChildren(id);
+    const hasProductsOrChildren =
+      await this.categoryRepository.hasProductsOrChildren(id);
     if (hasProductsOrChildren) {
       throw new BadRequestException({
         code: 'CATEGORY_001',
@@ -262,11 +295,15 @@ export class ProductService {
 
   // ─── Admin: Products ───
 
-  async findAllProducts(query: ProductQueryDto): Promise<IPaginatedResult<Product>> {
+  async findAllProducts(
+    query: ProductQueryDto,
+  ): Promise<IPaginatedResult<Product>> {
     return this.productRepository.findAllPaginated(query);
   }
 
-  async findProductById(id: number): Promise<Product & { reviewCount: number; avgRating: number }> {
+  async findProductById(
+    id: number,
+  ): Promise<Product & { reviewCount: number; avgRating: number }> {
     const product = await this.productRepository.findByIdWithReviewStats(id);
     if (!product) {
       throw new NotFoundException({
@@ -313,7 +350,10 @@ export class ProductService {
     }
 
     if (dto.slug && dto.slug !== product.slug) {
-      const slugExists = await this.productRepository.existsBySlugExcludingId(dto.slug, id);
+      const slugExists = await this.productRepository.existsBySlugExcludingId(
+        dto.slug,
+        id,
+      );
       if (slugExists) {
         throw new ConflictException({
           code: 'PRODUCT_005',
@@ -359,7 +399,10 @@ export class ProductService {
 
   // ─── Admin: Variants ───
 
-  async addVariant(productId: number, dto: CreateVariantDto): Promise<ProductVariant> {
+  async addVariant(
+    productId: number,
+    dto: CreateVariantDto,
+  ): Promise<ProductVariant> {
     const product = await this.productRepository.findById(productId);
     if (!product) {
       throw new NotFoundException({
@@ -386,7 +429,10 @@ export class ProductService {
     return variant;
   }
 
-  async updateVariant(id: number, dto: UpdateVariantDto): Promise<ProductVariant> {
+  async updateVariant(
+    id: number,
+    dto: UpdateVariantDto,
+  ): Promise<ProductVariant> {
     const variant = await this.productVariantRepository.findById(id);
     if (!variant) {
       throw new NotFoundException({
@@ -396,7 +442,8 @@ export class ProductService {
     }
 
     if (dto.sku && dto.sku !== variant.sku) {
-      const skuExists = await this.productVariantRepository.existsBySkuExcludingId(dto.sku, id);
+      const skuExists =
+        await this.productVariantRepository.existsBySkuExcludingId(dto.sku, id);
       if (skuExists) {
         throw new ConflictException({
           code: 'PRODUCT_003',
@@ -430,7 +477,8 @@ export class ProductService {
       });
     }
 
-    const hasCartItems = await this.productVariantRepository.hasActiveCartItems(id);
+    const hasCartItems =
+      await this.productVariantRepository.hasActiveCartItems(id);
     if (hasCartItems) {
       throw new BadRequestException({
         code: 'VARIANT_001',
@@ -444,7 +492,10 @@ export class ProductService {
 
   // ─── Admin: Images ───
 
-  async addImage(productId: number, dto: CreateImageDto): Promise<ProductImage> {
+  async addImage(
+    productId: number,
+    dto: CreateImageDto,
+  ): Promise<ProductImage> {
     const product = await this.productRepository.findById(productId);
     if (!product) {
       throw new NotFoundException({
@@ -545,20 +596,25 @@ export class ProductService {
     if (option1 && !product.option1_label) {
       throw new BadRequestException({
         code: 'PRODUCT_006',
-        message: 'Cannot set option1 value: product has no option1_label defined',
+        message:
+          'Cannot set option1 value: product has no option1_label defined',
       });
     }
     if (option2 && !product.option2_label) {
       throw new BadRequestException({
         code: 'PRODUCT_006',
-        message: 'Cannot set option2 value: product has no option2_label defined',
+        message:
+          'Cannot set option2 value: product has no option2_label defined',
       });
     }
   }
 
   // ─── Seller: Products ───
 
-  async assertSellerCanModifyProduct(userId: number, productId: number): Promise<{ shop: Shop; product: Product }> {
+  async assertSellerCanModifyProduct(
+    userId: number,
+    productId: number,
+  ): Promise<{ shop: Shop; product: Product }> {
     const shop = await this.shopService.resolveShopByUserId(userId);
     this.shopService.assertShopIsActive(shop);
     const product = await this.productRepository.findById(productId);
@@ -571,12 +627,18 @@ export class ProductService {
     return { shop, product };
   }
 
-  async findSellerProducts(userId: number, query: ProductQueryDto): Promise<IPaginatedResult<Product>> {
+  async findSellerProducts(
+    userId: number,
+    query: ProductQueryDto,
+  ): Promise<IPaginatedResult<Product>> {
     const shop = await this.shopService.resolveShopByUserId(userId);
     return this.productRepository.findAllByShopPaginated(shop.id, query);
   }
 
-  async findSellerProductById(userId: number, id: number): Promise<Product & { reviewCount: number; avgRating: number }> {
+  async findSellerProductById(
+    userId: number,
+    id: number,
+  ): Promise<Product & { reviewCount: number; avgRating: number }> {
     const shop = await this.shopService.resolveShopByUserId(userId);
     const product = await this.productRepository.findByIdAndShop(id, shop.id);
     if (!product) {
@@ -595,7 +657,10 @@ export class ProductService {
     return withStats;
   }
 
-  async createProductForSeller(userId: number, dto: CreateProductDto): Promise<Product> {
+  async createProductForSeller(
+    userId: number,
+    dto: CreateProductDto,
+  ): Promise<Product> {
     const shop = await this.shopService.resolveShopByUserId(userId);
     this.shopService.assertShopIsActive(shop);
 
@@ -615,12 +680,21 @@ export class ProductService {
       });
     }
 
-    const product = await this.productRepository.create({ ...dto, shop_id: shop.id });
-    this.logger.log(`Seller ${userId} (shop ${shop.id}) created product: ${product.name} (${product.slug})`);
+    const product = await this.productRepository.create({
+      ...dto,
+      shop_id: shop.id,
+    });
+    this.logger.log(
+      `Seller ${userId} (shop ${shop.id}) created product: ${product.name} (${product.slug})`,
+    );
     return product;
   }
 
-  async updateProductForSeller(userId: number, id: number, dto: UpdateProductDto): Promise<Product> {
+  async updateProductForSeller(
+    userId: number,
+    id: number,
+    dto: UpdateProductDto,
+  ): Promise<Product> {
     await this.assertSellerCanModifyProduct(userId, id);
     // Sellers cannot reassign a product to another shop — strip shop_id (admin-only field).
     const sellerSafeDto: UpdateProductDto = { ...dto };
@@ -628,17 +702,28 @@ export class ProductService {
     return this.updateProduct(id, sellerSafeDto);
   }
 
-  async toggleProductActiveForSeller(userId: number, id: number): Promise<Product> {
+  async toggleProductActiveForSeller(
+    userId: number,
+    id: number,
+  ): Promise<Product> {
     await this.assertSellerCanModifyProduct(userId, id);
     return this.toggleProductActive(id);
   }
 
-  async addVariantForSeller(userId: number, productId: number, dto: CreateVariantDto): Promise<ProductVariant> {
+  async addVariantForSeller(
+    userId: number,
+    productId: number,
+    dto: CreateVariantDto,
+  ): Promise<ProductVariant> {
     await this.assertSellerCanModifyProduct(userId, productId);
     return this.addVariant(productId, dto);
   }
 
-  async updateVariantForSeller(userId: number, variantId: number, dto: UpdateVariantDto): Promise<ProductVariant> {
+  async updateVariantForSeller(
+    userId: number,
+    variantId: number,
+    dto: UpdateVariantDto,
+  ): Promise<ProductVariant> {
     const variant = await this.productVariantRepository.findById(variantId);
     if (!variant) {
       throw new NotFoundException({
@@ -650,7 +735,10 @@ export class ProductService {
     return this.updateVariant(variantId, dto);
   }
 
-  async deleteVariantForSeller(userId: number, variantId: number): Promise<void> {
+  async deleteVariantForSeller(
+    userId: number,
+    variantId: number,
+  ): Promise<void> {
     const variant = await this.productVariantRepository.findById(variantId);
     if (!variant) {
       throw new NotFoundException({
@@ -662,12 +750,20 @@ export class ProductService {
     return this.deleteVariant(variantId);
   }
 
-  async addImageForSeller(userId: number, productId: number, dto: CreateImageDto): Promise<ProductImage> {
+  async addImageForSeller(
+    userId: number,
+    productId: number,
+    dto: CreateImageDto,
+  ): Promise<ProductImage> {
     await this.assertSellerCanModifyProduct(userId, productId);
     return this.addImage(productId, dto);
   }
 
-  async updateImageForSeller(userId: number, imageId: number, dto: UpdateImageDto): Promise<ProductImage> {
+  async updateImageForSeller(
+    userId: number,
+    imageId: number,
+    dto: UpdateImageDto,
+  ): Promise<ProductImage> {
     const image = await this.productImageRepository.findById(imageId);
     if (!image) {
       throw new NotFoundException({

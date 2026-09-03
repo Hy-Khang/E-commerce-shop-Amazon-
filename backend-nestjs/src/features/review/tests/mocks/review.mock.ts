@@ -24,7 +24,9 @@ export const mockReviewWithUser = (overrides: Partial<Review> = {}): Review =>
     ...overrides,
   });
 
-export const mockReviewWithProduct = (overrides: Partial<Review> = {}): Review =>
+export const mockReviewWithProduct = (
+  overrides: Partial<Review> = {},
+): Review =>
   mockReview({
     product: mockProduct(),
     ...overrides,
@@ -43,9 +45,7 @@ export const mockCompletedOrderForReview = (
   id: 42,
   user_id: 1,
   status: OrderStatus.Completed,
-  order_items: [
-    { id: 1, product_variant_id: 20 },
-  ],
+  order_items: [{ id: 1, product_variant_id: 20 }],
   ...overrides,
 });
 

@@ -32,7 +32,11 @@ export class AdminUserController {
   @Get()
   @Permissions(PERMISSIONS.USERS_READ)
   @ApiOperation({ summary: 'List all users (paginated, filtered, sorted)' })
-  @ApiResponse({ status: 200, description: 'Returns paginated user list', type: [AdminUserResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated user list',
+    type: [AdminUserResponseDto],
+  })
   async findAll(@Query() query: AdminUserQueryDto) {
     return this.authService.findAllUsers(query);
   }
@@ -40,7 +44,11 @@ export class AdminUserController {
   @Get(':id')
   @Permissions(PERMISSIONS.USERS_READ)
   @ApiOperation({ summary: 'Get user detail with order and review counts' })
-  @ApiResponse({ status: 200, description: 'Returns user detail', type: AdminUserDetailResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns user detail',
+    type: AdminUserDetailResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'USER_002: User not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.authService.findUserById(id);
@@ -59,7 +67,10 @@ export class AdminUserController {
   @Permissions(PERMISSIONS.USERS_UPDATE)
   @ApiOperation({ summary: 'Change user role' })
   @ApiResponse({ status: 200, description: 'User role updated' })
-  @ApiResponse({ status: 404, description: 'USER_002: User not found / COMMON_001: Role not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'USER_002: User not found / COMMON_001: Role not found',
+  })
   async changeRole(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserRoleDto,

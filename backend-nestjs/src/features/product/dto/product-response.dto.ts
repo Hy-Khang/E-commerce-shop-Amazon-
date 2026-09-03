@@ -77,10 +77,14 @@ export class ProductResponseDto {
   @ApiProperty({ type: [ImageResponseDto] })
   images: ImageResponseDto[];
 
-  @ApiPropertyOptional({ description: 'Average rating — present only on the bulk `?ids=` path' })
+  @ApiPropertyOptional({
+    description: 'Average rating — present only on the bulk `?ids=` path',
+  })
   avgRating?: number;
 
-  @ApiPropertyOptional({ description: 'Review count — present only on the bulk `?ids=` path' })
+  @ApiPropertyOptional({
+    description: 'Review count — present only on the bulk `?ids=` path',
+  })
   reviewCount?: number;
 }
 

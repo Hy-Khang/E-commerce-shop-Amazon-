@@ -1,13 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddOrderGroupAndShopIdToOrders1749300011000
-  implements MigrationInterface
-{
+export class AddOrderGroupAndShopIdToOrders1749300011000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Step 1: Add columns (nullable initially for backfill)
-    await queryRunner.query(
-      `ALTER TABLE orders ADD shop_id INT NULL`,
-    );
+    await queryRunner.query(`ALTER TABLE orders ADD shop_id INT NULL`);
     await queryRunner.query(
       `ALTER TABLE orders ADD order_group_id NVARCHAR(36) NULL`,
     );
@@ -64,26 +60,16 @@ export class AddOrderGroupAndShopIdToOrders1749300011000
     await queryRunner.query(
       `DROP INDEX idx_payment_transactions_order_group_id ON payment_transactions`,
     );
-    await queryRunner.query(
-      `DROP INDEX idx_orders_order_group_id ON orders`,
-    );
-    await queryRunner.query(
-      `DROP INDEX idx_orders_shop_id ON orders`,
-    );
+    await queryRunner.query(`DROP INDEX idx_orders_order_group_id ON orders`);
+    await queryRunner.query(`DROP INDEX idx_orders_shop_id ON orders`);
     await queryRunner.query(
       `ALTER TABLE orders DROP CONSTRAINT fk_orders_shop_id`,
     );
     await queryRunner.query(
       `ALTER TABLE payment_transactions DROP COLUMN order_group_id`,
     );
-    await queryRunner.query(
-      `ALTER TABLE orders DROP COLUMN shop_name`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE orders DROP COLUMN order_group_id`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE orders DROP COLUMN shop_id`,
-    );
+    await queryRunner.query(`ALTER TABLE orders DROP COLUMN shop_name`);
+    await queryRunner.query(`ALTER TABLE orders DROP COLUMN order_group_id`);
+    await queryRunner.query(`ALTER TABLE orders DROP COLUMN shop_id`);
   }
 }

@@ -1,13 +1,22 @@
 import { Order } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/order-item.entity';
-import { OrderStatus, PaymentMethod, PaymentStatus } from '../../../../common/constants';
+import {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from '../../../../common/constants';
 import {
   mockProduct,
   mockProductVariant,
 } from '../../../product/tests/mocks/product.mock';
 
 export const mockShippingAddress = (
-  overrides: Partial<{ full_name: string; phone: string; address_line: string; city: string }> = {},
+  overrides: Partial<{
+    full_name: string;
+    phone: string;
+    address_line: string;
+    city: string;
+  }> = {},
 ) => ({
   full_name: 'Nguyen Van A',
   phone: '0901234567',
@@ -16,7 +25,9 @@ export const mockShippingAddress = (
   ...overrides,
 });
 
-export const mockOrderItem = (overrides: Partial<OrderItem> = {}): OrderItem => ({
+export const mockOrderItem = (
+  overrides: Partial<OrderItem> = {},
+): OrderItem => ({
   id: 1,
   order_id: 1,
   product_variant_id: 1,
@@ -104,13 +115,15 @@ export const mockCartForCheckout = (itemCount = 1) => {
   return { id: 1, items };
 };
 
-export const mockAddress = (overrides: Partial<{
-  id: number;
-  full_name: string;
-  phone: string;
-  address_line: string;
-  city: string;
-}> = {}) => ({
+export const mockAddress = (
+  overrides: Partial<{
+    id: number;
+    full_name: string;
+    phone: string;
+    address_line: string;
+    city: string;
+  }> = {},
+) => ({
   id: 5,
   full_name: 'Nguyen Van A',
   phone: '0901234567',

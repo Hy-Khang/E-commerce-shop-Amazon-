@@ -4,7 +4,8 @@ import { generateSlug } from '../../../common/utils/slug.util';
 export class BackfillShopsAndProductShopId1749300002000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // 1. Create shops for all seller-role users
-    const sellers: { id: number; full_name: string }[] = await queryRunner.query(`
+    const sellers: { id: number; full_name: string }[] =
+      await queryRunner.query(`
       SELECT u.id, u.full_name FROM users u
       INNER JOIN roles r ON u.role_id = r.id
       WHERE r.name = 'seller'
@@ -19,14 +20,18 @@ export class BackfillShopsAndProductShopId1749300002000 implements MigrationInte
     }
 
     // 2. Validate: shop count matches seller count
-    const [{ shopCount }] = await queryRunner.query(`SELECT COUNT(*) AS shopCount FROM shops`);
+    const [{ shopCount }] = await queryRunner.query(
+      `SELECT COUNT(*) AS shopCount FROM shops`,
+    );
     const [{ sellerCount }] = await queryRunner.query(`
       SELECT COUNT(*) AS sellerCount FROM users u
       INNER JOIN roles r ON u.role_id = r.id WHERE r.name = 'seller'
     `);
 
     if (parseInt(shopCount, 10) !== parseInt(sellerCount, 10)) {
-      throw new Error(`Shop count (${shopCount}) does not match seller count (${sellerCount}). Rolling back.`);
+      throw new Error(
+        `Shop count (${shopCount}) does not match seller count (${sellerCount}). Rolling back.`,
+      );
     }
 
     // 3. Backfill products.shop_id from seller_id
@@ -44,7 +49,9 @@ export class BackfillShopsAndProductShopId1749300002000 implements MigrationInte
     `);
 
     if (parseInt(orphanCount, 10) > 0) {
-      throw new Error(`Found ${orphanCount} orphaned products (seller_id set but shop_id NULL). Rolling back.`);
+      throw new Error(
+        `Found ${orphanCount} orphaned products (seller_id set but shop_id NULL). Rolling back.`,
+      );
     }
   }
 

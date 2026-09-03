@@ -17,13 +17,21 @@ export class CreateNotificationsTable1749300005000 implements MigrationInterface
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX idx_notifications_user_id_is_read ON notifications(user_id, is_read)`);
-    await queryRunner.query(`CREATE INDEX idx_notifications_created_at ON notifications(created_at)`);
+    await queryRunner.query(
+      `CREATE INDEX idx_notifications_user_id_is_read ON notifications(user_id, is_read)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX idx_notifications_created_at ON notifications(created_at)`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX idx_notifications_created_at ON notifications`);
-    await queryRunner.query(`DROP INDEX idx_notifications_user_id_is_read ON notifications`);
+    await queryRunner.query(
+      `DROP INDEX idx_notifications_created_at ON notifications`,
+    );
+    await queryRunner.query(
+      `DROP INDEX idx_notifications_user_id_is_read ON notifications`,
+    );
     await queryRunner.query(`DROP TABLE notifications`);
   }
 }

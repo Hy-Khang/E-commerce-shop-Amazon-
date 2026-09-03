@@ -108,10 +108,7 @@ export class CouponRepository {
    * expires_at`). Empty `shopIds` (cart of null-shop items) → platform only,
    * avoiding an `IN ()` that SQL Server rejects.
    */
-  async findAvailableForCart(
-    shopIds: number[],
-    now: Date,
-  ): Promise<Coupon[]> {
+  async findAvailableForCart(shopIds: number[], now: Date): Promise<Coupon[]> {
     const qb = this.repo
       .createQueryBuilder('coupon')
       .leftJoinAndSelect('coupon.coupon_categories', 'cc')
@@ -185,7 +182,10 @@ export class CouponRepository {
     await this.repo
       .createQueryBuilder()
       .update(Coupon)
-      .set({ current_uses: () => 'CASE WHEN current_uses > 0 THEN current_uses - 1 ELSE 0 END' })
+      .set({
+        current_uses: () =>
+          'CASE WHEN current_uses > 0 THEN current_uses - 1 ELSE 0 END',
+      })
       .where('id = :id', { id: couponId })
       .execute();
   }

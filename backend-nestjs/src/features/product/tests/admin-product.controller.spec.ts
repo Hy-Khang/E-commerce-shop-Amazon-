@@ -151,7 +151,10 @@ describe('AdminProductController', () => {
 
   describe('addImage', () => {
     it('should call service.addImage with product id and dto', async () => {
-      const dto = { image_url: 'https://cdn.example.com/new.jpg', sort_order: 0 } as any;
+      const dto = {
+        image_url: 'https://cdn.example.com/new.jpg',
+        sort_order: 0,
+      } as any;
       const image = mockProductImage({ image_url: dto.image_url });
       service.addImage.mockResolvedValue(image);
 

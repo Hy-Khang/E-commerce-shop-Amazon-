@@ -4,7 +4,10 @@ import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { WishlistSortBy } from '../types/wishlist.types';
 
 export class WishlistQueryDto extends PaginationDto {
-  @ApiPropertyOptional({ enum: WishlistSortBy, default: WishlistSortBy.CreatedAt })
+  @ApiPropertyOptional({
+    enum: WishlistSortBy,
+    default: WishlistSortBy.CreatedAt,
+  })
   @IsOptional()
   @IsEnum(WishlistSortBy)
   sort?: string;

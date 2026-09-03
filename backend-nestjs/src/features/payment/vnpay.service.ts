@@ -45,9 +45,7 @@ export class VnpayService {
     };
 
     const sortedParams = this.sortParams(params);
-    const signData = new URLSearchParams(
-      sortedParams as Record<string, string>,
-    ).toString();
+    const signData = new URLSearchParams(sortedParams).toString();
     const secureHash = createHmac('sha512', this.hashSecret)
       .update(signData)
       .digest('hex');

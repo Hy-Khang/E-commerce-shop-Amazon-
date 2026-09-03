@@ -26,7 +26,10 @@ export class PermissionRepository {
     return this.repo.findByIds(ids);
   }
 
-  async findByResourceAndAction(resource: string, action: string): Promise<Permission | null> {
+  async findByResourceAndAction(
+    resource: string,
+    action: string,
+  ): Promise<Permission | null> {
     return this.repo.findOne({ where: { resource, action } });
   }
 
@@ -35,7 +38,10 @@ export class PermissionRepository {
     return this.repo.save(permission);
   }
 
-  async update(id: number, data: Partial<Permission>): Promise<Permission | null> {
+  async update(
+    id: number,
+    data: Partial<Permission>,
+  ): Promise<Permission | null> {
     await this.repo.update(id, data);
     return this.repo.findOne({ where: { id } });
   }

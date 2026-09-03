@@ -105,8 +105,12 @@ export class CreateFlashSaleTables1756400000000 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE flash_sale_items`);
 
-    await queryRunner.query(`DROP INDEX idx_flash_sales_ends_at ON flash_sales`);
-    await queryRunner.query(`DROP INDEX idx_flash_sales_starts_at ON flash_sales`);
+    await queryRunner.query(
+      `DROP INDEX idx_flash_sales_ends_at ON flash_sales`,
+    );
+    await queryRunner.query(
+      `DROP INDEX idx_flash_sales_starts_at ON flash_sales`,
+    );
     await queryRunner.query(`DROP INDEX idx_flash_sales_status ON flash_sales`);
     await queryRunner.query(`DROP TABLE flash_sales`);
   }

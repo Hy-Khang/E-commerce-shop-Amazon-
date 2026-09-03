@@ -50,14 +50,16 @@ describe('CartController', () => {
 
       const result = await controller.getCart(undefined, 'guest-session-123');
 
-      expect(cartService.getCart).toHaveBeenCalledWith({ sessionId: 'guest-session-123' });
+      expect(cartService.getCart).toHaveBeenCalledWith({
+        sessionId: 'guest-session-123',
+      });
       expect(result).toEqual(response);
     });
 
     it('should throw BadRequestException when neither auth nor session_id', async () => {
-      await expect(
-        controller.getCart(undefined, undefined),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.getCart(undefined, undefined)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -82,7 +84,10 @@ describe('CartController', () => {
 
       const result = await controller.addItem(undefined, 'guest-abc', dto);
 
-      expect(cartService.addItem).toHaveBeenCalledWith({ sessionId: 'guest-abc' }, dto);
+      expect(cartService.addItem).toHaveBeenCalledWith(
+        { sessionId: 'guest-abc' },
+        dto,
+      );
       expect(result).toEqual(response);
     });
 
@@ -104,7 +109,11 @@ describe('CartController', () => {
 
       const result = await controller.updateItem(mockUser, undefined, 10, dto);
 
-      expect(cartService.updateItemQuantity).toHaveBeenCalledWith({ userId: 1 }, 10, dto);
+      expect(cartService.updateItemQuantity).toHaveBeenCalledWith(
+        { userId: 1 },
+        10,
+        dto,
+      );
       expect(result).toEqual(response);
     });
 
@@ -112,7 +121,12 @@ describe('CartController', () => {
       const response = mockCartResponse();
       cartService.updateItemQuantity.mockResolvedValue(response);
 
-      const result = await controller.updateItem(undefined, 'guest-abc', 10, dto);
+      const result = await controller.updateItem(
+        undefined,
+        'guest-abc',
+        10,
+        dto,
+      );
 
       expect(cartService.updateItemQuantity).toHaveBeenCalledWith(
         { sessionId: 'guest-abc' },
@@ -139,7 +153,10 @@ describe('CartController', () => {
 
       await controller.removeItem(undefined, 'guest-abc', 10);
 
-      expect(cartService.removeItem).toHaveBeenCalledWith({ sessionId: 'guest-abc' }, 10);
+      expect(cartService.removeItem).toHaveBeenCalledWith(
+        { sessionId: 'guest-abc' },
+        10,
+      );
     });
   });
 

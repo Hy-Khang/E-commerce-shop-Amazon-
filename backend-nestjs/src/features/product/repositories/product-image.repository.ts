@@ -26,12 +26,18 @@ export class ProductImageRepository {
     return this.repo.save(image);
   }
 
-  async updateSortOrder(id: number, sortOrder: number): Promise<ProductImage | null> {
+  async updateSortOrder(
+    id: number,
+    sortOrder: number,
+  ): Promise<ProductImage | null> {
     await this.repo.update(id, { sort_order: sortOrder });
     return this.findById(id);
   }
 
-  async update(id: number, data: Partial<ProductImage>): Promise<ProductImage | null> {
+  async update(
+    id: number,
+    data: Partial<ProductImage>,
+  ): Promise<ProductImage | null> {
     await this.repo.update(id, data);
     return this.findById(id);
   }

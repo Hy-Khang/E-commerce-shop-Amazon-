@@ -39,8 +39,13 @@ export class CartService {
     return this.buildResponse(cart);
   }
 
-  async addItem(owner: ICartOwner, dto: AddCartItemDto): Promise<CartResponseDto> {
-    const variant = await this.productService.findVariantById(dto.product_variant_id);
+  async addItem(
+    owner: ICartOwner,
+    dto: AddCartItemDto,
+  ): Promise<CartResponseDto> {
+    const variant = await this.productService.findVariantById(
+      dto.product_variant_id,
+    );
     if (!variant || !variant.product?.is_active) {
       throw new NotFoundException({
         code: 'PRODUCT_002',
@@ -81,7 +86,10 @@ export class CartService {
     }
 
     if (existingItem) {
-      await this.cartItemRepository.updateQuantity(existingItem.id, newQuantity);
+      await this.cartItemRepository.updateQuantity(
+        existingItem.id,
+        newQuantity,
+      );
     } else {
       await this.cartItemRepository.create({
         cart_id: cart.id,
@@ -225,11 +233,12 @@ export class CartService {
    */
   private async buildResponse(cart: Cart): Promise<CartResponseDto> {
     const variantIds = (cart.items || []).map((i) => i.product_variant_id);
-    const flashMap = await this.flashSaleService.getActiveFlashPriceMap(
-      variantIds,
-    );
+    const flashMap =
+      await this.flashSaleService.getActiveFlashPriceMap(variantIds);
     const flashPrices = new Map<number, number>();
-    flashMap.forEach((v, variantId) => flashPrices.set(variantId, v.flashPrice));
+    flashMap.forEach((v, variantId) =>
+      flashPrices.set(variantId, v.flashPrice),
+    );
     return toCartResponse(cart, flashPrices);
   }
 

@@ -50,11 +50,19 @@ export class CreateChatTables1756600000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX idx_messages_conversation_created ON messages`);
-    await queryRunner.query(`DROP INDEX idx_messages_conversation_id ON messages`);
+    await queryRunner.query(
+      `DROP INDEX idx_messages_conversation_created ON messages`,
+    );
+    await queryRunner.query(
+      `DROP INDEX idx_messages_conversation_id ON messages`,
+    );
     await queryRunner.query(`DROP TABLE messages`);
-    await queryRunner.query(`DROP INDEX idx_conversations_shop_id ON conversations`);
-    await queryRunner.query(`DROP INDEX idx_conversations_customer_id ON conversations`);
+    await queryRunner.query(
+      `DROP INDEX idx_conversations_shop_id ON conversations`,
+    );
+    await queryRunner.query(
+      `DROP INDEX idx_conversations_customer_id ON conversations`,
+    );
     await queryRunner.query(`DROP TABLE conversations`);
   }
 }

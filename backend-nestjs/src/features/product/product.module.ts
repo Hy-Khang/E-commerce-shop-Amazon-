@@ -20,7 +20,12 @@ import { ShopModule } from '../shop/shop.module';
     TypeOrmModule.forFeature([Category, Product, ProductVariant, ProductImage]),
     ShopModule,
   ],
-  controllers: [ProductController, AdminProductController, AdminCategoryController, SellerProductController],
+  controllers: [
+    ProductController,
+    AdminProductController,
+    AdminCategoryController,
+    SellerProductController,
+  ],
   providers: [
     ProductService,
     CategoryRepository,

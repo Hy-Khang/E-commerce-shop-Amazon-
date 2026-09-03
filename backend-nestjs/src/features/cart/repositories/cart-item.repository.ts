@@ -42,6 +42,6 @@ export class CartItemRepository {
 
   async deleteByCartId(cartId: number, manager?: EntityManager): Promise<void> {
     const repo = manager ? manager.getRepository(CartItem) : this.repo;
-    await repo.delete({ cart_id: cartId } as any);
+    await repo.delete({ cart_id: cartId });
   }
 }

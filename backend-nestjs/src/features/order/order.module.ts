@@ -27,7 +27,12 @@ import { FlashSaleModule } from '../flash-sale/flash-sale.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem, OrderStatusHistory, OrderTrackingLocation]),
+    TypeOrmModule.forFeature([
+      Order,
+      OrderItem,
+      OrderStatusHistory,
+      OrderTrackingLocation,
+    ]),
     CartModule,
     ProductModule,
     UserProfileModule,
@@ -37,7 +42,12 @@ import { FlashSaleModule } from '../flash-sale/flash-sale.module';
     ShopModule,
     FlashSaleModule,
   ],
-  controllers: [OrderController, AdminOrderController, SellerOrderController, ShipperOrderController],
+  controllers: [
+    OrderController,
+    AdminOrderController,
+    SellerOrderController,
+    ShipperOrderController,
+  ],
   providers: [
     OrderService,
     OrderScheduler,

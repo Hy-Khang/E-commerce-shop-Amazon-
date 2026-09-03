@@ -21,8 +21,14 @@ export class SellerWishlistController {
 
   @Get('popular')
   @Permissions(PERMISSIONS.WISHLIST_READ)
-  @ApiOperation({ summary: "Most wishlisted products in the seller's shop (paginated)" })
-  @ApiResponse({ status: 200, description: 'Returns paginated popular wishlist items', type: [PopularWishlistItemDto] })
+  @ApiOperation({
+    summary: "Most wishlisted products in the seller's shop (paginated)",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated popular wishlist items',
+    type: [PopularWishlistItemDto],
+  })
   @ApiResponse({ status: 400, description: 'SHOP_004: Shop not set up' })
   async getMostWishlisted(
     @CurrentUser() user: ICurrentUser,

@@ -16,7 +16,10 @@ export class IsImagePathConstraint implements ValidatorConstraintInterface {
 
     if (UPLOAD_PATH_REGEX.test(value)) return true;
 
-    return isURL(value, { require_protocol: true, protocols: ['http', 'https'] });
+    return isURL(value, {
+      require_protocol: true,
+      protocols: ['http', 'https'],
+    });
   }
 
   defaultMessage(): string {

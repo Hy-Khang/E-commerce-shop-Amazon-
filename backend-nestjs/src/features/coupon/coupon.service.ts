@@ -167,8 +167,9 @@ export class CouponService {
         eligible = false;
         reason = 'below_min';
         shortOfMin =
-          Math.round((Number(candidate.min_order_amount) - applicableTotal) *
-            100) / 100;
+          Math.round(
+            (Number(candidate.min_order_amount) - applicableTotal) * 100,
+          ) / 100;
       } else {
         const userUsage =
           await this.couponUsageRepository.countActiveByUserAndCoupon(
@@ -492,7 +493,8 @@ export class CouponService {
       if (effectiveCategories.length === 0) {
         throw new BadRequestException({
           code: 'VALIDATION_001',
-          message: 'A categories-scoped coupon must target at least one category',
+          message:
+            'A categories-scoped coupon must target at least one category',
         });
       }
     }
@@ -530,10 +532,7 @@ export class CouponService {
       await this.replaceCouponProducts(id, dto.product_ids);
     }
 
-    if (
-      dto.scope !== undefined &&
-      dto.scope !== coupon.scope
-    ) {
+    if (dto.scope !== undefined && dto.scope !== coupon.scope) {
       if (newScope !== CouponScope.Categories) {
         await this.replaceCouponCategories(id, []);
       }
@@ -947,7 +946,8 @@ export class CouponService {
     if (userUsageCount >= coupon.max_uses_per_user) {
       throw new BadRequestException({
         code: 'COUPON_004',
-        message: 'You have already used this coupon the maximum number of times',
+        message:
+          'You have already used this coupon the maximum number of times',
       });
     }
 

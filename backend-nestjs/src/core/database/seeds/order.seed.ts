@@ -250,7 +250,9 @@ export const OrderSeed: ISeed = {
           NULL, 0, '2026-07-15T09:00:00');
       SET IDENTITY_INSERT orders OFF;
     `);
-    console.log('  + orders: 37 rows (all with order_group_id, no legacy NULL)');
+    console.log(
+      '  + orders: 37 rows (all with order_group_id, no legacy NULL)',
+    );
 
     // 47 order items with shop_id/shop_name snapshots
     await qr.query(`
@@ -437,7 +439,9 @@ export const OrderSeed: ISeed = {
       UPDATE orders SET shipper_id = 16
       WHERE id IN (19,20,23,25,26,33);
     `);
-    console.log('  + shipper assignments: 24 orders (18 delivered + 6 shipping)');
+    console.log(
+      '  + shipper assignments: 24 orders (18 delivered + 6 shipping)',
+    );
 
     await qr.release();
   },

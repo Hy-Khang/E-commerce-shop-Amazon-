@@ -362,7 +362,9 @@ export const ProductSeed: ISeed = {
         (123, 50, N'VDA-Y2010-05',    NULL, NULL, 450000, 379000, 18);
       SET IDENTITY_INSERT product_variants OFF;
     `);
-    console.log('  + product_variants: +35 rows (89-123) — pants/laptops/accessories');
+    console.log(
+      '  + product_variants: +35 rows (89-123) — pants/laptops/accessories',
+    );
 
     // ── New Product Images (52) ──
     await qr.query(`
@@ -469,7 +471,9 @@ export const ProductSeed: ISeed = {
         (68, 10, 6, N'Pin Sạc Dự Phòng 20000mAh',  N'pin-sac-du-phong-20000mah',  N'Pin dự phòng 20000mAh, sạc nhanh PD 22.5W',          N'/uploads/products/seed/p68.jpg', NULL, NULL, 1);
       SET IDENTITY_INSERT products OFF;
     `);
-    console.log('  + products: +18 rows (51-68) — books/home/shoes/electronics/accessories');
+    console.log(
+      '  + products: +18 rows (51-68) — books/home/shoes/electronics/accessories',
+    );
 
     // ── Extra Product Variants (21) ──
     // Books/home/accessories: 1 variant each. Shoes: size variants. Phone: 2 variants.

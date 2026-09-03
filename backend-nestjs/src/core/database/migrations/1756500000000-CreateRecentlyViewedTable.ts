@@ -15,13 +15,21 @@ export class CreateRecentlyViewedTable1756500000000 implements MigrationInterfac
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX idx_recently_viewed_user_id ON recently_viewed(user_id)`);
-    await queryRunner.query(`CREATE INDEX idx_recently_viewed_user_viewed ON recently_viewed(user_id, viewed_at)`);
+    await queryRunner.query(
+      `CREATE INDEX idx_recently_viewed_user_id ON recently_viewed(user_id)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX idx_recently_viewed_user_viewed ON recently_viewed(user_id, viewed_at)`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX idx_recently_viewed_user_viewed ON recently_viewed`);
-    await queryRunner.query(`DROP INDEX idx_recently_viewed_user_id ON recently_viewed`);
+    await queryRunner.query(
+      `DROP INDEX idx_recently_viewed_user_viewed ON recently_viewed`,
+    );
+    await queryRunner.query(
+      `DROP INDEX idx_recently_viewed_user_id ON recently_viewed`,
+    );
     await queryRunner.query(`DROP TABLE recently_viewed`);
   }
 }

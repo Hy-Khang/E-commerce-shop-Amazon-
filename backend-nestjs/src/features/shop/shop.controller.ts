@@ -2,7 +2,10 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ShopService } from './shop.service';
 import { ShopQueryDto } from './dto/shop-query.dto';
-import { ShopResponseDto, ShopProfileResponseDto } from './dto/shop-response.dto';
+import {
+  ShopResponseDto,
+  ShopProfileResponseDto,
+} from './dto/shop-response.dto';
 import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Shops')

@@ -24,9 +24,7 @@ export class UploadService {
   async saveImage(file: Express.Multer.File): Promise<string> {
     const ext = MIME_TO_EXT[file.mimetype];
     if (!ext) {
-      throw new BadRequestException(
-        `Unsupported image type: ${file.mimetype}`,
-      );
+      throw new BadRequestException(`Unsupported image type: ${file.mimetype}`);
     }
 
     const subDir = 'products';

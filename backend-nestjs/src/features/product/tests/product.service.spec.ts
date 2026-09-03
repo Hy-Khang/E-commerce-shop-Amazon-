@@ -150,15 +150,19 @@ describe('ProductService', () => {
       expect(result.category).toEqual(category);
       expect(result.products).toEqual(products);
       expect(categoryRepository.findDescendantIds).toHaveBeenCalledWith(1);
-      expect(productRepository.findProductsByCategoryIds).toHaveBeenCalledWith([1, 2, 3], 1, 20);
+      expect(productRepository.findProductsByCategoryIds).toHaveBeenCalledWith(
+        [1, 2, 3],
+        1,
+        20,
+      );
     });
 
     it('should throw NotFoundException when category not found', async () => {
       categoryRepository.findBySlug.mockResolvedValue(null);
 
-      await expect(service.getCategoryBySlug('nonexistent', 1, 20)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.getCategoryBySlug('nonexistent', 1, 20),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -223,7 +227,9 @@ describe('ProductService', () => {
     it('should throw NotFoundException when category not found', async () => {
       categoryRepository.findByIdWithDetails.mockResolvedValue(null);
 
-      await expect(service.findCategoryById(999)).rejects.toThrow(NotFoundException);
+      await expect(service.findCategoryById(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -243,7 +249,9 @@ describe('ProductService', () => {
     it('should throw ConflictException on duplicate slug', async () => {
       categoryRepository.existsBySlug.mockResolvedValue(true);
 
-      await expect(service.createCategory(dto)).rejects.toThrow(ConflictException);
+      await expect(service.createCategory(dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw NotFoundException when parent_id does not exist', async () => {
@@ -259,7 +267,12 @@ describe('ProductService', () => {
     it('should create category with valid parent_id', async () => {
       const dtoWithParent = { ...dto, parent_id: 1 };
       const parent = mockCategory();
-      const created = mockCategory({ id: 2, name: 'Phones', slug: 'phones', parent_id: 1 });
+      const created = mockCategory({
+        id: 2,
+        name: 'Phones',
+        slug: 'phones',
+        parent_id: 1,
+      });
       categoryRepository.existsBySlug.mockResolvedValue(false);
       categoryRepository.findById.mockResolvedValue(parent);
       categoryRepository.create.mockResolvedValue(created);
@@ -298,7 +311,9 @@ describe('ProductService', () => {
       categoryRepository.findById.mockResolvedValue(existingCategory);
       categoryRepository.existsBySlugExcludingId.mockResolvedValue(true);
 
-      await expect(service.updateCategory(1, dto)).rejects.toThrow(ConflictException);
+      await expect(service.updateCategory(1, dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should skip slug check when slug unchanged', async () => {
@@ -328,7 +343,9 @@ describe('ProductService', () => {
         .mockResolvedValueOnce(existingCategory)
         .mockResolvedValueOnce(null);
 
-      await expect(service.updateCategory(1, dto)).rejects.toThrow(NotFoundException);
+      await expect(service.updateCategory(1, dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -346,14 +363,18 @@ describe('ProductService', () => {
     it('should throw NotFoundException when category not found', async () => {
       categoryRepository.findById.mockResolvedValue(null);
 
-      await expect(service.deleteCategory(999)).rejects.toThrow(NotFoundException);
+      await expect(service.deleteCategory(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException when category has products or children', async () => {
       categoryRepository.findById.mockResolvedValue(mockCategory());
       categoryRepository.hasProductsOrChildren.mockResolvedValue(true);
 
-      await expect(service.deleteCategory(1)).rejects.toThrow(BadRequestException);
+      await expect(service.deleteCategory(1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -386,15 +407,25 @@ describe('ProductService', () => {
     it('should throw NotFoundException when product not found', async () => {
       productRepository.findByIdWithReviewStats.mockResolvedValue(null);
 
-      await expect(service.findProductById(999)).rejects.toThrow(NotFoundException);
+      await expect(service.findProductById(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('createProduct', () => {
-    const dto = { name: 'New Product', slug: 'new-product', category_id: 1 } as any;
+    const dto = {
+      name: 'New Product',
+      slug: 'new-product',
+      category_id: 1,
+    } as any;
 
     it('should create product successfully', async () => {
-      const created = mockProduct({ id: 2, name: 'New Product', slug: 'new-product' });
+      const created = mockProduct({
+        id: 2,
+        name: 'New Product',
+        slug: 'new-product',
+      });
       productRepository.existsBySlug.mockResolvedValue(false);
       categoryRepository.findById.mockResolvedValue(mockCategory());
       productRepository.create.mockResolvedValue(created);
@@ -407,14 +438,18 @@ describe('ProductService', () => {
     it('should throw ConflictException on duplicate slug', async () => {
       productRepository.existsBySlug.mockResolvedValue(true);
 
-      await expect(service.createProduct(dto)).rejects.toThrow(ConflictException);
+      await expect(service.createProduct(dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw NotFoundException when category not found', async () => {
       productRepository.existsBySlug.mockResolvedValue(false);
       categoryRepository.findById.mockResolvedValue(null);
 
-      await expect(service.createProduct(dto)).rejects.toThrow(NotFoundException);
+      await expect(service.createProduct(dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -445,7 +480,9 @@ describe('ProductService', () => {
       productRepository.findById.mockResolvedValue(existingProduct);
       productRepository.existsBySlugExcludingId.mockResolvedValue(true);
 
-      await expect(service.updateProduct(1, dto)).rejects.toThrow(ConflictException);
+      await expect(service.updateProduct(1, dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should skip slug check when slug unchanged', async () => {
@@ -464,7 +501,9 @@ describe('ProductService', () => {
       productRepository.findById.mockResolvedValue(existingProduct);
       categoryRepository.findById.mockResolvedValue(null);
 
-      await expect(service.updateProduct(1, dto)).rejects.toThrow(NotFoundException);
+      await expect(service.updateProduct(1, dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should skip category check when category_id unchanged', async () => {
@@ -505,17 +544,29 @@ describe('ProductService', () => {
     it('should throw NotFoundException when product not found', async () => {
       productRepository.findById.mockResolvedValue(null);
 
-      await expect(service.toggleProductActive(999)).rejects.toThrow(NotFoundException);
+      await expect(service.toggleProductActive(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   // ─── Admin: Variants ───
 
   describe('addVariant', () => {
-    const dto = { sku: 'NEW-SKU-001', option1: 'Red', option2: 'L', price: 300000, stock_quantity: 50 } as any;
+    const dto = {
+      sku: 'NEW-SKU-001',
+      option1: 'Red',
+      option2: 'L',
+      price: 300000,
+      stock_quantity: 50,
+    } as any;
 
     it('should add variant to product successfully', async () => {
-      const variant = mockProductVariant({ id: 2, sku: 'NEW-SKU-001', product_id: 1 });
+      const variant = mockProductVariant({
+        id: 2,
+        sku: 'NEW-SKU-001',
+        product_id: 1,
+      });
       productRepository.findById.mockResolvedValue(mockProduct());
       productVariantRepository.existsBySku.mockResolvedValue(false);
       productVariantRepository.create.mockResolvedValue(variant);
@@ -532,14 +583,18 @@ describe('ProductService', () => {
     it('should throw NotFoundException when product not found', async () => {
       productRepository.findById.mockResolvedValue(null);
 
-      await expect(service.addVariant(999, dto)).rejects.toThrow(NotFoundException);
+      await expect(service.addVariant(999, dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException on duplicate SKU', async () => {
       productRepository.findById.mockResolvedValue(mockProduct());
       productVariantRepository.existsBySku.mockResolvedValue(true);
 
-      await expect(service.addVariant(1, dto)).rejects.toThrow(ConflictException);
+      await expect(service.addVariant(1, dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -570,7 +625,9 @@ describe('ProductService', () => {
       productVariantRepository.findById.mockResolvedValue(existingVariant);
       productVariantRepository.existsBySkuExcludingId.mockResolvedValue(true);
 
-      await expect(service.updateVariant(1, dto)).rejects.toThrow(ConflictException);
+      await expect(service.updateVariant(1, dto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should skip SKU check when SKU unchanged', async () => {
@@ -581,7 +638,9 @@ describe('ProductService', () => {
 
       await service.updateVariant(1, dto);
 
-      expect(productVariantRepository.existsBySkuExcludingId).not.toHaveBeenCalled();
+      expect(
+        productVariantRepository.existsBySkuExcludingId,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -599,24 +658,35 @@ describe('ProductService', () => {
     it('should throw NotFoundException when variant not found', async () => {
       productVariantRepository.findById.mockResolvedValue(null);
 
-      await expect(service.deleteVariant(999)).rejects.toThrow(NotFoundException);
+      await expect(service.deleteVariant(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException when variant has active cart items', async () => {
       productVariantRepository.findById.mockResolvedValue(mockProductVariant());
       productVariantRepository.hasActiveCartItems.mockResolvedValue(true);
 
-      await expect(service.deleteVariant(1)).rejects.toThrow(BadRequestException);
+      await expect(service.deleteVariant(1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   // ─── Admin: Images ───
 
   describe('addImage', () => {
-    const dto = { image_url: 'https://cdn.example.com/new.jpg', sort_order: 1 } as any;
+    const dto = {
+      image_url: 'https://cdn.example.com/new.jpg',
+      sort_order: 1,
+    } as any;
 
     it('should add image to product successfully', async () => {
-      const image = mockProductImage({ id: 2, image_url: dto.image_url, sort_order: 1 });
+      const image = mockProductImage({
+        id: 2,
+        image_url: dto.image_url,
+        sort_order: 1,
+      });
       productRepository.findById.mockResolvedValue(mockProduct());
       productImageRepository.create.mockResolvedValue(image);
 
@@ -633,7 +703,9 @@ describe('ProductService', () => {
     it('should throw NotFoundException when product not found', async () => {
       productRepository.findById.mockResolvedValue(null);
 
-      await expect(service.addImage(999, dto)).rejects.toThrow(NotFoundException);
+      await expect(service.addImage(999, dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -644,24 +716,32 @@ describe('ProductService', () => {
       productImageRepository.findById.mockResolvedValue(image);
       productImageRepository.update.mockResolvedValue(updated);
 
-      const result = await service.updateImage(1, { sort_order: 5 } as any);
+      const result = await service.updateImage(1, { sort_order: 5 });
 
       expect(result).toEqual(updated);
-      expect(productImageRepository.update).toHaveBeenCalledWith(1, { sort_order: 5 });
+      expect(productImageRepository.update).toHaveBeenCalledWith(1, {
+        sort_order: 5,
+      });
     });
 
     it('should update variant_option1 when explicitly set', async () => {
       const image = mockProductImage();
-      const product = mockProduct({ variants: [mockProductVariant({ option1: 'Black' })] });
+      const product = mockProduct({
+        variants: [mockProductVariant({ option1: 'Black' })],
+      });
       const updated = mockProductImage({ variant_option1: 'Black' });
       productImageRepository.findById.mockResolvedValue(image);
       productRepository.findById.mockResolvedValue(product);
       productImageRepository.update.mockResolvedValue(updated);
 
-      const result = await service.updateImage(1, { variant_option1: 'Black' } as any);
+      const result = await service.updateImage(1, {
+        variant_option1: 'Black',
+      });
 
       expect(result).toEqual(updated);
-      expect(productImageRepository.update).toHaveBeenCalledWith(1, { variant_option1: 'Black' });
+      expect(productImageRepository.update).toHaveBeenCalledWith(1, {
+        variant_option1: 'Black',
+      });
     });
 
     it('should clear variant_option1 when set to null', async () => {
@@ -674,7 +754,9 @@ describe('ProductService', () => {
       const result = await service.updateImage(1, dto);
 
       expect(result).toEqual(updated);
-      expect(productImageRepository.update).toHaveBeenCalledWith(1, { variant_option1: null });
+      expect(productImageRepository.update).toHaveBeenCalledWith(1, {
+        variant_option1: null,
+      });
     });
 
     it('should throw NotFoundException when image not found', async () => {
@@ -687,7 +769,9 @@ describe('ProductService', () => {
 
     it('should throw BadRequestException when variant_option1 does not match any variant', async () => {
       const image = mockProductImage();
-      const product = mockProduct({ variants: [mockProductVariant({ option1: 'Black' })] });
+      const product = mockProduct({
+        variants: [mockProductVariant({ option1: 'Black' })],
+      });
       productImageRepository.findById.mockResolvedValue(image);
       productRepository.findById.mockResolvedValue(product);
 

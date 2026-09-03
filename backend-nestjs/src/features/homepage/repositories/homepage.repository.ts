@@ -164,10 +164,7 @@ export class HomepageRepository {
       .innerJoin('shops', 's', 's.id = p.shop_id')
       .where('p.is_active = 1')
       .andWhere("s.status = 'active'")
-      .orderBy(
-        `CHECKSUM(CONCAT(CAST(p.id AS NVARCHAR), :dateString))`,
-        'ASC',
-      )
+      .orderBy(`CHECKSUM(CONCAT(CAST(p.id AS NVARCHAR), :dateString))`, 'ASC')
       .setParameter('dateString', today)
       .limit(limit)
       .getRawMany();

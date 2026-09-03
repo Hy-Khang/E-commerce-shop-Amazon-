@@ -42,7 +42,9 @@ export class CategoryRepository {
     });
   }
 
-  async findAllPaginated(filter: ICategoryFilter): Promise<IPaginatedResult<Category>> {
+  async findAllPaginated(
+    filter: ICategoryFilter,
+  ): Promise<IPaginatedResult<Category>> {
     const qb = this.repo
       .createQueryBuilder('category')
       .loadRelationCountAndMap('category.productCount', 'category.products');

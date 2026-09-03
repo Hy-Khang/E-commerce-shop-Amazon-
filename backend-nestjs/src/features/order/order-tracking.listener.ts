@@ -10,9 +10,7 @@ import type {
 export class OrderTrackingListener {
   private readonly logger = new Logger(OrderTrackingListener.name);
 
-  constructor(
-    private readonly historyRepo: OrderStatusHistoryRepository,
-  ) {}
+  constructor(private readonly historyRepo: OrderStatusHistoryRepository) {}
 
   @OnEvent('order.placed')
   async handleOrderPlaced(payload: OrderPlacedEvent): Promise<void> {

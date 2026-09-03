@@ -105,14 +105,23 @@ describe('CoinService', () => {
       batchRepo.consume.mockResolvedValue(true);
       const manager = {} as any;
 
-      const spent = await service.redeemForCheckout(1, 4000, 10, 'grp', manager);
+      const spent = await service.redeemForCheckout(
+        1,
+        4000,
+        10,
+        'grp',
+        manager,
+      );
 
       expect(spent).toBe(4000);
       expect(batchRepo.consume).toHaveBeenNthCalledWith(1, 1, 3000, manager);
       expect(batchRepo.consume).toHaveBeenNthCalledWith(2, 2, 1000, manager);
       expect(txnRepo.create).toHaveBeenCalledTimes(1);
       expect(txnRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ type: CoinTransactionType.Redeem, amount: 4000 }),
+        expect.objectContaining({
+          type: CoinTransactionType.Redeem,
+          amount: 4000,
+        }),
         manager,
       );
     });
@@ -149,7 +158,10 @@ describe('CoinService', () => {
         }),
       );
       expect(txnRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ type: CoinTransactionType.Earn, amount: 1000 }),
+        expect.objectContaining({
+          type: CoinTransactionType.Earn,
+          amount: 1000,
+        }),
       );
     });
 
@@ -199,7 +211,10 @@ describe('CoinService', () => {
         }),
       );
       expect(txnRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ type: CoinTransactionType.Refund, amount: 2000 }),
+        expect.objectContaining({
+          type: CoinTransactionType.Refund,
+          amount: 2000,
+        }),
       );
     });
 
@@ -222,7 +237,10 @@ describe('CoinService', () => {
       expect(count).toBe(2);
       expect(batchRepo.markExpired).toHaveBeenCalledTimes(2);
       expect(txnRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ type: CoinTransactionType.Expire, amount: 500 }),
+        expect.objectContaining({
+          type: CoinTransactionType.Expire,
+          amount: 500,
+        }),
       );
     });
   });

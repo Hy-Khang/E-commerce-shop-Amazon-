@@ -5,21 +5,34 @@ import { ISeed } from './seed.interface';
 const SALT_ROUNDS = 10;
 
 const SELLER_PERMISSIONS = [
-  'products:create', 'products:read', 'products:update', 'products:delete',
+  'products:create',
+  'products:read',
+  'products:update',
+  'products:delete',
   'categories:read',
-  'orders:read', 'orders:update',
-  'coupons:create', 'coupons:read', 'coupons:update', 'coupons:delete',
+  'orders:read',
+  'orders:update',
+  'coupons:create',
+  'coupons:read',
+  'coupons:update',
+  'coupons:delete',
   'reviews:read',
   'wishlist:read',
   'uploads:create',
   'dashboard:read',
-  'shops:create', 'shops:read', 'shops:update',
-  'flash_registrations:create', 'flash_registrations:read', 'flash_registrations:update', 'flash_registrations:delete',
+  'shops:create',
+  'shops:read',
+  'shops:update',
+  'flash_registrations:create',
+  'flash_registrations:read',
+  'flash_registrations:update',
+  'flash_registrations:delete',
   'portal:seller',
 ];
 
 const SHIPPER_PERMISSIONS = [
-  'orders:read', 'orders:update',
+  'orders:read',
+  'orders:update',
   'dashboard:read',
   'portal:shipper',
 ];
@@ -59,10 +72,26 @@ const SEED_PERMISSIONS = [
   { resource: 'flash_sales', action: 'read', name: 'Read Flash Sales' },
   { resource: 'flash_sales', action: 'update', name: 'Update Flash Sale' },
   { resource: 'flash_sales', action: 'delete', name: 'Delete Flash Sale' },
-  { resource: 'flash_registrations', action: 'create', name: 'Register Flash Sale Product' },
-  { resource: 'flash_registrations', action: 'read', name: 'Read Flash Sale Registrations' },
-  { resource: 'flash_registrations', action: 'update', name: 'Update Flash Sale Registration' },
-  { resource: 'flash_registrations', action: 'delete', name: 'Withdraw Flash Sale Registration' },
+  {
+    resource: 'flash_registrations',
+    action: 'create',
+    name: 'Register Flash Sale Product',
+  },
+  {
+    resource: 'flash_registrations',
+    action: 'read',
+    name: 'Read Flash Sale Registrations',
+  },
+  {
+    resource: 'flash_registrations',
+    action: 'update',
+    name: 'Update Flash Sale Registration',
+  },
+  {
+    resource: 'flash_registrations',
+    action: 'delete',
+    name: 'Withdraw Flash Sale Registration',
+  },
   { resource: 'settings', action: 'read', name: 'Read Settings' },
   { resource: 'settings', action: 'update', name: 'Update Settings' },
   { resource: 'ai_chatbox', action: 'read', name: 'Read AI Chatbox' },
@@ -138,31 +167,33 @@ export const AuthSeed: ISeed = {
       INSERT INTO role_permissions (role_id, permission_id)
       SELECT 2, id FROM permissions;
     `);
-    console.log(`  + role_permissions: ${SEED_PERMISSIONS.length} rows (admin gets all)`);
+    console.log(
+      `  + role_permissions: ${SEED_PERMISSIONS.length} rows (admin gets all)`,
+    );
 
-    const sellerWhere = SELLER_PERMISSIONS.map(
-      (p) => {
-        const [resource, action] = p.split(':');
-        return `(resource = N'${resource}' AND action = N'${action}')`;
-      },
-    ).join(' OR ');
+    const sellerWhere = SELLER_PERMISSIONS.map((p) => {
+      const [resource, action] = p.split(':');
+      return `(resource = N'${resource}' AND action = N'${action}')`;
+    }).join(' OR ');
     await qr.query(`
       INSERT INTO role_permissions (role_id, permission_id)
       SELECT 3, id FROM permissions WHERE ${sellerWhere};
     `);
-    console.log(`  + role_permissions: ${SELLER_PERMISSIONS.length} rows (seller)`);
+    console.log(
+      `  + role_permissions: ${SELLER_PERMISSIONS.length} rows (seller)`,
+    );
 
-    const shipperWhere = SHIPPER_PERMISSIONS.map(
-      (p) => {
-        const [resource, action] = p.split(':');
-        return `(resource = N'${resource}' AND action = N'${action}')`;
-      },
-    ).join(' OR ');
+    const shipperWhere = SHIPPER_PERMISSIONS.map((p) => {
+      const [resource, action] = p.split(':');
+      return `(resource = N'${resource}' AND action = N'${action}')`;
+    }).join(' OR ');
     await qr.query(`
       INSERT INTO role_permissions (role_id, permission_id)
       SELECT 4, id FROM permissions WHERE ${shipperWhere};
     `);
-    console.log(`  + role_permissions: ${SHIPPER_PERMISSIONS.length} rows (shipper)`);
+    console.log(
+      `  + role_permissions: ${SHIPPER_PERMISSIONS.length} rows (shipper)`,
+    );
 
     await qr.release();
   },
