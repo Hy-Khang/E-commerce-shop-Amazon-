@@ -22,6 +22,23 @@ describe('AiQuickRepliesCard', () => {
     expect(onPick).toHaveBeenCalledTimes(1);
   });
 
+  it('is inert when not interactive (a superseded question) — no send, chips disabled', () => {
+    const onPick = vi.fn();
+    render(
+      <AiQuickRepliesCard
+        prompt="Pick a colour"
+        options={options}
+        onPick={onPick}
+        interactive={false}
+      />,
+    );
+
+    const chip = screen.getByRole('button', { name: 'Đen' });
+    expect(chip).toBeDisabled();
+    fireEvent.click(chip);
+    expect(onPick).not.toHaveBeenCalled();
+  });
+
   it('renders nothing when there are no options', () => {
     const { container } = render(<AiQuickRepliesCard options={[]} />);
     expect(container).toBeEmptyDOMElement();

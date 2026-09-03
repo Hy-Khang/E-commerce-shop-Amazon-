@@ -9,6 +9,7 @@ import { CartResponseDto } from '../../cart/dto/cart-response.dto';
 import { Product } from '../../product/entities/product.entity';
 import { AiChatOwner, ToolDispatchResult } from '../types/ai-chat.types';
 import { AGENT_TOOL_NAMES, POLICY_FAQ } from './agent-tools';
+import { extractKeywords, parsePriceHint } from '../utils/ai-chat.util';
 
 /**
  * Executes a single agent tool call against the real feature services.
@@ -89,18 +90,73 @@ export class ToolDispatcher {
     args: Record<string, any>,
   ): Promise<ToolDispatchResult> {
     const query = String(args.query ?? '').trim();
-    const result = await this.productService.findActiveProducts({
-      page: 1,
-      limit: 6,
-      search: query || undefined,
-      ...(args.min_price != null && { min_price: Number(args.min_price) }),
-      ...(args.max_price != null && { max_price: Number(args.max_price) }),
-    });
 
-    const products = result.data.map((p) => this.toProductPayload(p));
+    // The catalog matches `search` as a SINGLE `product.name LIKE %term%`, so
+    // two things break a naïve search: (a) colour/size are variant attributes
+    // (product_variants.option*) never present in the name, so "áo thun nam
+    // oversize đen" as one LIKE finds nothing; (b) a broad token like "áo"
+    // returns many rows and, in a keyword UNION, crowds out the specific product
+    // ("Áo thun Seventy Seven 04"). So we go PRECISE → BROAD and return at the
+    // first tier that hits: exact/substring name → attribute-stripped phrase →
+    // union of individual keywords (last resort). A price phrase in the query
+    // ("dưới 300k") becomes a bound; explicit args win.
+    const priceHint = parsePriceHint(query);
+    const minPrice =
+      args.min_price != null ? Number(args.min_price) : priceHint.min_price;
+    const maxPrice =
+      args.max_price != null ? Number(args.max_price) : priceHint.max_price;
+
+    const runSearch = (search?: string): Promise<Product[]> =>
+      this.productService
+        .findActiveProducts({
+          page: 1,
+          limit: 6,
+          search: search || undefined,
+          ...(minPrice != null && { min_price: minPrice }),
+          ...(maxPrice != null && { max_price: maxPrice }),
+        })
+        .then((r) => r.data)
+        .catch(() => [] as Product[]);
+
+    let data: Product[] = [];
+    if (!query) {
+      data = await runSearch(undefined);
+    } else {
+      // 1) Exact / substring product-name match — resolves "Áo thun Seventy
+      //    Seven 04" straight to that product.
+      data = await runSearch(query);
+
+      if (data.length === 0) {
+        // 2) Strip trailing attribute/filler words (colour/size/price) and retry
+        //    as a contiguous phrase — "áo thun nam oversize đen" → "áo thun nam
+        //    oversize" still LIKE-matches the product name.
+        const keywords = extractKeywords(query);
+        if (keywords.length) {
+          data = await runSearch(keywords.join(' '));
+
+          // 3) Last resort: union individual keywords (broadest — a distinctive
+          //    token still surfaces something even if the phrase missed).
+          if (data.length === 0) {
+            const seen = new Set<number>();
+            for (const kw of keywords) {
+              for (const p of await runSearch(kw)) {
+                if (seen.has(p.id)) continue;
+                seen.add(p.id);
+                data.push(p);
+                if (data.length >= 6) break;
+              }
+              if (data.length >= 6) break;
+            }
+          }
+        }
+      }
+    }
+
+    const top = data.slice(0, 6);
+    const products = top.map((p) => this.toProductPayload(p));
     return {
       content: { count: products.length, products },
-      productIds: result.data.map((p) => p.id),
+      productIds: top.map((p) => p.id),
     };
   }
 

@@ -6,6 +6,7 @@ import { AiConversationRepository } from '../repositories/ai-conversation.reposi
 import { AiMessageRepository } from '../repositories/ai-message.repository';
 import { AiSettingRepository } from '../repositories/ai-setting.repository';
 import { ProductService } from '../../product/product.service';
+import { CartService } from '../../cart/cart.service';
 import { ToolDispatcher } from '../tools/tool-dispatcher';
 
 const CONFIG_MAP: Record<string, string> = {
@@ -28,6 +29,7 @@ describe('AiChatService', () => {
   let messageRepo: jest.Mocked<AiMessageRepository>;
   let settingRepo: jest.Mocked<AiSettingRepository>;
   let productService: jest.Mocked<ProductService>;
+  let cartService: jest.Mocked<CartService>;
   let apiKey: string;
 
   beforeEach(async () => {
@@ -60,6 +62,10 @@ describe('AiChatService', () => {
             }),
             findActiveByIds: jest.fn().mockResolvedValue([]),
           },
+        },
+        {
+          provide: CartService,
+          useValue: { getCart: jest.fn().mockResolvedValue({ id: 1, items: [] }) },
         },
         {
           provide: AiConversationRepository,
@@ -104,6 +110,7 @@ describe('AiChatService', () => {
     messageRepo = module.get(AiMessageRepository);
     settingRepo = module.get(AiSettingRepository);
     productService = module.get(ProductService);
+    cartService = module.get(CartService);
   });
 
   afterEach(() => jest.restoreAllMocks());
@@ -130,6 +137,36 @@ describe('AiChatService', () => {
     // Persists both the user and assistant turns.
     expect(messageRepo.create).toHaveBeenCalledTimes(2);
     expect(conversationRepo.touch).toHaveBeenCalledWith(10);
+  });
+
+  it('drops cart items from suggestions and backfills same-category "similar" products', async () => {
+    // The agent searched (and added) product 1; variant 11 is now in the cart.
+    productService.findActiveByIds.mockResolvedValueOnce([
+      { id: 1, category: { id: 7 }, variants: [{ id: 11 }] },
+    ] as any);
+    cartService.getCart.mockResolvedValueOnce({
+      id: 9,
+      items: [{ product_variant_id: 11 }],
+    } as any);
+    // Same-category backfill returns other products (not in the cart).
+    productService.findActiveProducts.mockResolvedValueOnce({
+      data: [
+        { id: 2, category: { id: 7 }, variants: [{ id: 21 }] },
+        { id: 3, category: { id: 7 }, variants: [{ id: 31 }] },
+      ],
+      meta: { page: 1, limit: 12, total: 2, totalPages: 1 },
+    } as any);
+
+    const out = await (service as any).selectSuggestedProducts([], [1], {
+      userId: null,
+      sessionId: 's1',
+    });
+
+    // Product 1 (just added) is excluded; the carousel is filled with 2 & 3.
+    expect(out.map((p: { id: number }) => p.id)).toEqual([2, 3]);
+    expect(productService.findActiveProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ category_id: 7 }),
+    );
   });
 
   it('falls back gracefully (HTTP 200, still persists) when the LLM call fails', async () => {

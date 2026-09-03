@@ -7,9 +7,17 @@ interface Props {
   message: AiChatMessage;
   onNavigate?: () => void;
   onPickSuggestion?: (text: string) => void;
+  /** True only for the last message in the thread — gates quick-reply chips so
+   *  a superseded question's chips can't be answered after scrolling past. */
+  isLatest?: boolean;
 }
 
-export function AiMessageBubble({ message, onNavigate, onPickSuggestion }: Props) {
+export function AiMessageBubble({
+  message,
+  onNavigate,
+  onPickSuggestion,
+  isLatest = false,
+}: Props) {
   const isUser = message.role === 'user';
 
   if (isUser) {
@@ -41,6 +49,7 @@ export function AiMessageBubble({ message, onNavigate, onPickSuggestion }: Props
           <AiProductSuggestions
             products={message.products}
             onNavigate={onNavigate}
+            onPickSuggestion={onPickSuggestion}
           />
         )}
         {message.actions && message.actions.length > 0 && (
@@ -49,6 +58,7 @@ export function AiMessageBubble({ message, onNavigate, onPickSuggestion }: Props
             messageId={message.id}
             onNavigate={onNavigate}
             onPickSuggestion={onPickSuggestion}
+            quickRepliesInteractive={isLatest}
           />
         )}
       </div>

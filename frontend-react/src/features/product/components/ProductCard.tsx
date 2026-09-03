@@ -14,9 +14,12 @@ interface Props {
   /** Denser layout for tight contexts (e.g. AI chat suggestions) — smaller
    *  padding + type so the thumbnail reads compact. Default keeps the full card. */
   compact?: boolean;
+  /** Extra classes on the card root — e.g. `h-full` to stretch to an
+   *  equal-height grid cell so sibling actions line up across a row. */
+  className?: string;
 }
 
-export function ProductCard({ product, compact = false }: Props) {
+export function ProductCard({ product, compact = false, className = '' }: Props) {
   const prefetch = usePrefetchProduct();
   const { byProduct } = useFlashPriceMaps();
   const priceRange = getPriceRange(product.variants);
@@ -28,7 +31,7 @@ export function ProductCard({ product, compact = false }: Props) {
     <Link
       to={ROUTES.PRODUCT_DETAIL(product.slug)}
       onMouseEnter={() => prefetch(product.slug)}
-      className="group block overflow-hidden rounded-xl border border-border-default bg-elevated transition-all hover:border-border-strong hover:shadow-sm"
+      className={`group block overflow-hidden rounded-xl border border-border-default bg-elevated transition-all hover:border-border-strong hover:shadow-sm ${className}`}
     >
       <div className="relative aspect-square overflow-hidden bg-surface-hover">
         {product.thumbnail_url ? (
@@ -63,7 +66,7 @@ export function ProductCard({ product, compact = false }: Props) {
         </h3>
         <div className="mt-1">
           {flash ? (
-            <div className="flex items-baseline gap-2">
+            <div className="flex flex-wrap items-baseline gap-x-2">
               <span className={`${priceSize} font-bold text-amber-600 dark:text-amber-400`}>
                 {formatPrice(flash.flash_price)}
               </span>

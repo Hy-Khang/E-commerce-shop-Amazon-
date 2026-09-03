@@ -11,6 +11,9 @@ import { AiConversationRepository } from './repositories/ai-conversation.reposit
 import { AiMessageRepository } from './repositories/ai-message.repository';
 import { AiSettingRepository } from './repositories/ai-setting.repository';
 import { ProductService } from '../product/product.service';
+import { ProductQueryDto } from '../product/dto/product-query.dto';
+import { CartService } from '../cart/cart.service';
+import { ICartOwner } from '../cart/types/cart.types';
 import { ChatDto } from './dto/chat.dto';
 import {
   AiConfigResponseDto,
@@ -53,6 +56,11 @@ import { IPaginatedResult } from '../../common/interfaces/paginated-result.inter
 const FALLBACK_REPLY =
   'Xin lỗi, trợ lý AI hiện tạm thời không khả dụng. Bạn vui lòng thử lại sau ít phút, hoặc liên hệ trực tiếp với người bán để được hỗ trợ nhanh nhất nhé.';
 
+/** Target size of the suggestion carousel — when the turn's own picks fall short
+ *  (e.g. the only match was the item just added to cart, now excluded), backfill
+ *  with other products from the same category up to this many. */
+const SUGGESTION_FILL_TARGET = 6;
+
 @Injectable()
 export class AiChatService {
   private readonly logger = new Logger(AiChatService.name);
@@ -60,6 +68,7 @@ export class AiChatService {
   constructor(
     private readonly configService: ConfigService,
     private readonly productService: ProductService,
+    private readonly cartService: CartService,
     private readonly conversationRepository: AiConversationRepository,
     private readonly messageRepository: AiMessageRepository,
     private readonly settingRepository: AiSettingRepository,
@@ -144,6 +153,7 @@ export class AiChatService {
     const products = await this.selectSuggestedProducts(
       seedProducts,
       toolProductIds,
+      owner,
     );
     const productIds = products.map((p) => p.id);
 
@@ -278,10 +288,16 @@ export class AiChatService {
    * **dominant category** (the category most tool/seed products belong to), so a
    * noisy seed can't leak an unrelated item (e.g. a phone into an áo-thun chat).
    * When neither source has a clear category, the seed passes through as-is.
+   *
+   * Products already in the caller's cart are dropped — after an add-to-cart the
+   * item just added is redundant to re-suggest. If that leaves the carousel thin,
+   * it is backfilled with **other products from the same category** ("similar"),
+   * so the shopper keeps discovering instead of seeing an empty/echo carousel.
    */
   private async selectSuggestedProducts(
     seed: Product[],
     toolProductIds: number[],
+    owner: AiChatOwner,
   ): Promise<Product[]> {
     const toolProducts = toolProductIds.length
       ? await this.productService.findActiveByIds([...new Set(toolProductIds)])
@@ -291,25 +307,78 @@ export class AiChatService {
     const dominantCategoryId =
       this.dominantCategoryId(toolProducts) ?? this.dominantCategoryId(seed);
 
+    // Never re-suggest what's already in the cart (esp. the just-added item).
+    // Candidates carry eager variants, so match by variant id — the cart DTO
+    // exposes variant ids, not product ids.
+    const cartVariantIds = await this.cartVariantIds(owner);
+    const inCart = (p: Product): boolean =>
+      (p.variants ?? []).some((v) => cartVariantIds.has(v.id));
+
     const seen = new Set<number>();
     const result: Product[] = [];
-    for (const p of toolProducts) {
-      if (seen.has(p.id)) continue;
+    // Tracks whether a candidate was dropped *because* it's in the cart — the
+    // "echo" case that warrants a same-category backfill. A plain discovery turn
+    // (no cart overlap) is left exactly as before, so we never pad it with
+    // off-constraint products (e.g. ignoring the user's price filter).
+    let droppedInCart = false;
+    const push = (p: Product): void => {
+      if (seen.has(p.id)) return;
+      if (inCart(p)) {
+        droppedInCart = true;
+        return;
+      }
       seen.add(p.id);
       result.push(p);
-    }
+    };
+
+    for (const p of toolProducts) push(p);
     for (const p of seed) {
-      if (seen.has(p.id)) continue;
       // Coherence: drop seed products outside the dominant category.
       if (
         dominantCategoryId != null &&
         this.categoryId(p) !== dominantCategoryId
       )
         continue;
-      seen.add(p.id);
-      result.push(p);
+      push(p);
     }
+
+    // Backfill "similar" products from the same category only when the cart
+    // swallowed a candidate (typically the item just added) and that left the
+    // carousel thin — so the shopper sees alternatives, not an echo/empty row.
+    if (
+      droppedInCart &&
+      dominantCategoryId != null &&
+      result.length < SUGGESTION_FILL_TARGET
+    ) {
+      const more = await this.productService.findActiveProducts({
+        category_id: dominantCategoryId,
+        page: 1,
+        limit: SUGGESTION_FILL_TARGET * 2,
+      } as ProductQueryDto);
+      for (const p of more.data) push(p);
+    }
+
     return result.slice(0, 12);
+  }
+
+  /**
+   * Product-variant ids currently in the caller's cart, used to keep suggestions
+   * from echoing what's already added. Best-effort — a cart read failure never
+   * breaks the reply (returns an empty set).
+   */
+  private async cartVariantIds(owner: AiChatOwner): Promise<Set<number>> {
+    try {
+      const cart = await this.cartService.getCart(this.toCartOwner(owner));
+      return new Set((cart.items ?? []).map((it) => it.product_variant_id));
+    } catch {
+      return new Set();
+    }
+  }
+
+  private toCartOwner(owner: AiChatOwner): ICartOwner {
+    return owner.userId != null
+      ? { userId: owner.userId }
+      : { sessionId: owner.sessionId };
   }
 
   private categoryId(p: Product): number | null {

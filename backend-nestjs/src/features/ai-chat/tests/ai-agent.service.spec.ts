@@ -5,6 +5,7 @@ import { AiConversationRepository } from '../repositories/ai-conversation.reposi
 import { AiMessageRepository } from '../repositories/ai-message.repository';
 import { AiSettingRepository } from '../repositories/ai-setting.repository';
 import { ProductService } from '../../product/product.service';
+import { CartService } from '../../cart/cart.service';
 import { ToolDispatcher } from '../tools/tool-dispatcher';
 
 const CONFIG_MAP: Record<string, string> = {
@@ -66,6 +67,10 @@ describe('AiChatService — agent tool loop', () => {
               .mockResolvedValue({ data: [], meta: {} }),
             findActiveByIds: jest.fn().mockResolvedValue([]),
           },
+        },
+        {
+          provide: CartService,
+          useValue: { getCart: jest.fn().mockResolvedValue({ id: 1, items: [] }) },
         },
         {
           provide: AiConversationRepository,

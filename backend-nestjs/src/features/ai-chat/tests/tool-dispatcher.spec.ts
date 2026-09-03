@@ -79,6 +79,52 @@ describe('ToolDispatcher', () => {
     );
   });
 
+  it('search_products resolves an exact product name on the first (precise) tier', async () => {
+    // Only the full-name query matches; broad tokens ("áo") would return a
+    // different set. The precise tier must win and not fall through.
+    productService.findActiveProducts.mockImplementation((f: any) =>
+      Promise.resolve({
+        data:
+          f.search === 'Áo thun Seventy Seven 04'
+            ? [{ id: 27, name: 'Áo thun Seventy Seven 04', variants: [] }]
+            : [{ id: 1, name: 'Áo khác', variants: [] }],
+        meta: {},
+      }),
+    );
+
+    const res = await dispatcher.run(
+      AGENT_TOOL_NAMES.SEARCH_PRODUCTS,
+      { query: 'Áo thun Seventy Seven 04' },
+      guest,
+    );
+
+    expect((res.content as any).products[0].id).toBe(27);
+    // Tier 1 hit → no broad-token fan-out.
+    expect(productService.findActiveProducts).toHaveBeenCalledTimes(1);
+  });
+
+  it('search_products falls back to the attribute-stripped phrase when the full query misses', async () => {
+    // "áo thun nam oversize đen" as one LIKE misses (đen is a variant attr);
+    // the stripped phrase "áo thun nam oversize" then matches.
+    productService.findActiveProducts.mockImplementation((f: any) =>
+      Promise.resolve({
+        data:
+          f.search === 'áo thun nam oversize'
+            ? [{ id: 5, name: 'Áo thun nam oversize', variants: [] }]
+            : [],
+        meta: {},
+      }),
+    );
+
+    const res = await dispatcher.run(
+      AGENT_TOOL_NAMES.SEARCH_PRODUCTS,
+      { query: 'áo thun nam oversize đen' },
+      guest,
+    );
+
+    expect((res.content as any).products[0].id).toBe(5);
+  });
+
   it('add_to_cart executes the cart service and returns a cart_updated action', async () => {
     const res = await dispatcher.run(
       AGENT_TOOL_NAMES.ADD_TO_CART,
