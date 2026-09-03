@@ -25,27 +25,29 @@ export function ShopHeader({ shop }: Props) {
         <div className="h-40 w-full bg-gradient-to-r from-primary-600 to-primary-800 sm:h-52" />
       )}
 
-      <div className="-mt-10 px-6 pb-6">
+      <div className="-mt-8 px-6 pb-6">
         <div className="flex items-end gap-4">
           {shop.logo_url ? (
             <img
               src={shop.logo_url}
               alt={shop.name}
-              className="h-20 w-20 rounded-full border-4 border-surface bg-surface object-cover shadow"
+              className="h-20 w-20 flex-shrink-0 rounded-full border-4 border-surface bg-surface object-cover shadow"
             />
           ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-surface bg-brand-light shadow">
+            <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full border-4 border-surface bg-brand-light shadow">
               <Store className="h-8 w-8 text-text-brand" />
             </div>
           )}
-          <div className="mb-1 min-w-0 flex-1">
-            <h1 className="truncate text-xl font-bold text-text-primary">{shop.name}</h1>
+          {/* Name + action share a centered row that sits fully below the banner,
+              so the button never crosses the banner seam. */}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-2 pb-1">
+            <h1 className="min-w-0 truncate text-xl font-bold text-text-primary">{shop.name}</h1>
+            {!isOwnShop && (
+              <div className="flex-shrink-0">
+                <ChatWithShopButton shopId={shop.id} />
+              </div>
+            )}
           </div>
-          {!isOwnShop && (
-            <div className="mb-1 flex-shrink-0">
-              <ChatWithShopButton shopId={shop.id} />
-            </div>
-          )}
         </div>
 
         <div className="mt-4 flex flex-wrap gap-6 text-sm text-text-secondary">

@@ -347,16 +347,24 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | GET | `/ai/config` | Whether the storefront chatbox is enabled (FE gate) | Public |
-| POST | `/ai/chat` | Send a message → `{ conversation_id, reply, products[] }` | Public (guest `x-session-id` / customer JWT) |
+| POST | `/ai/chat` | Send a message → `{ conversation_id, reply, products[], actions?[] }` | Public (guest `x-session-id` / customer JWT) |
 | GET | `/ai/conversations/:id` | Get a conversation (own only) to resume | Public (owner-scoped) |
 
-> **AI Chatbox (Module 21).** Floating storefront assistant for **guest + customer**: product suggestions via **RAG** (retrieve from the catalog → single LLM call) + policy FAQ + product summaries. `POST /ai/chat` body is `{ message: string(≤2000), conversation_id?: number }`; the assistant reply plus any suggested products (same shape as `GET /products`) are returned and both turns are **persisted** (`ai_conversations` / `ai_messages`) so Admin can review them and the thread can resume.
+> **AI Shopping Agent (Module 21).** Floating storefront assistant for **guest + customer**. Beyond RAG suggestions + policy FAQ, it is a **tool-calling agent** that can *act* on the shopper's behalf: search products, add/update/remove cart items, look up & cancel (pending) orders, list addresses, and **propose checkout**. `POST /ai/chat` body is `{ message: string(≤2000), conversation_id?: number }`; the response is `{ conversation_id, reply, products[], actions?[] }`. Both turns are **persisted** (`ai_conversations` / `ai_messages` — the assistant turn snapshots `product_ids` **and** `actions`) so Admin can review them and the thread can resume with its cards intact.
 >
-> **Ownership:** a conversation is owned by the customer (`user_id` from JWT) or the guest (`session_id` from the `x-session-id` header, auto-attached by the axios interceptor like the cart). Touching someone else's conversation → `CHATBOT_003 (403)`; unknown id → `CHATBOT_001 (404)`.
+> **Tool-calling loop (human-in-the-loop):** each `POST /ai/chat` runs a bounded loop (≤ **4** LLM rounds). When the model returns `tool_calls`, the backend `ToolDispatcher` executes them against the real feature services (`ProductService` / `CartService` / `OrderService` / `UserProfileService`) using the request-derived owner — **tool args are never trusted for identity** — feeds results back, and loops. Read tools and cart-writes run **automatically**; identical tool calls are de-duplicated to avoid double side-effects.
 >
-> **Rate limit:** `POST /ai/chat` is throttled to **10 requests/min** (in-memory `@nestjs/throttler` — the repo has no Redis, see `share-docs/TECH_DEBT.md` TD-001) → `429` on exceed.
+> **`actions[]`** are the agent's UI cards, each `{ type, data }`: `cart_updated` (cart summary after a cart write), `checkout_proposal` (advisory `previewCheckout` totals + chosen `coupon_codes`/`coins_to_redeem`), `order_cancelled` (`{ order_id, status }`), `needs_login` (a guest hit a customer-only tool → `{ tool }`).
 >
-> **Provider + fallback:** reuses the OpenRouter key/baseUrl from Visual Search with a text model (`OPENROUTER_CHAT_MODEL`, a Grok model). A provider/timeout error returns a **polite fallback reply with HTTP 200** (still persisted), not an error. A missing API key → `CHATBOT_004 (503)`; a disabled chatbox → `CHATBOT_005 (400)`; the system prompt constrains the model to only recommend products present in the retrieved context (no hallucinated products).
+> **Money is gated:** the `propose_checkout` tool calls `OrderService.previewCheckout` (**advisory, writes nothing**) and returns a `checkout_proposal` — it **never** places an order. The storefront widget renders a **mini-checkout** card (address + payment method) and the customer's explicit confirm calls the existing **`POST /orders`** (then `POST /payments/create` for VNPay/MoMo). The LLM cannot move money.
+>
+> **Guest gating:** checkout / order-lookup / address tools require a logged-in user; for a guest they short-circuit to `{ needs_login: true }` (+ a `needs_login` action) instead of touching a service — cart tools still work for guests (session cart).
+>
+> **Ownership:** a conversation is owned by the customer (`user_id` from JWT) or the guest (`session_id` from the `x-session-id` header, auto-attached by the axios interceptor like the cart). Touching someone else's conversation → `CHATBOT_003 (403)`; unknown id → `CHATBOT_001 (404)`. Order tools are additionally owner-scoped (`findMyOrders`/`findMyOrderById`, `cancelOrder` → `ORDER_004`).
+>
+> **Rate limit:** `POST /ai/chat` is throttled to **10 requests/min** per user (in-memory `@nestjs/throttler` — the repo has no Redis, see `share-docs/TECH_DEBT.md` TD-001) → `429` on exceed. One message = ≤4 internal LLM rounds (cost cap).
+>
+> **Provider + fallback:** tool-calling uses `OPENROUTER_AGENT_MODEL` (a function-calling-capable model; falls back to `OPENROUTER_CHAT_MODEL` when unset — the agent then **self-degrades to plain RAG**, since a model that ignores tools just replies with text). A provider/timeout/`429` error mid-loop breaks the loop and returns a **polite reply with HTTP 200** (still persisted, keeping any actions already performed). A missing API key → `CHATBOT_004 (503)`; a disabled chatbox → `CHATBOT_005 (400)`; the system prompt constrains the model to only recommend retrieved products and forbids claiming an order was placed.
 
 ### Flash Sale — `/api/v1/flash-sales`
 

@@ -647,11 +647,13 @@
 | role | NVARCHAR(20) | NOT NULL — `user` / `assistant` |
 | content | NVARCHAR(MAX) | NOT NULL |
 | product_ids | NVARCHAR(MAX) | NULL — JSON array of suggested product ids (assistant turns) |
+| actions | NVARCHAR(MAX) | NULL — JSON array of agent action cards (assistant turns; Module 21 agent upgrade) |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
 **Indexes:** `idx_ai_messages_conversation_created (conversation_id, created_at)`.
 
 > **`product_ids`** snapshots which products the assistant suggested for that turn; on read they are hydrated via `ProductService.findActiveByIds` (active product + active shop) so cards re-render on resume / in the admin view, dropping any product deactivated since.
+> **`actions`** (AI Shopping Agent) snapshots the agent action cards for the turn as JSON `[{ type, data }]` — `type ∈ { cart_updated, checkout_proposal, order_cancelled, needs_login }` — so the storefront re-renders them on resume and Admin sees what the agent did. Added by migration `1756800000000-AddActionsToAiMessages` (dev auto-adds via `synchronize`).
 
 #### `ai_settings` — single-row admin config
 

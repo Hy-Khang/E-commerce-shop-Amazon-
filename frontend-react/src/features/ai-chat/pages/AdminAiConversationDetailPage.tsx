@@ -4,6 +4,13 @@ import { formatDate, formatPrice } from '@/common/utils/format.util';
 import { getPriceRange } from '@/features/product';
 import { useAdminAiConversation } from '../hooks/useAdminAiChat';
 
+const ACTION_LABELS: Record<string, string> = {
+  cart_updated: '🛒 Cart updated',
+  checkout_proposal: '💳 Checkout proposed',
+  order_cancelled: '✖ Order cancelled',
+  needs_login: '🔒 Needs login',
+};
+
 export default function AdminAiConversationDetailPage() {
   const { id } = useParams();
   const conversationId = Number(id);
@@ -79,6 +86,18 @@ export default function AdminAiConversationDetailPage() {
                             </span>
                           );
                         })}
+                      </div>
+                    )}
+                    {m.actions && m.actions.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {m.actions.map((a, i) => (
+                          <span
+                            key={i}
+                            className="rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-teal-700 ring-1 ring-inset ring-teal-600/20 dark:bg-teal-500/15 dark:text-teal-300"
+                          >
+                            {ACTION_LABELS[a.type] ?? a.type}
+                          </span>
+                        ))}
                       </div>
                     )}
                   </div>

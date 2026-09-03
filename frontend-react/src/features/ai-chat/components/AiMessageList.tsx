@@ -10,9 +10,9 @@ interface Props {
 }
 
 const SUGGESTIONS = [
-  'Gợi ý áo thun nam giá dưới 300k',
-  'Chính sách đổi trả thế nào?',
-  'Có những cách thanh toán nào?',
+  'Suggest men’s t-shirts under 300k',
+  'What is the return policy?',
+  'What payment methods are available?',
 ];
 
 export function AiMessageList({ messages, onNavigate, onPickSuggestion }: Props) {
@@ -35,10 +35,11 @@ export function AiMessageList({ messages, onNavigate, onPickSuggestion }: Props)
             <Sparkles className="h-6 w-6 text-text-brand" />
           </div>
           <p className="text-sm font-semibold text-text-primary">
-            Trợ lý mua sắm AI
+            AI Shopping Assistant
           </p>
           <p className="text-xs text-text-secondary">
-            Mình có thể gợi ý sản phẩm và trả lời câu hỏi về sàn. Bạn cần tìm gì?
+            I can suggest products and answer questions about the store. What are
+            you looking for?
           </p>
           <ul className="mt-2 w-full space-y-1.5">
             {SUGGESTIONS.map((s) => (
@@ -57,7 +58,12 @@ export function AiMessageList({ messages, onNavigate, onPickSuggestion }: Props)
         </div>
       ) : (
         messages.map((m) => (
-          <AiMessageBubble key={m.id} message={m} onNavigate={onNavigate} />
+          <AiMessageBubble
+            key={m.id}
+            message={m}
+            onNavigate={onNavigate}
+            onPickSuggestion={onPickSuggestion}
+          />
         ))
       )}
     </div>

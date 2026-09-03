@@ -9,16 +9,26 @@ import { AiSettingRepository } from './repositories/ai-setting.repository';
 import { AiChatService } from './ai-chat.service';
 import { AiChatController } from './ai-chat.controller';
 import { AdminAiChatController } from './admin-ai-chat.controller';
+import { ToolDispatcher } from './tools/tool-dispatcher';
 import { ProductModule } from '../product/product.module';
+import { CartModule } from '../cart/cart.module';
+import { OrderModule } from '../order/order.module';
+import { UserProfileModule } from '../user-profile/user-profile.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AiConversation, AiMessage, AiSetting]),
+    // Agent tools reuse these features' services (no repos/entities touched).
+    // One-way import (only AppModule imports AiChatModule) → no circular dep.
     ProductModule,
+    CartModule,
+    OrderModule,
+    UserProfileModule,
   ],
   controllers: [AiChatController, AdminAiChatController],
   providers: [
     AiChatService,
+    ToolDispatcher,
     AiConversationRepository,
     AiMessageRepository,
     AiSettingRepository,

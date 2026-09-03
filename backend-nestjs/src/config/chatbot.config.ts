@@ -7,11 +7,18 @@ import { registerAs } from '@nestjs/config';
  * proven on this key. Override with `OPENROUTER_CHAT_MODEL` if you want a
  * different chat model (free `:free` slugs come and go on OpenRouter).
  */
-export default registerAs('chatbot', () => ({
-  apiKey: process.env.OPENROUTER_API_KEY || '',
-  baseUrl: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
-  chatModel:
+export default registerAs('chatbot', () => {
+  const chatModel =
     process.env.OPENROUTER_CHAT_MODEL ||
     process.env.OPENROUTER_MODEL ||
-    'google/gemma-4-31b-it:free',
-}));
+    'google/gemma-4-31b-it:free';
+  return {
+    apiKey: process.env.OPENROUTER_API_KEY || '',
+    baseUrl: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
+    chatModel,
+    // Agent (Module 21 upgrade) needs a function-calling-capable model. Falls
+    // back to chatModel when unset — the agent then self-degrades to RAG (no
+    // tool_calls returned → plain reply).
+    agentModel: process.env.OPENROUTER_AGENT_MODEL || chatModel,
+  };
+});

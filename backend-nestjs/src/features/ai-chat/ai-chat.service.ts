@@ -25,19 +25,26 @@ import {
 import {
   AI_HISTORY_LIMIT,
   AI_RETRIEVAL_LIMIT,
+  AgentAction,
   AiChatOwner,
   AiMessageRole,
   ChatbotConfig,
   ChatCompletionMessage,
+  LlmResult,
+  MAX_TOOL_ROUNDS,
   ProductContextItem,
+  ToolDispatchResult,
 } from './types/ai-chat.types';
 import {
+  AGENT_SYSTEM_PROMPT_SUFFIX,
   DEFAULT_SYSTEM_PROMPT,
   buildProductContext,
   callChatCompletion,
   extractKeywords,
   parsePriceHint,
 } from './utils/ai-chat.util';
+import { AGENT_TOOLS } from './tools/agent-tools';
+import { ToolDispatcher } from './tools/tool-dispatcher';
 import { AiConversation } from './entities/ai-conversation.entity';
 import { AiMessage } from './entities/ai-message.entity';
 import { Product } from '../product/entities/product.entity';
@@ -56,6 +63,7 @@ export class AiChatService {
     private readonly conversationRepository: AiConversationRepository,
     private readonly messageRepository: AiMessageRepository,
     private readonly settingRepository: AiSettingRepository,
+    private readonly toolDispatcher: ToolDispatcher,
   ) {}
 
   // ─── Public: config gate ───
@@ -92,10 +100,12 @@ export class AiChatService {
       message,
     );
 
-    // 1. Retrieval — keyword-based (the product repo matches `search` as one
-    //    LIKE, so a whole sentence never matches). No LLM call.
-    const products = await this.retrieveProducts(message);
-    const context = products.map((p) => this.toContextItem(p));
+    // 1. Retrieval — keyword-based seed context (the product repo matches
+    //    `search` as one LIKE, so a whole sentence never matches). No LLM call.
+    //    This primes the first round so the model often needn't call
+    //    search_products for a simple recommendation.
+    const seedProducts = await this.retrieveProducts(message);
+    const context = seedProducts.map((p) => this.toContextItem(p));
 
     // 2. History (older turns first) → LLM messages.
     const history = await this.messageRepository.findRecent(
@@ -104,7 +114,8 @@ export class AiChatService {
     );
     const systemPrompt =
       (setting.system_prompt?.trim() || DEFAULT_SYSTEM_PROMPT) +
-      buildProductContext(context);
+      buildProductContext(context) +
+      AGENT_SYSTEM_PROMPT_SUFFIX;
 
     const llmMessages: ChatCompletionMessage[] = [
       { role: 'system', content: systemPrompt },
@@ -115,19 +126,16 @@ export class AiChatService {
       { role: 'user', content: message },
     ];
 
-    // 3. Generation — the single LLM call; fall back gracefully on failure.
-    let reply: string;
-    try {
-      reply = await callChatCompletion(llmMessages, config);
-    } catch (err) {
-      this.logger.error(
-        `AI chat generation failed (conversation ${conversation.id}): ${(err as Error).message}`,
-      );
-      reply = FALLBACK_REPLY;
-    }
+    // 3. Agent loop — multi-step tool-calling, bounded. Falls back gracefully
+    //    (a model that ignores tools just returns a plain reply).
+    const { reply, actions, productIds: toolProductIds } =
+      await this.runAgentLoop(llmMessages, config, owner);
 
-    // 4. Persist both turns (assistant snapshots suggested product ids).
+    // 4. Merge products: keyword-seed entities + any hydrated from search tools.
+    const products = await this.mergeProducts(seedProducts, toolProductIds);
     const productIds = products.map((p) => p.id);
+
+    // 5. Persist both turns (assistant snapshots suggested product ids + actions).
     await this.messageRepository.create({
       conversation_id: conversation.id,
       role: AiMessageRole.User,
@@ -138,6 +146,7 @@ export class AiChatService {
       role: AiMessageRole.Assistant,
       content: reply,
       product_ids: productIds.length ? JSON.stringify(productIds) : null,
+      actions: actions.length ? JSON.stringify(actions) : null,
     });
     await this.conversationRepository.touch(conversation.id);
 
@@ -145,7 +154,118 @@ export class AiChatService {
       conversation_id: conversation.id,
       reply,
       products: products as unknown as ChatResponseDto['products'],
+      ...(actions.length && { actions: actions as ChatResponseDto['actions'] }),
     };
+  }
+
+  /**
+   * Bounded multi-step tool-calling loop. Each round is one LLM call: if the
+   * model returns `tool_calls`, we execute them via `ToolDispatcher` (using the
+   * request-derived `owner`, never trusting tool args for identity), feed the
+   * results back, and loop. When the model returns plain content we stop.
+   * A provider/rate-limit error breaks the loop while keeping any actions
+   * already performed. Identical tool calls are de-duplicated to avoid double
+   * side-effects (e.g. adding the same item twice).
+   */
+  private async runAgentLoop(
+    llmMessages: ChatCompletionMessage[],
+    config: ChatbotConfig,
+    owner: AiChatOwner,
+  ): Promise<{ reply: string; actions: AgentAction[]; productIds: number[] }> {
+    const actions: AgentAction[] = [];
+    const productIds: number[] = [];
+    const seenCalls = new Set<string>();
+    let reply = '';
+
+    for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+      let result: LlmResult;
+      try {
+        result = await callChatCompletion(llmMessages, config, {
+          tools: AGENT_TOOLS,
+          model: config.agentModel,
+        });
+      } catch (err) {
+        this.logger.error(
+          `Agent LLM call failed (round ${round}): ${(err as Error).message}`,
+        );
+        return { reply: reply || FALLBACK_REPLY, actions, productIds };
+      }
+
+      if (!result.tool_calls?.length) {
+        return { reply: result.content ?? '', actions, productIds };
+      }
+
+      // Echo the assistant's tool-call turn before appending tool results.
+      llmMessages.push({
+        role: 'assistant',
+        content: result.content ?? '',
+        tool_calls: result.tool_calls,
+      });
+
+      for (const call of result.tool_calls) {
+        const dedupeKey = `${call.function.name}:${call.function.arguments}`;
+        let dispatch: ToolDispatchResult;
+        if (seenCalls.has(dedupeKey)) {
+          dispatch = {
+            content: { skipped: true, note: 'Tool call trùng lặp đã bị bỏ qua.' },
+          };
+        } else {
+          seenCalls.add(dedupeKey);
+          dispatch = await this.toolDispatcher.run(
+            call.function.name,
+            this.parseToolArgs(call.function.arguments),
+            owner,
+          );
+          if (dispatch.action) actions.push(dispatch.action);
+          if (dispatch.productIds?.length) productIds.push(...dispatch.productIds);
+        }
+        llmMessages.push({
+          role: 'tool',
+          tool_call_id: call.id,
+          content: JSON.stringify(dispatch.content),
+        });
+      }
+    }
+
+    // Rounds exhausted with tools still pending — force one final text answer.
+    try {
+      const final = await callChatCompletion(llmMessages, config, {
+        model: config.agentModel,
+      });
+      reply = final.content ?? '';
+    } catch {
+      reply = '';
+    }
+    return {
+      reply:
+        reply ||
+        'Mình đã thực hiện xong các thao tác bạn yêu cầu. Bạn cần hỗ trợ gì thêm không?',
+      actions,
+      productIds,
+    };
+  }
+
+  private parseToolArgs(raw: string): Record<string, any> {
+    if (!raw) return {};
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  /** Seed entities + hydrated tool-search products, de-duplicated, capped. */
+  private async mergeProducts(
+    seed: Product[],
+    toolProductIds: number[],
+  ): Promise<Product[]> {
+    const seenIds = new Set(seed.map((p) => p.id));
+    const extraIds = [...new Set(toolProductIds)].filter((id) => !seenIds.has(id));
+    const extra = extraIds.length
+      ? await this.productService.findActiveByIds(extraIds)
+      : [];
+    return [...seed, ...extra].slice(0, 12);
   }
 
   // ─── Public: resume a conversation ───
@@ -267,10 +387,13 @@ export class AiChatService {
         message: 'AI chatbox is not configured',
       });
     }
+    const chatModel = this.configService.get<string>('chatbot.chatModel')!;
     return {
       apiKey,
       baseUrl: this.configService.get<string>('chatbot.baseUrl')!,
-      chatModel: this.configService.get<string>('chatbot.chatModel')!,
+      chatModel,
+      agentModel:
+        this.configService.get<string>('chatbot.agentModel') || chatModel,
     };
   }
 
@@ -356,14 +479,27 @@ export class AiChatService {
       const cards = ids
         .map((id) => byId.get(id))
         .filter((p): p is Product => p != null);
+      const actions = this.parseActions(m.actions);
       return {
         id: m.id,
         role: m.role,
         content: m.content,
         products: cards as unknown as AiMessageResponseDto['products'],
+        ...(actions.length && { actions: actions as AiMessageResponseDto['actions'] }),
         created_at: m.created_at,
       };
     });
+  }
+
+  /** Parse the persisted agent-action JSON snapshot (assistant turns). */
+  private parseActions(raw: string | null): AgentAction[] {
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? (parsed as AgentAction[]) : [];
+    } catch {
+      return [];
+    }
   }
 
   private parseIds(raw: string | null): number[] {

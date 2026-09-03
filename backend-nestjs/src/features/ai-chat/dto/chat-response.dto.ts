@@ -1,5 +1,17 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductResponseDto } from '../../product/dto/product-response.dto';
+
+/** A user-facing agent action card returned alongside the assistant reply. */
+export class AgentActionDto {
+  @ApiProperty({
+    enum: ['cart_updated', 'checkout_proposal', 'order_cancelled', 'needs_login'],
+    description: 'Action type — drives which card the widget renders',
+  })
+  type: string;
+
+  @ApiProperty({ description: 'Action payload (shape depends on type)' })
+  data: unknown;
+}
 
 export class ChatResponseDto {
   @ApiProperty()
@@ -13,6 +25,12 @@ export class ChatResponseDto {
     description: 'Suggested products (same shape as GET /products)',
   })
   products: ProductResponseDto[];
+
+  @ApiPropertyOptional({
+    type: [AgentActionDto],
+    description: 'Agent action cards (cart update, checkout proposal, ...)',
+  })
+  actions?: AgentActionDto[];
 }
 
 export class AiMessageResponseDto {
@@ -27,6 +45,9 @@ export class AiMessageResponseDto {
 
   @ApiProperty({ type: [ProductResponseDto] })
   products: ProductResponseDto[];
+
+  @ApiPropertyOptional({ type: [AgentActionDto] })
+  actions?: AgentActionDto[];
 
   @ApiProperty()
   created_at: Date;

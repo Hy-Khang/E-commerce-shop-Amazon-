@@ -62,6 +62,8 @@ import chatbotConfig from './chatbot.config';
         OPENROUTER_MODEL: Joi.string().optional().default('google/gemma-4-31b-it:free'),
         // AI Chatbox — OpenRouter text chat model (optional; reuses OPENROUTER_API_KEY)
         OPENROUTER_CHAT_MODEL: Joi.string().optional().default('google/gemma-4-31b-it:free'),
+        // AI Shopping Agent — tool-calling-capable model (optional; falls back to OPENROUTER_CHAT_MODEL)
+        OPENROUTER_AGENT_MODEL: Joi.string().optional().allow('').default(''),
       }),
     }),
   ],

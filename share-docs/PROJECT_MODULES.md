@@ -71,7 +71,7 @@
 | 18 | [Recently Viewed](#module-18--recently-viewed-sản-phẩm-đã-xem-gần-đây) | 6 | Lịch sử sản phẩm đã xem |
 | 19 | [Product Comparison](#module-19--product-comparison-so-sánh-sản-phẩm) | 6 | So sánh sản phẩm side-by-side |
 | 20 | [Chat Realtime](#module-20--chat-realtime) | 6 | Nhắn tin Customer ↔ Seller |
-| 21 | [AI Chatbox](#module-21--ai-chatbox-gợi-ý-thông-minh) | 6 | Gợi ý sản phẩm bằng AI, FAQ |
+| 21 | [AI Chatbox → Shopping Agent](#module-21--ai-chatbox--ai-shopping-agent-gợi-ý--thao-tác-thông-minh) | 6 | AI Agent: gợi ý + thêm giỏ, đặt hàng qua chat (tool-calling) |
 | 22 | [Smart Recommendations](#module-22--smart-recommendations-gợi-ý-thông-minh) | 6 | Gợi ý cá nhân hóa dựa trên hành vi người dùng |
 | 23 | [Hoàn Xu (Cashback Coins)](#module-23--hoàn-xu-cashback-coins) | 6 | Tích/tiêu Xu hoàn tiền, hết hạn theo lô, cấu hình động |
 
@@ -187,7 +187,7 @@ Phase 6 — Tính năng nâng cao (phụ thuộc Phase 2-3, triển khai độc 
   ├── Module 18: Recently Viewed         ← Product Catalog
   ├── Module 19: So sánh sản phẩm       ← Product Catalog
   ├── Module 20: Chat Realtime           ← Auth, Shop (tái sử dụng Socket.IO Gateway từ Module 11)
-  ├── Module 21: AI Chatbox              ← Product Catalog
+  ├── Module 21: AI Chatbox/Agent        ← Product Catalog, Cart, Order (tool-calling)
   ├── Module 22: Smart Recommendations  ← Product Catalog, AI Chatbox (optional)
   └── Module 23: Hoàn Xu (Cashback)     ← Order (earn on completed, redeem at checkout)
 ```
@@ -880,31 +880,43 @@ sent → delivered → read
 
 ---
 
-## Module 21 — AI Chatbox (Gợi ý thông minh)
+## Module 21 — AI Chatbox → AI Shopping Agent (Gợi ý & thao tác thông minh)
 
-> **Phase 6** · Phụ thuộc: Module 5 (Product Catalog) · *Triển khai độc lập*
+> **Phase 6** · Phụ thuộc: Module 5 (Product Catalog), Module 6 (Cart), Module 7 (Order) · *Triển khai độc lập*
 
 ### Mô tả
 
-Chatbox AI tích hợp trên sàn, hỗ trợ khách hàng tìm kiếm sản phẩm, trả lời câu hỏi thường gặp và gợi ý sản phẩm phù hợp.
+Chatbox AI tích hợp trên sàn — không chỉ **tư vấn** mà còn là một **AI Agent** giúp khách **thao tác mua hàng** ngay trong khung chat: tìm sản phẩm, thêm/sửa giỏ, xem coupon/Xu, tra/hủy đơn và **đặt hàng** với xác nhận của khách.
 
-### Chức năng
+### Chức năng — Tư vấn (RAG)
 
-- **Gợi ý sản phẩm** dựa trên mô tả nhu cầu của khách hàng bằng ngôn ngữ tự nhiên
+- **Gợi ý sản phẩm** dựa trên mô tả nhu cầu bằng ngôn ngữ tự nhiên
   - Ví dụ: "Tôi cần áo thun nam size L màu đen giá dưới 300k" → trả về danh sách sản phẩm phù hợp
-- **Trả lời FAQ** về chính sách: đổi trả, vận chuyển, thanh toán, mã giảm giá
-- **Tóm tắt thông tin sản phẩm** — hỏi chatbox để so sánh hoặc tìm hiểu nhanh về sản phẩm
-- Widget chatbox **floating** ở góc phải dưới màn hình, mở rộng/thu gọn được
-- Lưu **lịch sử hội thoại** trong phiên làm việc
+- **Trả lời FAQ** về chính sách: đổi trả, vận chuyển, thanh toán, mã giảm giá, Hoàn Xu
+- **Tóm tắt thông tin sản phẩm** — hỏi chatbox để tìm hiểu nhanh
+- Widget chatbox **floating** ở góc phải dưới, mở rộng/thu gọn; lưu lịch sử hội thoại
+
+### Chức năng — Agent thao tác (tool-calling, human-in-the-loop)
+
+- **Giỏ hàng:** thêm / cập nhật số lượng / xóa item — chạy **tự động** trong hội thoại (guest + customer)
+- **Đơn hàng:** liệt kê đơn, xem chi tiết, **hủy đơn pending** (owner-scoped)
+- **Địa chỉ:** liệt kê sổ địa chỉ để chọn khi đặt hàng
+- **Đặt hàng (money-gated):** AI chỉ **đề xuất** (`propose_checkout` → bảng tạm tính, KHÔNG ghi DB). Khách bấm **Xác nhận** trên thẻ **mini-checkout** (chọn địa chỉ + phương thức) → gọi `POST /orders` thật. LLM **không bao giờ** tự trừ tiền
+- **Guest** thao tác giỏ được; checkout/đơn/địa chỉ yêu cầu đăng nhập → agent điều hướng đăng nhập
 
 ### Ghi chú kỹ thuật
 
-- Backend gọi **Grok API** để xử lý ngôn ngữ tự nhiên
-- Sử dụng **RAG (Retrieval-Augmented Generation)**: query sản phẩm từ DB → đưa vào context cho AI trả lời chính xác
-- System prompt được cấu hình sẵn với thông tin về sàn, chính sách, hướng dẫn trả lời
-- API endpoint: `POST /api/v1/ai/chat` — nhận `message` + `conversation_history`, trả về response của AI
-- Rate limiting: giới hạn số request/phút để kiểm soát chi phí API (**Redis store** cho `@nestjs/throttler`)
-- Fallback: nếu AI service không khả dụng → hiển thị thông báo và gợi ý liên hệ trực tiếp với seller
+- **Vòng lặp tool-calling** (chuẩn OpenAI/OpenRouter `tools[]`), giới hạn **≤ 4 vòng LLM**/tin nhắn. Model trả `tool_calls` → `ToolDispatcher` gọi service thật (`ProductService`/`CartService`/`OrderService`/`UserProfileService`) → feed kết quả lại → lặp
+- **Owner enforcement:** danh tính lấy từ request (JWT/`x-session-id`), **không tin `args`**; tool cần login → `{ needs_login }`. Tra đơn dùng `findMyOrders`/`findMyOrderById` (không dùng API admin)
+- **Chống double side-effect:** de-dup các `tool_calls` trùng (name+args) trong 1 request
+- **Actions:** assistant turn trả `actions[]` (`cart_updated` / `checkout_proposal` / `order_cancelled` / `needs_login`), snapshot vào `ai_messages.actions` để FE re-render khi resume + Admin xem lại
+- **Model:** `OPENROUTER_AGENT_MODEL` (có function-calling); nếu không set → fallback `OPENROUTER_CHAT_MODEL` và agent **tự thoái lui RAG** (model không gọi tool → trả lời thường)
+- **Fallback:** lỗi/timeout/429 giữa vòng → break loop, trả reply lịch sự HTTP 200 (vẫn persist, giữ action đã làm)
+- Rate limiting: **10 request/phút/user** (`@nestjs/throttler` in-memory — repo chưa có Redis, xem TECH_DEBT TD-001)
+
+### Phase sau (chưa làm ở bản này)
+
+- **Seller Agent:** tạo/sửa sản phẩm, duyệt/quản đơn, xem doanh thu qua chat — bộ tool + quyền riêng (`products:*`, `orders:update`…), UX trong seller portal. `ToolDispatcher` thiết kế để dễ thêm namespace tool seller sau
 
 ---
 

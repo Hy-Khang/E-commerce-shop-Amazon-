@@ -6,11 +6,13 @@ import { AiConversationRepository } from '../repositories/ai-conversation.reposi
 import { AiMessageRepository } from '../repositories/ai-message.repository';
 import { AiSettingRepository } from '../repositories/ai-setting.repository';
 import { ProductService } from '../../product/product.service';
+import { ToolDispatcher } from '../tools/tool-dispatcher';
 
 const CONFIG_MAP: Record<string, string> = {
   'chatbot.apiKey': 'test-key',
   'chatbot.baseUrl': 'https://openrouter.ai/api/v1',
   'chatbot.chatModel': 'x-ai/grok-4-fast:free',
+  'chatbot.agentModel': 'x-ai/grok-4-fast:free',
 };
 
 function mockFetchReply(content: string) {
@@ -77,6 +79,12 @@ describe('AiChatService', () => {
             get: jest.fn().mockResolvedValue({ chatbox_enabled: true, system_prompt: null }),
             update: jest.fn(),
           },
+        },
+        {
+          // Content-only fetch mocks never yield tool_calls, so the dispatcher
+          // is never invoked — a stub keeps DI happy and asserts that.
+          provide: ToolDispatcher,
+          useValue: { run: jest.fn() },
         },
       ],
     }).compile();

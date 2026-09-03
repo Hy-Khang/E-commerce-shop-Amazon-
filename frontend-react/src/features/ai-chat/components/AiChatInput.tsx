@@ -36,14 +36,14 @@ export function AiChatInput({ onSend, disabled }: Props) {
         onKeyDown={handleKeyDown}
         rows={1}
         maxLength={2000}
-        placeholder="Hỏi về sản phẩm, chính sách…"
+        placeholder="Ask about products, policies…"
         className="shop-input max-h-28 min-h-[42px] flex-1 resize-none"
       />
       <button
         type="submit"
         disabled={disabled || !value.trim()}
         className="flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg bg-brand text-white transition-colors hover:bg-brand-hover disabled:pointer-events-none disabled:opacity-50"
-        aria-label="Gửi tin nhắn"
+        aria-label="Send message"
       >
         <Send className="h-4 w-4" />
       </button>
