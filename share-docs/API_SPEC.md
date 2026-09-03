@@ -212,6 +212,8 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | GET | `/products` | List active products (paginated, filtered, sorted). Accepts `?ids=1,2,3` (CSV, max 100) to bulk-fetch a specific set of active products — used by Recently Viewed (guest) and Product Comparison | Public |
 | GET | `/products/:slug` | Get product detail (variants + images + shop info) | Public |
 
+> **Bulk `?ids=` path (Recently Viewed guest hydration + Product Comparison):** when `ids` is present the endpoint returns the **full requested set in one call** (no pagination trimming — `meta` is `{ page: 1, limit: ids.length, total, totalPages: 1 }`) and each item is enriched with `avgRating` + `reviewCount` (via one batched grouped query over `reviews`) alongside the joined `category` object. The normal (no-`ids`) listing is unchanged — no stats, standard pagination — so existing consumers are unaffected. Inactive products / products of non-active shops are dropped (visibility filter), so the returned set may be smaller than the requested ids.
+
 ### Shop — `/api/v1/shops`
 
 | Method | Path | Description | Auth |

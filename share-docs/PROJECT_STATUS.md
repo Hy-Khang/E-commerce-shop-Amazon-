@@ -164,9 +164,13 @@ Hoàn chỉnh (Admin-only, full-stack).
 
 Hoàn chỉnh. **BE:** feature module `recently-viewed/` (entity/table `recently_viewed` với UNIQUE `(user_id, product_id)` + bump `viewed_at`, migration, repo UPSERT + prune-20), 3 endpoint Customer-only `GET/POST /recently-viewed` + `/merge`. Thêm bulk `GET /products?ids=` + `ProductService.findActiveByIds` (dùng chung, lọc visibility). **FE:** Zustand persist store (guest lưu id + viewed_at), hooks `useRecentlyViewed`/`useTrackView`/`useMergeRecentlyViewed`, `RecentlyViewedCarousel` (tái dùng `ProductCard`) hiển thị ở Home/Product Detail/Cart, merge localStorage → DB khi đăng nhập (useLogin/useVerifyEmail/OAuthCallback).
 
-#### Module 19: Product Comparison — 0% ❌
+#### Module 19: Product Comparison — 100% ✅
 
-Chưa làm. Module này chủ yếu FE (Zustand store + comparison page). Không cần nhiều BE.
+Hoàn chỉnh. Cho phép chọn tối đa **4 sản phẩm cùng danh mục** so sánh side-by-side (giá, đánh giá, danh mục, cửa hàng, phân loại variant, tồn kho). Chủ yếu FE (state không lưu DB), tái dùng pattern Recently Viewed.
+
+**Backend (nhẹ):** thêm `ProductRepository.findActiveByIdsWithStats` (mirror `findActiveByIds` + enrich `avgRating`/`reviewCount` bằng 1 query GROUP BY, không N+1). `ProductService.findActiveProducts` early-return nhánh `?ids=` → trả toàn bộ set (không phân trang) kèm review stats + `category` object. Nhánh list thường giữ nguyên; Recently Viewed guest vẫn dùng chung endpoint (bỏ qua field thừa).
+
+**Frontend:** feature `compare/` — Zustand persist store (`compare_candidates`, cap 4 + khóa cùng category), `useCompare` (hydrate qua `GET /products?ids=`, reconcile prune SP inactive), `CompareToggleButton` (overlay trên `ProductCard`, toast khi khác danh mục/đầy), `CompareBar` nổi (mount 1 lần ở MainLayout, z-50), `ComparePage` (`/compare` public, bảng sticky + tái dùng `AddToCartButton`), `RatingStars` local. Route/wiring đã nối.
 
 #### Module 20: Chat Realtime — 100% ✅
 

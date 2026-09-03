@@ -99,6 +99,41 @@ export class ProductRepository {
       .getMany();
   }
 
+  /**
+   * Active products (active shop only) for a set of ids, each enriched with review
+   * stats (`avgRating` + `reviewCount`). Powers the bulk `?ids=` path used by product
+   * comparison. Stats are fetched in one grouped query (batched, no N+1).
+   */
+  async findActiveByIdsWithStats(
+    ids: number[],
+  ): Promise<(Product & { reviewCount: number; avgRating: number })[]> {
+    if (ids.length === 0) return [];
+
+    const products = await this.findActiveByIds(ids);
+    if (products.length === 0) return [];
+
+    const statsRows = await this.repo.manager
+      .createQueryBuilder()
+      .select('r.product_id', 'productId')
+      .addSelect('COUNT(*)', 'reviewCount')
+      .addSelect('COALESCE(AVG(CAST(r.rating AS FLOAT)), 0)', 'avgRating')
+      .from('reviews', 'r')
+      .where('r.product_id IN (:...ids)', { ids: products.map((p) => p.id) })
+      .groupBy('r.product_id')
+      .getRawMany<{ productId: number; reviewCount: string; avgRating: string }>();
+
+    const statsMap = new Map(
+      statsRows.map((s) => [
+        Number(s.productId),
+        { reviewCount: parseInt(s.reviewCount, 10), avgRating: parseFloat(s.avgRating) },
+      ]),
+    );
+
+    return products.map((p) =>
+      Object.assign(p, statsMap.get(p.id) ?? { reviewCount: 0, avgRating: 0 }),
+    );
+  }
+
   async findAllPaginated(filter: IProductFilter): Promise<IPaginatedResult<Product>> {
     const qb = this.repo
       .createQueryBuilder('product')

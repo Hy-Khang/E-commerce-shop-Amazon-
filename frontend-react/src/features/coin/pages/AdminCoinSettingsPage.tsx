@@ -9,9 +9,9 @@ import { useUpdateCoinSettings } from '../hooks/useUpdateCoinSettings';
 
 const schema = z.object({
   enabled: z.boolean(),
-  earn_rate_percent: z.coerce.number().min(0).max(100),
-  redeem_max_percent: z.coerce.number().min(0).max(100),
-  expiry_days: z.coerce.number().int().min(1).max(3650),
+  earn_rate_percent: z.number({ message: 'Bắt buộc' }).min(0).max(100),
+  redeem_max_percent: z.number({ message: 'Bắt buộc' }).min(0).max(100),
+  expiry_days: z.number({ message: 'Bắt buộc' }).int().min(1).max(3650),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -86,7 +86,7 @@ export default function AdminCoinSettingsPage() {
             step="0.01"
             min={0}
             max={100}
-            {...register('earn_rate_percent')}
+            {...register('earn_rate_percent', { valueAsNumber: true })}
             className="admin-input"
           />
         </Field>
@@ -101,7 +101,7 @@ export default function AdminCoinSettingsPage() {
             step="0.01"
             min={0}
             max={100}
-            {...register('redeem_max_percent')}
+            {...register('redeem_max_percent', { valueAsNumber: true })}
             className="admin-input"
           />
         </Field>
@@ -116,7 +116,7 @@ export default function AdminCoinSettingsPage() {
             step="1"
             min={1}
             max={3650}
-            {...register('expiry_days')}
+            {...register('expiry_days', { valueAsNumber: true })}
             className="admin-input"
           />
         </Field>

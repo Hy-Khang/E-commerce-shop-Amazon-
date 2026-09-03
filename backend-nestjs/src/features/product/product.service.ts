@@ -89,6 +89,17 @@ export class ProductService {
   // ─── Public: Products ───
 
   async findActiveProducts(query: ProductQueryDto): Promise<IPaginatedResult<Product>> {
+    // Bulk `?ids=` path (Recently Viewed guest hydration, Product Comparison): return the
+    // full requested set in one call, enriched with review stats. No pagination/sorting —
+    // callers order client-side by their own id list.
+    if (query.ids && query.ids.length > 0) {
+      const data = await this.productRepository.findActiveByIdsWithStats(query.ids);
+      return {
+        data,
+        meta: { page: 1, limit: query.ids.length, total: data.length, totalPages: 1 },
+      };
+    }
+
     const filter: any = { ...query };
 
     if (query.category_id) {

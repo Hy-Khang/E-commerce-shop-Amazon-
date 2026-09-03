@@ -21,6 +21,7 @@ const ProductListPage = lazy(() => import('@/features/product/pages/ProductListP
 const ProductDetailPage = lazy(() => import('@/features/product/pages/ProductDetailPage'));
 const CategoryPage = lazy(() => import('@/features/product/pages/CategoryPage'));
 const FlashSalePage = lazy(() => import('@/features/flash-sale/pages/FlashSalePage'));
+const ComparePage = lazy(() => import('@/features/compare/pages/ComparePage'));
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
@@ -111,6 +112,7 @@ export const router = createBrowserRouter([
       { path: 'categories/:slug', element: <SuspenseWrapper><CategoryPage /></SuspenseWrapper> },
       { path: 'shops/:slug', element: <SuspenseWrapper><ShopProfilePage /></SuspenseWrapper> },
       { path: 'flash-sale', element: <SuspenseWrapper><FlashSalePage /></SuspenseWrapper> },
+      { path: 'compare', element: <SuspenseWrapper><ComparePage /></SuspenseWrapper> },
       { path: 'cart', element: <SuspenseWrapper><CartPage /></SuspenseWrapper> },
 
       {
