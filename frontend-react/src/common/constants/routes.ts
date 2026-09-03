@@ -5,6 +5,7 @@ export const ROUTES = {
   CATEGORY: (slug: string) => `/categories/${slug}`,
   SHOP_PROFILE: (slug: string) => `/shops/${slug}`,
   FLASH_SALE: '/flash-sale',
+  COMPARE: '/compare',
 
   LOGIN: '/login',
   REGISTER: '/register',

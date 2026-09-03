@@ -3,6 +3,7 @@ import { Zap } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { WishlistButton } from '@/features/wishlist';
+import { CompareToggleButton } from '@/features/compare';
 import { useFlashPriceMaps } from '@/features/flash-sale';
 import { usePrefetchProduct } from '../hooks/usePrefetchProduct';
 import { getPriceRange, hasAnyStock } from '../utils/product.util';
@@ -37,8 +38,9 @@ export function ProductCard({ product }: Props) {
             No image
           </div>
         )}
-        <div className="absolute right-2 top-2">
+        <div className="absolute right-2 top-2 flex flex-col gap-1.5">
           <WishlistButton productId={product.id} size="sm" />
+          <CompareToggleButton product={product} />
         </div>
         {flash && (
           <span className="absolute left-2 top-2 inline-flex items-center gap-0.5 rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
