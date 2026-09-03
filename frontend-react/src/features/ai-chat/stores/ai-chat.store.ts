@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useAuthStore } from '@/features/auth';
 import type { AiChatMessage } from '../types/ai-chat.types';
 
 const STORAGE_KEY = 'ai_chat';
@@ -77,7 +78,26 @@ export const useAiChatStore = create<AiChatState>()(
         conversationId: s.conversationId,
         messages: s.messages,
         size: s.size,
+        // Persisted so an OAuth sign-in (full-page redirect) can still resume the
+        // interrupted action after the widget remounts (email login clears it
+        // synchronously before this ever matters).
+        pendingIntent: s.pendingIntent,
       }),
     },
   ),
 );
+
+// Clear the thread on logout so a previous user's conversation never carries into
+// the next session — a privacy leak (the persisted messages include checkout
+// totals / order ids) and a correctness bug (the stale `conversationId` belongs to
+// the old owner → `CHATBOT_003` on the next send). Mirrors `useCoinRedemptionStore`
+// / `useAppliedCouponsStore`. Only fires on a true→false transition, so a guest
+// thread still carries into a fresh login (the resume-after-login feature).
+useAuthStore.subscribe((state, prev) => {
+  if (prev.isAuthenticated && !state.isAuthenticated) {
+    const s = useAiChatStore.getState();
+    if (s.conversationId !== null || s.messages.length > 0 || s.pendingIntent) {
+      s.reset();
+    }
+  }
+});

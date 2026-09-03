@@ -3,6 +3,7 @@ import { useAiChatStore } from '../stores/ai-chat.store';
 import { AiCartUpdateCard } from './AiCartUpdateCard';
 import { AiCheckoutProposalCard } from './AiCheckoutProposalCard';
 import { AiOrderPlacedCard } from './AiOrderPlacedCard';
+import { AiQuickRepliesCard } from './AiQuickRepliesCard';
 import type { AgentAction, AiOrderPlaced } from '../types/ai-chat.types';
 
 interface Props {
@@ -55,6 +56,15 @@ export function AiActionCards({ actions, messageId, onNavigate, onPickSuggestion
                 order={action.data}
                 onNavigate={onNavigate}
                 onPickSuggestion={onPickSuggestion}
+              />
+            );
+          case 'quick_replies':
+            return (
+              <AiQuickRepliesCard
+                key={i}
+                prompt={action.data.prompt}
+                options={action.data.options}
+                onPick={onPickSuggestion}
               />
             );
           case 'order_cancelled':

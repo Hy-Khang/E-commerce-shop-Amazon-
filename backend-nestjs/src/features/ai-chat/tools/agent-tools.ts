@@ -27,12 +27,14 @@ export const AGENT_TOOL_NAMES = {
   ADD_TO_CART: 'add_to_cart',
   UPDATE_CART_ITEM: 'update_cart_item',
   REMOVE_CART_ITEM: 'remove_cart_item',
+  LIST_COUPONS: 'list_coupons',
   PROPOSE_CHECKOUT: 'propose_checkout',
   LIST_ORDERS: 'list_orders',
   GET_ORDER: 'get_order',
   LIST_ADDRESSES: 'list_addresses',
   CANCEL_ORDER: 'cancel_order',
   GET_POLICIES: 'get_policies',
+  ASK_CHOICE: 'ask_choice',
 } as const;
 
 export const AGENT_TOOLS: AgentToolDefinition[] = [
@@ -45,9 +47,18 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
       parameters: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'Từ khoá tìm kiếm (tên sản phẩm, loại...)' },
-          min_price: { type: 'number', description: 'Giá tối thiểu (VND), tuỳ chọn' },
-          max_price: { type: 'number', description: 'Giá tối đa (VND), tuỳ chọn' },
+          query: {
+            type: 'string',
+            description: 'Từ khoá tìm kiếm (tên sản phẩm, loại...)',
+          },
+          min_price: {
+            type: 'number',
+            description: 'Giá tối thiểu (VND), tuỳ chọn',
+          },
+          max_price: {
+            type: 'number',
+            description: 'Giá tối đa (VND), tuỳ chọn',
+          },
         },
         required: ['query'],
       },
@@ -57,7 +68,8 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
     type: 'function',
     function: {
       name: AGENT_TOOL_NAMES.VIEW_CART,
-      description: 'Xem giỏ hàng hiện tại của khách (các item, số lượng, tạm tính).',
+      description:
+        'Xem giỏ hàng hiện tại của khách (các item, số lượng, tạm tính).',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -66,11 +78,14 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
     function: {
       name: AGENT_TOOL_NAMES.ADD_TO_CART,
       description:
-        'Thêm một biến thể sản phẩm vào giỏ hàng. Cần product_variant_id (lấy từ kết quả search_products) và số lượng.',
+        'Thêm một biến thể sản phẩm CỤ THỂ vào giỏ hàng. Cần product_variant_id — là id của đúng biến thể khớp TẤT CẢ lựa chọn của khách (ví dụ đúng màu VÀ đúng size). CHỈ gọi khi đã xác định được product_variant_id chính xác từ kết quả search_products; nếu sản phẩm còn nhiều biến thể mà khách chưa chọn hết (còn thiếu màu hoặc size...), TUYỆT ĐỐI không gọi tool này mà phải hỏi khách chọn trước. Không được tự đoán/mặc định một giá trị biến thể mà khách chưa nói.',
       parameters: {
         type: 'object',
         properties: {
-          product_variant_id: { type: 'number', description: 'ID biến thể sản phẩm' },
+          product_variant_id: {
+            type: 'number',
+            description: 'ID biến thể sản phẩm',
+          },
           quantity: { type: 'number', description: 'Số lượng cần thêm (>= 1)' },
         },
         required: ['product_variant_id', 'quantity'],
@@ -81,11 +96,15 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
     type: 'function',
     function: {
       name: AGENT_TOOL_NAMES.UPDATE_CART_ITEM,
-      description: 'Cập nhật số lượng của một item trong giỏ. Cần item_id (từ view_cart) và số lượng mới.',
+      description:
+        'Cập nhật số lượng của một item trong giỏ. Cần item_id (từ view_cart) và số lượng mới.',
       parameters: {
         type: 'object',
         properties: {
-          item_id: { type: 'number', description: 'ID của cart item (từ view_cart)' },
+          item_id: {
+            type: 'number',
+            description: 'ID của cart item (từ view_cart)',
+          },
           quantity: { type: 'number', description: 'Số lượng mới (>= 1)' },
         },
         required: ['item_id', 'quantity'],
@@ -100,10 +119,22 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
       parameters: {
         type: 'object',
         properties: {
-          item_id: { type: 'number', description: 'ID của cart item (từ view_cart)' },
+          item_id: {
+            type: 'number',
+            description: 'ID của cart item (từ view_cart)',
+          },
         },
         required: ['item_id'],
       },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: AGENT_TOOL_NAMES.LIST_COUPONS,
+      description:
+        'Liệt kê các mã giảm giá (voucher) đang có thể áp dụng cho giỏ hàng hiện tại của khách: mã toàn sàn và mã của từng shop, kèm mức giảm ước tính và điều kiện. Dùng khi khách hỏi về mã giảm giá/khuyến mãi, hoặc CHỦ ĐỘNG gợi ý trước khi khách thanh toán. Chỉ dùng được khi khách đã đăng nhập.',
+      parameters: { type: 'object', properties: {} },
     },
   },
   {
@@ -118,9 +149,13 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
           coupon_codes: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Mã giảm giá muốn áp dụng (tối đa 1 mã sàn + 1 mã mỗi shop), tuỳ chọn',
+            description:
+              'Mã giảm giá muốn áp dụng (tối đa 1 mã sàn + 1 mã mỗi shop), tuỳ chọn',
           },
-          coins_to_redeem: { type: 'number', description: 'Số Xu muốn dùng, tuỳ chọn' },
+          coins_to_redeem: {
+            type: 'number',
+            description: 'Số Xu muốn dùng, tuỳ chọn',
+          },
         },
       },
     },
@@ -129,13 +164,15 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
     type: 'function',
     function: {
       name: AGENT_TOOL_NAMES.LIST_ORDERS,
-      description: 'Liệt kê các đơn hàng gần đây của khách (tuỳ chọn lọc theo trạng thái).',
+      description:
+        'Liệt kê các đơn hàng gần đây của khách (tuỳ chọn lọc theo trạng thái).',
       parameters: {
         type: 'object',
         properties: {
           status: {
             type: 'string',
-            description: 'Lọc theo trạng thái: pending, confirmed, shipping, delivered, completed, return_requested, cancelled',
+            description:
+              'Lọc theo trạng thái: pending, confirmed, shipping, delivered, completed, return_requested, cancelled',
           },
         },
       },
@@ -159,7 +196,8 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
     type: 'function',
     function: {
       name: AGENT_TOOL_NAMES.LIST_ADDRESSES,
-      description: 'Liệt kê sổ địa chỉ giao hàng của khách (để chọn địa chỉ khi đặt hàng).',
+      description:
+        'Liệt kê sổ địa chỉ giao hàng của khách (để chọn địa chỉ khi đặt hàng).',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -167,13 +205,39 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
     type: 'function',
     function: {
       name: AGENT_TOOL_NAMES.CANCEL_ORDER,
-      description: 'Huỷ một đơn hàng ĐANG CHỜ XỬ LÝ (pending) của khách. Chỉ đơn pending mới huỷ được.',
+      description:
+        'Huỷ một đơn hàng ĐANG CHỜ XỬ LÝ (pending) của khách. Chỉ đơn pending mới huỷ được.',
       parameters: {
         type: 'object',
         properties: {
           order_id: { type: 'number', description: 'ID đơn hàng cần huỷ' },
         },
         required: ['order_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: AGENT_TOOL_NAMES.ASK_CHOICE,
+      description:
+        'Hiện các NÚT BẤM NHANH để khách chọn MỘT trong nhiều lựa chọn — ví dụ chọn màu/size của sản phẩm, hoặc chọn mã giảm giá. Mỗi lựa chọn là một câu trả lời HOÀN CHỈNH mà khách sẽ GỬI khi bấm nút. Dùng tool này thay vì bắt khách gõ tay khi đã có tập lựa chọn rõ ràng. Vẫn nên nêu câu hỏi trong phần trả lời text.',
+      parameters: {
+        type: 'object',
+        properties: {
+          question: {
+            type: 'string',
+            description:
+              'Câu hỏi ngắn hiển thị phía trên các nút (vd "Bạn chọn màu nào?")',
+          },
+          options: {
+            type: 'array',
+            items: { type: 'string' },
+            description:
+              'Danh sách lựa chọn; mỗi phần tử là câu khách sẽ gửi khi bấm (vd "Màu Đen", "Màu Trắng", hoặc "Dùng mã SALE10"). Tối đa 8 lựa chọn.',
+          },
+        },
+        required: ['question', 'options'],
       },
     },
   },
@@ -188,7 +252,8 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
         properties: {
           topic: {
             type: 'string',
-            description: 'returns | shipping | payment | coupon | coins | general',
+            description:
+              'returns | shipping | payment | coupon | coins | general',
           },
         },
         required: ['topic'],

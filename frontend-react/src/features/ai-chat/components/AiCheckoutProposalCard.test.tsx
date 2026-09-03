@@ -8,8 +8,13 @@ const checkoutMutate = vi.fn();
 let authed = true;
 
 vi.mock('@/features/auth', () => ({
-  useAuthStore: (sel: (s: { isAuthenticated: boolean }) => unknown) =>
-    sel({ isAuthenticated: authed }),
+  // Store-shaped: the real Zustand store is a callable hook that also exposes
+  // `.subscribe` (the ai-chat store subscribes to it for its logout reset).
+  useAuthStore: Object.assign(
+    (sel: (s: { isAuthenticated: boolean }) => unknown) =>
+      sel({ isAuthenticated: authed }),
+    { subscribe: () => () => {} },
+  ),
 }));
 vi.mock('@/features/user-profile', () => ({
   useAddresses: () => ({
@@ -19,6 +24,8 @@ vi.mock('@/features/user-profile', () => ({
 }));
 vi.mock('@/features/order', () => ({
   useCheckout: () => ({ mutateAsync: checkoutMutate, isPending: false }),
+  // Inline voucher editing stays idle unless a code is applied (enabled=dirty).
+  usePreviewCheckout: () => ({ data: undefined, isError: false, isFetching: false }),
 }));
 vi.mock('@/features/payment', () => ({
   useCreatePayment: () => ({ mutateAsync: vi.fn(), isPending: false }),
@@ -83,6 +90,23 @@ describe('AiCheckoutProposalCard', () => {
         order_group_id: 'abcd1234-xyz',
         payment_method: 'cod',
       }),
+    );
+  });
+
+  it('applies a coupon code and includes it on confirm', async () => {
+    renderCard();
+    fireEvent.change(screen.getByPlaceholderText('Enter coupon code'), {
+      target: { value: 'sale10' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    // The applied code shows as a chip (uppercased).
+    expect(screen.getByText('SALE10')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm order' }));
+    await waitFor(() =>
+      expect(checkoutMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ coupon_codes: ['SALE10'] }),
+      ),
     );
   });
 

@@ -120,7 +120,10 @@ export class AiChatService {
     const llmMessages: ChatCompletionMessage[] = [
       { role: 'system', content: systemPrompt },
       ...history.map((m) => ({
-        role: m.role === AiMessageRole.Assistant ? ('assistant' as const) : ('user' as const),
+        role:
+          m.role === AiMessageRole.Assistant
+            ? ('assistant' as const)
+            : ('user' as const),
         content: m.content,
       })),
       { role: 'user', content: message },
@@ -128,11 +131,20 @@ export class AiChatService {
 
     // 3. Agent loop — multi-step tool-calling, bounded. Falls back gracefully
     //    (a model that ignores tools just returns a plain reply).
-    const { reply, actions, productIds: toolProductIds } =
-      await this.runAgentLoop(llmMessages, config, owner);
+    const {
+      reply,
+      actions,
+      productIds: toolProductIds,
+    } = await this.runAgentLoop(llmMessages, config, owner);
 
-    // 4. Merge products: keyword-seed entities + any hydrated from search tools.
-    const products = await this.mergeProducts(seedProducts, toolProductIds);
+    // 4. Choose which products to show as suggestions: the agent's own
+    //    search_products results first (what it actually recommended), then the
+    //    keyword seed — but only seed products in the dominant category, so a
+    //    fashion chat never shows a stray phone.
+    const products = await this.selectSuggestedProducts(
+      seedProducts,
+      toolProductIds,
+    );
     const productIds = products.map((p) => p.id);
 
     // 5. Persist both turns (assistant snapshots suggested product ids + actions).
@@ -154,7 +166,7 @@ export class AiChatService {
       conversation_id: conversation.id,
       reply,
       products: products as unknown as ChatResponseDto['products'],
-      ...(actions.length && { actions: actions as ChatResponseDto['actions'] }),
+      ...(actions.length && { actions: actions }),
     };
   }
 
@@ -207,7 +219,10 @@ export class AiChatService {
         let dispatch: ToolDispatchResult;
         if (seenCalls.has(dedupeKey)) {
           dispatch = {
-            content: { skipped: true, note: 'Tool call trùng lặp đã bị bỏ qua.' },
+            content: {
+              skipped: true,
+              note: 'Tool call trùng lặp đã bị bỏ qua.',
+            },
           };
         } else {
           seenCalls.add(dedupeKey);
@@ -217,7 +232,8 @@ export class AiChatService {
             owner,
           );
           if (dispatch.action) actions.push(dispatch.action);
-          if (dispatch.productIds?.length) productIds.push(...dispatch.productIds);
+          if (dispatch.productIds?.length)
+            productIds.push(...dispatch.productIds);
         }
         llmMessages.push({
           role: 'tool',
@@ -255,17 +271,69 @@ export class AiChatService {
     }
   }
 
-  /** Seed entities + hydrated tool-search products, de-duplicated, capped. */
-  private async mergeProducts(
+  /**
+   * Pick the suggestion cards for an assistant turn. The agent's own
+   * `search_products` results (the products it actually engaged with) come first
+   * and are ALWAYS kept. The keyword seed is appended only for products in the
+   * **dominant category** (the category most tool/seed products belong to), so a
+   * noisy seed can't leak an unrelated item (e.g. a phone into an áo-thun chat).
+   * When neither source has a clear category, the seed passes through as-is.
+   */
+  private async selectSuggestedProducts(
     seed: Product[],
     toolProductIds: number[],
   ): Promise<Product[]> {
-    const seenIds = new Set(seed.map((p) => p.id));
-    const extraIds = [...new Set(toolProductIds)].filter((id) => !seenIds.has(id));
-    const extra = extraIds.length
-      ? await this.productService.findActiveByIds(extraIds)
+    const toolProducts = toolProductIds.length
+      ? await this.productService.findActiveByIds([...new Set(toolProductIds)])
       : [];
-    return [...seed, ...extra].slice(0, 12);
+
+    // Dominant category: from the agent's picks first, else from the seed.
+    const dominantCategoryId =
+      this.dominantCategoryId(toolProducts) ?? this.dominantCategoryId(seed);
+
+    const seen = new Set<number>();
+    const result: Product[] = [];
+    for (const p of toolProducts) {
+      if (seen.has(p.id)) continue;
+      seen.add(p.id);
+      result.push(p);
+    }
+    for (const p of seed) {
+      if (seen.has(p.id)) continue;
+      // Coherence: drop seed products outside the dominant category.
+      if (
+        dominantCategoryId != null &&
+        this.categoryId(p) !== dominantCategoryId
+      )
+        continue;
+      seen.add(p.id);
+      result.push(p);
+    }
+    return result.slice(0, 12);
+  }
+
+  private categoryId(p: Product): number | null {
+    return (
+      p.category?.id ?? (p as { category_id?: number }).category_id ?? null
+    );
+  }
+
+  /** Most frequent category id among products (ties → first seen); null if none. */
+  private dominantCategoryId(products: Product[]): number | null {
+    const counts = new Map<number, number>();
+    let best: number | null = null;
+    let bestCount = 0;
+    for (const p of products) {
+      const cid = this.categoryId(p);
+      if (cid == null) continue;
+      const next = (counts.get(cid) ?? 0) + 1;
+      counts.set(cid, next);
+      if (next > bestCount) {
+        bestCount = next;
+        best = cid;
+      }
+    }
+    return best;
   }
 
   // ─── Public: resume a conversation ───
@@ -325,7 +393,9 @@ export class AiChatService {
     };
   }
 
-  async updateSettings(dto: UpdateAiSettingsDto): Promise<AiSettingsResponseDto> {
+  async updateSettings(
+    dto: UpdateAiSettingsDto,
+  ): Promise<AiSettingsResponseDto> {
     const s = await this.settingRepository.update({
       ...(dto.chatbox_enabled !== undefined && {
         chatbox_enabled: dto.chatbox_enabled,
@@ -351,7 +421,12 @@ export class AiChatService {
   private async retrieveProducts(message: string): Promise<Product[]> {
     const priceHint = parsePriceHint(message);
     const keywords = extractKeywords(message);
-    const queries = keywords.length > 0 ? keywords : [message.trim()];
+    // No product keyword survived — a greeting, thanks, or a follow-up like
+    // "size M đi" / "màu đen nha". The old whole-sentence fallback LIKE-matched
+    // random items (a phone leaking into a t-shirt chat), so seed nothing: the
+    // model answers from history, or is told to call search_products.
+    if (keywords.length === 0) return [];
+    const queries = keywords;
 
     const lists = await Promise.all(
       queries.map((search) =>
@@ -411,7 +486,8 @@ export class AiChatService {
     firstMessage: string,
   ): Promise<AiConversation> {
     if (conversationId) {
-      const existing = await this.conversationRepository.findById(conversationId);
+      const existing =
+        await this.conversationRepository.findById(conversationId);
       if (existing && this.isOwner(existing, owner)) {
         return existing;
       }
@@ -484,8 +560,10 @@ export class AiChatService {
         id: m.id,
         role: m.role,
         content: m.content,
-        products: cards as unknown as AiMessageResponseDto['products'],
-        ...(actions.length && { actions: actions as AiMessageResponseDto['actions'] }),
+        products: cards,
+        ...(actions.length && {
+          actions: actions,
+        }),
         created_at: m.created_at,
       };
     });

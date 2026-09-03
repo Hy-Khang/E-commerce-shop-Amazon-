@@ -8,11 +8,12 @@ interface Props {
   onNavigate?: () => void;
 }
 
-// Grid widens with the panel size (from `sm:` up; mobile stays 2 columns).
+// Denser than the storefront grid — suggestion thumbnails read compact inside the
+// chat bubble. Columns widen with the panel size (from `sm:` up; mobile stays 3).
 const GRID_CLASS: Record<AiPanelSize, string> = {
-  normal: 'grid grid-cols-2 gap-2',
-  large: 'grid grid-cols-2 gap-2 sm:grid-cols-3',
-  full: 'grid grid-cols-2 gap-2 sm:grid-cols-4',
+  normal: 'grid grid-cols-3 gap-2',
+  large: 'grid grid-cols-3 gap-2 sm:grid-cols-4',
+  full: 'grid grid-cols-3 gap-2 sm:grid-cols-5',
 };
 
 /**
@@ -33,7 +34,7 @@ export function AiProductSuggestions({ products, onNavigate }: Props) {
       </p>
       <div className={GRID_CLASS[size]} onClickCapture={onNavigate}>
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard key={product.id} product={product} compact />
         ))}
       </div>
     </div>

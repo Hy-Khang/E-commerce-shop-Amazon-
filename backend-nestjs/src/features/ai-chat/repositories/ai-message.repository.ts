@@ -23,7 +23,10 @@ export class AiMessageRepository {
   }
 
   /** The newest `limit` messages, returned oldest→newest for LLM history. */
-  async findRecent(conversationId: number, limit: number): Promise<AiMessage[]> {
+  async findRecent(
+    conversationId: number,
+    limit: number,
+  ): Promise<AiMessage[]> {
     const rows = await this.repo.find({
       where: { conversation_id: conversationId },
       order: { created_at: 'DESC', id: 'DESC' },

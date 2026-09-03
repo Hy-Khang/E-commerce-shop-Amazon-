@@ -21,9 +21,10 @@ Nhiệm vụ của bạn:
 3. Tóm tắt / so sánh nhanh các sản phẩm khi được hỏi.
 
 QUY TẮC BẮT BUỘC:
-- CHỈ gợi ý những sản phẩm xuất hiện trong danh sách "SẢN PHẨM LIÊN QUAN" được cung cấp bên dưới. TUYỆT ĐỐI KHÔNG bịa ra sản phẩm, giá, hay cửa hàng không có trong danh sách.
-- Nếu không có sản phẩm nào phù hợp trong danh sách, hãy nói thật rằng hiện chưa tìm thấy và gợi ý khách thử từ khóa khác.
-- Trả lời ngắn gọn, thân thiện, bằng tiếng Việt. Không lặp lại nguyên văn danh sách; hãy diễn giải tự nhiên.
+- CHỈ gợi ý những sản phẩm xuất hiện trong danh sách "SẢN PHẨM LIÊN QUAN" được cung cấp bên dưới (hoặc trong kết quả tool search_products). TUYỆT ĐỐI KHÔNG bịa ra sản phẩm, giá, hay cửa hàng không có trong danh sách.
+- Kho sản phẩm đặt tên bằng TIẾNG VIỆT. Nếu danh sách "SẢN PHẨM LIÊN QUAN" trống, ĐỪNG vội kết luận là không có — trước tiên hãy gọi tool search_products với TỪ KHOÁ TIẾNG VIỆT (dịch nhu cầu của khách sang tiếng Việt, ví dụ "men t-shirt" → "áo thun nam"). Chỉ nói "chưa tìm thấy" sau khi đã thử tìm mà vẫn không có, rồi gợi ý khách thử từ khoá khác.
+- NGÔN NGỮ: luôn trả lời khách bằng ĐÚNG ngôn ngữ mà khách đang dùng (khách nhắn tiếng Anh → trả lời tiếng Anh; tiếng Việt → trả lời tiếng Việt). Chỉ dùng tiếng Việt cho TỪ KHOÁ tìm kiếm nội bộ, không phải cho câu trả lời.
+- Trả lời ngắn gọn, thân thiện. Không lặp lại nguyên văn danh sách; hãy diễn giải tự nhiên.
 
 CHÍNH SÁCH SÀN (dùng để trả lời FAQ):
 - Đổi trả: khách có thể yêu cầu trả hàng/hoàn tiền trong vòng 7 ngày kể từ khi nhận hàng (đơn ở trạng thái đã giao).
@@ -61,19 +62,148 @@ export function buildProductContext(products: ProductContextItem[]): string {
  * to the few meaningful keywords instead.
  */
 const STOP_WORDS = new Set([
-  'tôi', 'toi', 'mình', 'minh', 'em', 'anh', 'chị', 'chi', 'bạn', 'ban',
-  'cần', 'can', 'muốn', 'muon', 'tìm', 'tim', 'mua', 'kiếm', 'kiem', 'xem',
-  'cho', 'với', 'voi', 'và', 'va', 'có', 'co', 'là', 'la', 'một', 'mot',
-  'những', 'nhung', 'các', 'cac', 'cái', 'cai', 'chiếc', 'chiec', 'loại', 'loai',
-  'sản', 'san', 'phẩm', 'pham', 'hàng', 'hang', 'shop', 'cửa', 'cua',
-  'giá', 'gia', 'rẻ', 're', 'đắt', 'dat', 'tốt', 'tot', 'đẹp', 'dep', 'ngon',
-  'khoảng', 'khoang', 'dưới', 'duoi', 'trên', 'tren', 'từ', 'tu', 'đến', 'den',
-  'tầm', 'tam', 'giới', 'gioi', 'hạn', 'han', 'ạ', 'a', 'nhé', 'nhe', 'nha',
-  'xin', 'chào', 'chao', 'ơi', 'oi', 'gì', 'gi', 'nào', 'nao', 'thế', 'the',
-  'khoảng', 'độ', 'do', 'chất', 'chat', 'lượng', 'luong',
+  'tôi',
+  'toi',
+  'mình',
+  'minh',
+  'em',
+  'anh',
+  'chị',
+  'chi',
+  'bạn',
+  'ban',
+  'cần',
+  'can',
+  'muốn',
+  'muon',
+  'tìm',
+  'tim',
+  'mua',
+  'kiếm',
+  'kiem',
+  'xem',
+  'cho',
+  'với',
+  'voi',
+  'và',
+  'va',
+  'có',
+  'co',
+  'là',
+  'la',
+  'một',
+  'mot',
+  'những',
+  'nhung',
+  'các',
+  'cac',
+  'cái',
+  'cai',
+  'chiếc',
+  'chiec',
+  'loại',
+  'loai',
+  'sản',
+  'san',
+  'phẩm',
+  'pham',
+  'hàng',
+  'hang',
+  'shop',
+  'cửa',
+  'cua',
+  'giá',
+  'gia',
+  'rẻ',
+  're',
+  'đắt',
+  'dat',
+  'tốt',
+  'tot',
+  'đẹp',
+  'dep',
+  'ngon',
+  'khoảng',
+  'khoang',
+  'dưới',
+  'duoi',
+  'trên',
+  'tren',
+  'từ',
+  'tu',
+  'đến',
+  'den',
+  'tầm',
+  'tam',
+  'giới',
+  'gioi',
+  'hạn',
+  'han',
+  'ạ',
+  'a',
+  'nhé',
+  'nhe',
+  'nha',
+  'xin',
+  'chào',
+  'chao',
+  'ơi',
+  'oi',
+  'gì',
+  'gi',
+  'nào',
+  'nao',
+  'thế',
+  'the',
+  'khoảng',
+  'độ',
+  'do',
+  'chất',
+  'chat',
+  'lượng',
+  'luong',
+  // Variant-axis labels + follow-up fillers: these are never product nouns, so
+  // a message like "size M đi" / "màu đen nha" must not seed random matches.
+  'size',
+  'màu',
+  'mau',
+  'kích',
+  'kich',
+  'thước',
+  'thuoc',
+  'đi',
+  'di',
+  'ok',
+  'oke',
+  'okie',
+  'vâng',
+  'vang',
+  'uh',
+  'ừ',
+  'u',
+  'chọn',
+  'chon',
+  'lấy',
+  'lay',
+  'này',
+  'nay',
+  'đó',
+  'thêm',
+  'them',
+  'giúp',
+  'giup',
+  'cũng',
+  'cung',
+  'được',
+  'duoc',
+  'luôn',
+  'luon',
+  'rồi',
+  'roi',
 ]);
 
-const PRICE_TOKEN = /^\d+(?:[.,]\d+)?(?:k|tr|triệu|trieu|đ|d|vnd|nghìn|nghin|ngàn|ngan)?$/i;
+const PRICE_TOKEN =
+  /^\d+(?:[.,]\d+)?(?:k|tr|triệu|trieu|đ|d|vnd|nghìn|nghin|ngàn|ngan)?$/i;
 
 /**
  * Reduce a natural-language message to a few meaningful search keywords: strip
@@ -110,7 +240,8 @@ export function parsePriceHint(message: string): {
   const text = message.toLowerCase();
   const toVnd = (numRaw: string, unit: string): number => {
     const num = parseFloat(numRaw.replace(',', '.'));
-    if (unit.includes('tr') || unit.includes('triệu')) return Math.round(num * 1_000_000);
+    if (unit.includes('tr') || unit.includes('triệu'))
+      return Math.round(num * 1_000_000);
     if (unit.includes('k') || unit.includes('ngàn') || unit.includes('nghìn'))
       return Math.round(num * 1_000);
     return Math.round(num);
@@ -118,14 +249,18 @@ export function parsePriceHint(message: string): {
   const numUnit = '(\\d+(?:[.,]\\d+)?)\\s*(triệu|tr|k|ngàn|nghìn|đ|vnd)?';
 
   // Range: "200k - 500k"
-  const range = text.match(new RegExp(`${numUnit}\\s*(?:-|đến|tới)\\s*${numUnit}`));
+  const range = text.match(
+    new RegExp(`${numUnit}\\s*(?:-|đến|tới)\\s*${numUnit}`),
+  );
   if (range) {
     const a = toVnd(range[1], range[2] ?? '');
     const b = toVnd(range[3], range[4] ?? range[2] ?? '');
     return { min_price: Math.min(a, b), max_price: Math.max(a, b) };
   }
 
-  const under = text.match(new RegExp(`(?:dưới|<|nhỏ hơn|tối đa|khoảng)\\s*${numUnit}`));
+  const under = text.match(
+    new RegExp(`(?:dưới|<|nhỏ hơn|tối đa|khoảng)\\s*${numUnit}`),
+  );
   if (under) return { max_price: toVnd(under[1], under[2] ?? '') };
 
   const over = text.match(new RegExp(`(?:trên|>|lớn hơn|từ)\\s*${numUnit}`));
@@ -144,13 +279,22 @@ export const AGENT_SYSTEM_PROMPT_SUFFIX = `
 BẠN LÀ TRỢ LÝ MUA HÀNG CÓ CÔNG CỤ (tool). Ngoài tư vấn, bạn có thể GIÚP KHÁCH THAO TÁC bằng cách gọi tool:
 - Tìm sản phẩm: search_products (lấy product_variant_id để thêm giỏ).
 - Giỏ hàng: view_cart, add_to_cart, update_cart_item, remove_cart_item — cứ thực hiện khi khách yêu cầu.
+- Mã giảm giá: list_coupons (xem voucher đang áp dụng được cho giỏ).
 - Đơn hàng: list_orders, get_order, cancel_order (chỉ huỷ đơn pending).
 - Địa chỉ: list_addresses.
 - Đặt hàng: propose_checkout — CHỈ tạo bảng tạm tính để khách xác nhận.
+- Hỏi lựa chọn nhanh: ask_choice — hiện các NÚT bấm để khách chọn (màu/size/mã giảm giá) thay vì gõ tay.
 - FAQ chính sách: get_policies.
 
-QUY TẮC:
-- Khi khách muốn thêm/mua sản phẩm: dùng search_products để lấy đúng product_variant_id rồi add_to_cart. Nếu sản phẩm có nhiều biến thể (màu/size), hãy hỏi khách chọn trước khi thêm.
+QUY TẮC CHỌN BIẾN THỂ (RẤT QUAN TRỌNG — chống thêm nhầm hàng):
+- Mỗi sản phẩm có thể có nhiều biến thể theo 1–2 thuộc tính (ví dụ Màu sắc + Kích thước). Mỗi product_variant_id ứng với MỘT tổ hợp thuộc tính cụ thể.
+- Trước khi add_to_cart, khách PHẢI chọn rõ TẤT CẢ các thuộc tính mà sản phẩm có. Nếu khách mới nói một phần (ví dụ chỉ nói size mà chưa nói màu, hoặc ngược lại), hãy HỎI LẠI phần còn thiếu. Khi hỏi, hãy gọi tool ask_choice với danh sách các giá trị CÓ SẴN của thuộc tính còn thiếu (vd các màu: "Màu Đen", "Màu Trắng") để khách BẤM chọn thay vì gõ tay. TUYỆT ĐỐI KHÔNG tự chọn/mặc định giúp một giá trị mà khách chưa nói.
+- Chỉ gọi add_to_cart khi đã xác định đúng product_variant_id khớp mọi lựa chọn của khách. Nếu chưa chắc, hỏi lại — đừng đoán.
+
+QUY TẮC KHÁC:
+- Ngôn ngữ trả lời phải khớp ngôn ngữ của khách (Anh↔Anh, Việt↔Việt). Kho hàng tên tiếng Việt → khi gọi search_products hãy DỊCH nhu cầu sang từ khoá tiếng Việt (ví dụ "cheap black hoodie" → "áo hoodie đen"). Nếu lần đầu không ra kết quả, thử lại với từ khoá tiếng Việt khác trước khi nói không có.
+- Khi khách muốn thêm/mua sản phẩm: dùng search_products để lấy đúng product_variant_id rồi (sau khi đã đủ thuộc tính) add_to_cart.
+- Mã giảm giá: khi khách hỏi về mã/voucher/khuyến mãi, gọi list_coupons và nêu các mã đang dùng được. Trước khi khách thanh toán, hãy CHỦ ĐỘNG gọi list_coupons và nhắc nếu có voucher phù hợp để khách đỡ bỏ lỡ. Nếu có nhiều mã dùng được (eligible=true), có thể gọi ask_choice để khách BẤM chọn mã (mỗi option dạng "Dùng mã <CODE>"). Khi khách đồng ý dùng mã, truyền code vào propose_checkout.coupon_codes (tối đa 1 mã sàn + 1 mã mỗi shop).
 - Khi khách muốn "đặt hàng / thanh toán": gọi propose_checkout để hiện bảng tạm tính. TUYỆT ĐỐI KHÔNG nói rằng đơn đã được đặt — việc đặt đơn do khách bấm nút xác nhận, không phải bạn.
 - Nếu tool trả về needs_login: mời khách đăng nhập, đừng bịa dữ liệu.
 - Nếu tool trả về error: giải thích ngắn gọn cho khách, đừng bịa kết quả.
@@ -190,7 +334,9 @@ export async function callChatCompletion(
 
   if (!response.ok) {
     const errorText = await response.text();
-    logger.error(`AI chat API error ${response.status}: ${errorText.slice(0, 300)}`);
+    logger.error(
+      `AI chat API error ${response.status}: ${errorText.slice(0, 300)}`,
+    );
     throw new Error(`AI chat API returned status ${response.status}`);
   }
 
@@ -198,10 +344,18 @@ export async function callChatCompletion(
   const message = data.choices?.[0]?.message ?? {};
   const content: string | null =
     typeof message.content === 'string' ? message.content.trim() : null;
-  const toolCalls = Array.isArray(message.tool_calls) ? message.tool_calls : undefined;
+  const toolCalls = Array.isArray(message.tool_calls)
+    ? message.tool_calls
+    : undefined;
 
-  if ((!content || content.length === 0) && (!toolCalls || toolCalls.length === 0)) {
+  if (
+    (!content || content.length === 0) &&
+    (!toolCalls || toolCalls.length === 0)
+  ) {
     throw new Error('AI chat API returned neither content nor tool calls');
   }
-  return { content: content && content.length ? content : null, tool_calls: toolCalls };
+  return {
+    content: content && content.length ? content : null,
+    tool_calls: toolCalls,
+  };
 }

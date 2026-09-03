@@ -14,9 +14,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AiChatService } from './ai-chat.service';
-import {
-  AiConversationDetailResponseDto,
-} from './dto/chat-response.dto';
+import { AiConversationDetailResponseDto } from './dto/chat-response.dto';
 import {
   AiSettingsResponseDto,
   UpdateAiSettingsDto,
@@ -33,7 +31,9 @@ export class AdminAiChatController {
 
   @Get('conversations')
   @Permissions(PERMISSIONS.AI_CHATBOX_READ)
-  @ApiOperation({ summary: 'List AI conversations (paginated, newest activity)' })
+  @ApiOperation({
+    summary: 'List AI conversations (paginated, newest activity)',
+  })
   async listConversations(@Query() query: PaginationDto) {
     return this.aiChatService.adminListConversations(query.page, query.limit);
   }
@@ -42,7 +42,10 @@ export class AdminAiChatController {
   @Permissions(PERMISSIONS.AI_CHATBOX_READ)
   @ApiOperation({ summary: 'Get an AI conversation with its messages' })
   @ApiResponse({ status: 200, type: AiConversationDetailResponseDto })
-  @ApiResponse({ status: 404, description: 'CHATBOT_001: Conversation not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'CHATBOT_001: Conversation not found',
+  })
   async getConversation(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<AiConversationDetailResponseDto> {
@@ -59,7 +62,9 @@ export class AdminAiChatController {
 
   @Patch('settings')
   @Permissions(PERMISSIONS.AI_CHATBOX_UPDATE)
-  @ApiOperation({ summary: 'Update AI chatbox settings (enable/disable, prompt)' })
+  @ApiOperation({
+    summary: 'Update AI chatbox settings (enable/disable, prompt)',
+  })
   @ApiResponse({ status: 200, type: AiSettingsResponseDto })
   async updateSettings(
     @Body() dto: UpdateAiSettingsDto,

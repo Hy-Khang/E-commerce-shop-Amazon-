@@ -19,7 +19,7 @@ function mockFetchReply(content: string) {
   global.fetch = jest.fn().mockResolvedValue({
     ok: true,
     json: async () => ({ choices: [{ message: { content } }] }),
-  }) as unknown as typeof fetch;
+  });
 }
 
 describe('AiChatService', () => {
@@ -49,7 +49,12 @@ describe('AiChatService', () => {
           useValue: {
             findActiveProducts: jest.fn().mockResolvedValue({
               data: [
-                { id: 1, name: 'Áo thun đen', slug: 'ao-thun-den', variants: [{ price: 200000, sale_price: null }] },
+                {
+                  id: 1,
+                  name: 'Áo thun đen',
+                  slug: 'ao-thun-den',
+                  variants: [{ price: 200000, sale_price: null }],
+                },
               ],
               meta: { page: 1, limit: 6, total: 1, totalPages: 1 },
             }),
@@ -60,7 +65,9 @@ describe('AiChatService', () => {
           provide: AiConversationRepository,
           useValue: {
             findById: jest.fn(),
-            create: jest.fn().mockResolvedValue({ id: 10, user_id: null, session_id: 's1' }),
+            create: jest
+              .fn()
+              .mockResolvedValue({ id: 10, user_id: null, session_id: 's1' }),
             touch: jest.fn(),
             findAllPaginated: jest.fn(),
           },
@@ -76,7 +83,10 @@ describe('AiChatService', () => {
         {
           provide: AiSettingRepository,
           useValue: {
-            get: jest.fn().mockResolvedValue({ chatbox_enabled: true, system_prompt: null }),
+            get: jest.fn().mockResolvedValue({
+              chatbox_enabled: true,
+              system_prompt: null,
+            }),
             update: jest.fn(),
           },
         },
@@ -127,7 +137,7 @@ describe('AiChatService', () => {
       ok: false,
       status: 500,
       text: async () => 'boom',
-    }) as unknown as typeof fetch;
+    });
 
     const res = await service.chat({ message: 'hello' }, guest);
 
@@ -136,7 +146,10 @@ describe('AiChatService', () => {
   });
 
   it('throws CHATBOT_005 when the chatbox is disabled', async () => {
-    settingRepo.get.mockResolvedValueOnce({ chatbox_enabled: false, system_prompt: null } as any);
+    settingRepo.get.mockResolvedValueOnce({
+      chatbox_enabled: false,
+      system_prompt: null,
+    } as any);
 
     await expect(service.chat({ message: 'hi' }, guest)).rejects.toBeInstanceOf(
       BadRequestException,
@@ -161,7 +174,10 @@ describe('AiChatService', () => {
       session_id: null,
     } as any);
 
-    const res = await service.chat({ message: 'hi', conversation_id: 7 }, guest);
+    const res = await service.chat(
+      { message: 'hi', conversation_id: 7 },
+      guest,
+    );
 
     expect(conversationRepo.create).toHaveBeenCalled();
     expect(res.conversation_id).toBe(10); // the freshly-created thread

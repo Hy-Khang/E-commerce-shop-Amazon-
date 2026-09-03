@@ -15,7 +15,10 @@ import { AiConversation } from './ai-conversation.entity';
  * resumed or reviewed in Admin.
  */
 @Entity('ai_messages')
-@Index('idx_ai_messages_conversation_created', ['conversation_id', 'created_at'])
+@Index('idx_ai_messages_conversation_created', [
+  'conversation_id',
+  'created_at',
+])
 export class AiMessage {
   @PrimaryGeneratedColumn()
   id: number;

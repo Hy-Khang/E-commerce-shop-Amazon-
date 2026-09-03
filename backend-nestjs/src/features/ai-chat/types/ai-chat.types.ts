@@ -7,7 +7,8 @@ export const AiMessageRole = {
   User: 'user',
   Assistant: 'assistant',
 } as const;
-export type AiMessageRoleType = (typeof AiMessageRole)[keyof typeof AiMessageRole];
+export type AiMessageRoleType =
+  (typeof AiMessageRole)[keyof typeof AiMessageRole];
 
 /** A function/tool call the model asks the backend to run (OpenAI format). */
 export interface ToolCall {
@@ -66,7 +67,8 @@ export type AgentActionType =
   | 'cart_updated'
   | 'checkout_proposal'
   | 'order_cancelled'
-  | 'needs_login';
+  | 'needs_login'
+  | 'quick_replies';
 
 export interface AgentAction {
   type: AgentActionType;

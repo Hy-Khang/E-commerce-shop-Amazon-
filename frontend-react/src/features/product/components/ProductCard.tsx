@@ -11,14 +11,18 @@ import type { ProductListItem } from '../types/product.types';
 
 interface Props {
   product: ProductListItem;
+  /** Denser layout for tight contexts (e.g. AI chat suggestions) — smaller
+   *  padding + type so the thumbnail reads compact. Default keeps the full card. */
+  compact?: boolean;
 }
 
-export function ProductCard({ product }: Props) {
+export function ProductCard({ product, compact = false }: Props) {
   const prefetch = usePrefetchProduct();
   const { byProduct } = useFlashPriceMaps();
   const priceRange = getPriceRange(product.variants);
   const inStock = hasAnyStock(product.variants);
   const flash = byProduct.get(product.id) ?? null;
+  const priceSize = compact ? 'text-xs' : 'text-sm';
 
   return (
     <Link
@@ -49,14 +53,18 @@ export function ProductCard({ product }: Props) {
           </span>
         )}
       </div>
-      <div className="p-4">
-        <h3 className="truncate text-sm font-semibold text-text-primary group-hover:text-text-brand transition-colors">
+      <div className={compact ? 'p-2' : 'p-4'}>
+        <h3
+          className={`truncate font-semibold text-text-primary group-hover:text-text-brand transition-colors ${
+            compact ? 'text-xs' : 'text-sm'
+          }`}
+        >
           {product.name}
         </h3>
         <div className="mt-1">
           {flash ? (
             <div className="flex items-baseline gap-2">
-              <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+              <span className={`${priceSize} font-bold text-amber-600 dark:text-amber-400`}>
                 {formatPrice(flash.flash_price)}
               </span>
               {flash.original_price != null && flash.original_price > flash.flash_price && (
@@ -67,16 +75,16 @@ export function ProductCard({ product }: Props) {
             </div>
           ) : priceRange ? (
             priceRange.min === priceRange.max ? (
-              <span className="text-sm font-bold text-text-price">
+              <span className={`${priceSize} font-bold text-text-price`}>
                 {formatPrice(priceRange.min)}
               </span>
             ) : (
-              <span className="text-sm font-bold text-text-price">
+              <span className={`${priceSize} font-bold text-text-price`}>
                 {formatPrice(priceRange.min)} — {formatPrice(priceRange.max)}
               </span>
             )
           ) : (
-            <span className="text-sm text-text-muted">No variants</span>
+            <span className={`${priceSize} text-text-muted`}>No variants</span>
           )}
         </div>
         {!inStock && (

@@ -20,7 +20,7 @@ function mockFetchSequence(responses: any[]) {
   for (const r of responses) {
     fn.mockResolvedValueOnce({ ok: true, json: async () => r });
   }
-  global.fetch = fn as unknown as typeof fetch;
+  global.fetch = fn;
   return fn;
 }
 
@@ -30,14 +30,20 @@ const toolCallResponse = (name: string, args: object) => ({
       message: {
         content: null,
         tool_calls: [
-          { id: 'call_1', type: 'function', function: { name, arguments: JSON.stringify(args) } },
+          {
+            id: 'call_1',
+            type: 'function',
+            function: { name, arguments: JSON.stringify(args) },
+          },
         ],
       },
     },
   ],
 });
 
-const textResponse = (content: string) => ({ choices: [{ message: { content } }] });
+const textResponse = (content: string) => ({
+  choices: [{ message: { content } }],
+});
 
 describe('AiChatService — agent tool loop', () => {
   let service: AiChatService;
@@ -55,7 +61,9 @@ describe('AiChatService — agent tool loop', () => {
         {
           provide: ProductService,
           useValue: {
-            findActiveProducts: jest.fn().mockResolvedValue({ data: [], meta: {} }),
+            findActiveProducts: jest
+              .fn()
+              .mockResolvedValue({ data: [], meta: {} }),
             findActiveByIds: jest.fn().mockResolvedValue([]),
           },
         },
@@ -63,17 +71,27 @@ describe('AiChatService — agent tool loop', () => {
           provide: AiConversationRepository,
           useValue: {
             findById: jest.fn(),
-            create: jest.fn().mockResolvedValue({ id: 10, user_id: 5, session_id: null }),
+            create: jest
+              .fn()
+              .mockResolvedValue({ id: 10, user_id: 5, session_id: null }),
             touch: jest.fn(),
           },
         },
         {
           provide: AiMessageRepository,
-          useValue: { create: jest.fn(), findRecent: jest.fn().mockResolvedValue([]) },
+          useValue: {
+            create: jest.fn(),
+            findRecent: jest.fn().mockResolvedValue([]),
+          },
         },
         {
           provide: AiSettingRepository,
-          useValue: { get: jest.fn().mockResolvedValue({ chatbox_enabled: true, system_prompt: null }) },
+          useValue: {
+            get: jest.fn().mockResolvedValue({
+              chatbox_enabled: true,
+              system_prompt: null,
+            }),
+          },
         },
         {
           provide: ToolDispatcher,

@@ -11,10 +11,32 @@ history (including the agent's actions) and toggle the widget on/off.
 - `tools/agent-tools.ts` — OpenAI/OpenRouter `tools[]` definitions + static `POLICY_FAQ`.
 - `tools/tool-dispatcher.ts` — `@Injectable() ToolDispatcher.run(name, args, owner)`
   maps each tool to a real service (`ProductService`/`CartService`/`OrderService`/
-  `UserProfileService`). **Owner comes from the request, never from tool args.**
-  Guest-gated tools (checkout/order/address) → `{ needs_login }`. Service errors are
-  caught → `{ error: { code, message } }` (uses `return await` so rejections are
-  caught, never thrown out of the loop).
+  `UserProfileService`/`CouponService`). **Owner comes from the request, never from tool
+  args.** Guest-gated tools (checkout/order/address/**coupons**) → `{ needs_login }`.
+  Service errors are caught → `{ error: { code, message } }` (uses `return await` so
+  rejections are caught, never thrown out of the loop).
+- **Variant safety (`add_to_cart`):** the prompt forbids guessing an unspecified variant
+  axis — the agent must confirm **every** option (e.g. colour AND size) and only call
+  `add_to_cart` with the exact `product_variant_id`, else ask which value is missing.
+- **Language + cross-language search:** the reply must match the user's language
+  (English question → English answer). The catalog is Vietnamese, so the keyword seed
+  (`retrieveProducts` → `extractKeywords`) misses English terms; the prompt tells the model
+  to **translate the need to Vietnamese keywords and call `search_products`** when the seed
+  block is empty, instead of prematurely answering "not found".
+- **Coupons (`list_coupons`):** reads `CouponService.getAvailableCouponsForCart(userId)`
+  (customer-only → `needs_login` for guests) so the agent can surface vouchers and pass
+  chosen codes into `propose_checkout.coupon_codes`. The prompt tells it to proactively
+  offer eligible vouchers before checkout.
+- **Quick-reply chips (`ask_choice`):** a no-side-effect, guest-safe tool
+  `ask_choice({ question, options[] })` → `quick_replies` action. Each option is a
+  complete message the customer sends on tap. The prompt tells the model to use it for a
+  missing variant axis (colour/size) or to pick a coupon, so the shopper doesn't type.
+- **Suggested-product selection (`selectSuggestedProducts`):** the displayed cards are
+  the agent's own `search_products` results first, then keyword-seed products **filtered
+  to the dominant category** — so a fashion chat can't leak a phone. `retrieveProducts`
+  now returns `[]` when no product keyword survives (a greeting or a follow-up like
+  "size M đi" — variant/filler words are stopwords), instead of LIKE-matching the raw
+  sentence. So a pure clarification turn shows no new cards.
 - `AiChatService.runAgentLoop` — bounded loop (`MAX_TOOL_ROUNDS = 4`). Model returns
   `tool_calls` → dispatch → feed `role:'tool'` results back → loop; plain content
   ends it. Identical tool calls are de-duplicated (no double add-to-cart). A provider
@@ -22,8 +44,8 @@ history (including the agent's actions) and toggle the widget on/off.
 - **Money gate:** `propose_checkout` calls `OrderService.previewCheckout` (advisory,
   no writes) → `checkout_proposal` action. Placing the order is the **frontend**
   mini-checkout calling the existing `POST /orders` — the LLM never charges money.
-- `actions[]` (`cart_updated`/`checkout_proposal`/`order_cancelled`/`needs_login`) are
-  returned to the FE and snapshotted into `ai_messages.actions` (JSON).
+- `actions[]` (`cart_updated`/`checkout_proposal`/`order_cancelled`/`needs_login`/
+  `quick_replies`) are returned to the FE and snapshotted into `ai_messages.actions` (JSON).
 
 ## Entities
 - `ai_conversations` — one thread. Owned by `user_id` (customer) **or** `session_id`
@@ -64,8 +86,8 @@ history (including the agent's actions) and toggle the widget on/off.
 chatbox disabled. (Runtime provider errors → fallback 200, not an error code.)
 
 ## Dependencies
-Imports `ProductModule`, `CartModule`, `OrderModule`, `UserProfileModule` (agent tools
-reuse their **services** — no repos/entities touched). One-way import (only
+Imports `ProductModule`, `CartModule`, `OrderModule`, `UserProfileModule`, `CouponModule`
+(agent tools reuse their **services** — no repos/entities touched). One-way import (only
 `AppModule` imports `AiChatModule`) → no circular dep. Seed: `ai-chat.seed.ts` (order 12).
 
 ## Verify
