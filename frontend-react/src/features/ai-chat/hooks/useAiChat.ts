@@ -40,6 +40,7 @@ export function useSendAiMessage() {
   const addMessage = useAiChatStore((s) => s.addMessage);
   const updateMessage = useAiChatStore((s) => s.updateMessage);
   const setConversationId = useAiChatStore((s) => s.setConversationId);
+  const setPendingIntent = useAiChatStore((s) => s.setPendingIntent);
 
   return useMutation<ChatResponse, unknown, string, { assistantId: string }>({
     meta: { suppressToast: true },
@@ -55,13 +56,20 @@ export function useSendAiMessage() {
       addMessage({ id: assistantId, role: 'assistant', content: '', pending: true });
       return { assistantId };
     },
-    onSuccess: (data, _message, ctx) => {
+    onSuccess: (data, message, ctx) => {
       setConversationId(data.conversation_id);
       updateMessage(ctx.assistantId, {
         content: data.reply,
         products: data.products,
+        actions: data.actions,
         pending: false,
       });
+      // A guest hit a customer-only tool (e.g. checkout). Remember this message
+      // so we can auto-resend it right after they sign in — the agent then
+      // continues the interrupted action instead of the user re-typing it.
+      if (data.actions?.some((a) => a.type === 'needs_login')) {
+        setPendingIntent(message);
+      }
     },
     onError: (error, _message, ctx) => {
       if (ctx) {

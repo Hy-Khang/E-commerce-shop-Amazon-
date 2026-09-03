@@ -32,6 +32,14 @@ export class AiMessage {
   @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
   product_ids: string | null;
 
+  /**
+   * JSON snapshot of agent action cards produced for this (assistant) turn —
+   * cart_updated / checkout_proposal / order_cancelled / needs_login — so the
+   * frontend can re-render them on resume and Admin can review them.
+   */
+  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  actions: string | null;
+
   @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
   created_at: Date;
 

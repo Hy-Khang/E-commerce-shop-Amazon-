@@ -1,13 +1,15 @@
 import { Bot } from 'lucide-react';
 import { AiProductSuggestions } from './AiProductSuggestions';
+import { AiActionCards } from './AiActionCards';
 import type { AiChatMessage } from '../types/ai-chat.types';
 
 interface Props {
   message: AiChatMessage;
   onNavigate?: () => void;
+  onPickSuggestion?: (text: string) => void;
 }
 
-export function AiMessageBubble({ message, onNavigate }: Props) {
+export function AiMessageBubble({ message, onNavigate, onPickSuggestion }: Props) {
   const isUser = message.role === 'user';
 
   if (isUser) {
@@ -28,7 +30,7 @@ export function AiMessageBubble({ message, onNavigate }: Props) {
       <div className="min-w-0 flex-1">
         <div className="inline-block max-w-full rounded-2xl rounded-tl-sm bg-surface-hover px-3 py-2 text-sm text-text-primary">
           {message.pending ? (
-            <span className="flex items-center gap-1 py-0.5" aria-label="Đang trả lời">
+            <span className="flex items-center gap-1 py-0.5" aria-label="Typing">
               <Dot /> <Dot delay="150ms" /> <Dot delay="300ms" />
             </span>
           ) : (
@@ -39,6 +41,14 @@ export function AiMessageBubble({ message, onNavigate }: Props) {
           <AiProductSuggestions
             products={message.products}
             onNavigate={onNavigate}
+          />
+        )}
+        {message.actions && message.actions.length > 0 && (
+          <AiActionCards
+            actions={message.actions}
+            messageId={message.id}
+            onNavigate={onNavigate}
+            onPickSuggestion={onPickSuggestion}
           />
         )}
       </div>

@@ -8,7 +8,17 @@ import { useMergeRecentlyViewed } from '@/features/recently-viewed/hooks/useMerg
 import type { LoginRequest } from '../types/auth.types';
 import { ROUTES } from '@/common/constants/routes';
 
-export function useLogin() {
+interface UseLoginOptions {
+  /** When false, skip the post-login navigation (stay on the current page —
+   *  used by the in-widget AI login popup so the chat thread is preserved). */
+  redirect?: boolean;
+  /** Fired after login + guest-cart/recently-viewed merge, before any
+   *  navigation. Lets callers resume an interrupted flow (e.g. checkout). */
+  onSuccess?: () => void;
+}
+
+export function useLogin(options?: UseLoginOptions) {
+  const redirect = options?.redirect ?? true;
   const navigate = useNavigate();
   const location = useLocation();
   const login = useAuthStore((s) => s.login);
@@ -38,6 +48,10 @@ export function useLogin() {
       } catch {
         // recently-viewed merge is best-effort
       }
+
+      // Cart + history are merged; let the caller resume its flow.
+      options?.onSuccess?.();
+      if (!redirect) return;
 
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
       if (from) {

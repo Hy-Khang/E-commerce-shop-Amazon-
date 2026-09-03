@@ -2,8 +2,10 @@ import { Logger } from '@nestjs/common';
 import {
   ChatbotConfig,
   ChatCompletionMessage,
+  LlmResult,
   ProductContextItem,
 } from '../types/ai-chat.types';
+import { AgentToolDefinition } from '../tools/agent-tools';
 
 const logger = new Logger('AiChat');
 
@@ -133,26 +135,57 @@ export function parsePriceHint(message: string): {
 }
 
 /**
- * Call the OpenRouter chat-completions endpoint (text only). Mirrors
+ * Extra system-prompt guidance for the agent loop: how/when to use tools, and
+ * the hard rule that money (checkout) is only ever *proposed*, never claimed as
+ * done. Appended after the base prompt + product context.
+ */
+export const AGENT_SYSTEM_PROMPT_SUFFIX = `
+
+BẠN LÀ TRỢ LÝ MUA HÀNG CÓ CÔNG CỤ (tool). Ngoài tư vấn, bạn có thể GIÚP KHÁCH THAO TÁC bằng cách gọi tool:
+- Tìm sản phẩm: search_products (lấy product_variant_id để thêm giỏ).
+- Giỏ hàng: view_cart, add_to_cart, update_cart_item, remove_cart_item — cứ thực hiện khi khách yêu cầu.
+- Đơn hàng: list_orders, get_order, cancel_order (chỉ huỷ đơn pending).
+- Địa chỉ: list_addresses.
+- Đặt hàng: propose_checkout — CHỈ tạo bảng tạm tính để khách xác nhận.
+- FAQ chính sách: get_policies.
+
+QUY TẮC:
+- Khi khách muốn thêm/mua sản phẩm: dùng search_products để lấy đúng product_variant_id rồi add_to_cart. Nếu sản phẩm có nhiều biến thể (màu/size), hãy hỏi khách chọn trước khi thêm.
+- Khi khách muốn "đặt hàng / thanh toán": gọi propose_checkout để hiện bảng tạm tính. TUYỆT ĐỐI KHÔNG nói rằng đơn đã được đặt — việc đặt đơn do khách bấm nút xác nhận, không phải bạn.
+- Nếu tool trả về needs_login: mời khách đăng nhập, đừng bịa dữ liệu.
+- Nếu tool trả về error: giải thích ngắn gọn cho khách, đừng bịa kết quả.
+- Sau khi gọi tool, hãy trả lời khách bằng tiếng Việt tự nhiên, ngắn gọn dựa trên kết quả tool.`;
+
+/**
+ * Call the OpenRouter chat-completions endpoint. Mirrors
  * `grok-visual-search.util.ts`: native fetch, Bearer auth, `response.ok` guard.
- * Throws on failure so the service can fall back to a graceful message.
+ * When `tools` are supplied the model may return `tool_calls` instead of (or
+ * alongside) text; the result carries both so the agent loop can dispatch tools
+ * or finish. Throws on transport/API failure so the service can fall back.
  */
 export async function callChatCompletion(
   messages: ChatCompletionMessage[],
   config: ChatbotConfig,
-): Promise<string> {
+  options?: { tools?: AgentToolDefinition[]; model?: string },
+): Promise<LlmResult> {
+  const body: Record<string, unknown> = {
+    model: options?.model ?? config.chatModel,
+    messages,
+    temperature: 0.4,
+    max_tokens: 800,
+  };
+  if (options?.tools?.length) {
+    body.tools = options.tools;
+    body.tool_choice = 'auto';
+  }
+
   const response = await fetch(`${config.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${config.apiKey}`,
     },
-    body: JSON.stringify({
-      model: config.chatModel,
-      messages,
-      temperature: 0.4,
-      max_tokens: 800,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -162,9 +195,13 @@ export async function callChatCompletion(
   }
 
   const data = await response.json();
-  const content: string = data.choices?.[0]?.message?.content ?? '';
-  if (!content.trim()) {
-    throw new Error('AI chat API returned empty content');
+  const message = data.choices?.[0]?.message ?? {};
+  const content: string | null =
+    typeof message.content === 'string' ? message.content.trim() : null;
+  const toolCalls = Array.isArray(message.tool_calls) ? message.tool_calls : undefined;
+
+  if ((!content || content.length === 0) && (!toolCalls || toolCalls.length === 0)) {
+    throw new Error('AI chat API returned neither content nor tool calls');
   }
-  return content.trim();
+  return { content: content && content.length ? content : null, tool_calls: toolCalls };
 }

@@ -39,26 +39,26 @@ export const ProductSeed: ISeed = {
     await qr.query(`
       SET IDENTITY_INSERT products ON;
       INSERT INTO products (id, category_id, shop_id, name, slug, description, thumbnail_url, option1_label, option2_label, is_active) VALUES
-        (1,  15, 1, N'Áo thun nam basic cotton',       N'ao-thun-nam-basic-cotton',       N'Áo thun nam chất liệu cotton 100%, thoáng mát',           N'https://picsum.photos/seed/ao-thun-basic/400/400',    N'Màu sắc',    N'Kích thước', 1),
-        (2,  15, 1, N'Áo thun nam oversize',            N'ao-thun-nam-oversize',            N'Áo thun form rộng phong cách Hàn Quốc',                    N'https://picsum.photos/seed/ao-thun-oversize/400/400', N'Màu sắc',    N'Kích thước', 1),
-        (3,  16, 1, N'Áo sơ mi nam Oxford',             N'ao-so-mi-nam-oxford',             N'Áo sơ mi Oxford dáng slim fit, vải dày dặn',               N'https://picsum.photos/seed/ao-so-mi-oxford/400/400',  N'Màu sắc',    N'Kích thước', 1),
-        (4,  6,  5, N'Quần jean nam slim fit',          N'quan-jean-nam-slim-fit',          N'Quần jean co giãn, dáng ôm vừa phải',                      N'https://picsum.photos/seed/quan-jean-slim/400/400',   N'Màu sắc',    N'Kích thước', 1),
-        (5,  6,  5, N'Quần kaki nam',                   N'quan-kaki-nam',                   N'Quần kaki nam form regular, vải mềm',                       N'https://picsum.photos/seed/quan-kaki/400/400',        N'Màu sắc',    N'Kích thước', 1),
-        (6,  7,  7, N'Giày sneaker trắng',              N'giay-sneaker-trang',              N'Giày sneaker trắng basic, đế cao su bền',                   N'https://picsum.photos/seed/sneaker-trang/400/400',    N'Kích thước', NULL,          1),
-        (7,  7,  7, N'Dép quai ngang nam',              N'dep-quai-ngang-nam',              N'Dép quai ngang êm chân, phù hợp đi hàng ngày',             N'https://picsum.photos/seed/dep-quai-ngang/400/400',   N'Kích thước', NULL,          1),
-        (8,  8,  2, N'iPhone 15 Pro Max',               N'iphone-15-pro-max',               N'iPhone 15 Pro Max chip A17 Pro, camera 48MP',                N'https://picsum.photos/seed/iphone-15-promax/400/400', N'Dung lượng', N'Màu',        1),
-        (9,  8,  2, N'Samsung Galaxy S24 Ultra',        N'samsung-galaxy-s24-ultra',        N'Samsung Galaxy S24 Ultra, S Pen tích hợp',                  N'https://picsum.photos/seed/samsung-s24/400/400',      N'Dung lượng', N'Màu',        1),
-        (10, 9,  2, N'MacBook Air M3',                  N'macbook-air-m3',                  N'MacBook Air chip M3, 15.3 inch Liquid Retina',              N'https://picsum.photos/seed/macbook-air-m3/400/400',   N'Dung lượng', N'Màu',        1),
-        (11, 9,  2, N'Lenovo ThinkPad X1 Carbon',       N'lenovo-thinkpad-x1-carbon',       N'ThinkPad X1 Carbon Gen 12, Core Ultra 7',                   N'https://picsum.photos/seed/thinkpad-x1/400/400',      NULL,          NULL,          1),
-        (12, 10, 6, N'Tai nghe AirPods Pro 2',          N'tai-nghe-airpods-pro-2',          N'AirPods Pro 2 USB-C, chống ồn chủ động',                   N'https://picsum.photos/seed/airpods-pro-2/400/400',    NULL,          NULL,          1),
-        (13, 10, 6, N'Sạc nhanh 65W GaN',              N'sac-nhanh-65w-gan',              N'Sạc nhanh 65W GaN, 3 cổng, gọn nhẹ',                       N'https://picsum.photos/seed/sac-65w-gan/400/400',      NULL,          NULL,          1),
-        (14, 11, 3, N'Bàn làm việc gỗ tự nhiên',       N'ban-lam-viec-go-tu-nhien',       N'Bàn làm việc gỗ sồi, kích thước 120x60cm',                 N'https://picsum.photos/seed/ban-lam-viec/400/400',     N'Màu sắc',    NULL,          1),
-        (15, 11, 3, N'Ghế công thái học',               N'ghe-cong-thai-hoc',               N'Ghế ergonomic có tựa đầu, tay vịn điều chỉnh',             N'https://picsum.photos/seed/ghe-ergonomic/400/400',    N'Màu sắc',    NULL,          1),
-        (16, 12, 3, N'Nồi chiên không dầu 5L',         N'noi-chien-khong-dau-5l',         N'Air fryer 5 lít, 8 chế độ nấu, màn hình cảm ứng',         N'https://picsum.photos/seed/air-fryer/400/400',         NULL,          NULL,          1),
-        (17, 12, 3, N'Bộ dao nhà bếp 6 món',           N'bo-dao-nha-bep-6-mon',           N'Bộ dao thép không gỉ kèm block gỗ',                        N'https://picsum.photos/seed/bo-dao/400/400',            NULL,          NULL,          1),
-        (18, 13, 4, N'Đắc Nhân Tâm',                   N'dac-nhan-tam',                   N'Dale Carnegie - Nghệ thuật ứng xử và giao tiếp',           N'https://picsum.photos/seed/dac-nhan-tam/400/400',     NULL,          NULL,          1),
-        (19, 13, 4, N'Atomic Habits',                   N'atomic-habits',                   N'James Clear - Thay đổi tí hon, hiệu quả bất ngờ',          N'https://picsum.photos/seed/atomic-habits/400/400',    NULL,          NULL,          1),
-        (20, 14, 4, N'Nhà Giả Kim',                    N'nha-gia-kim',                    N'Paulo Coelho - Tiểu thuyết triết lý nổi tiếng thế giới',   N'https://picsum.photos/seed/nha-gia-kim/400/400',      NULL,          NULL,          1);
+        (1,  15, 1, N'Áo thun nam basic cotton',       N'ao-thun-nam-basic-cotton',       N'Áo thun nam chất liệu cotton 100%, thoáng mát',           N'/uploads/products/seed/p1.jpg',    N'Màu sắc',    N'Kích thước', 1),
+        (2,  15, 1, N'Áo thun nam oversize',            N'ao-thun-nam-oversize',            N'Áo thun form rộng phong cách Hàn Quốc',                    N'/uploads/products/seed/p2.jpg', N'Màu sắc',    N'Kích thước', 1),
+        (3,  16, 1, N'Áo sơ mi nam Oxford',             N'ao-so-mi-nam-oxford',             N'Áo sơ mi Oxford dáng slim fit, vải dày dặn',               N'/uploads/products/seed/p3.jpg',  N'Màu sắc',    N'Kích thước', 1),
+        (4,  6,  5, N'Quần jean nam slim fit',          N'quan-jean-nam-slim-fit',          N'Quần jean co giãn, dáng ôm vừa phải',                      N'/uploads/products/seed/p4.jpg',   N'Màu sắc',    N'Kích thước', 1),
+        (5,  6,  5, N'Quần kaki nam',                   N'quan-kaki-nam',                   N'Quần kaki nam form regular, vải mềm',                       N'/uploads/products/seed/p5.jpg',        N'Màu sắc',    N'Kích thước', 1),
+        (6,  7,  7, N'Giày sneaker trắng',              N'giay-sneaker-trang',              N'Giày sneaker trắng basic, đế cao su bền',                   N'/uploads/products/seed/p6.jpg',    N'Kích thước', NULL,          1),
+        (7,  7,  7, N'Dép quai ngang nam',              N'dep-quai-ngang-nam',              N'Dép quai ngang êm chân, phù hợp đi hàng ngày',             N'/uploads/products/seed/p7.jpg',   N'Kích thước', NULL,          1),
+        (8,  8,  2, N'iPhone 15 Pro Max',               N'iphone-15-pro-max',               N'iPhone 15 Pro Max chip A17 Pro, camera 48MP',                N'/uploads/products/seed/p8.jpg', N'Dung lượng', N'Màu',        1),
+        (9,  8,  2, N'Samsung Galaxy S24 Ultra',        N'samsung-galaxy-s24-ultra',        N'Samsung Galaxy S24 Ultra, S Pen tích hợp',                  N'/uploads/products/seed/p9.jpg',      N'Dung lượng', N'Màu',        1),
+        (10, 9,  2, N'MacBook Air M3',                  N'macbook-air-m3',                  N'MacBook Air chip M3, 15.3 inch Liquid Retina',              N'/uploads/products/laptop/1711080787179-apple-02.png',   N'Dung lượng', N'Màu',        1),
+        (11, 9,  2, N'Lenovo ThinkPad X1 Carbon',       N'lenovo-thinkpad-x1-carbon',       N'ThinkPad X1 Carbon Gen 12, Core Ultra 7',                   N'/uploads/products/laptop/1711079073759-lenovo-01.png',      NULL,          NULL,          1),
+        (12, 10, 6, N'Tai nghe AirPods Pro 2',          N'tai-nghe-airpods-pro-2',          N'AirPods Pro 2 USB-C, chống ồn chủ động',                   N'/uploads/products/seed/p12.jpg',    NULL,          NULL,          1),
+        (13, 10, 6, N'Sạc nhanh 65W GaN',              N'sac-nhanh-65w-gan',              N'Sạc nhanh 65W GaN, 3 cổng, gọn nhẹ',                       N'/uploads/products/seed/p13.jpg',      NULL,          NULL,          1),
+        (14, 11, 3, N'Bàn làm việc gỗ tự nhiên',       N'ban-lam-viec-go-tu-nhien',       N'Bàn làm việc gỗ sồi, kích thước 120x60cm',                 N'/uploads/products/seed/p14.jpg',     N'Màu sắc',    NULL,          1),
+        (15, 11, 3, N'Ghế công thái học',               N'ghe-cong-thai-hoc',               N'Ghế ergonomic có tựa đầu, tay vịn điều chỉnh',             N'/uploads/products/seed/p15.jpg',    N'Màu sắc',    NULL,          1),
+        (16, 12, 3, N'Nồi chiên không dầu 5L',         N'noi-chien-khong-dau-5l',         N'Air fryer 5 lít, 8 chế độ nấu, màn hình cảm ứng',         N'/uploads/products/seed/p16.jpg',         NULL,          NULL,          1),
+        (17, 12, 3, N'Bộ dao nhà bếp 6 món',           N'bo-dao-nha-bep-6-mon',           N'Bộ dao thép không gỉ kèm block gỗ',                        N'/uploads/products/seed/p17.jpg',            NULL,          NULL,          1),
+        (18, 13, 4, N'Đắc Nhân Tâm',                   N'dac-nhan-tam',                   N'Dale Carnegie - Nghệ thuật ứng xử và giao tiếp',           N'/uploads/products/seed/p18.jpg',     NULL,          NULL,          1),
+        (19, 13, 4, N'Atomic Habits',                   N'atomic-habits',                   N'James Clear - Thay đổi tí hon, hiệu quả bất ngờ',          N'/uploads/products/seed/p19.jpg',    NULL,          NULL,          1),
+        (20, 14, 4, N'Nhà Giả Kim',                    N'nha-gia-kim',                    N'Paulo Coelho - Tiểu thuyết triết lý nổi tiếng thế giới',   N'/uploads/products/seed/p20.jpg',      NULL,          NULL,          1);
       SET IDENTITY_INSERT products OFF;
     `);
     console.log('  + products: 20 rows');
@@ -122,55 +122,55 @@ export const ProductSeed: ISeed = {
       SET IDENTITY_INSERT product_images ON;
       INSERT INTO product_images (id, product_id, image_url, sort_order, variant_option1) VALUES
         -- Product 1: Áo thun basic — shared + Đen + Trắng
-        (1,  1,  N'https://picsum.photos/seed/ao-thun-basic-1/600/600',       0, NULL),
-        (2,  1,  N'https://picsum.photos/seed/ao-thun-basic-den-1/600/600',   0, N'Đen'),
-        (3,  1,  N'https://picsum.photos/seed/ao-thun-basic-den-2/600/600',   1, N'Đen'),
-        (4,  1,  N'https://picsum.photos/seed/ao-thun-basic-trang-1/600/600', 0, N'Trắng'),
-        (5,  1,  N'https://picsum.photos/seed/ao-thun-basic-trang-2/600/600', 1, N'Trắng'),
+        (1,  1,  N'/uploads/products/seed/p1.jpg',       0, NULL),
+        (2,  1,  N'/uploads/products/seed/p1.jpg',   0, N'Đen'),
+        (3,  1,  N'/uploads/products/seed/p1.jpg',   1, N'Đen'),
+        (4,  1,  N'/uploads/products/seed/p1.jpg', 0, N'Trắng'),
+        (5,  1,  N'/uploads/products/seed/p1.jpg', 1, N'Trắng'),
         -- Product 2: Áo thun oversize — Đen + Xám (no shared, tests variant-only)
-        (6,  2,  N'https://picsum.photos/seed/ao-oversize-den-1/600/600',     0, N'Đen'),
-        (7,  2,  N'https://picsum.photos/seed/ao-oversize-den-2/600/600',     1, N'Đen'),
-        (8,  2,  N'https://picsum.photos/seed/ao-oversize-xam-1/600/600',     0, N'Xám'),
-        (9,  2,  N'https://picsum.photos/seed/ao-oversize-xam-2/600/600',     1, N'Xám'),
+        (6,  2,  N'/uploads/products/seed/p2.jpg',     0, N'Đen'),
+        (7,  2,  N'/uploads/products/seed/p2.jpg',     1, N'Đen'),
+        (8,  2,  N'/uploads/products/seed/p2.jpg',     0, N'Xám'),
+        (9,  2,  N'/uploads/products/seed/p2.jpg',     1, N'Xám'),
         -- Product 3: Áo sơ mi Oxford — shared + Trắng + Xanh
-        (10, 3,  N'https://picsum.photos/seed/ao-so-mi-oxford-1/600/600',       0, NULL),
-        (11, 3,  N'https://picsum.photos/seed/ao-so-mi-trang-1/600/600',        0, N'Trắng'),
-        (12, 3,  N'https://picsum.photos/seed/ao-so-mi-xanh-1/600/600',         0, N'Xanh'),
+        (10, 3,  N'/uploads/products/seed/p3.jpg',       0, NULL),
+        (11, 3,  N'/uploads/products/seed/p3.jpg',        0, N'Trắng'),
+        (12, 3,  N'/uploads/products/seed/p3.jpg',         0, N'Xanh'),
         -- Product 4-5: Quần — shared only (tests fallback)
-        (13, 4,  N'https://picsum.photos/seed/quan-jean-slim-1/600/600',  0, NULL),
-        (14, 4,  N'https://picsum.photos/seed/quan-jean-slim-2/600/600',  1, NULL),
-        (15, 5,  N'https://picsum.photos/seed/quan-kaki-1/600/600',       0, NULL),
-        (16, 5,  N'https://picsum.photos/seed/quan-kaki-2/600/600',       1, NULL),
+        (13, 4,  N'/uploads/products/seed/p4.jpg',  0, NULL),
+        (14, 4,  N'/uploads/products/seed/p4.jpg',  1, NULL),
+        (15, 5,  N'/uploads/products/seed/p5.jpg',       0, NULL),
+        (16, 5,  N'/uploads/products/seed/p5.jpg',       1, NULL),
         -- Product 6-7: Giày dép — no color variants, all shared
-        (17, 6,  N'https://picsum.photos/seed/sneaker-trang-1/600/600',      0, NULL),
-        (18, 6,  N'https://picsum.photos/seed/sneaker-trang-2/600/600',      1, NULL),
-        (19, 7,  N'https://picsum.photos/seed/dep-quai-ngang-1/600/600',     0, NULL),
-        (20, 7,  N'https://picsum.photos/seed/dep-quai-ngang-2/600/600',     1, NULL),
+        (17, 6,  N'/uploads/products/seed/p6.jpg',      0, NULL),
+        (18, 6,  N'/uploads/products/seed/p6.jpg',      1, NULL),
+        (19, 7,  N'/uploads/products/seed/p7.jpg',     0, NULL),
+        (20, 7,  N'/uploads/products/seed/p7.jpg',     1, NULL),
         -- Product 8-13: Electronics — all shared
-        (21, 8,  N'https://picsum.photos/seed/iphone-15-promax-1/600/600',   0, NULL),
-        (22, 8,  N'https://picsum.photos/seed/iphone-15-promax-2/600/600',   1, NULL),
-        (23, 9,  N'https://picsum.photos/seed/samsung-s24-1/600/600',        0, NULL),
-        (24, 9,  N'https://picsum.photos/seed/samsung-s24-2/600/600',        1, NULL),
-        (25, 10, N'https://picsum.photos/seed/macbook-air-m3-1/600/600',     0, NULL),
-        (26, 10, N'https://picsum.photos/seed/macbook-air-m3-2/600/600',     1, NULL),
-        (27, 11, N'https://picsum.photos/seed/thinkpad-x1-1/600/600',        0, NULL),
-        (28, 11, N'https://picsum.photos/seed/thinkpad-x1-2/600/600',        1, NULL),
-        (29, 12, N'https://picsum.photos/seed/airpods-pro-2-1/600/600',      0, NULL),
-        (30, 12, N'https://picsum.photos/seed/airpods-pro-2-2/600/600',      1, NULL),
-        (31, 13, N'https://picsum.photos/seed/sac-65w-gan-1/600/600',        0, NULL),
+        (21, 8,  N'/uploads/products/seed/p8.jpg',   0, NULL),
+        (22, 8,  N'/uploads/products/seed/p8.jpg',   1, NULL),
+        (23, 9,  N'/uploads/products/seed/p9.jpg',        0, NULL),
+        (24, 9,  N'/uploads/products/seed/p9.jpg',        1, NULL),
+        (25, 10, N'/uploads/products/laptop/1711080787179-apple-02.png',     0, NULL),
+        (26, 10, N'/uploads/products/laptop/1711080787179-apple-02.png',     1, NULL),
+        (27, 11, N'/uploads/products/laptop/1711079073759-lenovo-01.png',        0, NULL),
+        (28, 11, N'/uploads/products/laptop/1711079073759-lenovo-01.png',        1, NULL),
+        (29, 12, N'/uploads/products/seed/p12.jpg',      0, NULL),
+        (30, 12, N'/uploads/products/seed/p12.jpg',      1, NULL),
+        (31, 13, N'/uploads/products/seed/p13.jpg',        0, NULL),
         -- Product 14: Bàn làm việc — Gỗ sồi + Gỗ óc chó
-        (32, 14, N'https://picsum.photos/seed/ban-lam-viec-soi-1/600/600',   0, N'Gỗ sồi'),
-        (33, 14, N'https://picsum.photos/seed/ban-lam-viec-oc-cho-1/600/600',0, N'Gỗ óc chó'),
+        (32, 14, N'/uploads/products/seed/p14.jpg',   0, N'Gỗ sồi'),
+        (33, 14, N'/uploads/products/seed/p14.jpg',0, N'Gỗ óc chó'),
         -- Product 15: Ghế — Đen + Xám
-        (34, 15, N'https://picsum.photos/seed/ghe-ergonomic-den-1/600/600',  0, N'Đen'),
-        (35, 15, N'https://picsum.photos/seed/ghe-ergonomic-xam-1/600/600',  0, N'Xám'),
+        (34, 15, N'/uploads/products/seed/p15.jpg',  0, N'Đen'),
+        (35, 15, N'/uploads/products/seed/p15.jpg',  0, N'Xám'),
         -- Product 16-20: No variants, all shared
-        (36, 16, N'https://picsum.photos/seed/air-fryer-1/600/600',          0, NULL),
-        (37, 16, N'https://picsum.photos/seed/air-fryer-2/600/600',          1, NULL),
-        (38, 17, N'https://picsum.photos/seed/bo-dao-1/600/600',             0, NULL),
-        (39, 18, N'https://picsum.photos/seed/dac-nhan-tam-1/600/600',       0, NULL),
-        (40, 19, N'https://picsum.photos/seed/atomic-habits-1/600/600',      0, NULL),
-        (41, 20, N'https://picsum.photos/seed/nha-gia-kim-1/600/600',        0, NULL);
+        (36, 16, N'/uploads/products/seed/p16.jpg',          0, NULL),
+        (37, 16, N'/uploads/products/seed/p16.jpg',          1, NULL),
+        (38, 17, N'/uploads/products/seed/p17.jpg',             0, NULL),
+        (39, 18, N'/uploads/products/seed/p18.jpg',       0, NULL),
+        (40, 19, N'/uploads/products/seed/p19.jpg',      0, NULL),
+        (41, 20, N'/uploads/products/seed/p20.jpg',        0, NULL);
       SET IDENTITY_INSERT product_images OFF;
     `);
     console.log('  + product_images: 41 rows');
@@ -437,6 +437,94 @@ export const ProductSeed: ISeed = {
       SET IDENTITY_INSERT product_images OFF;
     `);
     console.log('  + product_images: +52 rows (42-93)');
+
+    // ══════════════════════════════════════════════════════════════
+    // ── EXTRA SEED DATA — more products across multiple shops ──────
+    //    (curated Unsplash images downloaded to /uploads/products/seed)
+    // ══════════════════════════════════════════════════════════════
+
+    // ── Extra Products (18) — shops 2,3,4,6,7 ──
+    // Shop 4 Books (51-56), Shop 3 Home (57-60), Shop 7 Shoes (61-65),
+    // Shop 2 Electronics (66), Shop 6 Accessories (67-68)
+    await qr.query(`
+      SET IDENTITY_INSERT products ON;
+      INSERT INTO products (id, category_id, shop_id, name, slug, description, thumbnail_url, option1_label, option2_label, is_active) VALUES
+        (51, 13, 4, N'Tôi Tài Giỏi, Bạn Cũng Thế', N'toi-tai-gioi-ban-cung-the', N'Adam Khoo - Bí quyết học tập và thành công',        N'/uploads/products/seed/p51.jpg', NULL, NULL, 1),
+        (52, 13, 4, N'Cà Phê Cùng Tony',           N'ca-phe-cung-tony',           N'Tony Buổi Sáng - Góc nhìn khởi nghiệp và cuộc sống', N'/uploads/products/seed/p52.jpg', NULL, NULL, 1),
+        (53, 14, 4, N'Muôn Kiếp Nhân Sinh',        N'muon-kiep-nhan-sinh',        N'Nguyên Phong - Tiểu thuyết về luân hồi và nhân quả', N'/uploads/products/seed/p53.jpg', NULL, NULL, 1),
+        (54, 13, 4, N'Tuổi Trẻ Đáng Giá Bao Nhiêu', N'tuoi-tre-dang-gia-bao-nhieu', N'Rosie Nguyễn - Sách kỹ năng cho người trẻ',         N'/uploads/products/seed/p54.jpg', NULL, NULL, 1),
+        (55, 14, 4, N'Hoàng Tử Bé',                N'hoang-tu-be',                N'Antoine de Saint-Exupéry - Kiệt tác văn học thiếu nhi', N'/uploads/products/seed/p55.jpg', NULL, NULL, 1),
+        (56, 13, 4, N'Sapiens: Lược Sử Loài Người', N'sapiens-luoc-su-loai-nguoi', N'Yuval Noah Harari - Lịch sử tiến hóa loài người',   N'/uploads/products/seed/p56.jpg', NULL, NULL, 1),
+        (57, 11, 3, N'Ghế Sofa Da 3 Chỗ',          N'ghe-sofa-da-3-cho',          N'Sofa da PU cao cấp, khung gỗ tự nhiên, 3 chỗ ngồi',  N'/uploads/products/seed/p57.jpg', NULL, NULL, 1),
+        (58, 11, 3, N'Đèn Bàn LED Chống Cận',      N'den-ban-led-chong-can',      N'Đèn bàn LED bảo vệ mắt, 3 chế độ sáng, cắm USB',     N'/uploads/products/seed/p58.jpg', NULL, NULL, 1),
+        (59, 11, 3, N'Kệ Sách Gỗ 5 Tầng',          N'ke-sach-go-5-tang',          N'Kệ sách gỗ tự nhiên 5 tầng, chắc chắn, dễ lắp ráp',  N'/uploads/products/seed/p59.jpg', NULL, NULL, 1),
+        (60, 12, 3, N'Bộ Nồi Inox 5 Món',          N'bo-noi-inox-5-mon',          N'Bộ nồi inox 304 cao cấp 5 món, dùng mọi loại bếp',   N'/uploads/products/seed/p60.jpg', NULL, NULL, 1),
+        (61, 7,  7, N'Giày Chạy Bộ Nam',           N'giay-chay-bo-nam',           N'Giày chạy bộ đế êm, thoáng khí, hỗ trợ vận động',    N'/uploads/products/seed/p61.jpg', N'Kích thước', NULL, 1),
+        (62, 7,  7, N'Giày Sneaker Cổ Điển',       N'giay-sneaker-co-dien',       N'Giày sneaker phong cách cổ điển, dễ phối đồ',        N'/uploads/products/seed/p62.jpg', N'Kích thước', NULL, 1),
+        (63, 7,  7, N'Giày Sneaker Cao Cổ',        N'giay-sneaker-cao-co',        N'Giày sneaker cao cổ năng động, cá tính',             N'/uploads/products/seed/p63.jpg', N'Kích thước', NULL, 1),
+        (64, 7,  7, N'Sandal Quai Hậu Nam',        N'sandal-quai-hau-nam',        N'Sandal quai hậu chắc chắn, đế chống trơn',          N'/uploads/products/seed/p64.jpg', N'Kích thước', NULL, 1),
+        (65, 7,  7, N'Dép Lê Nam',                 N'dep-le-nam',                 N'Dép lê nam êm nhẹ, phù hợp đi trong nhà và dạo phố', N'/uploads/products/seed/p65.jpg', N'Kích thước', NULL, 1),
+        (66, 8,  2, N'Xiaomi Redmi Note 13',       N'xiaomi-redmi-note-13',       N'Xiaomi Redmi Note 13, màn AMOLED, pin 5000mAh',     N'/uploads/products/seed/p66.jpg', N'Dung lượng', N'Màu', 1),
+        (67, 10, 6, N'Tai Nghe Chụp Tai Bluetooth', N'tai-nghe-chup-tai-bluetooth', N'Tai nghe over-ear chống ồn, pin 30 giờ',            N'/uploads/products/seed/p67.jpg', NULL, NULL, 1),
+        (68, 10, 6, N'Pin Sạc Dự Phòng 20000mAh',  N'pin-sac-du-phong-20000mah',  N'Pin dự phòng 20000mAh, sạc nhanh PD 22.5W',          N'/uploads/products/seed/p68.jpg', NULL, NULL, 1);
+      SET IDENTITY_INSERT products OFF;
+    `);
+    console.log('  + products: +18 rows (51-68) — books/home/shoes/electronics/accessories');
+
+    // ── Extra Product Variants (21) ──
+    // Books/home/accessories: 1 variant each. Shoes: size variants. Phone: 2 variants.
+    await qr.query(`
+      SET IDENTITY_INSERT product_variants ON;
+      INSERT INTO product_variants (id, product_id, sku, option1, option2, price, sale_price, stock_quantity) VALUES
+        (124, 51, N'SACH-TTG',       NULL,     NULL, 110000,  89000,   60),
+        (125, 52, N'SACH-TONY',      NULL,     NULL, 95000,   79000,   55),
+        (126, 53, N'SACH-MKNS',      NULL,     NULL, 160000,  135000,  40),
+        (127, 54, N'SACH-TTDG',      NULL,     NULL, 90000,   75000,   70),
+        (128, 55, N'SACH-HTB',       NULL,     NULL, 75000,   59000,   80),
+        (129, 56, N'SACH-SAP',       NULL,     NULL, 220000,  179000,  35),
+        (130, 57, N'NOI-SOFA3',      NULL,     NULL, 8500000, 7490000, 6),
+        (131, 58, N'NOI-DENLED',     NULL,     NULL, 350000,  279000,  40),
+        (132, 59, N'NOI-KE5T',       NULL,     NULL, 1200000, 990000,  15),
+        (133, 60, N'BEP-NOI5',       NULL,     NULL, 1500000, 1190000, 20),
+        (134, 61, N'GIAY-CHAY-41',   N'41',    NULL, 950000,  790000,  20),
+        (135, 61, N'GIAY-CHAY-42',   N'42',    NULL, 950000,  790000,  18),
+        (136, 62, N'GIAY-SNCD-42',   N'42',    NULL, 850000,  699000,  20),
+        (137, 63, N'GIAY-SNCC-42',   N'42',    NULL, 990000,  849000,  18),
+        (138, 64, N'DEP-SDLQH-42',   N'42',    NULL, 320000,  269000,  30),
+        (139, 65, N'DEP-LE-42',      N'42',    NULL, 180000,  149000,  45),
+        (140, 66, N'DT-XIAOMI-128-XL', N'128GB', N'Xanh lá', 6490000, 5990000, 20),
+        (141, 66, N'DT-XIAOMI-256-DEN', N'256GB', N'Đen',    7490000, NULL,    15),
+        (142, 67, N'TN-CHUP-BT',     NULL,     NULL, 1200000, 990000,  25),
+        (143, 68, N'PIN-20K',        NULL,     NULL, 590000,  490000,  40);
+      SET IDENTITY_INSERT product_variants OFF;
+    `);
+    console.log('  + product_variants: +20 rows (124-143) — extra products');
+
+    // ── Extra Product Images (18) — one shared image per product ──
+    await qr.query(`
+      SET IDENTITY_INSERT product_images ON;
+      INSERT INTO product_images (id, product_id, image_url, sort_order, variant_option1) VALUES
+        (94,  51, N'/uploads/products/seed/p51.jpg', 0, NULL),
+        (95,  52, N'/uploads/products/seed/p52.jpg', 0, NULL),
+        (96,  53, N'/uploads/products/seed/p53.jpg', 0, NULL),
+        (97,  54, N'/uploads/products/seed/p54.jpg', 0, NULL),
+        (98,  55, N'/uploads/products/seed/p55.jpg', 0, NULL),
+        (99,  56, N'/uploads/products/seed/p56.jpg', 0, NULL),
+        (100, 57, N'/uploads/products/seed/p57.jpg', 0, NULL),
+        (101, 58, N'/uploads/products/seed/p58.jpg', 0, NULL),
+        (102, 59, N'/uploads/products/seed/p59.jpg', 0, NULL),
+        (103, 60, N'/uploads/products/seed/p60.jpg', 0, NULL),
+        (104, 61, N'/uploads/products/seed/p61.jpg', 0, NULL),
+        (105, 62, N'/uploads/products/seed/p62.jpg', 0, NULL),
+        (106, 63, N'/uploads/products/seed/p63.jpg', 0, NULL),
+        (107, 64, N'/uploads/products/seed/p64.jpg', 0, NULL),
+        (108, 65, N'/uploads/products/seed/p65.jpg', 0, NULL),
+        (109, 66, N'/uploads/products/seed/p66.jpg', 0, NULL),
+        (110, 67, N'/uploads/products/seed/p67.jpg', 0, NULL),
+        (111, 68, N'/uploads/products/seed/p68.jpg', 0, NULL);
+      SET IDENTITY_INSERT product_images OFF;
+    `);
+    console.log('  + product_images: +18 rows (94-111) — extra products');
 
     await qr.release();
   },

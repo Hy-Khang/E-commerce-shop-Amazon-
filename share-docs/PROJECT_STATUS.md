@@ -29,7 +29,7 @@
 | 18 | Recently Viewed | 6 | 100% | 100% | **100%** | Hoàn chỉnh (guest localStorage + customer DB, merge on login, carousel Home/Detail/Cart) |
 | 19 | Product Comparison | 6 | 0% | 0% | **0%** | Chưa làm — FE-only (Zustand), không cần BE |
 | 20 | Chat Realtime | 6 | 100% | 100% | **100%** | Hoàn chỉnh (Customer ↔ Seller realtime chat trên shared Socket.IO gateway; typing/presence/read-receipts; unread badge) |
-| 21 | AI Chatbox | 6 | 100% | 100% | **100%** | Hoàn chỉnh (RAG 1-call LLM qua OpenRouter, widget nổi guest+customer, FAQ chính sách, admin xem lịch sử + bật/tắt/prompt; throttle 10/phút in-memory) |
+| 21 | AI Chatbox → Shopping Agent | 6 | 100% | 100% | **100%** | Hoàn chỉnh + nâng cấp **AI Agent**: tool-calling (search/cart/order/address) human-in-the-loop, đề xuất checkout → mini-checkout trong widget gọi `POST /orders`, actions snapshot vào `ai_messages.actions`, admin xem action; fallback RAG khi model không hỗ trợ tool. Seller-agent để phase sau |
 | 22 | Smart Recommendations | 6 | 0% | 0% | **0%** | Chưa làm |
 
 ---
@@ -172,9 +172,9 @@ Chưa làm. Module này chủ yếu FE (Zustand store + comparison page). Không
 
 Hoàn chỉnh. Nhắn tin realtime Customer ↔ Seller trên **shared Socket.IO gateway** (`ChatGateway`, cùng namespace `/` với `NotificationGateway`, tự verify JWT trong handshake — không mở socket thứ 2). Bảng `conversations` (1 dòng / cặp customer–shop, 2 bộ đếm unread) + `messages` (`sent`/`delivered`/`read`). BE: REST `/api/v1/chat` (start/list conversation, message history, send, mark-read, unread-count), membership guard (`CHAT_002`), persist-then-emit, receipt theo presence. FE: feature `chat/` — service + TanStack Query hooks (optimistic send), `useRealtimeChat` (listeners) + `useChatRoom` (join/typing), Zustand `chat.store`, `ChatPage` (customer) + `SellerChatPage` (seller), `ChatBadge` ở Header, `ChatWithShopButton` ở ShopInfoCard/ShopHeader. Có typing indicator, online presence, read receipts.
 
-#### Module 21: AI Chatbox — 0% ❌
+#### Module 21: AI Chatbox → AI Shopping Agent — 100% ✅
 
-Chưa làm. Không có Grok API integration, không có chatbox widget, không có endpoint `POST /ai/chat`.
+Hoàn chỉnh + nâng cấp thành **AI Agent**. Nền RAG (retrieve sản phẩm theo keyword → LLM qua OpenRouter) + widget nổi guest+customer + FAQ + admin xem lịch sử/bật-tắt/prompt. **Agent (tool-calling human-in-the-loop):** vòng lặp ≤4 LLM/tin nhắn, model trả `tool_calls` → `ToolDispatcher` gọi service thật (search/cart/order/address). Read + cart-write chạy tự động; **tiền bị chặn** — `propose_checkout` chỉ `previewCheckout` (advisory) → thẻ **mini-checkout** trong widget, khách bấm Xác nhận mới gọi `POST /orders` (+`payments/create` cho VNPay/MoMo). Owner-scope đơn (`findMyOrders`/`cancelOrder`), guest-gated tool → `needs_login`. `actions[]` snapshot vào `ai_messages.actions`. Model qua `OPENROUTER_AGENT_MODEL` (fallback `OPENROUTER_CHAT_MODEL` → tự thoái lui RAG). Test: BE 8 (agent loop + dispatcher), FE mini-checkout card. **Seller-agent để phase sau.**
 
 #### Module 22: Smart Recommendations — 0% ❌
 
