@@ -34,7 +34,9 @@ export class DropSellerIdFromProducts1749300003000 implements MigrationInterface
     }
 
     for (const fk of fkResult) {
-      await queryRunner.query(`ALTER TABLE products DROP CONSTRAINT [${fk.name}]`);
+      await queryRunner.query(
+        `ALTER TABLE products DROP CONSTRAINT [${fk.name}]`,
+      );
     }
 
     await queryRunner.query(`ALTER TABLE products DROP COLUMN seller_id`);
@@ -47,7 +49,9 @@ export class DropSellerIdFromProducts1749300003000 implements MigrationInterface
       ALTER TABLE products ADD CONSTRAINT fk_products_seller_id
       FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE NO ACTION
     `);
-    await queryRunner.query(`CREATE INDEX idx_products_seller_id ON products(seller_id)`);
+    await queryRunner.query(
+      `CREATE INDEX idx_products_seller_id ON products(seller_id)`,
+    );
 
     // Backfill seller_id from shop_id
     await queryRunner.query(`
@@ -58,6 +62,8 @@ export class DropSellerIdFromProducts1749300003000 implements MigrationInterface
     `);
 
     // Clear order_items shop data
-    await queryRunner.query(`UPDATE order_items SET shop_id = NULL, shop_name = NULL`);
+    await queryRunner.query(
+      `UPDATE order_items SET shop_id = NULL, shop_name = NULL`,
+    );
   }
 }

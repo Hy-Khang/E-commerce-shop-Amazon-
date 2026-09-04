@@ -10,12 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import {
-  ApiHeader,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AiChatService } from './ai-chat.service';
 import { ChatDto } from './dto/chat.dto';
 import {
@@ -48,11 +43,21 @@ export class AiChatController {
   @ApiOperation({
     summary: 'Send a message to the AI chatbox (guest or customer)',
   })
-  @ApiHeader({ name: 'x-session-id', required: false, description: 'Guest session ID' })
+  @ApiHeader({
+    name: 'x-session-id',
+    required: false,
+    description: 'Guest session ID',
+  })
   @ApiResponse({ status: 201, type: ChatResponseDto })
   @ApiResponse({ status: 400, description: 'CHATBOT_002 / CHATBOT_005' })
-  @ApiResponse({ status: 403, description: 'CHATBOT_003: Not your conversation' })
-  @ApiResponse({ status: 404, description: 'CHATBOT_001: Conversation not found' })
+  @ApiResponse({
+    status: 403,
+    description: 'CHATBOT_003: Not your conversation',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'CHATBOT_001: Conversation not found',
+  })
   @ApiResponse({ status: 503, description: 'CHATBOT_004: AI not configured' })
   async chat(
     @CurrentUser() user: ICurrentUser | undefined,
@@ -65,10 +70,20 @@ export class AiChatController {
   @Public()
   @Get('conversations/:id')
   @ApiOperation({ summary: 'Get a conversation to resume (own only)' })
-  @ApiHeader({ name: 'x-session-id', required: false, description: 'Guest session ID' })
+  @ApiHeader({
+    name: 'x-session-id',
+    required: false,
+    description: 'Guest session ID',
+  })
   @ApiResponse({ status: 200, type: AiConversationDetailResponseDto })
-  @ApiResponse({ status: 403, description: 'CHATBOT_003: Not your conversation' })
-  @ApiResponse({ status: 404, description: 'CHATBOT_001: Conversation not found' })
+  @ApiResponse({
+    status: 403,
+    description: 'CHATBOT_003: Not your conversation',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'CHATBOT_001: Conversation not found',
+  })
   async getConversation(
     @CurrentUser() user: ICurrentUser | undefined,
     @Headers('x-session-id') sessionId: string | undefined,

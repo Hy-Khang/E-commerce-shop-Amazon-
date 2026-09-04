@@ -65,10 +65,14 @@ describe('ProductController', () => {
       const result = await controller.getCategoryBySlug('electronics', {
         page: 1,
         limit: 20,
-      } as any);
+      });
 
       expect(result).toEqual(response);
-      expect(service.getCategoryBySlug).toHaveBeenCalledWith('electronics', 1, 20);
+      expect(service.getCategoryBySlug).toHaveBeenCalledWith(
+        'electronics',
+        1,
+        20,
+      );
     });
   });
 
@@ -93,7 +97,9 @@ describe('ProductController', () => {
       const result = await controller.findBySlug('wireless-headphones');
 
       expect(result).toEqual(product);
-      expect(service.findProductBySlug).toHaveBeenCalledWith('wireless-headphones');
+      expect(service.findProductBySlug).toHaveBeenCalledWith(
+        'wireless-headphones',
+      );
     });
   });
 });

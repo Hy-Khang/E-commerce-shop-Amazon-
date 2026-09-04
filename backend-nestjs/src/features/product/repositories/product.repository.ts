@@ -37,7 +37,9 @@ export class ProductRepository {
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
       .leftJoinAndSelect('product.category', 'category')
-      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', {
+        shopStatus: ShopStatus.Active,
+      })
       .where('product.slug = :slug', { slug })
       .andWhere('product.is_active = :isActive', { isActive: true })
       .getOne();
@@ -57,13 +59,17 @@ export class ProductRepository {
     });
   }
 
-  async findActivePaginated(filter: IProductFilter): Promise<IPaginatedResult<Product>> {
+  async findActivePaginated(
+    filter: IProductFilter,
+  ): Promise<IPaginatedResult<Product>> {
     const qb = this.repo
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
       .leftJoinAndSelect('product.category', 'category')
-      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', {
+        shopStatus: ShopStatus.Active,
+      })
       .where('product.is_active = :isActive', { isActive: true });
 
     this.applyFilters(qb, { ...filter, globalSearch: true });
@@ -93,7 +99,9 @@ export class ProductRepository {
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
       .leftJoinAndSelect('product.category', 'category')
-      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', {
+        shopStatus: ShopStatus.Active,
+      })
       .where('product.id IN (:...ids)', { ids })
       .andWhere('product.is_active = :isActive', { isActive: true })
       .getMany();
@@ -120,12 +128,19 @@ export class ProductRepository {
       .from('reviews', 'r')
       .where('r.product_id IN (:...ids)', { ids: products.map((p) => p.id) })
       .groupBy('r.product_id')
-      .getRawMany<{ productId: number; reviewCount: string; avgRating: string }>();
+      .getRawMany<{
+        productId: number;
+        reviewCount: string;
+        avgRating: string;
+      }>();
 
     const statsMap = new Map(
       statsRows.map((s) => [
         Number(s.productId),
-        { reviewCount: parseInt(s.reviewCount, 10), avgRating: parseFloat(s.avgRating) },
+        {
+          reviewCount: parseInt(s.reviewCount, 10),
+          avgRating: parseFloat(s.avgRating),
+        },
       ]),
     );
 
@@ -134,7 +149,9 @@ export class ProductRepository {
     );
   }
 
-  async findAllPaginated(filter: IProductFilter): Promise<IPaginatedResult<Product>> {
+  async findAllPaginated(
+    filter: IProductFilter,
+  ): Promise<IPaginatedResult<Product>> {
     const qb = this.repo
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.variants', 'variant')
@@ -168,7 +185,9 @@ export class ProductRepository {
     };
   }
 
-  async findByIdWithReviewStats(id: number): Promise<Product & { reviewCount: number; avgRating: number } | null> {
+  async findByIdWithReviewStats(
+    id: number,
+  ): Promise<(Product & { reviewCount: number; avgRating: number }) | null> {
     const product = await this.findById(id);
     if (!product) return null;
 
@@ -221,7 +240,9 @@ export class ProductRepository {
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
-      .innerJoin('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .innerJoin('product.shop', 'shop', 'shop.status = :shopStatus', {
+        shopStatus: ShopStatus.Active,
+      })
       .where('product.category_id IN (:...categoryIds)', { categoryIds })
       .andWhere('product.is_active = :isActive', { isActive: true })
       .orderBy('product.created_at', 'DESC');
@@ -236,7 +257,10 @@ export class ProductRepository {
     };
   }
 
-  async findAllByShopPaginated(shopId: number, filter: IProductFilter): Promise<IPaginatedResult<Product>> {
+  async findAllByShopPaginated(
+    shopId: number,
+    filter: IProductFilter,
+  ): Promise<IPaginatedResult<Product>> {
     const qb = this.repo
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.variants', 'variant')
@@ -279,11 +303,16 @@ export class ProductRepository {
 
   // ─── Search Suggestions ───
 
-  async suggestProducts(query: string, limit: number): Promise<{ name: string; slug: string; thumbnail_url: string | null }[]> {
+  async suggestProducts(
+    query: string,
+    limit: number,
+  ): Promise<{ name: string; slug: string; thumbnail_url: string | null }[]> {
     return this.repo
       .createQueryBuilder('product')
       .select(['product.name', 'product.slug', 'product.thumbnail_url'])
-      .innerJoin('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .innerJoin('product.shop', 'shop', 'shop.status = :shopStatus', {
+        shopStatus: ShopStatus.Active,
+      })
       .where('product.is_active = :isActive', { isActive: true })
       .andWhere('product.name LIKE :q', { q: `%${query}%` })
       .orderBy('product.name', 'ASC')
@@ -291,7 +320,10 @@ export class ProductRepository {
       .getMany();
   }
 
-  async suggestCategories(query: string, limit: number): Promise<{ name: string; slug: string }[]> {
+  async suggestCategories(
+    query: string,
+    limit: number,
+  ): Promise<{ name: string; slug: string }[]> {
     return this.repo.manager
       .createQueryBuilder()
       .select(['c.name AS name', 'c.slug AS slug'])
@@ -305,7 +337,13 @@ export class ProductRepository {
   // ─── Visual Search ───
 
   async findByVisualAttributes(
-    attrs: { category?: string; color?: string; material?: string; style?: string; keywords?: string[] },
+    attrs: {
+      category?: string;
+      color?: string;
+      material?: string;
+      style?: string;
+      keywords?: string[];
+    },
     page: number,
     limit: number,
   ): Promise<IPaginatedResult<Product>> {
@@ -314,7 +352,9 @@ export class ProductRepository {
       .leftJoinAndSelect('product.variants', 'variant')
       .leftJoinAndSelect('product.images', 'image')
       .leftJoinAndSelect('product.category', 'category')
-      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', { shopStatus: ShopStatus.Active })
+      .innerJoinAndSelect('product.shop', 'shop', 'shop.status = :shopStatus', {
+        shopStatus: ShopStatus.Active,
+      })
       .where('product.is_active = :isActive', { isActive: true });
 
     const orClauses: string[] = [];
@@ -345,7 +385,9 @@ export class ProductRepository {
 
     textTerms.forEach((term, i) => {
       params[`vsT${i}`] = `%${term}%`;
-      orClauses.push(`(product.name LIKE :vsT${i} OR product.description LIKE :vsT${i})`);
+      orClauses.push(
+        `(product.name LIKE :vsT${i} OR product.description LIKE :vsT${i})`,
+      );
       scoreExprs.push(
         `CASE WHEN product.name LIKE :vsT${i} THEN 2 WHEN product.description LIKE :vsT${i} THEN 1 ELSE 0 END`,
       );
@@ -374,7 +416,10 @@ export class ProductRepository {
 
   // ─── Private ───
 
-  private applyFilters(qb: SelectQueryBuilder<Product>, filter: IProductFilter): void {
+  private applyFilters(
+    qb: SelectQueryBuilder<Product>,
+    filter: IProductFilter,
+  ): void {
     if (filter.search) {
       if (filter.globalSearch) {
         qb.andWhere(
@@ -434,7 +479,10 @@ export class ProductRepository {
     }
   }
 
-  private applySorting(qb: SelectQueryBuilder<Product>, filter: IProductFilter): void {
+  private applySorting(
+    qb: SelectQueryBuilder<Product>,
+    filter: IProductFilter,
+  ): void {
     const sortOrder = (filter.order || 'desc').toUpperCase() as 'ASC' | 'DESC';
 
     switch (filter.sort) {

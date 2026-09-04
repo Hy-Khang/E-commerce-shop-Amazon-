@@ -128,7 +128,14 @@ export class PaymentService {
       `Payment transaction #${transaction.id} created for order #${orderId}, gateway: ${gateway}`,
     );
 
-    return this.buildPaymentUrl(gateway, transactionRef, amount, orderInfo, ipAddress, transaction.id);
+    return this.buildPaymentUrl(
+      gateway,
+      transactionRef,
+      amount,
+      orderInfo,
+      ipAddress,
+      transaction.id,
+    );
   }
 
   private async createGroupPayment(
@@ -213,7 +220,14 @@ export class PaymentService {
       `Group payment transaction #${transaction.id} created for group ${orderGroupId}, orders: ${activeOrders.map((o) => o.id).join(',')}, gateway: ${gateway}`,
     );
 
-    return this.buildPaymentUrl(gateway, transactionRef, amount, orderInfo, ipAddress, transaction.id);
+    return this.buildPaymentUrl(
+      gateway,
+      transactionRef,
+      amount,
+      orderInfo,
+      ipAddress,
+      transaction.id,
+    );
   }
 
   private async buildPaymentUrl(
@@ -419,10 +433,7 @@ export class PaymentService {
     orderId: number,
     userId: number,
   ): Promise<PaymentTransactionResponseDto[]> {
-    const order = await this.orderService.findOrderForPayment(
-      orderId,
-      userId,
-    );
+    const order = await this.orderService.findOrderForPayment(orderId, userId);
     if (!order) {
       throw new NotFoundException({
         code: 'ORDER_001',

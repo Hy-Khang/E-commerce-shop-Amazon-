@@ -24,11 +24,16 @@ import { DiscountType, CouponScope } from '../types/coupon.types';
  * - `code` is short (server prepends the shop slug → final code ≤ 50 chars)
  */
 export class CreateSellerCouponDto {
-  @ApiProperty({ example: 'SALE10', description: 'Short code; the shop slug is prepended automatically' })
+  @ApiProperty({
+    example: 'SALE10',
+    description: 'Short code; the shop slug is prepended automatically',
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(30)
-  @Transform(({ value }) => (typeof value === 'string' ? value.toUpperCase().trim() : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toUpperCase().trim() : value,
+  )
   code: string;
 
   @ApiPropertyOptional({ example: 'Giảm 10% cho shop' })
@@ -55,7 +60,10 @@ export class CreateSellerCouponDto {
   @IsIn([CouponScope.All, CouponScope.Products])
   scope?: CouponScope;
 
-  @ApiPropertyOptional({ example: [101, 102], description: 'Required when scope = products (must belong to your shop)' })
+  @ApiPropertyOptional({
+    example: [101, 102],
+    description: 'Required when scope = products (must belong to your shop)',
+  })
   @ValidateIf((o) => o.scope === CouponScope.Products)
   @IsArray()
   @ArrayMinSize(1, { message: 'At least one product must be selected' })
@@ -70,13 +78,19 @@ export class CreateSellerCouponDto {
   @IsPositive()
   min_order_amount?: number;
 
-  @ApiPropertyOptional({ example: 100000, description: 'Max discount for percentage type' })
+  @ApiPropertyOptional({
+    example: 100000,
+    description: 'Max discount for percentage type',
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   max_discount_amount?: number;
 
-  @ApiPropertyOptional({ example: 100, description: 'Total usage limit (null = unlimited)' })
+  @ApiPropertyOptional({
+    example: 100,
+    description: 'Total usage limit (null = unlimited)',
+  })
   @IsOptional()
   @IsInt()
   @IsPositive()

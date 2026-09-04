@@ -12,7 +12,10 @@ import {
   mockCartWithItems,
   mockGuestCart,
 } from './mocks/cart.mock';
-import { mockProductVariant, mockProduct } from '../../product/tests/mocks/product.mock';
+import {
+  mockProductVariant,
+  mockProduct,
+} from '../../product/tests/mocks/product.mock';
 
 describe('CartService', () => {
   let service: CartService;
@@ -113,7 +116,10 @@ describe('CartService', () => {
     const dto = { product_variant_id: 1, quantity: 2 };
 
     it('should add new item to existing cart', async () => {
-      const variant = mockProductVariant({ stock_quantity: 10, product: mockProduct() });
+      const variant = mockProductVariant({
+        stock_quantity: 10,
+        product: mockProduct(),
+      });
       const cart = mockCart();
       const updatedCart = mockCartWithItems(1);
 
@@ -135,7 +141,10 @@ describe('CartService', () => {
     });
 
     it('should increment quantity when variant already in cart', async () => {
-      const variant = mockProductVariant({ stock_quantity: 10, product: mockProduct() });
+      const variant = mockProductVariant({
+        stock_quantity: 10,
+        product: mockProduct(),
+      });
       const existingItem = mockCartItem({ id: 5, quantity: 3 });
       const cart = mockCart();
       const updatedCart = mockCartWithItems(1);
@@ -153,7 +162,10 @@ describe('CartService', () => {
     });
 
     it('should create new cart when none exists', async () => {
-      const variant = mockProductVariant({ stock_quantity: 10, product: mockProduct() });
+      const variant = mockProductVariant({
+        stock_quantity: 10,
+        product: mockProduct(),
+      });
       const newCart = mockCart({ id: 99 });
       const updatedCart = mockCartWithItems(1);
 
@@ -171,7 +183,10 @@ describe('CartService', () => {
     });
 
     it('should create guest cart with session_id when no user', async () => {
-      const variant = mockProductVariant({ stock_quantity: 10, product: mockProduct() });
+      const variant = mockProductVariant({
+        stock_quantity: 10,
+        product: mockProduct(),
+      });
       const guestCart = mockGuestCart({ id: 50 });
       const updatedCart = mockCartWithItems(1);
 
@@ -185,15 +200,17 @@ describe('CartService', () => {
 
       await service.addItem({ sessionId: 'guest-session-abc' }, dto);
 
-      expect(cartRepository.create).toHaveBeenCalledWith({ session_id: 'guest-session-abc' });
+      expect(cartRepository.create).toHaveBeenCalledWith({
+        session_id: 'guest-session-abc',
+      });
     });
 
     it('should throw NotFoundException when variant not found', async () => {
       productService.findVariantById.mockResolvedValue(null);
 
-      await expect(
-        service.addItem({ userId: 1 }, dto),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.addItem({ userId: 1 }, dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when product is inactive', async () => {
@@ -203,9 +220,9 @@ describe('CartService', () => {
       });
       productService.findVariantById.mockResolvedValue(variant);
 
-      await expect(
-        service.addItem({ userId: 1 }, dto),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.addItem({ userId: 1 }, dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException when variant out of stock', async () => {
@@ -215,13 +232,16 @@ describe('CartService', () => {
       });
       productService.findVariantById.mockResolvedValue(variant);
 
-      await expect(
-        service.addItem({ userId: 1 }, dto),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.addItem({ userId: 1 }, dto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when total quantity exceeds stock', async () => {
-      const variant = mockProductVariant({ stock_quantity: 5, product: mockProduct() });
+      const variant = mockProductVariant({
+        stock_quantity: 5,
+        product: mockProduct(),
+      });
       const cart = mockCart();
 
       productService.findVariantById.mockResolvedValue(variant);
@@ -230,9 +250,9 @@ describe('CartService', () => {
         mockCartItem({ quantity: 4 }),
       );
 
-      await expect(
-        service.addItem({ userId: 1 }, dto),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.addItem({ userId: 1 }, dto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -243,7 +263,10 @@ describe('CartService', () => {
       const item = mockCartItem({
         id: 10,
         cart_id: 1,
-        product_variant: mockProductVariant({ stock_quantity: 20, product: mockProduct() }),
+        product_variant: mockProductVariant({
+          stock_quantity: 20,
+          product: mockProduct(),
+        }),
       });
       const cart = mockCart({ id: 1 });
       const updatedCart = mockCartWithItems(1);
@@ -253,7 +276,9 @@ describe('CartService', () => {
         .mockResolvedValueOnce(cart)
         .mockResolvedValueOnce(updatedCart);
 
-      const result = await service.updateItemQuantity({ userId: 1 }, 10, { quantity: 5 });
+      const result = await service.updateItemQuantity({ userId: 1 }, 10, {
+        quantity: 5,
+      });
 
       expect(cartItemRepository.updateQuantity).toHaveBeenCalledWith(10, 5);
       expect(result.id).toBe(updatedCart.id);
@@ -294,7 +319,10 @@ describe('CartService', () => {
       const item = mockCartItem({
         id: 10,
         cart_id: 1,
-        product_variant: mockProductVariant({ stock_quantity: 3, product: mockProduct() }),
+        product_variant: mockProductVariant({
+          stock_quantity: 3,
+          product: mockProduct(),
+        }),
       });
       const cart = mockCart({ id: 1 });
 
@@ -325,9 +353,9 @@ describe('CartService', () => {
     it('should throw NotFoundException when item does not exist', async () => {
       cartItemRepository.findById.mockResolvedValue(null);
 
-      await expect(
-        service.removeItem({ userId: 1 }, 99),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.removeItem({ userId: 1 }, 99)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when item belongs to another cart', async () => {
@@ -337,9 +365,9 @@ describe('CartService', () => {
       cartItemRepository.findById.mockResolvedValue(item);
       cartRepository.findByUserId.mockResolvedValue(cart);
 
-      await expect(
-        service.removeItem({ userId: 1 }, 10),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.removeItem({ userId: 1 }, 10)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -347,7 +375,12 @@ describe('CartService', () => {
 
   describe('mergeCart', () => {
     it('should merge guest items into existing user cart', async () => {
-      const guestItem = mockCartItem({ id: 20, cart_id: 5, product_variant_id: 7, quantity: 3 });
+      const guestItem = mockCartItem({
+        id: 20,
+        cart_id: 5,
+        product_variant_id: 7,
+        quantity: 3,
+      });
       const guestCart = mockGuestCart({ id: 5, items: [guestItem] });
       const userCart = mockCart({ id: 1, items: [] });
       const mergedCart = mockCartWithItems(1);
@@ -359,7 +392,9 @@ describe('CartService', () => {
       cartItemRepository.findByCartAndVariant.mockResolvedValue(null);
       cartItemRepository.create.mockResolvedValue(mockCartItem());
 
-      const result = await service.mergeCart(1, { session_id: 'guest-session-abc' });
+      const result = await service.mergeCart(1, {
+        session_id: 'guest-session-abc',
+      });
 
       expect(cartItemRepository.create).toHaveBeenCalledWith({
         cart_id: userCart.id,
@@ -372,9 +407,19 @@ describe('CartService', () => {
     });
 
     it('should sum quantities when variant already exists in user cart', async () => {
-      const guestItem = mockCartItem({ id: 20, cart_id: 5, product_variant_id: 7, quantity: 2 });
+      const guestItem = mockCartItem({
+        id: 20,
+        cart_id: 5,
+        product_variant_id: 7,
+        quantity: 2,
+      });
       const guestCart = mockGuestCart({ id: 5, items: [guestItem] });
-      const existingUserItem = mockCartItem({ id: 3, cart_id: 1, product_variant_id: 7, quantity: 4 });
+      const existingUserItem = mockCartItem({
+        id: 3,
+        cart_id: 1,
+        product_variant_id: 7,
+        quantity: 4,
+      });
       const userCart = mockCart({ id: 1 });
       const mergedCart = mockCartWithItems(1);
 
@@ -382,7 +427,9 @@ describe('CartService', () => {
       cartRepository.findByUserId
         .mockResolvedValueOnce(userCart)
         .mockResolvedValueOnce(mergedCart);
-      cartItemRepository.findByCartAndVariant.mockResolvedValue(existingUserItem);
+      cartItemRepository.findByCartAndVariant.mockResolvedValue(
+        existingUserItem,
+      );
 
       await service.mergeCart(1, { session_id: 'guest-session-abc' });
 
@@ -431,14 +478,18 @@ describe('CartService', () => {
     it('should throw CartEmptyException when cart is null', async () => {
       cartRepository.findByUserId.mockResolvedValue(null);
 
-      await expect(service.getCartWithItems(1)).rejects.toThrow(CartEmptyException);
+      await expect(service.getCartWithItems(1)).rejects.toThrow(
+        CartEmptyException,
+      );
     });
 
     it('should throw CartEmptyException when cart has no items', async () => {
       const emptyCart = mockCart({ items: [] });
       cartRepository.findByUserId.mockResolvedValue(emptyCart);
 
-      await expect(service.getCartWithItems(1)).rejects.toThrow(CartEmptyException);
+      await expect(service.getCartWithItems(1)).rejects.toThrow(
+        CartEmptyException,
+      );
     });
   });
 
@@ -451,7 +502,10 @@ describe('CartService', () => {
 
       await service.clearCart(1);
 
-      expect(cartItemRepository.deleteByCartId).toHaveBeenCalledWith(5, undefined);
+      expect(cartItemRepository.deleteByCartId).toHaveBeenCalledWith(
+        5,
+        undefined,
+      );
       expect(cartRepository.delete).toHaveBeenCalledWith(5, undefined);
     });
 
@@ -462,7 +516,10 @@ describe('CartService', () => {
 
       await service.clearCart(1, mockManager);
 
-      expect(cartItemRepository.deleteByCartId).toHaveBeenCalledWith(5, mockManager);
+      expect(cartItemRepository.deleteByCartId).toHaveBeenCalledWith(
+        5,
+        mockManager,
+      );
       expect(cartRepository.delete).toHaveBeenCalledWith(5, mockManager);
     });
 

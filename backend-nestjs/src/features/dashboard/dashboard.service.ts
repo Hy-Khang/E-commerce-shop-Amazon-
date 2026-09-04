@@ -31,24 +31,17 @@ export class DashboardService {
     }
 
     return {
-      summary:
-        results[0].status === 'fulfilled' ? results[0].value : null,
+      summary: results[0].status === 'fulfilled' ? results[0].value : null,
       revenueOverTime:
         results[1].status === 'fulfilled' ? results[1].value : [],
-      ordersByStatus:
-        results[2].status === 'fulfilled' ? results[2].value : [],
-      recentOrders:
-        results[3].status === 'fulfilled' ? results[3].value : [],
-      usersByRole:
-        results[4].status === 'fulfilled' ? results[4].value : [],
-      topProducts:
-        results[5].status === 'fulfilled' ? results[5].value : [],
-      lowStockAlerts:
-        results[6].status === 'fulfilled' ? results[6].value : [],
+      ordersByStatus: results[2].status === 'fulfilled' ? results[2].value : [],
+      recentOrders: results[3].status === 'fulfilled' ? results[3].value : [],
+      usersByRole: results[4].status === 'fulfilled' ? results[4].value : [],
+      topProducts: results[5].status === 'fulfilled' ? results[5].value : [],
+      lowStockAlerts: results[6].status === 'fulfilled' ? results[6].value : [],
       attentionSignals:
         results[7].status === 'fulfilled' ? results[7].value : null,
-      topShops:
-        results[8].status === 'fulfilled' ? results[8].value : [],
+      topShops: results[8].status === 'fulfilled' ? results[8].value : [],
     };
   }
 }

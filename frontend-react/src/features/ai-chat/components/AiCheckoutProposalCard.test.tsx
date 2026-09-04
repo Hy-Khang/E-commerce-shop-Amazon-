@@ -8,8 +8,13 @@ const checkoutMutate = vi.fn();
 let authed = true;
 
 vi.mock('@/features/auth', () => ({
-  useAuthStore: (sel: (s: { isAuthenticated: boolean }) => unknown) =>
-    sel({ isAuthenticated: authed }),
+  // Store-shaped: the real Zustand store is a callable hook that also exposes
+  // `.subscribe` (the ai-chat store subscribes to it for its logout reset).
+  useAuthStore: Object.assign(
+    (sel: (s: { isAuthenticated: boolean }) => unknown) =>
+      sel({ isAuthenticated: authed }),
+    { subscribe: () => () => {} },
+  ),
 }));
 vi.mock('@/features/user-profile', () => ({
   useAddresses: () => ({
@@ -19,9 +24,39 @@ vi.mock('@/features/user-profile', () => ({
 }));
 vi.mock('@/features/order', () => ({
   useCheckout: () => ({ mutateAsync: checkoutMutate, isPending: false }),
+  // Inline voucher editing stays idle unless a code is applied (enabled=dirty).
+  usePreviewCheckout: () => ({ data: undefined, isError: false, isFetching: false }),
 }));
 vi.mock('@/features/payment', () => ({
   useCreatePayment: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock('@/features/cart', () => ({
+  useCart: () => ({ data: { items: [{ id: 1 }] } }),
+  cartSignature: () => 'sig',
+}));
+// Voucher selection now uses the storefront picker — stub it to a single
+// apply button and passthrough helpers (the real modal has its own tests).
+vi.mock('@/features/coupon', () => ({
+  useAvailableCoupons: () => ({ data: undefined, isLoading: false }),
+  optionToValidation: (o: { code: string; shop_id?: number | null }) => ({
+    code: o.code,
+    shop_id: o.shop_id ?? null,
+  }),
+  CouponSelectorModal: ({
+    open,
+    onApply,
+  }: {
+    open: boolean;
+    onApply: (code: string, v: unknown) => void;
+  }) =>
+    open ? (
+      <button
+        type="button"
+        onClick={() => onApply('SALE10', { code: 'SALE10', shop_id: null })}
+      >
+        stub-apply
+      </button>
+    ) : null,
 }));
 
 const proposal: AiCheckoutProposal = {
@@ -83,6 +118,22 @@ describe('AiCheckoutProposalCard', () => {
         order_group_id: 'abcd1234-xyz',
         payment_method: 'cod',
       }),
+    );
+  });
+
+  it('applies a coupon via the picker and includes it on confirm', async () => {
+    renderCard();
+    // Open the picker (the select trigger) → apply a code via the stubbed modal.
+    fireEvent.click(screen.getByRole('button', { name: /voucher/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'stub-apply' }));
+    // The applied code shows as a removable chip.
+    expect(screen.getByText('SALE10')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm order' }));
+    await waitFor(() =>
+      expect(checkoutMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ coupon_codes: ['SALE10'] }),
+      ),
     );
   });
 

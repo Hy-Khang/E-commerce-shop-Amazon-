@@ -9,7 +9,11 @@ import {
 import { Product } from './product.entity';
 
 @Entity('product_variants')
-@Index('idx_product_variants_product_options', ['product_id', 'option1', 'option2'])
+@Index('idx_product_variants_product_options', [
+  'product_id',
+  'option1',
+  'option2',
+])
 @Index('uq_pv_both_options', ['product_id', 'option1', 'option2'], {
   unique: true,
   where: 'option1 IS NOT NULL AND option2 IS NOT NULL',

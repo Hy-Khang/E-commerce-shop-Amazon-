@@ -14,7 +14,8 @@ export class HomepageController {
   @ApiOperation({ summary: 'Get homepage product sections' })
   @ApiResponse({
     status: 200,
-    description: 'Homepage data with special offers, best sellers, trending, and discover more',
+    description:
+      'Homepage data with special offers, best sellers, trending, and discover more',
     type: HomepageResponseDto,
   })
   async getHomepage() {

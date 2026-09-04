@@ -18,21 +18,27 @@ export class UpdateCoinSettingsDto {
   @IsBoolean()
   enabled?: boolean;
 
-  @ApiPropertyOptional({ description: '% of post-discount items total earned as Xu (0-100)' })
+  @ApiPropertyOptional({
+    description: '% of post-discount items total earned as Xu (0-100)',
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Max(100)
   earn_rate_percent?: number;
 
-  @ApiPropertyOptional({ description: 'Max % of a checkout redeemable in Xu (0-100)' })
+  @ApiPropertyOptional({
+    description: 'Max % of a checkout redeemable in Xu (0-100)',
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Max(100)
   redeem_max_percent?: number;
 
-  @ApiPropertyOptional({ description: 'Days until an earned Xu batch expires (1-3650)' })
+  @ApiPropertyOptional({
+    description: 'Days until an earned Xu batch expires (1-3650)',
+  })
   @IsOptional()
   @IsInt()
   @Min(1)

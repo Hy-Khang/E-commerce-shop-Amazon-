@@ -26,7 +26,8 @@ export class OrderScheduler {
       Date.now() - AUTO_COMPLETE_DAYS * 24 * 60 * 60 * 1000,
     );
 
-    const orders = await this.orderRepository.findExpiredDeliveredOrders(cutoff);
+    const orders =
+      await this.orderRepository.findExpiredDeliveredOrders(cutoff);
     if (orders.length === 0) return;
 
     const ids = orders.map((o) => o.id);

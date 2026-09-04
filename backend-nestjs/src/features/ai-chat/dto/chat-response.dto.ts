@@ -4,7 +4,12 @@ import { ProductResponseDto } from '../../product/dto/product-response.dto';
 /** A user-facing agent action card returned alongside the assistant reply. */
 export class AgentActionDto {
   @ApiProperty({
-    enum: ['cart_updated', 'checkout_proposal', 'order_cancelled', 'needs_login'],
+    enum: [
+      'cart_updated',
+      'checkout_proposal',
+      'order_cancelled',
+      'needs_login',
+    ],
     description: 'Action type — drives which card the widget renders',
   })
   type: string;

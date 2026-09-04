@@ -3,11 +3,13 @@ import { ProductService } from '../../product/product.service';
 import { CartService } from '../../cart/cart.service';
 import { OrderService } from '../../order/order.service';
 import { UserProfileService } from '../../user-profile/user-profile.service';
+import { CouponService } from '../../coupon/coupon.service';
 import { ICartOwner } from '../../cart/types/cart.types';
 import { CartResponseDto } from '../../cart/dto/cart-response.dto';
 import { Product } from '../../product/entities/product.entity';
 import { AiChatOwner, ToolDispatchResult } from '../types/ai-chat.types';
 import { AGENT_TOOL_NAMES, POLICY_FAQ } from './agent-tools';
+import { extractKeywords, parsePriceHint } from '../utils/ai-chat.util';
 
 /**
  * Executes a single agent tool call against the real feature services.
@@ -28,6 +30,7 @@ export class ToolDispatcher {
     private readonly cartService: CartService,
     private readonly orderService: OrderService,
     private readonly userProfileService: UserProfileService,
+    private readonly couponService: CouponService,
   ) {}
 
   async run(
@@ -49,6 +52,8 @@ export class ToolDispatcher {
           return await this.updateCartItem(args, owner);
         case AGENT_TOOL_NAMES.REMOVE_CART_ITEM:
           return await this.removeCartItem(args, owner);
+        case AGENT_TOOL_NAMES.LIST_COUPONS:
+          return await this.listCoupons(owner);
         case AGENT_TOOL_NAMES.PROPOSE_CHECKOUT:
           return await this.proposeCheckout(args, owner);
         case AGENT_TOOL_NAMES.LIST_ORDERS:
@@ -61,8 +66,14 @@ export class ToolDispatcher {
           return await this.cancelOrder(args, owner);
         case AGENT_TOOL_NAMES.GET_POLICIES:
           return this.getPolicies(args);
+        case AGENT_TOOL_NAMES.ASK_CHOICE:
+          return this.askChoice(args);
         default:
-          return { content: { error: { code: 'TOOL_UNKNOWN', message: `Unknown tool ${name}` } } };
+          return {
+            content: {
+              error: { code: 'TOOL_UNKNOWN', message: `Unknown tool ${name}` },
+            },
+          };
       }
     } catch (err: any) {
       const resp = err?.response;
@@ -75,20 +86,77 @@ export class ToolDispatcher {
 
   // ─── Read tools ───
 
-  private async searchProducts(args: Record<string, any>): Promise<ToolDispatchResult> {
+  private async searchProducts(
+    args: Record<string, any>,
+  ): Promise<ToolDispatchResult> {
     const query = String(args.query ?? '').trim();
-    const result = await this.productService.findActiveProducts({
-      page: 1,
-      limit: 6,
-      search: query || undefined,
-      ...(args.min_price != null && { min_price: Number(args.min_price) }),
-      ...(args.max_price != null && { max_price: Number(args.max_price) }),
-    } as any);
 
-    const products = result.data.map((p) => this.toProductPayload(p));
+    // The catalog matches `search` as a SINGLE `product.name LIKE %term%`, so
+    // two things break a naïve search: (a) colour/size are variant attributes
+    // (product_variants.option*) never present in the name, so "áo thun nam
+    // oversize đen" as one LIKE finds nothing; (b) a broad token like "áo"
+    // returns many rows and, in a keyword UNION, crowds out the specific product
+    // ("Áo thun Seventy Seven 04"). So we go PRECISE → BROAD and return at the
+    // first tier that hits: exact/substring name → attribute-stripped phrase →
+    // union of individual keywords (last resort). A price phrase in the query
+    // ("dưới 300k") becomes a bound; explicit args win.
+    const priceHint = parsePriceHint(query);
+    const minPrice =
+      args.min_price != null ? Number(args.min_price) : priceHint.min_price;
+    const maxPrice =
+      args.max_price != null ? Number(args.max_price) : priceHint.max_price;
+
+    const runSearch = (search?: string): Promise<Product[]> =>
+      this.productService
+        .findActiveProducts({
+          page: 1,
+          limit: 6,
+          search: search || undefined,
+          ...(minPrice != null && { min_price: minPrice }),
+          ...(maxPrice != null && { max_price: maxPrice }),
+        })
+        .then((r) => r.data)
+        .catch(() => [] as Product[]);
+
+    let data: Product[] = [];
+    if (!query) {
+      data = await runSearch(undefined);
+    } else {
+      // 1) Exact / substring product-name match — resolves "Áo thun Seventy
+      //    Seven 04" straight to that product.
+      data = await runSearch(query);
+
+      if (data.length === 0) {
+        // 2) Strip trailing attribute/filler words (colour/size/price) and retry
+        //    as a contiguous phrase — "áo thun nam oversize đen" → "áo thun nam
+        //    oversize" still LIKE-matches the product name.
+        const keywords = extractKeywords(query);
+        if (keywords.length) {
+          data = await runSearch(keywords.join(' '));
+
+          // 3) Last resort: union individual keywords (broadest — a distinctive
+          //    token still surfaces something even if the phrase missed).
+          if (data.length === 0) {
+            const seen = new Set<number>();
+            for (const kw of keywords) {
+              for (const p of await runSearch(kw)) {
+                if (seen.has(p.id)) continue;
+                seen.add(p.id);
+                data.push(p);
+                if (data.length >= 6) break;
+              }
+              if (data.length >= 6) break;
+            }
+          }
+        }
+      }
+    }
+
+    const top = data.slice(0, 6);
+    const products = top.map((p) => this.toProductPayload(p));
     return {
       content: { count: products.length, products },
-      productIds: result.data.map((p) => p.id),
+      productIds: top.map((p) => p.id),
     };
   }
 
@@ -106,7 +174,7 @@ export class ToolDispatcher {
       page: 1,
       limit: 10,
       ...(args.status && { status: args.status }),
-    } as any);
+    });
     const orders = result.data.map((o: any) => ({
       id: o.id,
       status: o.status,
@@ -125,7 +193,10 @@ export class ToolDispatcher {
   ): Promise<ToolDispatchResult> {
     if (owner.userId == null) return this.needsLogin('get_order');
     const orderId = Number(args.order_id);
-    const order: any = await this.orderService.findMyOrderById(owner.userId, orderId);
+    const order: any = await this.orderService.findMyOrderById(
+      owner.userId,
+      orderId,
+    );
     return {
       content: {
         id: order.id,
@@ -149,7 +220,9 @@ export class ToolDispatcher {
 
   private async listAddresses(owner: AiChatOwner): Promise<ToolDispatchResult> {
     if (owner.userId == null) return this.needsLogin('list_addresses');
-    const addresses = await this.userProfileService.findAllAddresses(owner.userId);
+    const addresses = await this.userProfileService.findAllAddresses(
+      owner.userId,
+    );
     return {
       content: {
         count: addresses.length,
@@ -169,6 +242,67 @@ export class ToolDispatcher {
     const topic = String(args.topic ?? 'general').toLowerCase();
     const answer = POLICY_FAQ[topic] ?? POLICY_FAQ.general;
     return { content: { topic, answer } };
+  }
+
+  /**
+   * Render quick-reply chips (no side effect, guest-safe). Each option is a
+   * complete message the customer sends when they tap it — used for variant
+   * choices (colour/size) or picking a coupon, so they don't have to type.
+   */
+  private askChoice(args: Record<string, any>): ToolDispatchResult {
+    const question = String(args.question ?? '').trim();
+    const options = (Array.isArray(args.options) ? args.options : [])
+      .map((o: any) => String(o ?? '').trim())
+      .filter((o: string) => o.length > 0)
+      .slice(0, 8)
+      .map((o: string) => ({ label: o, value: o }));
+    if (options.length === 0) {
+      return {
+        content: {
+          error: {
+            code: 'ASK_CHOICE_EMPTY',
+            message: 'No options provided for ask_choice',
+          },
+        },
+      };
+    }
+    return {
+      content: { shown: true, options: options.map((o) => o.value) },
+      action: {
+        type: 'quick_replies',
+        data: { ...(question && { prompt: question }), options },
+      },
+    };
+  }
+
+  private async listCoupons(owner: AiChatOwner): Promise<ToolDispatchResult> {
+    if (owner.userId == null) return this.needsLogin('list_coupons');
+    const available = await this.couponService.getAvailableCouponsForCart(
+      owner.userId,
+    );
+    const toOption = (c: any) => ({
+      code: c.code,
+      description: c.description ?? null,
+      discount_type: c.discount_type,
+      discount_value: Number(c.discount_value),
+      min_order_amount:
+        c.min_order_amount != null ? Number(c.min_order_amount) : null,
+      discount_preview: Number(c.discount_preview ?? 0),
+      eligible: c.eligible,
+      ...(c.reason && { reason: c.reason }),
+      ...(c.short_of_min != null && { short_of_min: Number(c.short_of_min) }),
+    });
+    return {
+      content: {
+        note: 'Đây là voucher đang có cho giỏ hàng. eligible=false nghĩa là chưa đủ điều kiện (xem reason). Khi khách chọn mã, hãy truyền code vào propose_checkout.coupon_codes.',
+        platform: (available.platform ?? []).map(toOption),
+        shops: (available.shops ?? []).map((s) => ({
+          shop_id: s.shop_id,
+          shop_name: s.shop_name,
+          coupons: (s.coupons ?? []).map(toOption),
+        })),
+      },
+    };
   }
 
   // ─── Cart-write tools (auto, guest + customer) ───
@@ -235,7 +369,7 @@ export class ToolDispatcher {
     const preview = await this.orderService.previewCheckout(owner.userId, {
       ...(couponCodes && { coupon_codes: couponCodes }),
       ...(coinsToRedeem != null && { coins_to_redeem: coinsToRedeem }),
-    } as any);
+    });
 
     const proposal = {
       preview,
@@ -273,7 +407,10 @@ export class ToolDispatcher {
     );
     return {
       content: { ok: true, order_id: order.id, status: order.status },
-      action: { type: 'order_cancelled', data: { order_id: order.id, status: order.status } },
+      action: {
+        type: 'order_cancelled',
+        data: { order_id: order.id, status: order.status },
+      },
     };
   }
 
@@ -283,7 +420,8 @@ export class ToolDispatcher {
     return {
       content: {
         needs_login: true,
-        message: 'Khách cần đăng nhập để dùng tính năng này. Hãy mời khách đăng nhập.',
+        message:
+          'Khách cần đăng nhập để dùng tính năng này. Hãy mời khách đăng nhập.',
       },
       action: { type: 'needs_login', data: { tool } },
     };

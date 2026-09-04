@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddContextToNotifications1749300007000
-  implements MigrationInterface
-{
+export class AddContextToNotifications1749300007000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
       `ALTER TABLE notifications ADD context NVARCHAR(20) NOT NULL CONSTRAINT df_notifications_context DEFAULT 'customer'`,
@@ -30,8 +28,6 @@ export class AddContextToNotifications1749300007000
       `ALTER TABLE notifications DROP CONSTRAINT df_notifications_context`,
     );
 
-    await queryRunner.query(
-      `ALTER TABLE notifications DROP COLUMN context`,
-    );
+    await queryRunner.query(`ALTER TABLE notifications DROP COLUMN context`);
   }
 }

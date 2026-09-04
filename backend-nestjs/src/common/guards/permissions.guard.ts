@@ -7,7 +7,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PERMISSIONS_KEY, PermissionsMetadata } from '../decorators/permissions.decorator';
+import {
+  PERMISSIONS_KEY,
+  PermissionsMetadata,
+} from '../decorators/permissions.decorator';
 import { ICurrentUser } from '../interfaces/current-user.interface';
 import type { IPermissionCacheProvider } from '../../features/auth/interfaces/permission-cache.interface';
 import { PERMISSION_CACHE_PROVIDER } from '../../features/auth/interfaces/permission-cache.interface';
@@ -43,7 +46,10 @@ export class PermissionsGuard implements CanActivate {
     let userPermissions = await this.permissionCache.get(user.roleId);
 
     if (!userPermissions) {
-      const permStrings = await this.rolePermissionRepository.findPermissionStringsByRoleId(user.roleId);
+      const permStrings =
+        await this.rolePermissionRepository.findPermissionStringsByRoleId(
+          user.roleId,
+        );
       userPermissions = new Set(permStrings);
       await this.permissionCache.set(user.roleId, userPermissions);
     }
@@ -52,8 +58,8 @@ export class PermissionsGuard implements CanActivate {
 
     const hasPermission =
       mode === 'any'
-        ? required.some((p) => userPermissions!.has(p))
-        : required.every((p) => userPermissions!.has(p));
+        ? required.some((p) => userPermissions.has(p))
+        : required.every((p) => userPermissions.has(p));
 
     if (!hasPermission) {
       throw new ForbiddenException({

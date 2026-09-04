@@ -32,8 +32,7 @@ export function toFlashSaleItemResponse(
     product_slug: product?.slug ?? null,
     thumbnail_url: product?.thumbnail_url ?? null,
     sku: variant?.sku ?? null,
-    original_price:
-      variant?.price != null ? Number(variant.price) : null,
+    original_price: variant?.price != null ? Number(variant.price) : null,
     variant_option1_label: product?.option1_label ?? null,
     variant_option1_value: variant?.option1 ?? null,
     variant_option2_label: product?.option2_label ?? null,

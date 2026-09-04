@@ -11,7 +11,11 @@ import request from 'supertest';
 import { OrderController } from '../order.controller';
 import { AdminOrderController } from '../admin-order.controller';
 import { OrderService } from '../order.service';
-import { PaymentMethod, OrderStatus, PaymentStatus } from '../../../common/constants';
+import {
+  PaymentMethod,
+  OrderStatus,
+  PaymentStatus,
+} from '../../../common/constants';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from '../../../common/decorators/permissions.decorator';
 
@@ -74,7 +78,8 @@ describe('Order (e2e)', () => {
         { provide: APP_GUARD, useClass: MockJwtAuthGuard },
         {
           provide: APP_GUARD,
-          useFactory: (reflector: Reflector) => new MockPermissionsGuard(reflector),
+          useFactory: (reflector: Reflector) =>
+            new MockPermissionsGuard(reflector),
           inject: [Reflector],
         },
       ],
@@ -105,9 +110,7 @@ describe('Order (e2e)', () => {
 
   describe('Authentication', () => {
     it('should return 401 when no token is provided', async () => {
-      await request(app.getHttpServer())
-        .get('/orders')
-        .expect(401);
+      await request(app.getHttpServer()).get('/orders').expect(401);
     });
 
     it('should return 401 for invalid token', async () => {

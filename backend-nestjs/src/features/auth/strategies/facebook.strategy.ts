@@ -27,7 +27,9 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
       provider: 'facebook',
       providerId: profile.id,
       email: email || '',
-      fullName: profile.displayName || `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim(),
+      fullName:
+        profile.displayName ||
+        `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim(),
     };
     done(null, oauthProfile);
   }

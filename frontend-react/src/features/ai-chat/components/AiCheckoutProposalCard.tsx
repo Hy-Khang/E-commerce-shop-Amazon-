@@ -1,15 +1,31 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, CreditCard, Loader2, LogIn, MapPin } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
 import { useAuthStore } from '@/features/auth';
 import { useAddresses } from '@/features/user-profile';
-import { useCheckout } from '@/features/order';
+import { useCart, cartSignature } from '@/features/cart';
+import {
+  useAvailableCoupons,
+  optionToValidation,
+  type AppliedCouponEntry,
+  type CouponValidationResult,
+} from '@/features/coupon';
+import { useCheckout, usePreviewCheckout } from '@/features/order';
 import { useCreatePayment } from '@/features/payment';
 import type { PaymentMethod } from '@/features/order';
 import { useAiChatStore } from '../stores/ai-chat.store';
+import { AiCheckoutVoucher } from './AiCheckoutVoucher';
+import { pickVoucherSuggestions } from '../utils/voucher-suggestion.util';
 import type { AiCheckoutProposal, AiOrderPlaced } from '../types/ai-chat.types';
+
+/** Order-independent key for a set of codes (seed comparison / dirty check). */
+const codesKey = (codes: string[]): string => [...codes].sort().join('|');
+
+/** ≤1 coupon per group (platform / each shop) — mirrors the checkout picker. */
+const groupOf = (v: CouponValidationResult): string =>
+  v.shop_id != null ? `shop:${v.shop_id}` : 'platform';
 
 interface Props {
   proposal: AiCheckoutProposal;
@@ -41,8 +57,66 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
   const [method, setMethod] = useState<PaymentMethod>('cod');
   const [placedGroupId, setPlacedGroupId] = useState<string | null>(null);
 
-  const { preview } = proposal;
+  // Inline voucher editing via the storefront picker. `applied` holds the chosen
+  // vouchers (code + validation, for group semantics); applying/removing re-runs
+  // the advisory preview so totals stay exact. Coins stay as the agent proposed.
+  const [applied, setApplied] = useState<AppliedCouponEntry[]>([]);
+  // Seed from the agent's proposed codes once the catalog resolves (so we can
+  // attach each code's group). No proposed codes → nothing to seed.
+  const [seeded, setSeeded] = useState(proposal.coupon_codes.length === 0);
+  const coins = proposal.coins_to_redeem;
+
+  const cartQuery = useCart();
+  const cartSig = useMemo(
+    () => cartSignature(cartQuery.data?.items ?? []),
+    [cartQuery.data],
+  );
+  const catalogEnabled =
+    isAuthenticated && (cartQuery.data?.items?.length ?? 0) > 0;
+  const { data: catalog } = useAvailableCoupons(cartSig, catalogEnabled);
+
+  if (!seeded && catalog) {
+    const all = [...catalog.platform, ...catalog.shops.flatMap((s) => s.coupons)];
+    setApplied(
+      proposal.coupon_codes
+        .map((code) => all.find((o) => o.code === code))
+        .filter((o): o is NonNullable<typeof o> => !!o)
+        .map((o) => ({ code: o.code, validation: optionToValidation(o) })),
+    );
+    setSeeded(true);
+  }
+
+  // Before seeding, still send the agent's proposed codes to preview/checkout.
+  const codes = seeded ? applied.map((e) => e.code) : proposal.coupon_codes;
+  const dirty = codesKey(codes) !== codesKey(proposal.coupon_codes);
+  const suggestions = useMemo(
+    () => pickVoucherSuggestions(catalog, codes),
+    [catalog, codes],
+  );
+
+  const previewQuery = usePreviewCheckout(codes, 'ai-checkout', coins, dirty);
+  // While dirty: use the fresh preview; on a bad code the query errors and we
+  // fall back to the last-known (proposal) totals + disable Confirm.
+  const preview = (dirty ? previewQuery.data : undefined) ?? proposal.preview;
+  const previewError = dirty && previewQuery.isError;
+  const previewLoading = dirty && previewQuery.isFetching;
   const busy = checkout.isPending || createPayment.isPending;
+
+  const applyCoupon = (code: string, validation: CouponValidationResult) => {
+    setSeeded(true);
+    setApplied((prev) => [
+      // ≤1 per group and no duplicate code.
+      ...prev.filter(
+        (e) => groupOf(e.validation) !== groupOf(validation) && e.code !== code,
+      ),
+      { code, validation },
+    ]);
+  };
+
+  const removeCoupon = (code: string) => {
+    setSeeded(true);
+    setApplied((prev) => prev.filter((e) => e.code !== code));
+  };
 
   // Preselect the default address (or the first) once addresses load.
   const selectedAddressId =
@@ -92,8 +166,8 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
       const res = await checkout.mutateAsync({
         payment_method: method,
         address_id: selectedAddressId,
-        ...(proposal.coupon_codes.length && { coupon_codes: proposal.coupon_codes }),
-        ...(proposal.coins_to_redeem > 0 && { coins_to_redeem: proposal.coins_to_redeem }),
+        ...(codes.length && { coupon_codes: codes }),
+        ...(coins > 0 && { coins_to_redeem: coins }),
       });
       // Swap the proposal for a persisted "order placed" card (or fall back to
       // an inline success state when rendered standalone / without a parent).
@@ -144,6 +218,17 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
           </dd>
         </div>
       </dl>
+
+      {/* Voucher — Shopee-style picker + proactive suggestions; re-previews above */}
+      <AiCheckoutVoucher
+        cartSig={cartSig}
+        applied={applied}
+        suggestions={suggestions}
+        previewLoading={previewLoading}
+        previewError={previewError}
+        onApply={applyCoupon}
+        onRemove={removeCoupon}
+      />
 
       {/* Address */}
       <div className="mt-3">
@@ -202,7 +287,7 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
       <button
         type="button"
         onClick={handleConfirm}
-        disabled={!hasAddress || busy}
+        disabled={!hasAddress || busy || previewError || previewLoading}
         className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-50 disabled:pointer-events-none"
       >
         {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

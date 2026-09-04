@@ -45,16 +45,17 @@ export class UserRepository {
     return this.repo.exists({ where: { email } });
   }
 
-  async findAllPaginated(filter: IAdminUserFilter): Promise<IPaginatedResult<User>> {
+  async findAllPaginated(
+    filter: IAdminUserFilter,
+  ): Promise<IPaginatedResult<User>> {
     const qb = this.repo
       .createQueryBuilder('user')
       .innerJoinAndSelect('user.role', 'role');
 
     if (filter.search) {
-      qb.andWhere(
-        '(user.email LIKE :search OR user.full_name LIKE :search)',
-        { search: `%${filter.search}%` },
-      );
+      qb.andWhere('(user.email LIKE :search OR user.full_name LIKE :search)', {
+        search: `%${filter.search}%`,
+      });
     }
 
     if (filter.role) {
@@ -85,7 +86,9 @@ export class UserRepository {
     };
   }
 
-  async findByIdWithStats(id: number): Promise<(User & { orderCount: number; reviewCount: number }) | null> {
+  async findByIdWithStats(
+    id: number,
+  ): Promise<(User & { orderCount: number; reviewCount: number }) | null> {
     const user = await this.repo
       .createQueryBuilder('user')
       .innerJoinAndSelect('user.role', 'role')
@@ -121,7 +124,10 @@ export class UserRepository {
     await this.repo.update(id, { role_id: roleId });
   }
 
-  async updateProfile(id: number, data: { full_name?: string; phone?: string }): Promise<User | null> {
+  async updateProfile(
+    id: number,
+    data: { full_name?: string; phone?: string },
+  ): Promise<User | null> {
     await this.repo.update(id, { ...data, updated_at: new Date() });
     return this.repo.findOne({ where: { id }, relations: ['role'] });
   }

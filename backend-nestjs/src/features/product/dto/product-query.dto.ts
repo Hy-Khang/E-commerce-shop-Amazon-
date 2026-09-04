@@ -1,6 +1,17 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsEnum, IsInt, IsNumber, IsOptional, IsPositive, IsString, Max, Min } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 export enum ProductSortBy {
@@ -12,19 +23,25 @@ export enum ProductSortBy {
 }
 
 export class ProductQueryDto extends PaginationDto {
-  @ApiPropertyOptional({ description: 'Search by product name, description, category, or shop' })
+  @ApiPropertyOptional({
+    description: 'Search by product name, description, category, or shop',
+  })
   @IsOptional()
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by category ID (includes sub-categories)' })
+  @ApiPropertyOptional({
+    description: 'Filter by category ID (includes sub-categories)',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @IsPositive()
   category_id?: number;
 
-  @ApiPropertyOptional({ description: 'Filter by a set of product IDs (CSV, e.g. 1,2,3). Max 100.' })
+  @ApiPropertyOptional({
+    description: 'Filter by a set of product IDs (CSV, e.g. 1,2,3). Max 100.',
+  })
   @IsOptional()
   @Transform(({ value }) =>
     String(value)
@@ -67,17 +84,26 @@ export class ProductQueryDto extends PaginationDto {
   @IsPositive()
   shop_id?: number;
 
-  @ApiPropertyOptional({ description: 'Filter in-stock products only', example: 'true' })
+  @ApiPropertyOptional({
+    description: 'Filter in-stock products only',
+    example: 'true',
+  })
   @IsOptional()
   @IsString()
   in_stock?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by active status (admin only)', example: 'true' })
+  @ApiPropertyOptional({
+    description: 'Filter by active status (admin only)',
+    example: 'true',
+  })
   @IsOptional()
   @IsString()
   is_active?: string;
 
-  @ApiPropertyOptional({ enum: ProductSortBy, default: ProductSortBy.CreatedAt })
+  @ApiPropertyOptional({
+    enum: ProductSortBy,
+    default: ProductSortBy.CreatedAt,
+  })
   @IsOptional()
   @IsEnum(ProductSortBy)
   sort?: ProductSortBy;

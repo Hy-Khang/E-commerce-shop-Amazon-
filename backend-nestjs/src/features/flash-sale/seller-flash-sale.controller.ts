@@ -44,7 +44,9 @@ export class SellerFlashSaleController {
   // Declared BEFORE `:id` so `registrations` is never parsed as an id.
   @Get('registrations')
   @Permissions(PERMISSIONS.FLASH_REGISTRATIONS_READ)
-  @ApiOperation({ summary: "List the current shop's registrations (paginated)" })
+  @ApiOperation({
+    summary: "List the current shop's registrations (paginated)",
+  })
   async findMyRegistrations(
     @CurrentUser() user: ICurrentUser,
     @Query() query: FlashRegistrationQueryDto,
@@ -54,8 +56,13 @@ export class SellerFlashSaleController {
 
   @Patch('items/:itemId')
   @Permissions(PERMISSIONS.FLASH_REGISTRATIONS_UPDATE)
-  @ApiOperation({ summary: 'Edit a pending registration (price / quantity, own shop only)' })
-  @ApiResponse({ status: 403, description: 'FLASH_SALE_008: registration not owned by your shop' })
+  @ApiOperation({
+    summary: 'Edit a pending registration (price / quantity, own shop only)',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'FLASH_SALE_008: registration not owned by your shop',
+  })
   async updateItem(
     @CurrentUser() user: ICurrentUser,
     @Param('itemId', ParseIntPipe) itemId: number,
@@ -77,7 +84,9 @@ export class SellerFlashSaleController {
 
   @Get(':id')
   @Permissions(PERMISSIONS.FLASH_REGISTRATIONS_READ)
-  @ApiOperation({ summary: "Campaign detail with the shop's own registrations" })
+  @ApiOperation({
+    summary: "Campaign detail with the shop's own registrations",
+  })
   @ApiResponse({ status: 200, type: FlashSaleResponseDto })
   async findOne(
     @CurrentUser() user: ICurrentUser,
@@ -89,7 +98,10 @@ export class SellerFlashSaleController {
   @Post(':id/register')
   @Permissions(PERMISSIONS.FLASH_REGISTRATIONS_CREATE)
   @ApiOperation({ summary: 'Register a variant of your shop into a campaign' })
-  @ApiResponse({ status: 400, description: 'FLASH_SALE_009/010/011: window/ownership/floor' })
+  @ApiResponse({
+    status: 400,
+    description: 'FLASH_SALE_009/010/011: window/ownership/floor',
+  })
   async register(
     @CurrentUser() user: ICurrentUser,
     @Param('id', ParseIntPipe) id: number,

@@ -45,7 +45,8 @@ export class PreviewOrderDto {
 
   @ApiPropertyOptional({
     example: 5000,
-    description: 'Xu to redeem in the estimate (capped at 50% of items total & balance)',
+    description:
+      'Xu to redeem in the estimate (capped at 50% of items total & balance)',
   })
   @IsOptional()
   @IsInt()

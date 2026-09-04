@@ -57,12 +57,13 @@ export function AiMessageList({ messages, onNavigate, onPickSuggestion }: Props)
           </ul>
         </div>
       ) : (
-        messages.map((m) => (
+        messages.map((m, i) => (
           <AiMessageBubble
             key={m.id}
             message={m}
             onNavigate={onNavigate}
             onPickSuggestion={onPickSuggestion}
+            isLatest={i === messages.length - 1}
           />
         ))
       )}

@@ -17,11 +17,7 @@ import { FlashSaleModule } from '../flash-sale/flash-sale.module';
     FlashSaleModule,
   ],
   controllers: [CartController],
-  providers: [
-    CartService,
-    CartRepository,
-    CartItemRepository,
-  ],
+  providers: [CartService, CartRepository, CartItemRepository],
   exports: [CartService],
 })
 export class CartModule {}

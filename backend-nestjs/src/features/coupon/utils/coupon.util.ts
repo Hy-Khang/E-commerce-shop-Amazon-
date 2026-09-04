@@ -37,9 +37,7 @@ export function toCouponResponse(coupon: Coupon): CouponResponseDto {
     id: coupon.id,
     code: coupon.code,
     shop_id: coupon.shop_id ?? null,
-    shop: coupon.shop
-      ? { id: coupon.shop.id, name: coupon.shop.name }
-      : null,
+    shop: coupon.shop ? { id: coupon.shop.id, name: coupon.shop.name } : null,
     description: coupon.description ?? null,
     discount_type: coupon.discount_type,
     discount_value: Number(coupon.discount_value),
@@ -53,9 +51,7 @@ export function toCouponResponse(coupon: Coupon): CouponResponseDto {
         ? coupon.coupon_products.map((cp) => cp.product_id)
         : null,
     min_order_amount:
-      coupon.min_order_amount != null
-        ? Number(coupon.min_order_amount)
-        : null,
+      coupon.min_order_amount != null ? Number(coupon.min_order_amount) : null,
     max_discount_amount:
       coupon.max_discount_amount != null
         ? Number(coupon.max_discount_amount)
@@ -85,9 +81,7 @@ export function toCouponValidationResponse(
         ? Number(coupon.max_discount_amount)
         : null,
     min_order_amount:
-      coupon.min_order_amount != null
-        ? Number(coupon.min_order_amount)
-        : null,
+      coupon.min_order_amount != null ? Number(coupon.min_order_amount) : null,
     scope: coupon.scope,
     applicable_category_ids:
       coupon.scope === CouponScope.Categories && coupon.coupon_categories

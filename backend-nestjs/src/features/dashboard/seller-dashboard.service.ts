@@ -47,8 +47,7 @@ export class SellerDashboardService {
         results[1].status === 'fulfilled' ? results[1].value : [],
       topProducts: results[2].status === 'fulfilled' ? results[2].value : [],
       recentOrders: results[3].status === 'fulfilled' ? results[3].value : [],
-      lowStockAlerts:
-        results[4].status === 'fulfilled' ? results[4].value : [],
+      lowStockAlerts: results[4].status === 'fulfilled' ? results[4].value : [],
     };
   }
 }

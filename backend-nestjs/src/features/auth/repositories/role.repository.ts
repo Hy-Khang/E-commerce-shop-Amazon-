@@ -8,7 +8,7 @@ export class RoleRepository {
   constructor(
     @InjectRepository(Role)
     private readonly repo: Repository<Role>,
-  ) { }
+  ) {}
 
   async findByName(name: string): Promise<Role | null> {
     return this.repo.findOne({ where: { name } });
@@ -30,7 +30,9 @@ export class RoleRepository {
     return roles as (Role & { userCount: number })[];
   }
 
-  async findByIdWithUserCount(id: number): Promise<(Role & { userCount: number }) | null> {
+  async findByIdWithUserCount(
+    id: number,
+  ): Promise<(Role & { userCount: number }) | null> {
     const result = await this.repo
       .createQueryBuilder('role')
       .loadRelationCountAndMap('role.userCount', 'role.users')

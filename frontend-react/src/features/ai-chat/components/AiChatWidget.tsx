@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 import { MessageCircle, X } from 'lucide-react';
-import { useAiConfig } from '../hooks/useAiChat';
+import { useAuthStore } from '@/features/auth';
+import { useAiConfig, useSendAiMessage } from '../hooks/useAiChat';
 import { useAiChatStore, type AiPanelSize } from '../stores/ai-chat.store';
 import { AiChatPanel } from './AiChatPanel';
 
@@ -22,6 +25,27 @@ export function AiChatWidget() {
   const isOpen = useAiChatStore((s) => s.isOpen);
   const size = useAiChatStore((s) => s.size);
   const toggle = useAiChatStore((s) => s.toggle);
+  const send = useSendAiMessage();
+
+  // Resume after an OAuth sign-in only. "Continue with Google/Facebook" is a
+  // full-page redirect, so the in-panel resume never runs; on the fresh remount
+  // the OAuth callback has already merged the guest cart, so a persisted
+  // `pendingIntent` is safe to re-send here (reopen the chat + continue checkout).
+  // Mount-only (not an isAuthenticated effect) so it never fires during an
+  // in-widget email login — that path's cart merge is still in flight and is
+  // handled by AiChatPanel.handleResumeAfterLogin after the merge completes.
+  useEffect(() => {
+    if (!useAuthStore.getState().isAuthenticated) return;
+    const { pendingIntent, setPendingIntent, open, closeLoginPrompt } =
+      useAiChatStore.getState();
+    if (!pendingIntent) return;
+    setPendingIntent(null);
+    closeLoginPrompt();
+    open();
+    toast.success('Signed in successfully');
+    send.mutate(pendingIntent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!config?.enabled) return null;
 

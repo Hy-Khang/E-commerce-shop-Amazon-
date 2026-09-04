@@ -17,10 +17,14 @@ import { Shop } from '../../shop/entities/shop.entity';
 @Index('idx_flash_sale_items_sale_status', ['flash_sale_id', 'status'])
 // Filtered UNIQUE: one non-rejected registration per (campaign, variant). A
 // rejected row is kept for audit and lets the seller register the variant again.
-@Index('uq_flash_sale_items_sale_variant', ['flash_sale_id', 'product_variant_id'], {
-  unique: true,
-  where: "status <> 'rejected'",
-})
+@Index(
+  'uq_flash_sale_items_sale_variant',
+  ['flash_sale_id', 'product_variant_id'],
+  {
+    unique: true,
+    where: "status <> 'rejected'",
+  },
+)
 export class FlashSaleItem {
   @PrimaryGeneratedColumn()
   id: number;

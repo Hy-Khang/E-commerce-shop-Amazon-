@@ -36,9 +36,19 @@ export class WishlistController {
 
   @Post('wishlist')
   @ApiOperation({ summary: 'Add product to wishlist' })
-  @ApiResponse({ status: 201, description: 'Product added to wishlist', type: WishlistItemResponseDto })
-  @ApiResponse({ status: 404, description: 'WISHLIST_003: Product not found or inactive' })
-  @ApiResponse({ status: 409, description: 'WISHLIST_001: Product already in wishlist' })
+  @ApiResponse({
+    status: 201,
+    description: 'Product added to wishlist',
+    type: WishlistItemResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'WISHLIST_003: Product not found or inactive',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'WISHLIST_001: Product already in wishlist',
+  })
   async add(
     @CurrentUser() user: ICurrentUser,
     @Body() dto: AddWishlistItemDto,
@@ -50,7 +60,10 @@ export class WishlistController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove product from wishlist' })
   @ApiResponse({ status: 204, description: 'Product removed from wishlist' })
-  @ApiResponse({ status: 404, description: 'WISHLIST_002: Product not in wishlist' })
+  @ApiResponse({
+    status: 404,
+    description: 'WISHLIST_002: Product not in wishlist',
+  })
   async remove(
     @CurrentUser() user: ICurrentUser,
     @Param('productId', ParseIntPipe) productId: number,
@@ -60,7 +73,11 @@ export class WishlistController {
 
   @Get('wishlist')
   @ApiOperation({ summary: 'List my wishlist (paginated)' })
-  @ApiResponse({ status: 200, description: 'Returns paginated wishlist', type: [WishlistItemResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated wishlist',
+    type: [WishlistItemResponseDto],
+  })
   async findAll(
     @CurrentUser() user: ICurrentUser,
     @Query() query: WishlistQueryDto,
@@ -70,7 +87,11 @@ export class WishlistController {
 
   @Get('wishlist/check/:productId')
   @ApiOperation({ summary: 'Check if product is in my wishlist' })
-  @ApiResponse({ status: 200, description: 'Returns wishlist check result', type: WishlistCheckResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns wishlist check result',
+    type: WishlistCheckResponseDto,
+  })
   async check(
     @CurrentUser() user: ICurrentUser,
     @Param('productId', ParseIntPipe) productId: number,
@@ -81,7 +102,11 @@ export class WishlistController {
   @Post('wishlist/check')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk check multiple products in wishlist' })
-  @ApiResponse({ status: 200, description: 'Returns map of product_id to boolean', type: BulkCheckResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns map of product_id to boolean',
+    type: BulkCheckResponseDto,
+  })
   async bulkCheck(
     @CurrentUser() user: ICurrentUser,
     @Body() dto: BulkCheckWishlistDto,

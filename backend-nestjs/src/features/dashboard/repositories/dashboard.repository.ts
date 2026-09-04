@@ -120,7 +120,7 @@ export class DashboardRepository {
   ): Promise<IRevenueDataPoint[]> {
     const isMonth = granularity === 'month';
     const bucketExpr = isMonth
-      ? "CONVERT(varchar(7), o.created_at, 126)"
+      ? 'CONVERT(varchar(7), o.created_at, 126)'
       : 'CAST(o.created_at AS DATE)';
     const revenueExpr = shopId
       ? 'COALESCE(SUM(oi.price * oi.quantity), 0)'

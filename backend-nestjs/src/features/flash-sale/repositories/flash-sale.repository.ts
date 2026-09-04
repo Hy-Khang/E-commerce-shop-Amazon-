@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FlashSale } from '../entities/flash-sale.entity';
 import { FlashSaleQueryDto } from '../dto/flash-sale-query.dto';
-import { FlashSaleItemStatus, FlashSaleStatus } from '../types/flash-sale.types';
+import {
+  FlashSaleItemStatus,
+  FlashSaleStatus,
+} from '../types/flash-sale.types';
 import { IPaginatedResult } from '../../../common/interfaces/paginated-result.interface';
 
 @Injectable()
@@ -146,7 +149,10 @@ export class FlashSaleRepository {
     const result = await this.repo
       .createQueryBuilder()
       .update(FlashSale)
-      .set({ status: FlashSaleStatus.Active, updated_at: () => 'SYSUTCDATETIME()' })
+      .set({
+        status: FlashSaleStatus.Active,
+        updated_at: () => 'SYSUTCDATETIME()',
+      })
       .where('is_active = 1')
       .andWhere('status = :scheduled', { scheduled: FlashSaleStatus.Scheduled })
       .andWhere('starts_at <= :now', { now })
@@ -160,7 +166,10 @@ export class FlashSaleRepository {
     const result = await this.repo
       .createQueryBuilder()
       .update(FlashSale)
-      .set({ status: FlashSaleStatus.Ended, updated_at: () => 'SYSUTCDATETIME()' })
+      .set({
+        status: FlashSaleStatus.Ended,
+        updated_at: () => 'SYSUTCDATETIME()',
+      })
       .where('status != :ended', { ended: FlashSaleStatus.Ended })
       .andWhere('ends_at <= :now', { now })
       .execute();

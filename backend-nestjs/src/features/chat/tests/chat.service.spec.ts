@@ -181,7 +181,9 @@ describe('ChatService', () => {
     });
 
     it('increments the recipient unread when they are not viewing the thread', async () => {
-      chatGateway.resolveDeliveryStatus.mockReturnValue(MessageStatus.Delivered);
+      chatGateway.resolveDeliveryStatus.mockReturnValue(
+        MessageStatus.Delivered,
+      );
 
       await service.sendMessage(CUSTOMER_ID, 1, 'Hello shop');
 

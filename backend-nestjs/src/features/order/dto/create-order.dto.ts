@@ -52,7 +52,8 @@ export class CreateOrderDto {
 
   @ApiPropertyOptional({
     example: 5000,
-    description: 'Xu (Hoàn Xu) to redeem — capped at 50% of items total & balance',
+    description:
+      'Xu (Hoàn Xu) to redeem — capped at 50% of items total & balance',
   })
   @IsOptional()
   @IsInt()

@@ -223,10 +223,7 @@ export class OrderRepository {
     return total > 0 && total === cancelledCount;
   }
 
-  async findByIdAndUserId(
-    id: number,
-    userId: number,
-  ): Promise<Order | null> {
+  async findByIdAndUserId(id: number, userId: number): Promise<Order | null> {
     return this.repo.findOne({ where: { id, user_id: userId } });
   }
 

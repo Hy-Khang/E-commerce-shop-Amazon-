@@ -27,7 +27,7 @@ export class AiSettingRepository {
     await this.repo.update(current.id, {
       ...patch,
       updated_at: () => 'SYSUTCDATETIME()',
-    } as any);
+    });
     return this.get();
   }
 }

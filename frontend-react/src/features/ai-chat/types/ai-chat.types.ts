@@ -37,13 +37,23 @@ export interface AiOrderPlaced {
   payment_method: PaymentMethod;
 }
 
+/** A single quick-reply chip — clicking it sends `value` as the next message. */
+export interface AiQuickReplyOption {
+  label: string;
+  value: string;
+}
+
 /** A user-facing action card the agent produced (rendered under the reply). */
 export type AgentAction =
   | { type: 'cart_updated'; data: AiCartSummary }
   | { type: 'checkout_proposal'; data: AiCheckoutProposal }
   | { type: 'order_placed'; data: AiOrderPlaced }
   | { type: 'order_cancelled'; data: { order_id: number; status: string } }
-  | { type: 'needs_login'; data: { tool: string } };
+  | { type: 'needs_login'; data: { tool: string } }
+  | {
+      type: 'quick_replies';
+      data: { prompt?: string; options: AiQuickReplyOption[] };
+    };
 
 /** A message rendered in the storefront widget (client-side shape). */
 export interface AiChatMessage {

@@ -1,8 +1,10 @@
-import { LogIn, PackageX } from 'lucide-react';
+import { PackageX } from 'lucide-react';
 import { useAiChatStore } from '../stores/ai-chat.store';
 import { AiCartUpdateCard } from './AiCartUpdateCard';
 import { AiCheckoutProposalCard } from './AiCheckoutProposalCard';
 import { AiOrderPlacedCard } from './AiOrderPlacedCard';
+import { AiQuickRepliesCard } from './AiQuickRepliesCard';
+import { AiNeedsLoginCard } from './AiNeedsLoginCard';
 import type { AgentAction, AiOrderPlaced } from '../types/ai-chat.types';
 
 interface Props {
@@ -12,12 +14,20 @@ interface Props {
   messageId?: string;
   onNavigate?: () => void;
   onPickSuggestion?: (text: string) => void;
+  /** Only the latest turn's quick-reply chips answer the pending question;
+   *  earlier ones render inert. Defaults to true. */
+  quickRepliesInteractive?: boolean;
 }
 
 /** Renders the agent's action cards beneath an assistant bubble. */
-export function AiActionCards({ actions, messageId, onNavigate, onPickSuggestion }: Props) {
+export function AiActionCards({
+  actions,
+  messageId,
+  onNavigate,
+  onPickSuggestion,
+  quickRepliesInteractive = true,
+}: Props) {
   const updateMessage = useAiChatStore((s) => s.updateMessage);
-  const openLoginPrompt = useAiChatStore((s) => s.openLoginPrompt);
 
   if (!actions.length) return null;
 
@@ -57,6 +67,16 @@ export function AiActionCards({ actions, messageId, onNavigate, onPickSuggestion
                 onPickSuggestion={onPickSuggestion}
               />
             );
+          case 'quick_replies':
+            return (
+              <AiQuickRepliesCard
+                key={i}
+                prompt={action.data.prompt}
+                options={action.data.options}
+                onPick={onPickSuggestion}
+                interactive={quickRepliesInteractive}
+              />
+            );
           case 'order_cancelled':
             return (
               <div
@@ -68,23 +88,7 @@ export function AiActionCards({ actions, messageId, onNavigate, onPickSuggestion
               </div>
             );
           case 'needs_login':
-            return (
-              <div
-                key={i}
-                className="mt-2 rounded-xl border border-border-default bg-surface p-3"
-              >
-                <p className="text-xs text-text-secondary">
-                  You need to sign in to use this feature.
-                </p>
-                <button
-                  type="button"
-                  onClick={openLoginPrompt}
-                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-hover"
-                >
-                  <LogIn className="h-3.5 w-3.5" /> Sign in
-                </button>
-              </div>
-            );
+            return <AiNeedsLoginCard key={i} />;
           default:
             return null;
         }

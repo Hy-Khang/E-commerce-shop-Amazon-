@@ -27,7 +27,11 @@ export class AppSettingRepository {
     const result = await this.repo
       .createQueryBuilder()
       .update(AppSetting)
-      .set({ value, updated_by: updatedBy, updated_at: () => 'SYSUTCDATETIME()' })
+      .set({
+        value,
+        updated_by: updatedBy,
+        updated_at: () => 'SYSUTCDATETIME()',
+      })
       .where('[key] = :key', { key })
       .execute();
 

@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { FlashSaleItem } from '../entities/flash-sale-item.entity';
-import { FlashSaleItemStatus, FlashSaleStatus } from '../types/flash-sale.types';
+import {
+  FlashSaleItemStatus,
+  FlashSaleStatus,
+} from '../types/flash-sale.types';
 import { IPaginatedResult } from '../../../common/interfaces/paginated-result.interface';
 
 export interface IActiveFlashRow {
@@ -50,10 +53,7 @@ export class FlashSaleItemRepository {
    * registration. Rejected rows are ignored so a seller can re-register after
    * a rejection (mirrors the filtered UNIQUE index).
    */
-  async existsInSale(
-    flashSaleId: number,
-    variantId: number,
-  ): Promise<boolean> {
+  async existsInSale(flashSaleId: number, variantId: number): Promise<boolean> {
     return this.repo
       .createQueryBuilder('item')
       .where('item.flash_sale_id = :flashSaleId', { flashSaleId })

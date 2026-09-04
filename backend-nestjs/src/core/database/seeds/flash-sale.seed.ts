@@ -40,7 +40,9 @@ export const FlashSaleSeed: ISeed = {
     );
 
     if (variants.length === 0) {
-      console.log('  ! flash_sale_items: skipped (no shop-owned variants found)');
+      console.log(
+        '  ! flash_sale_items: skipped (no shop-owned variants found)',
+      );
       await qr.release();
       return;
     }

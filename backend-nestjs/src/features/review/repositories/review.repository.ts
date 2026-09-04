@@ -139,9 +139,7 @@ export class ReviewRepository {
     };
   }
 
-  async getReviewStats(
-    productId: number,
-  ): Promise<{
+  async getReviewStats(productId: number): Promise<{
     average_rating: number;
     total_reviews: number;
     rating_distribution: Record<number, number>;

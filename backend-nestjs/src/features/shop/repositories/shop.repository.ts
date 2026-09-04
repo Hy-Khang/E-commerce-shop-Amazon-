@@ -45,14 +45,8 @@ export class ShopRepository {
     const stats = await this.repo.manager
       .createQueryBuilder()
       .select('COUNT(DISTINCT p.id)', 'productCount')
-      .addSelect(
-        'COALESCE(AVG(CAST(r.rating AS FLOAT)), 0)',
-        'avgRating',
-      )
-      .addSelect(
-        'COALESCE(SUM(oi.quantity), 0)',
-        'totalSales',
-      )
+      .addSelect('COALESCE(AVG(CAST(r.rating AS FLOAT)), 0)', 'avgRating')
+      .addSelect('COALESCE(SUM(oi.quantity), 0)', 'totalSales')
       .from('products', 'p')
       .leftJoin('reviews', 'r', 'r.product_id = p.id')
       .leftJoin('product_variants', 'pv', 'pv.product_id = p.id')
@@ -77,7 +71,9 @@ export class ShopRepository {
     return this.repo.findOne({ where: { id } });
   }
 
-  async findActivePaginated(filter: IShopFilter): Promise<IPaginatedResult<Shop>> {
+  async findActivePaginated(
+    filter: IShopFilter,
+  ): Promise<IPaginatedResult<Shop>> {
     const qb = this.repo
       .createQueryBuilder('shop')
       .where('shop.status = :status', { status: ShopStatus.Active });
@@ -96,7 +92,12 @@ export class ShopRepository {
 
     return {
       data,
-      meta: { page: filter.page, limit: filter.limit, total, totalPages: Math.ceil(total / filter.limit) },
+      meta: {
+        page: filter.page,
+        limit: filter.limit,
+        total,
+        totalPages: Math.ceil(total / filter.limit),
+      },
     };
   }
 
@@ -121,7 +122,12 @@ export class ShopRepository {
 
     return {
       data,
-      meta: { page: filter.page, limit: filter.limit, total, totalPages: Math.ceil(total / filter.limit) },
+      meta: {
+        page: filter.page,
+        limit: filter.limit,
+        total,
+        totalPages: Math.ceil(total / filter.limit),
+      },
     };
   }
 
@@ -149,7 +155,9 @@ export class ShopRepository {
       .andWhere('product.is_active = :isActive', { isActive: true });
 
     if (filter.search) {
-      qb.andWhere('product.name LIKE :search', { search: `%${filter.search}%` });
+      qb.andWhere('product.name LIKE :search', {
+        search: `%${filter.search}%`,
+      });
     }
 
     const sortColumn = filter.sort || 'created_at';
@@ -171,7 +179,10 @@ export class ShopRepository {
     };
   }
 
-  async suggestShops(query: string, limit: number): Promise<{ name: string; slug: string; logo_url: string | null }[]> {
+  async suggestShops(
+    query: string,
+    limit: number,
+  ): Promise<{ name: string; slug: string; logo_url: string | null }[]> {
     return this.repo
       .createQueryBuilder('shop')
       .select(['shop.name', 'shop.slug', 'shop.logo_url'])

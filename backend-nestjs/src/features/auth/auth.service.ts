@@ -36,7 +36,14 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
-import { IAuthMeResponse, IJwtPayload, ILoginResponse, IOAuthProfile, IRegisterResponse, ITokenPair } from './types/auth.types';
+import {
+  IAuthMeResponse,
+  IJwtPayload,
+  ILoginResponse,
+  IOAuthProfile,
+  IRegisterResponse,
+  ITokenPair,
+} from './types/auth.types';
 import { MailService } from '../../core/mail/mail.service';
 import { hashToken } from './utils/auth.util';
 import { Role } from './entities/role.entity';
@@ -97,7 +104,11 @@ export class AuthService {
     });
 
     try {
-      await this.mailService.sendVerificationEmail(dto.email, dto.full_name, otp);
+      await this.mailService.sendVerificationEmail(
+        dto.email,
+        dto.full_name,
+        otp,
+      );
     } catch {
       user.email_verify_token = null;
       user.email_verify_expires = null;
@@ -105,7 +116,8 @@ export class AuthService {
       await this.userRepository.save(user);
       throw new InternalServerErrorException({
         code: 'AUTH_012',
-        message: 'Account created but failed to send verification email. Please use resend.',
+        message:
+          'Account created but failed to send verification email. Please use resend.',
       });
     }
 
@@ -153,7 +165,10 @@ export class AuthService {
 
     const isMatch =
       incomingHash.length === storedHash.length &&
-      crypto.timingSafeEqual(Buffer.from(incomingHash), Buffer.from(storedHash));
+      crypto.timingSafeEqual(
+        Buffer.from(incomingHash),
+        Buffer.from(storedHash),
+      );
 
     if (!isMatch) {
       user.email_verify_attempts += 1;
@@ -173,19 +188,24 @@ export class AuthService {
     return this.buildLoginResponse(user);
   }
 
-  async resendVerification(dto: ResendVerificationDto): Promise<IRegisterResponse> {
+  async resendVerification(
+    dto: ResendVerificationDto,
+  ): Promise<IRegisterResponse> {
     const user = await this.userRepository.findByEmail(dto.email);
     if (!user || user.email_verified) {
       return {
         email: dto.email,
         expiresIn: 300,
-        message: 'If the email exists and is unverified, a new code has been sent',
+        message:
+          'If the email exists and is unverified, a new code has been sent',
       };
     }
 
     // 60s cooldown: OTP was sent less than 60s ago
     if (user.email_verify_expires) {
-      const sentAt = new Date(user.email_verify_expires.getTime() - 5 * 60 * 1000);
+      const sentAt = new Date(
+        user.email_verify_expires.getTime() - 5 * 60 * 1000,
+      );
       if (Date.now() - sentAt.getTime() < 60 * 1000) {
         throw new BadRequestException({
           code: 'AUTH_011',
@@ -220,7 +240,11 @@ export class AuthService {
     user.email_verify_attempts = 0;
     await this.userRepository.save(user);
 
-    await this.mailService.sendVerificationEmail(dto.email, user.full_name, otp);
+    await this.mailService.sendVerificationEmail(
+      dto.email,
+      user.full_name,
+      otp,
+    );
 
     return {
       email: dto.email,
@@ -240,17 +264,25 @@ export class AuthService {
     user.password_reset_expires_at = new Date(Date.now() + 60 * 60 * 1000);
     await this.userRepository.save(user);
 
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:5173');
+    const frontendUrl = this.configService.get<string>(
+      'FRONTEND_URL',
+      'http://localhost:5173',
+    );
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
 
-    await this.mailService.sendPasswordResetEmail(dto.email, user.full_name, resetUrl);
+    await this.mailService.sendPasswordResetEmail(
+      dto.email,
+      user.full_name,
+      resetUrl,
+    );
 
     return { message: 'If the email exists, a reset link has been sent' };
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
     const tokenHash = hashToken(dto.token);
-    const user = await this.userRepository.findByPasswordResetTokenHash(tokenHash);
+    const user =
+      await this.userRepository.findByPasswordResetTokenHash(tokenHash);
 
     if (!user) {
       throw new BadRequestException({
@@ -259,7 +291,10 @@ export class AuthService {
       });
     }
 
-    if (!user.password_reset_expires_at || user.password_reset_expires_at < new Date()) {
+    if (
+      !user.password_reset_expires_at ||
+      user.password_reset_expires_at < new Date()
+    ) {
       throw new BadRequestException({
         code: 'AUTH_012',
         message: 'Reset token expired',
@@ -276,10 +311,16 @@ export class AuthService {
     return { message: 'Password reset successfully' };
   }
 
-  async changePassword(userId: number, dto: ChangePasswordDto): Promise<{ message: string }> {
+  async changePassword(
+    userId: number,
+    dto: ChangePasswordDto,
+  ): Promise<{ message: string }> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new NotFoundException({ code: 'USER_002', message: 'User not found' });
+      throw new NotFoundException({
+        code: 'USER_002',
+        message: 'User not found',
+      });
     }
 
     if (!user.password_hash) {
@@ -289,7 +330,10 @@ export class AuthService {
       });
     }
 
-    const isValid = await bcrypt.compare(dto.current_password, user.password_hash);
+    const isValid = await bcrypt.compare(
+      dto.current_password,
+      user.password_hash,
+    );
     if (!isValid) {
       throw new UnauthorizedException({
         code: 'AUTH_001',
@@ -312,16 +356,23 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
-  async setPassword(userId: number, dto: SetPasswordDto): Promise<{ message: string }> {
+  async setPassword(
+    userId: number,
+    dto: SetPasswordDto,
+  ): Promise<{ message: string }> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new NotFoundException({ code: 'USER_002', message: 'User not found' });
+      throw new NotFoundException({
+        code: 'USER_002',
+        message: 'User not found',
+      });
     }
 
     if (user.password_hash) {
       throw new BadRequestException({
         code: 'AUTH_001',
-        message: 'Use change-password endpoint for accounts with existing password',
+        message:
+          'Use change-password endpoint for accounts with existing password',
       });
     }
 
@@ -340,15 +391,19 @@ export class AuthService {
       });
     }
 
-    const existingLink = await this.userAuthProviderRepository.findByProviderAndProviderId(
-      profile.provider,
-      profile.providerId,
-    );
+    const existingLink =
+      await this.userAuthProviderRepository.findByProviderAndProviderId(
+        profile.provider,
+        profile.providerId,
+      );
 
     if (existingLink) {
       const user = existingLink.user;
       if (!user.is_active) {
-        throw new ForbiddenException({ code: 'AUTH_005', message: 'Account deactivated' });
+        throw new ForbiddenException({
+          code: 'AUTH_005',
+          message: 'Account deactivated',
+        });
       }
       return user;
     }
@@ -357,14 +412,23 @@ export class AuthService {
 
     if (existingUser) {
       if (!existingUser.is_active) {
-        throw new ForbiddenException({ code: 'AUTH_005', message: 'Account deactivated' });
+        throw new ForbiddenException({
+          code: 'AUTH_005',
+          message: 'Account deactivated',
+        });
       }
       if (!existingUser.email_verified) {
         existingUser.email_verified = true;
         await this.userRepository.save(existingUser);
       }
-      await this.userAuthProviderRepository.linkProvider(existingUser.id, profile.provider, profile.providerId);
-      this.logger.log(`Linked ${profile.provider} to existing user: ${existingUser.email}`);
+      await this.userAuthProviderRepository.linkProvider(
+        existingUser.id,
+        profile.provider,
+        profile.providerId,
+      );
+      this.logger.log(
+        `Linked ${profile.provider} to existing user: ${existingUser.email}`,
+      );
       return existingUser;
     }
 
@@ -375,14 +439,20 @@ export class AuthService {
 
     const newUser = await this.userRepository.create({
       email: profile.email,
-      password_hash: null as any,
+      password_hash: null,
       full_name: profile.fullName,
       role_id: customerRole.id,
       email_verified: true,
     });
 
-    await this.userAuthProviderRepository.linkProvider(newUser.id, profile.provider, profile.providerId);
-    this.logger.log(`OAuth user created: ${profile.email} via ${profile.provider}`);
+    await this.userAuthProviderRepository.linkProvider(
+      newUser.id,
+      profile.provider,
+      profile.providerId,
+    );
+    this.logger.log(
+      `OAuth user created: ${profile.email} via ${profile.provider}`,
+    );
 
     const userWithRole = await this.userRepository.findById(newUser.id);
     return userWithRole!;
@@ -398,7 +468,8 @@ export class AuthService {
 
   async exchangeOAuthCode(code: string): Promise<ILoginResponse> {
     const codeHash = hashToken(code);
-    const oauthCode = await this.oauthCodeRepository.findAndDeleteByCodeHash(codeHash);
+    const oauthCode =
+      await this.oauthCodeRepository.findAndDeleteByCodeHash(codeHash);
 
     if (!oauthCode) {
       throw new BadRequestException({
@@ -456,7 +527,10 @@ export class AuthService {
       } as any);
     }
 
-    const passwordValid = await bcrypt.compare(dto.password, user.password_hash);
+    const passwordValid = await bcrypt.compare(
+      dto.password,
+      user.password_hash,
+    );
     if (!passwordValid) {
       throw new UnauthorizedException({
         code: 'AUTH_001',
@@ -471,8 +545,12 @@ export class AuthService {
     const tokens = await this.generateTokenPair(user.id, user.role_id);
     await this.storeRefreshToken(user.id, tokens.refreshToken);
 
-    const permissions = await this.rolePermissionRepository.findPermissionStringsByRoleId(user.role_id);
-    const providers = await this.userAuthProviderRepository.getProviderNamesByUserId(user.id);
+    const permissions =
+      await this.rolePermissionRepository.findPermissionStringsByRoleId(
+        user.role_id,
+      );
+    const providers =
+      await this.userAuthProviderRepository.getProviderNamesByUserId(user.id);
 
     this.logger.log(`User logged in: ${user.email}`);
 
@@ -539,8 +617,12 @@ export class AuthService {
       });
     }
 
-    const permissions = await this.rolePermissionRepository.findPermissionStringsByRoleId(user.role_id);
-    const providers = await this.userAuthProviderRepository.getProviderNamesByUserId(user.id);
+    const permissions =
+      await this.rolePermissionRepository.findPermissionStringsByRoleId(
+        user.role_id,
+      );
+    const providers =
+      await this.userAuthProviderRepository.getProviderNamesByUserId(user.id);
 
     return {
       id: user.id,
@@ -558,11 +640,15 @@ export class AuthService {
 
   // ─── Admin: User Management ───
 
-  async findAllUsers(query: AdminUserQueryDto): Promise<IPaginatedResult<User>> {
+  async findAllUsers(
+    query: AdminUserQueryDto,
+  ): Promise<IPaginatedResult<User>> {
     return this.userRepository.findAllPaginated(query);
   }
 
-  async findUserById(id: number): Promise<User & { orderCount: number; reviewCount: number }> {
+  async findUserById(
+    id: number,
+  ): Promise<User & { orderCount: number; reviewCount: number }> {
     const user = await this.userRepository.findByIdWithStats(id);
     if (!user) {
       throw new NotFoundException({
@@ -612,7 +698,10 @@ export class AuthService {
     return { ...user, role_id: dto.role_id, role };
   }
 
-  async updateProfile(userId: number, data: { full_name?: string; phone?: string }): Promise<User> {
+  async updateProfile(
+    userId: number,
+    data: { full_name?: string; phone?: string },
+  ): Promise<User> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException({
@@ -744,7 +833,10 @@ export class AuthService {
     return permission;
   }
 
-  async updatePermission(id: number, dto: UpdatePermissionDto): Promise<Permission> {
+  async updatePermission(
+    id: number,
+    dto: UpdatePermissionDto,
+  ): Promise<Permission> {
     const permission = await this.permissionRepository.findById(id);
     if (!permission) {
       throw new NotFoundException({
@@ -778,7 +870,9 @@ export class AuthService {
 
     await this.permissionRepository.delete(id);
     await this.permissionCache.invalidateAll();
-    this.logger.log(`Permission deleted: ${permission.resource}:${permission.action}`);
+    this.logger.log(
+      `Permission deleted: ${permission.resource}:${permission.action}`,
+    );
   }
 
   // ─── Admin: Role-Permission Assignment ───
@@ -792,7 +886,8 @@ export class AuthService {
       });
     }
 
-    const rolePermissions = await this.rolePermissionRepository.findByRoleId(roleId);
+    const rolePermissions =
+      await this.rolePermissionRepository.findByRoleId(roleId);
     return rolePermissions.map((rp) => rp.permission);
   }
 
@@ -813,9 +908,14 @@ export class AuthService {
 
     await this.validateEscalation(dto.permission_ids, currentUserRoleId);
 
-    await this.rolePermissionRepository.syncPermissions(roleId, dto.permission_ids);
+    await this.rolePermissionRepository.syncPermissions(
+      roleId,
+      dto.permission_ids,
+    );
     await this.permissionCache.invalidate(roleId);
-    this.logger.log(`Role ${roleId} permissions synced: [${dto.permission_ids.join(', ')}]`);
+    this.logger.log(
+      `Role ${roleId} permissions synced: [${dto.permission_ids.join(', ')}]`,
+    );
 
     return this.getRolePermissions(roleId);
   }
@@ -837,9 +937,14 @@ export class AuthService {
 
     await this.validateEscalation(dto.permission_ids, currentUserRoleId);
 
-    await this.rolePermissionRepository.addPermissions(roleId, dto.permission_ids);
+    await this.rolePermissionRepository.addPermissions(
+      roleId,
+      dto.permission_ids,
+    );
     await this.permissionCache.invalidate(roleId);
-    this.logger.log(`Role ${roleId} permissions added: [${dto.permission_ids.join(', ')}]`);
+    this.logger.log(
+      `Role ${roleId} permissions added: [${dto.permission_ids.join(', ')}]`,
+    );
 
     return this.getRolePermissions(roleId);
   }
@@ -859,27 +964,43 @@ export class AuthService {
       });
     }
 
-    await this.rolePermissionRepository.removePermissions(roleId, dto.permission_ids);
+    await this.rolePermissionRepository.removePermissions(
+      roleId,
+      dto.permission_ids,
+    );
     await this.permissionCache.invalidate(roleId);
-    this.logger.log(`Role ${roleId} permissions removed: [${dto.permission_ids.join(', ')}]`);
+    this.logger.log(
+      `Role ${roleId} permissions removed: [${dto.permission_ids.join(', ')}]`,
+    );
 
     return this.getRolePermissions(roleId);
   }
 
-  private validateRolePermissionModification(targetRoleId: number, currentUserRoleId: number): void {
+  private validateRolePermissionModification(
+    targetRoleId: number,
+    currentUserRoleId: number,
+  ): void {
     if (targetRoleId === currentUserRoleId) {
       throw new ForbiddenException({
         code: 'PERMISSION_005',
-        message: 'Cannot modify own role\'s permissions',
+        message: "Cannot modify own role's permissions",
       });
     }
   }
 
-  private async validateEscalation(permissionIds: number[], currentUserRoleId: number): Promise<void> {
-    const currentUserPermissions = await this.rolePermissionRepository.findByRoleId(currentUserRoleId);
-    const currentPermissionIds = new Set(currentUserPermissions.map((rp) => rp.permission_id));
+  private async validateEscalation(
+    permissionIds: number[],
+    currentUserRoleId: number,
+  ): Promise<void> {
+    const currentUserPermissions =
+      await this.rolePermissionRepository.findByRoleId(currentUserRoleId);
+    const currentPermissionIds = new Set(
+      currentUserPermissions.map((rp) => rp.permission_id),
+    );
 
-    const unauthorized = permissionIds.filter((id) => !currentPermissionIds.has(id));
+    const unauthorized = permissionIds.filter(
+      (id) => !currentPermissionIds.has(id),
+    );
     if (unauthorized.length > 0) {
       throw new ForbiddenException({
         code: 'PERMISSION_004',

@@ -35,7 +35,11 @@ export class AdminPermissionController {
   @Permissions(PERMISSIONS.PERMISSIONS_READ)
   @ApiOperation({ summary: 'List all permissions (filter by ?resource=)' })
   @ApiQuery({ name: 'resource', required: false, type: String })
-  @ApiResponse({ status: 200, description: 'Returns all permissions', type: [PermissionResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all permissions',
+    type: [PermissionResponseDto],
+  })
   async findAll(@Query('resource') resource?: string) {
     return this.authService.findAllPermissions(resource);
   }
@@ -43,8 +47,15 @@ export class AdminPermissionController {
   @Get(':id')
   @Permissions(PERMISSIONS.PERMISSIONS_READ)
   @ApiOperation({ summary: 'Get permission by ID' })
-  @ApiResponse({ status: 200, description: 'Returns permission detail', type: PermissionResponseDto })
-  @ApiResponse({ status: 404, description: 'PERMISSION_003: Permission not found' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns permission detail',
+    type: PermissionResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'PERMISSION_003: Permission not found',
+  })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.authService.findPermissionById(id);
   }
@@ -52,8 +63,15 @@ export class AdminPermissionController {
   @Post()
   @Permissions(PERMISSIONS.PERMISSIONS_CREATE)
   @ApiOperation({ summary: 'Create permission' })
-  @ApiResponse({ status: 201, description: 'Permission created', type: PermissionResponseDto })
-  @ApiResponse({ status: 409, description: 'PERMISSION_001: Permission resource:action already exists' })
+  @ApiResponse({
+    status: 201,
+    description: 'Permission created',
+    type: PermissionResponseDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'PERMISSION_001: Permission resource:action already exists',
+  })
   async create(@Body() dto: CreatePermissionDto) {
     return this.authService.createPermission(dto);
   }
@@ -61,8 +79,15 @@ export class AdminPermissionController {
   @Patch(':id')
   @Permissions(PERMISSIONS.PERMISSIONS_UPDATE)
   @ApiOperation({ summary: 'Update permission (name, description)' })
-  @ApiResponse({ status: 200, description: 'Permission updated', type: PermissionResponseDto })
-  @ApiResponse({ status: 404, description: 'PERMISSION_003: Permission not found' })
+  @ApiResponse({
+    status: 200,
+    description: 'Permission updated',
+    type: PermissionResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'PERMISSION_003: Permission not found',
+  })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePermissionDto,
@@ -75,8 +100,14 @@ export class AdminPermissionController {
   @Permissions(PERMISSIONS.PERMISSIONS_DELETE)
   @ApiOperation({ summary: 'Delete permission (fails if assigned to roles)' })
   @ApiResponse({ status: 204, description: 'Permission deleted' })
-  @ApiResponse({ status: 400, description: 'PERMISSION_002: Cannot delete permission assigned to roles' })
-  @ApiResponse({ status: 404, description: 'PERMISSION_003: Permission not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'PERMISSION_002: Cannot delete permission assigned to roles',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'PERMISSION_003: Permission not found',
+  })
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.authService.deletePermission(id);
   }

@@ -14,12 +14,17 @@ export class FlashSaleQueryDto extends PaginationDto {
   @IsEnum(FlashSaleStatus)
   status?: FlashSaleStatus;
 
-  @ApiPropertyOptional({ description: 'Filter by active status: true or false' })
+  @ApiPropertyOptional({
+    description: 'Filter by active status: true or false',
+  })
   @IsOptional()
   @IsString()
   is_active?: string;
 
-  @ApiPropertyOptional({ enum: FlashSaleSortBy, default: FlashSaleSortBy.CreatedAt })
+  @ApiPropertyOptional({
+    enum: FlashSaleSortBy,
+    default: FlashSaleSortBy.CreatedAt,
+  })
   @IsOptional()
   @IsEnum(FlashSaleSortBy)
   sort?: string;

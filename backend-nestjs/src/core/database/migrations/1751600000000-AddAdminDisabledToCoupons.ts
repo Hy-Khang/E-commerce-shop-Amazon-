@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddAdminDisabledToCoupons1751600000000
-  implements MigrationInterface
-{
+export class AddAdminDisabledToCoupons1751600000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // admin_disabled: sticky admin moderation lock for shop coupons.
     // 0 = normal, 1 = deactivated by admin (seller cannot re-enable).

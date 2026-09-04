@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MakeOrderGroupIdNotNull1751328000000
-  implements MigrationInterface
-{
+export class MakeOrderGroupIdNotNull1751328000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Backfill any remaining NULL order_group_id with unique UUIDs
     await queryRunner.query(`
@@ -11,9 +9,7 @@ export class MakeOrderGroupIdNotNull1751328000000
     `);
 
     // Drop existing index before altering column
-    await queryRunner.query(
-      `DROP INDEX idx_orders_order_group_id ON orders`,
-    );
+    await queryRunner.query(`DROP INDEX idx_orders_order_group_id ON orders`);
 
     // Make NOT NULL
     await queryRunner.query(
@@ -27,9 +23,7 @@ export class MakeOrderGroupIdNotNull1751328000000
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `DROP INDEX idx_orders_order_group_id ON orders`,
-    );
+    await queryRunner.query(`DROP INDEX idx_orders_order_group_id ON orders`);
 
     await queryRunner.query(
       `ALTER TABLE orders ALTER COLUMN order_group_id NVARCHAR(36) NULL`,

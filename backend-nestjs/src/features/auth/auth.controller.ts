@@ -29,7 +29,10 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
 import { OAuthExchangeDto } from './dto/oauth-exchange.dto';
-import { LoginResponseDto, TokenPairResponseDto } from './dto/auth-response.dto';
+import {
+  LoginResponseDto,
+  TokenPairResponseDto,
+} from './dto/auth-response.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
@@ -50,7 +53,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Register new customer account' })
   @ApiResponse({ status: 201, description: 'Verification code sent' })
   @ApiResponse({ status: 409, description: 'USER_001: Email already exists' })
-  @ApiResponse({ status: 422, description: 'VALIDATION_001: Validation failed' })
+  @ApiResponse({
+    status: 422,
+    description: 'VALIDATION_001: Validation failed',
+  })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -59,7 +65,11 @@ export class AuthController {
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify email with OTP code' })
-  @ApiResponse({ status: 200, description: 'Email verified, returns token pair', type: LoginResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Email verified, returns token pair',
+    type: LoginResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'AUTH_007/AUTH_012/AUTH_013' })
   async verifyEmail(@Body() dto: VerifyEmailDto) {
     return this.authService.verifyEmail(dto);
@@ -79,8 +89,15 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email and password' })
-  @ApiResponse({ status: 200, description: 'Returns token pair + user info', type: LoginResponseDto })
-  @ApiResponse({ status: 401, description: 'AUTH_001: Invalid credentials / AUTH_006: Email not verified' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns token pair + user info',
+    type: LoginResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'AUTH_001: Invalid credentials / AUTH_006: Email not verified',
+  })
   @ApiResponse({ status: 403, description: 'AUTH_005: Account deactivated' })
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -90,8 +107,15 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
-  @ApiResponse({ status: 200, description: 'Returns new token pair', type: TokenPairResponseDto })
-  @ApiResponse({ status: 401, description: 'AUTH_003: Refresh token expired or revoked' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns new token pair',
+    type: TokenPairResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'AUTH_003: Refresh token expired or revoked',
+  })
   async refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto.refreshToken);
   }
@@ -100,7 +124,10 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset email' })
-  @ApiResponse({ status: 200, description: 'Reset email sent (silent on invalid email)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Reset email sent (silent on invalid email)',
+  })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
   }
@@ -118,9 +145,17 @@ export class AuthController {
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Change password (for users with existing password)' })
-  @ApiResponse({ status: 200, description: 'Password changed, all tokens revoked' })
-  @ApiResponse({ status: 401, description: 'AUTH_001: Current password incorrect' })
+  @ApiOperation({
+    summary: 'Change password (for users with existing password)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed, all tokens revoked',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'AUTH_001: Current password incorrect',
+  })
   async changePassword(
     @CurrentUser() user: ICurrentUser,
     @Body() dto: ChangePasswordDto,
@@ -172,8 +207,15 @@ export class AuthController {
   @Post('oauth/exchange')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Exchange one-time OAuth code for tokens' })
-  @ApiResponse({ status: 200, description: 'Returns token pair + user info', type: LoginResponseDto })
-  @ApiResponse({ status: 400, description: 'AUTH_009: Invalid or expired code' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns token pair + user info',
+    type: LoginResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'AUTH_009: Invalid or expired code',
+  })
   async exchangeOAuthCode(@Body() dto: OAuthExchangeDto) {
     return this.authService.exchangeOAuthCode(dto.code);
   }
@@ -182,14 +224,22 @@ export class AuthController {
     const profile = req.user as IOAuthProfile;
     const user = await this.authService.oauthLogin(profile);
     const code = await this.authService.generateOAuthCode(user.id);
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:5173');
+    const frontendUrl = this.configService.get<string>(
+      'FRONTEND_URL',
+      'http://localhost:5173',
+    );
     return res.redirect(`${frontendUrl}/oauth/callback?code=${code}`);
   }
 
   @Get('me')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current user state (role, permissions, is_active)' })
-  @ApiResponse({ status: 200, description: 'Returns full user state for frontend sync' })
+  @ApiOperation({
+    summary: 'Get current user state (role, permissions, is_active)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns full user state for frontend sync',
+  })
   async getMe(@CurrentUser() user: ICurrentUser) {
     return this.authService.getMe(user.id);
   }

@@ -8,7 +8,9 @@ export class AddShopIdToCoupons1751500000000 implements MigrationInterface {
       ALTER TABLE coupons ADD CONSTRAINT fk_coupons_shop_id
       FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE NO ACTION
     `);
-    await queryRunner.query(`CREATE INDEX idx_coupons_shop_id ON coupons(shop_id)`);
+    await queryRunner.query(
+      `CREATE INDEX idx_coupons_shop_id ON coupons(shop_id)`,
+    );
 
     // grant seller role the coupons:* permissions (idempotent — skip rows already present)
     await queryRunner.query(`
@@ -36,7 +38,9 @@ export class AddShopIdToCoupons1751500000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`DROP INDEX idx_coupons_shop_id ON coupons`);
-    await queryRunner.query(`ALTER TABLE coupons DROP CONSTRAINT fk_coupons_shop_id`);
+    await queryRunner.query(
+      `ALTER TABLE coupons DROP CONSTRAINT fk_coupons_shop_id`,
+    );
     await queryRunner.query(`ALTER TABLE coupons DROP COLUMN shop_id`);
   }
 }

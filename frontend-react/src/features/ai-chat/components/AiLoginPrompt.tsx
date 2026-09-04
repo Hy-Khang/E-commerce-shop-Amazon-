@@ -1,8 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { LogIn, Loader2, X } from 'lucide-react';
-import { loginSchema, useLogin, type LoginRequest } from '@/features/auth';
+import { loginSchema, useLogin, SocialLoginButtons, type LoginRequest } from '@/features/auth';
 import { ApiError } from '@/core/api/api.types';
 import { ROUTES } from '@/common/constants/routes';
 
@@ -26,8 +27,14 @@ export function AiLoginPrompt({ onSuccess, onClose }: Props) {
     formState: { errors },
   } = useForm<LoginRequest>({ resolver: zodResolver(loginSchema) });
 
-  // Stay on the page; resume the interrupted flow via onSuccess.
-  const { mutate, isPending, error } = useLogin({ redirect: false, onSuccess });
+  // Stay on the page; confirm success, then resume the interrupted flow.
+  const { mutate, isPending, error } = useLogin({
+    redirect: false,
+    onSuccess: () => {
+      toast.success('Signed in successfully');
+      onSuccess();
+    },
+  });
 
   return (
     <div className="absolute inset-0 z-10 flex flex-col bg-surface/95 backdrop-blur-sm">
@@ -101,6 +108,14 @@ export function AiLoginPrompt({ onSuccess, onClose }: Props) {
             {isPending ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <div className="my-4 flex items-center gap-3">
+          <span className="h-px flex-1 bg-border-default" />
+          <span className="text-xs text-text-muted">or</span>
+          <span className="h-px flex-1 bg-border-default" />
+        </div>
+
+        <SocialLoginButtons />
 
         <p className="mt-3 text-center text-xs text-text-secondary">
           Don&apos;t have an account?{' '}

@@ -32,10 +32,10 @@ describe('AdminOrderController', () => {
         data: [],
         meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
       };
-      service.findAllOrders.mockResolvedValue(mockResult as any);
+      service.findAllOrders.mockResolvedValue(mockResult);
 
       // Act
-      const result = await controller.findAll(query as any);
+      const result = await controller.findAll(query);
 
       // Assert
       expect(service.findAllOrders).toHaveBeenCalledWith(query);

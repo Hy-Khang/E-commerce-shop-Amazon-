@@ -68,7 +68,17 @@ describe('AuthController', () => {
       const expected = {
         accessToken: 'token',
         refreshToken: 'refresh',
-        user: { id: 1, email: dto.email, full_name: 'Test User', role: 'customer', role_id: 1, permissions: [], email_verified: true, has_password: true, providers: [] },
+        user: {
+          id: 1,
+          email: dto.email,
+          full_name: 'Test User',
+          role: 'customer',
+          role_id: 1,
+          permissions: [],
+          email_verified: true,
+          has_password: true,
+          providers: [],
+        },
       };
       service.login.mockResolvedValue(expected);
 
@@ -85,7 +95,10 @@ describe('AuthController', () => {
     it('should call authService.refresh with token', async () => {
       // Arrange
       const dto = { refreshToken: 'some-token' };
-      const expected = { accessToken: 'new-access', refreshToken: 'new-refresh' };
+      const expected = {
+        accessToken: 'new-access',
+        refreshToken: 'new-refresh',
+      };
       service.refresh.mockResolvedValue(expected);
 
       // Act

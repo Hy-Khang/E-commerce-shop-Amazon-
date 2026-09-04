@@ -73,7 +73,9 @@ export function toOrderResponse(order: Order): OrderResponseDto {
   };
 }
 
-export function toOrderListItemResponse(order: Order): OrderListItemResponseDto {
+export function toOrderListItemResponse(
+  order: Order,
+): OrderListItemResponseDto {
   return {
     id: order.id,
     shop_id: order.shop_id,
@@ -110,9 +112,7 @@ export function toAdminOrderResponse(order: Order): AdminOrderResponseDto {
   };
 }
 
-export function toSellerOrderResponse(
-  order: Order,
-): SellerOrderResponseDto {
+export function toSellerOrderResponse(order: Order): SellerOrderResponseDto {
   const items = order.order_items || [];
   const sellerItemsTotal = items.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,

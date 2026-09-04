@@ -27,10 +27,10 @@ describe('AdminReviewController', () => {
       // Arrange
       const query = { page: 1, limit: 20, product_id: 10, rating: 5 };
       const mockResult = mockPaginatedReviews([]);
-      service.findAllReviews.mockResolvedValue(mockResult as any);
+      service.findAllReviews.mockResolvedValue(mockResult);
 
       // Act
-      const result = await controller.findAll(query as any);
+      const result = await controller.findAll(query);
 
       // Assert
       expect(service.findAllReviews).toHaveBeenCalledWith(query);

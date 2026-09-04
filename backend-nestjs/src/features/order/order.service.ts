@@ -64,7 +64,11 @@ import {
   toAdminOrderResponse,
   toSellerOrderResponse,
 } from './utils/order.util';
-import { OrderStatus, PaymentMethod, PaymentStatus } from '../../common/constants';
+import {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from '../../common/constants';
 import { InsufficientStockException } from '../../common/exceptions/insufficient-stock.exception';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { ShopService } from '../shop/shop.service';
@@ -90,7 +94,7 @@ export class OrderService {
     private readonly flashSaleService: FlashSaleService,
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
-  ) { }
+  ) {}
 
   // ─── Customer endpoints ───
 
@@ -196,11 +200,14 @@ export class OrderService {
 
     // ── Group items by shop ──
 
-    const shopGroups = new Map<number, { shopName: string; items: typeof orderItemsData }>();
+    const shopGroups = new Map<
+      number,
+      { shopName: string; items: typeof orderItemsData }
+    >();
     for (const item of orderItemsData) {
       const shopId = item.shop_id!;
       if (!shopGroups.has(shopId)) {
-        shopGroups.set(shopId, { shopName: item.shop_name!, items: [] });
+        shopGroups.set(shopId, { shopName: item.shop_name, items: [] });
       }
       shopGroups.get(shopId)!.items.push(item);
     }
@@ -282,8 +289,11 @@ export class OrderService {
 
       for (const [shopId, { shopName, items }] of shopGroups) {
         const shopItemsTotal = shopItemsTotals.get(shopId)!;
-        const { discount: shopDiscount, couponCode: snapshotCode, usages } =
-          discountByShop.get(shopId)!;
+        const {
+          discount: shopDiscount,
+          couponCode: snapshotCode,
+          usages,
+        } = discountByShop.get(shopId)!;
         const shopCoinDiscount = coinByShop.get(shopId) ?? 0;
         const shopTotal =
           shopItemsTotal - shopDiscount - shopCoinDiscount + shippingFee;
@@ -439,7 +449,10 @@ export class OrderService {
     );
 
     // Group by shop (skip items with no shop — they can't form a valid order).
-    const shopGroups = new Map<number, { shopName: string; itemsTotal: number }>();
+    const shopGroups = new Map<
+      number,
+      { shopName: string; itemsTotal: number }
+    >();
     for (const item of cart.items) {
       const variant = item.product_variant;
       const product = variant.product;
@@ -534,7 +547,10 @@ export class OrderService {
     const perCoupon = new Map<string, number>();
     for (const [, d] of discountByShop) {
       for (const u of d.usages) {
-        perCoupon.set(u.couponCode, (perCoupon.get(u.couponCode) ?? 0) + u.amount);
+        perCoupon.set(
+          u.couponCode,
+          (perCoupon.get(u.couponCode) ?? 0) + u.amount,
+        );
       }
     }
 
@@ -546,10 +562,12 @@ export class OrderService {
       shipping_total: shippingTotal,
       grand_total: subtotal - discountTotal - coinDiscountTotal + shippingTotal,
       shops,
-      applied_coupons: [...perCoupon.entries()].map(([code, discount_amount]) => ({
-        code,
-        discount_amount,
-      })),
+      applied_coupons: [...perCoupon.entries()].map(
+        ([code, discount_amount]) => ({
+          code,
+          discount_amount,
+        }),
+      ),
     };
   }
 
@@ -643,7 +661,8 @@ export class OrderService {
     if (order.status !== OrderStatus.Delivered) {
       throw new BadRequestException({
         code: 'ORDER_005',
-        message: 'Order has already been completed or is not in delivered status',
+        message:
+          'Order has already been completed or is not in delivered status',
       });
     }
 
@@ -654,7 +673,9 @@ export class OrderService {
     // Earn Xu on completion (best-effort, idempotent).
     await this.awardCoinsForOrderSafe(order);
 
-    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
+    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([
+      order.shop_id,
+    ]);
 
     this.eventEmitter.emit('order.status_updated', {
       orderId: order.id,
@@ -693,15 +714,21 @@ export class OrderService {
     if (order.status !== OrderStatus.Delivered) {
       throw new BadRequestException({
         code: 'ORDER_005',
-        message: 'Order has already been completed or is not in delivered status',
+        message:
+          'Order has already been completed or is not in delivered status',
       });
     }
 
-    await this.orderRepository.updateStatus(orderId, OrderStatus.ReturnRequested);
+    await this.orderRepository.updateStatus(
+      orderId,
+      OrderStatus.ReturnRequested,
+    );
     const oldStatus = order.status;
     order.status = OrderStatus.ReturnRequested;
 
-    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
+    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([
+      order.shop_id,
+    ]);
 
     this.eventEmitter.emit('order.status_updated', {
       orderId: order.id,
@@ -760,7 +787,9 @@ export class OrderService {
       })),
     });
 
-    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
+    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([
+      order.shop_id,
+    ]);
     if (sellerUserIds.length > 0) {
       this.eventEmitter.emit('order.status_updated', {
         orderId: order.id,
@@ -907,11 +936,13 @@ export class OrderService {
 
     if (
       order.payment_method === PaymentMethod.Cod &&
-      (order.status === OrderStatus.Pending || order.status === OrderStatus.Confirmed)
+      (order.status === OrderStatus.Pending ||
+        order.status === OrderStatus.Confirmed)
     ) {
       throw new BadRequestException({
         code: 'ORDER_003',
-        message: 'COD orders can only be marked as paid during shipping or after delivery',
+        message:
+          'COD orders can only be marked as paid during shipping or after delivery',
       });
     }
 
@@ -932,7 +963,10 @@ export class OrderService {
     query: OrderQueryDto,
   ): Promise<IPaginatedResult<OrderListItemResponseDto>> {
     const shop = await this.shopService.resolveShopByUserId(userId);
-    const result = await this.orderRepository.findByShopIdPaginated(shop.id, query);
+    const result = await this.orderRepository.findByShopIdPaginated(
+      shop.id,
+      query,
+    );
 
     return {
       data: result.data.map(toOrderListItemResponse),
@@ -945,7 +979,10 @@ export class OrderService {
     orderId: number,
   ): Promise<SellerOrderResponseDto> {
     const shop = await this.shopService.resolveShopByUserId(userId);
-    const order = await this.orderRepository.findByIdWithItemsForShop(orderId, shop.id);
+    const order = await this.orderRepository.findByIdWithItemsForShop(
+      orderId,
+      shop.id,
+    );
     if (!order) {
       throw new NotFoundException({
         code: 'ORDER_001',
@@ -964,7 +1001,10 @@ export class OrderService {
     dto: UpdateOrderStatusDto,
   ): Promise<SellerOrderResponseDto> {
     const shop = await this.shopService.resolveShopByUserId(userId);
-    const order = await this.orderRepository.findByIdWithItemsForShop(orderId, shop.id);
+    const order = await this.orderRepository.findByIdWithItemsForShop(
+      orderId,
+      shop.id,
+    );
     if (!order) {
       throw new NotFoundException({
         code: 'ORDER_001',
@@ -1015,7 +1055,10 @@ export class OrderService {
     dto: UpdatePaymentStatusDto,
   ): Promise<SellerOrderResponseDto> {
     const shop = await this.shopService.resolveShopByUserId(userId);
-    const order = await this.orderRepository.findByIdWithItemsForShop(orderId, shop.id);
+    const order = await this.orderRepository.findByIdWithItemsForShop(
+      orderId,
+      shop.id,
+    );
     if (!order) {
       throw new NotFoundException({
         code: 'ORDER_001',
@@ -1035,11 +1078,13 @@ export class OrderService {
 
     if (
       order.payment_method === PaymentMethod.Cod &&
-      (order.status === OrderStatus.Pending || order.status === OrderStatus.Confirmed)
+      (order.status === OrderStatus.Pending ||
+        order.status === OrderStatus.Confirmed)
     ) {
       throw new BadRequestException({
         code: 'ORDER_003',
-        message: 'COD orders can only be marked as paid during shipping or after delivery',
+        message:
+          'COD orders can only be marked as paid during shipping or after delivery',
       });
     }
 
@@ -1125,9 +1170,7 @@ export class OrderService {
       actorId: userId,
     });
 
-    this.logger.log(
-      `Order #${orderId} accepted by shipper ${userId}`,
-    );
+    this.logger.log(`Order #${orderId} accepted by shipper ${userId}`);
 
     return toAdminOrderResponse(order!);
   }
@@ -1264,12 +1307,16 @@ export class OrderService {
       });
     }
 
-    const history =
-      await this.statusHistoryRepository.findByOrderId(orderId);
+    const history = await this.statusHistoryRepository.findByOrderId(orderId);
 
     const timeline = this.mapHistoryToTimeline(history);
-    const shipperLocation = await this.resolveShipperLocation(order.status, orderId);
-    const deliveryLocation = this.resolveDeliveryLocation(order.shipping_address);
+    const shipperLocation = await this.resolveShipperLocation(
+      order.status,
+      orderId,
+    );
+    const deliveryLocation = this.resolveDeliveryLocation(
+      order.shipping_address,
+    );
 
     return { timeline, shipperLocation, deliveryLocation };
   }
@@ -1285,12 +1332,16 @@ export class OrderService {
       });
     }
 
-    const history =
-      await this.statusHistoryRepository.findByOrderId(orderId);
+    const history = await this.statusHistoryRepository.findByOrderId(orderId);
 
     const timeline = this.mapHistoryToTimeline(history);
-    const shipperLocation = await this.resolveShipperLocation(order.status, orderId);
-    const deliveryLocation = this.resolveDeliveryLocation(order.shipping_address);
+    const shipperLocation = await this.resolveShipperLocation(
+      order.status,
+      orderId,
+    );
+    const deliveryLocation = this.resolveDeliveryLocation(
+      order.shipping_address,
+    );
 
     return { timeline, shipperLocation, deliveryLocation };
   }
@@ -1515,7 +1566,9 @@ export class OrderService {
     return null;
   }
 
-  private async resolveSellerUserIdsFromShopIds(shopIds: number[]): Promise<number[]> {
+  private async resolveSellerUserIdsFromShopIds(
+    shopIds: number[],
+  ): Promise<number[]> {
     const userIds: number[] = [];
     for (const shopId of shopIds) {
       try {

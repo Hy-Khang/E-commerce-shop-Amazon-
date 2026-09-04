@@ -54,7 +54,10 @@ export class ShopService {
     return this.shopRepository.findActivePaginated(query);
   }
 
-  async suggestShops(query: string, limit: number): Promise<{ name: string; slug: string; logo_url: string | null }[]> {
+  async suggestShops(
+    query: string,
+    limit: number,
+  ): Promise<{ name: string; slug: string; logo_url: string | null }[]> {
     return this.shopRepository.suggestShops(query, limit);
   }
 
@@ -113,7 +116,9 @@ export class ShopService {
         banner_url: dto.banner_url ?? null,
         status: ShopStatus.PendingVerification,
       });
-      this.logger.log(`Shop created: ${shop.name} (${shop.slug}) by user ${userId}`);
+      this.logger.log(
+        `Shop created: ${shop.name} (${shop.slug}) by user ${userId}`,
+      );
       return shop;
     } catch (error: any) {
       if (error?.number === 2627 || error?.number === 2601) {
@@ -150,7 +155,11 @@ export class ShopService {
     return shop;
   }
 
-  async updateShopStatus(id: number, newStatus: ShopStatus, adminUserId: number): Promise<Shop> {
+  async updateShopStatus(
+    id: number,
+    newStatus: ShopStatus,
+    adminUserId: number,
+  ): Promise<Shop> {
     const shop = await this.findShopById(id);
 
     const updateData: Partial<Shop> = { status: newStatus };
@@ -167,7 +176,9 @@ export class ShopService {
     }
 
     const updated = await this.shopRepository.update(id, updateData);
-    this.logger.log(`Shop ${id} status changed to ${newStatus} by admin ${adminUserId}`);
+    this.logger.log(
+      `Shop ${id} status changed to ${newStatus} by admin ${adminUserId}`,
+    );
     return updated!;
   }
 }

@@ -10,7 +10,11 @@ import { Product } from './product.entity';
 
 @Entity('product_images')
 @Index('idx_product_images_product_id', ['product_id'])
-@Index('idx_product_images_variant_option1', ['product_id', 'variant_option1', 'sort_order'])
+@Index('idx_product_images_variant_option1', [
+  'product_id',
+  'variant_option1',
+  'sort_order',
+])
 export class ProductImage {
   @PrimaryGeneratedColumn()
   id: number;
