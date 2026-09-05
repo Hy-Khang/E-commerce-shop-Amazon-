@@ -668,6 +668,106 @@
 
 ---
 
+### 2.17 Seller Application Feature (Module 24 — Onboarding)
+
+#### `seller_applications`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `pending` / `approved` / `rejected` |
+| shop_name | NVARCHAR(100) | NOT NULL |
+| phone | NVARCHAR(20) | NOT NULL |
+| business_name | NVARCHAR(150) | NULL |
+| tax_id | NVARCHAR(50) | NULL — MST / CCCD |
+| description | NVARCHAR(MAX) | NULL |
+| logo_url / banner_url | NVARCHAR(500) | NULL — reused when materializing the shop |
+| reject_reason | NVARCHAR(255) | NULL |
+| reviewed_by | INT | NULL — admin |
+| reviewed_at | DATETIME2 | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> **Filtered UNIQUE** `uq_seller_applications_user_pending (user_id) WHERE status = 'pending'` — at most one pending application per user; approved/rejected rows are kept (audit) and let the user re-apply. Indexes: `idx_seller_applications_user_id`, `idx_seller_applications_status`. Approving grants the `seller` role (via `AuthService`) and materializes an **active** shop (via `ShopService.createShopFromApplication`, skipping `pending_verification`).
+
+---
+
+### 2.18 Seller Finance Feature (Module 25 — Commission + Wallet + Payout)
+
+#### `commission_category_rates` — per-category commission override (owned by `settings`)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| category_id | INT | FK → `categories.id` ON DELETE CASCADE, UNIQUE |
+| rate_percent | DECIMAL(5,2) | NOT NULL |
+| updated_by | INT | NULL |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> Used only when `commission.mode = 'category'`. A rate override **cascades down the category tree**: an order line's category inherits the rate of its nearest ancestor override if it has none of its own (a child's own override wins), and a category with no ancestor override falls back to the platform `commission.rate_percent`. `SettingsService.getCommissionCategoryRateMap()` resolves this by walking the tree (`ProductService.getCategoryTree`) into a flat `{ category_id → effective rate }` map — the engine still matches the snapshot `order_items.category_id` exactly, but the map now covers descendants. The raw (un-cascaded) overrides stay editable via `GET /admin/settings/commission/category-rates`. Mirrors how coupon `scope='categories'` covers sub-categories. Commission config keys (`commission.enabled/mode/rate_percent`) live in `app_settings` (2.15 pattern).
+
+#### `commission_transactions` — immutable platform-commission ledger
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| shop_id | INT | NOT NULL |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL — seller (denormalized) |
+| order_id | INT | FK → `orders.id` ON DELETE SET NULL, NULL |
+| base_amount | DECIMAL(10,2) | NOT NULL — `total_amount − shipping_fee` |
+| rate_percent | DECIMAL(5,2) | NOT NULL — effective (blended) rate |
+| commission_amount | DECIMAL(10,2) | NOT NULL |
+| type | NVARCHAR(20) | NOT NULL — `charge` / `reverse` |
+| note | NVARCHAR(255) | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> One `charge` per completed order (idempotent `(order_id, type)`), defensive `reverse` on cancel. Indexes: `idx_commission_transactions_order`, `idx_commission_transactions_shop_created`.
+
+#### `seller_wallets` — withdrawable balance (source of truth)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, UNIQUE |
+| balance | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> Credited with the **net** (`base − commission`) when an order completes; debited on withdrawal via an atomic guard (`balance >= amount`). Self-heals an empty wallet on first read.
+
+#### `wallet_transactions` — immutable wallet ledger
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| type | NVARCHAR(20) | NOT NULL — `sale_earning` / `withdrawal` / `reversal` / `withdrawal_refund` |
+| amount | DECIMAL(10,2) | NOT NULL — positive magnitude; sign implied by `type` |
+| order_id | INT | FK → `orders.id` ON DELETE SET NULL, NULL |
+| withdrawal_id | INT | FK → `withdrawal_requests.id` **ON DELETE NO ACTION**, NULL |
+| note | NVARCHAR(255) | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> **⚠️ `withdrawal_id` FK is NO ACTION** — `users` already cascades here directly, so a second path via `withdrawal_requests` would trip SQL Server error 1785 (same fix as `coin_transactions.batch_id`, `messages.sender_id`). Indexes: `idx_wallet_transactions_user_created`, `idx_wallet_transactions_order`.
+
+#### `withdrawal_requests` — payout queue
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| amount | DECIMAL(10,2) | NOT NULL |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `pending` / `approved` / `rejected` |
+| bank_name / bank_account_number / bank_account_holder | NVARCHAR | NOT NULL |
+| reject_reason | NVARCHAR(255) | NULL |
+| reviewed_by | INT | NULL · reviewed_at DATETIME2 NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> On create the amount is **held** (atomic debit). Approve finalizes (paid out-of-band); reject refunds the held amount as a `withdrawal_refund`. Indexes: `idx_withdrawal_requests_user_created`, `idx_withdrawal_requests_status`.
+
+> **`order_items.category_id`** (INT NULL) added (2.6) — snapshot of the product's category at checkout, so the category-mode commission engine never joins products at runtime and survives variant/product deletion (null → platform rate).
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid

@@ -30,7 +30,7 @@ export function FlashSaleRegisterModal({ campaign, onClose }: Props) {
     <Drawer
       open={open}
       onClose={onClose}
-      title={campaign ? `Đăng ký — ${campaign.name}` : 'Đăng ký Flash Sale'}
+      title={campaign ? `Register — ${campaign.name}` : 'Flash Sale registration'}
       variant="modal"
       size="lg"
     >
@@ -85,7 +85,7 @@ function RegisterBody({ campaign, onClose }: { campaign: FlashSale; onClose: () 
     // Client-side floor guard (server re-validates → FLASH_SALE_011).
     if (maxPrice != null && data.flash_price > maxPrice) {
       setError('flash_price', {
-        message: `Tối đa ${formatPrice(maxPrice)} để đạt -${campaign.min_discount_percent}%`,
+        message: `At most ${formatPrice(maxPrice)} to reach -${campaign.min_discount_percent}%`,
       });
       return;
     }
@@ -112,18 +112,18 @@ function RegisterBody({ campaign, onClose }: { campaign: FlashSale; onClose: () 
       )}
 
       <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-        Giảm tối thiểu <strong>{campaign.min_discount_percent}%</strong> so với giá gốc.
+        At least <strong>{campaign.min_discount_percent}%</strong> off the original price.
       </div>
 
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-          Sản phẩm / biến thể
+          Product / variant
         </label>
         <select
           className="admin-input"
           {...rhf('product_variant_id', { valueAsNumber: true })}
         >
-          <option value={0}>-- Chọn biến thể --</option>
+          <option value={0}>-- Select a variant --</option>
           {variants.map((v) => (
             <option key={v.id} value={v.id}>
               {v.label}
@@ -137,7 +137,7 @@ function RegisterBody({ campaign, onClose }: { campaign: FlashSale; onClose: () 
         )}
         {variants.length === 0 && (
           <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-            Shop chưa có sản phẩm nào để đăng ký.
+            Your shop has no products to register yet.
           </p>
         )}
       </div>
@@ -145,7 +145,7 @@ function RegisterBody({ campaign, onClose }: { campaign: FlashSale; onClose: () 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Giá Flash Sale
+            Flash Sale price
           </label>
           <input
             type="number"
@@ -156,7 +156,7 @@ function RegisterBody({ campaign, onClose }: { campaign: FlashSale; onClose: () 
           />
           {maxPrice != null && (
             <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-              Tối đa {formatPrice(maxPrice)} (giá gốc {formatPrice(selected!.price)})
+              At most {formatPrice(maxPrice)} (original {formatPrice(selected!.price)})
             </p>
           )}
           {errors.flash_price && (
@@ -167,7 +167,7 @@ function RegisterBody({ campaign, onClose }: { campaign: FlashSale; onClose: () 
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Số lượng
+            Quantity
           </label>
           <input
             type="number"
@@ -190,7 +190,7 @@ function RegisterBody({ campaign, onClose }: { campaign: FlashSale; onClose: () 
           className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-amber-700 disabled:opacity-50"
         >
           {register.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-          Gửi đăng ký
+          Submit registration
         </button>
       </div>
     </form>

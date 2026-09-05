@@ -23,7 +23,7 @@ export function FlashSaleForm({ form, onSubmit, isPending, submitLabel, isEdit }
         <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
           Campaign name
         </label>
-        <input type="text" className="admin-input" placeholder="Flash Sale Cuối Tuần" {...register('name')} />
+        <input type="text" className="admin-input" placeholder="Weekend Flash Sale" {...register('name')} />
         {errors.name && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.name.message}</p>}
       </div>
 

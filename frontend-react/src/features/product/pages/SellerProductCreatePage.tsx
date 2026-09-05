@@ -87,6 +87,7 @@ export default function SellerProductCreatePage() {
           value={categoryId}
           onChange={(id) => setValue('category_id', id as number, { shouldValidate: true })}
           error={errors.category_id?.message}
+          leafOnly
         />
 
         <div>

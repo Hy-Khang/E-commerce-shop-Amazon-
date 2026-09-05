@@ -47,7 +47,7 @@
 
 ---
 
-## Mục lục Module (23 modules)
+## Mục lục Module (25 modules)
 
 | # | Module | Phase | Mô tả ngắn |
 |:-:|--------|:-----:|-------------|
@@ -74,6 +74,8 @@
 | 21 | [AI Chatbox → Shopping Agent](#module-21--ai-chatbox--ai-shopping-agent-gợi-ý--thao-tác-thông-minh) | 6 | AI Agent: gợi ý + thêm giỏ, đặt hàng qua chat (tool-calling) |
 | 22 | [Smart Recommendations](#module-22--smart-recommendations-gợi-ý-thông-minh) | 6 | Gợi ý cá nhân hóa dựa trên hành vi người dùng |
 | 23 | [Hoàn Xu (Cashback Coins)](#module-23--hoàn-xu-cashback-coins) | 6 | Tích/tiêu Xu hoàn tiền, hết hạn theo lô, cấu hình động |
+| 24 | [Seller Onboarding](#module-24--seller-onboarding-đăng-ký-bán-hàng) | 6 | Khách đăng ký bán hàng, admin duyệt → cấp role + tạo shop |
+| 25 | [Commission & Wallet](#module-25--commission--wallet-chiết-khấu--ví-người-bán) | 6 | Chiết khấu sàn (flat/danh mục), ví seller, rút tiền |
 
 ---
 
@@ -146,6 +148,13 @@
 | Dùng Xu khi thanh toán | — | ✅ | — | — | — |
 | Xem ví Xu / lịch sử | — | ✅ | — | — | — |
 | Cấu hình Xu (rate/cap/expiry/bật-tắt) | — | — | — | — | ✅ |
+| **Seller Onboarding** |
+| Nộp đơn đăng ký bán hàng | — | ✅ | — | — | — |
+| Duyệt / từ chối đơn đăng ký | — | — | — | — | ✅ |
+| **Commission & Wallet** |
+| Xem ví / lịch sử / rút tiền (seller) | — | — | ✅ | — | — |
+| Duyệt / từ chối yêu cầu rút tiền | — | — | — | — | ✅ |
+| Cấu hình chiết khấu (flat/danh mục) | — | — | — | — | ✅ |
 
 > **Lưu ý:** Đây là permission mặc định. Dynamic RBAC cho phép Admin tạo custom role với tập permission tùy ý.
 
@@ -189,7 +198,9 @@ Phase 6 — Tính năng nâng cao (phụ thuộc Phase 2-3, triển khai độc 
   ├── Module 20: Chat Realtime           ← Auth, Shop (tái sử dụng Socket.IO Gateway từ Module 11)
   ├── Module 21: AI Chatbox/Agent        ← Product Catalog, Cart, Order (tool-calling)
   ├── Module 22: Smart Recommendations  ← Product Catalog, AI Chatbox (optional)
-  └── Module 23: Hoàn Xu (Cashback)     ← Order (earn on completed, redeem at checkout)
+  ├── Module 23: Hoàn Xu (Cashback)     ← Order (earn on completed, redeem at checkout)
+  ├── Module 24: Seller Onboarding      ← Auth, Shop (đăng ký → cấp role + tạo shop)
+  └── Module 25: Commission & Wallet    ← Order (charge on completed → credit wallet → payout)
 ```
 
 ---
@@ -1010,6 +1021,71 @@ Giao dịch (ledger types): earn / redeem / expire / reverse_earn / refund
 - **Earn base = `total_amount − shipping_fee`** (total đã trừ coupon & Xu) → tự động loại ship và phần trả bằng Xu.
 - **Permission:** `settings:read` / `settings:update` (admin-only) cho cấu hình; endpoint Xu của customer chỉ JWT.
 - **Cron:** `@Cron(EVERY_DAY_AT_1AM)` quét lô hết hạn. **Redis cache** (dự kiến): cache số dư/scoring nếu cần.
+
+---
+
+## Module 24 — Seller Onboarding (Đăng ký bán hàng)
+
+> **Phase 6** · Phụ thuộc: Module 1 (Auth), Module 4 (Shop) · *Triển khai độc lập*
+
+### Mô tả
+
+Cho phép **khách hàng tự đăng ký trở thành người bán** thay vì admin đổi role thủ công. Có entity đơn đăng ký riêng + hàng đợi duyệt, thu thập thông tin người bán.
+
+### Chức năng
+
+- Khách nộp **đơn đăng ký** (tên cửa hàng, SĐT, tên hộ KD, MST/CCCD, mô tả, logo/banner tùy chọn)
+- Mỗi user chỉ **1 đơn `pending`** tại một thời điểm; đơn `rejected` giữ lại (audit) và cho nộp lại
+- Admin xem **hàng đợi duyệt**, **duyệt** (→ cấp role `seller` + tạo shop **active**, bỏ qua `pending_verification`) hoặc **từ chối** (kèm lý do)
+- Sau khi duyệt, FE **làm mới token + profile** để nhận role mới rồi vào Seller Center (không cần đăng nhập lại)
+
+### Trạng thái đơn
+
+```
+pending → approved | rejected   (rejected → nộp lại)
+```
+
+### Ghi chú kỹ thuật
+
+- Bảng `seller_applications` + **filtered UNIQUE** `(user_id) WHERE status='pending'` (mirror `flash_sale_items`)
+- Cross-feature qua DI: `AuthService.resolveRoleIdByName`/`changeUserRole` (AuthModule global) + `ShopService.createShopFromApplication`
+- Duyệt tuần tự, an toàn khi retry (shop đã có thì tái dùng — SHOP_002 guard); không dùng cross-service DB transaction (repo chưa có pattern này)
+- Errors: `SELLER_APP_001..004`. Permission admin: `seller_applications:read/update`
+
+---
+
+## Module 25 — Commission & Wallet (Chiết khấu & Ví người bán)
+
+> **Phase 6** · Phụ thuộc: Module 7 (Order) · *Triển khai độc lập*
+
+### Mô tả
+
+**Chiết khấu sàn** (platform commission) + **ví người bán** + **rút tiền** (payout). Khi đơn hoàn thành, sàn thu hoa hồng, seller được cộng **doanh thu ròng** vào ví, và có thể yêu cầu rút tiền (admin duyệt).
+
+### Chức năng
+
+- **Chiết khấu (charge):** khi đơn `completed` → `commission = flat` (`floor(base × rate%)`) hoặc `theo danh mục` (phân bổ `base` theo `line_total`, mỗi phần áp rate danh mục, fallback rate chung). `base = total_amount − shipping_fee`. Idempotent theo đơn.
+- **Ví seller:** cộng `net = base − commission` vào `seller_wallets` + ghi `wallet_transactions(sale_earning)`.
+- **Rút tiền (payout):** seller gửi yêu cầu (giữ tiền ngay bằng atomic debit) → admin **duyệt** (đã chi ngoài hệ thống) hoặc **từ chối** (hoàn tiền về ví).
+- **Cấu hình động (admin):** bật/tắt, chọn chế độ `flat`/`category`, rate chung, bảng rate theo danh mục.
+- **Dashboard:** seller thấy gross / chiết khấu / doanh thu ròng; admin thấy tổng hoa hồng toàn sàn.
+
+### Trạng thái
+
+```
+Commission ledger: charge / reverse (reverse phòng vệ — đơn completed không hủy được)
+Wallet ledger:     sale_earning / withdrawal / reversal / withdrawal_refund
+Withdrawal:        pending → approved | rejected
+```
+
+### Ghi chú kỹ thuật
+
+- Gộp 1 feature `seller-finance` (commission + wallet + withdrawal dính chặt). Cấu hình ở `features/settings`.
+- `CommissionService` gọi **đồng bộ** từ `OrderService`/`OrderScheduler` (mirror Coin — không listener → tránh circular dep); order layer build sẵn `OrderCommissionContext` nên module **không** import Order/Product.
+- Snapshot `order_items.category_id` lúc checkout → engine không join product runtime.
+- **Cascade 1785:** `wallet_transactions.withdrawal_id`/`order_id` để NO ACTION/SET NULL.
+- Bảng mới: `commission_transactions`, `seller_wallets`, `wallet_transactions`, `withdrawal_requests`, `commission_category_rates`; keys `commission.*` trong `app_settings`.
+- Errors: `WALLET_001..003`. Permission: seller `wallet:read`/`withdrawals:create`, admin `withdrawals:read/update` + `settings:read/update`.
 
 ---
 

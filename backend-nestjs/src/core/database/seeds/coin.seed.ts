@@ -20,9 +20,12 @@ export const CoinSeed: ISeed = {
         (N'coin.enabled',            N'true'),
         (N'coin.earn_rate_percent',  N'1'),
         (N'coin.redeem_max_percent', N'50'),
-        (N'coin.expiry_days',        N'90');
+        (N'coin.expiry_days',        N'90'),
+        (N'commission.enabled',      N'true'),
+        (N'commission.mode',         N'flat'),
+        (N'commission.rate_percent', N'10');
     `);
-    console.log('  + app_settings: 4 coin.* keys');
+    console.log('  + app_settings: 4 coin.* + 3 commission.* keys');
 
     // Active batches (future expiry) for customers #2 and #3. 1 Xu = 1 VND.
     await qr.query(`

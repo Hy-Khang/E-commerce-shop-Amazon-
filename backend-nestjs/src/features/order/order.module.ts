@@ -22,6 +22,7 @@ import { UserProfileModule } from '../user-profile/user-profile.module';
 import { CouponModule } from '../coupon/coupon.module';
 import { CoinModule } from '../coin/coin.module';
 import { SettingsModule } from '../settings/settings.module';
+import { SellerFinanceModule } from '../seller-finance/seller-finance.module';
 import { ShopModule } from '../shop/shop.module';
 import { FlashSaleModule } from '../flash-sale/flash-sale.module';
 
@@ -39,6 +40,7 @@ import { FlashSaleModule } from '../flash-sale/flash-sale.module';
     CouponModule,
     CoinModule,
     SettingsModule,
+    SellerFinanceModule,
     ShopModule,
     FlashSaleModule,
   ],

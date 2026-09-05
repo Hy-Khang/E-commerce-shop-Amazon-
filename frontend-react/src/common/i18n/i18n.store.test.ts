@@ -4,22 +4,22 @@ import { useI18nStore } from './i18n.store';
 describe('useI18nStore', () => {
   beforeEach(() => {
     localStorage.clear();
-    useI18nStore.setState({ locale: 'vi' });
+    useI18nStore.setState({ locale: 'en' });
   });
 
-  it('should default to vi locale', () => {
-    expect(useI18nStore.getState().locale).toBe('vi');
-  });
-
-  it('should change locale via setLocale', () => {
-    useI18nStore.getState().setLocale('en');
+  it('should default to en locale', () => {
     expect(useI18nStore.getState().locale).toBe('en');
   });
 
-  it('should switch back to vi', () => {
-    useI18nStore.getState().setLocale('en');
+  it('should change locale via setLocale', () => {
     useI18nStore.getState().setLocale('vi');
     expect(useI18nStore.getState().locale).toBe('vi');
+  });
+
+  it('should switch back to en', () => {
+    useI18nStore.getState().setLocale('vi');
+    useI18nStore.getState().setLocale('en');
+    expect(useI18nStore.getState().locale).toBe('en');
   });
 
   it('should persist locale to localStorage', () => {

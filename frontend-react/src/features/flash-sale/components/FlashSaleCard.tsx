@@ -69,7 +69,7 @@ export function FlashSaleCard({ item }: Props) {
             />
           </div>
           <p className="mt-1 text-[11px] font-medium text-text-secondary">
-            Đã bán {item.sold_quantity}/{item.flash_quantity}
+            Sold {item.sold_quantity}/{item.flash_quantity}
           </p>
         </div>
       </div>

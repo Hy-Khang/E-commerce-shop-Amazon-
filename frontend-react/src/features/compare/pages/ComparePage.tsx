@@ -14,7 +14,7 @@ export default function ComparePage() {
   if (count > 0 && isLoading && products.length === 0) {
     return (
       <div className="flex items-center justify-center py-16 text-sm text-text-secondary">
-        Đang tải sản phẩm so sánh…
+        Loading products to compare…
       </div>
     );
   }
@@ -23,15 +23,15 @@ export default function ComparePage() {
     return (
       <div className="flex flex-col items-center py-16 text-center">
         <Scale className="h-16 w-16 text-text-muted/60" />
-        <h1 className="mt-4 text-lg font-semibold text-text-primary">Chưa có sản phẩm để so sánh</h1>
+        <h1 className="mt-4 text-lg font-semibold text-text-primary">No products to compare yet</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Bấm nút <span className="font-medium">So sánh</span> trên sản phẩm để thêm vào đây.
+          Tap the <span className="font-medium">Compare</span> button on a product to add it here.
         </p>
         <Link
           to={ROUTES.PRODUCTS}
           className="mt-6 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
         >
-          Khám phá sản phẩm
+          Explore products
         </Link>
       </div>
     );
@@ -40,13 +40,13 @@ export default function ComparePage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary">So sánh sản phẩm</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary">Compare products</h1>
         <button
           type="button"
           onClick={clear}
           className="rounded-lg px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover"
         >
-          Xóa tất cả
+          Clear all
         </button>
       </div>
 
@@ -61,7 +61,7 @@ export default function ComparePage() {
                     <button
                       type="button"
                       onClick={() => remove(p.id)}
-                      aria-label="Xóa khỏi so sánh"
+                      aria-label="Remove from comparison"
                       className="absolute right-0 top-0 rounded-full p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
                     >
                       <X className="h-4 w-4" />
@@ -130,7 +130,7 @@ export default function ComparePage() {
                       to={ROUTES.PRODUCT_DETAIL(p.slug)}
                       className="block rounded-lg border border-border-brand px-3 py-2 text-center text-sm font-semibold text-text-brand transition-colors hover:bg-brand-light"
                     >
-                      Chọn mua
+                      Select to buy
                     </Link>
                   )}
                 </td>

@@ -26,9 +26,9 @@ const uid = () =>
 function messageForError(error: unknown): string {
   const status = (error as { response?: { status?: number } })?.response?.status;
   if (status === 429) {
-    return 'Bạn đang gửi quá nhanh. Vui lòng đợi một chút rồi thử lại nhé.';
+    return "You're sending messages too fast. Please wait a moment and try again.";
   }
-  return 'Xin lỗi, đã có lỗi xảy ra. Bạn vui lòng thử lại sau nhé.';
+  return 'Sorry, something went wrong. Please try again later.';
 }
 
 /**

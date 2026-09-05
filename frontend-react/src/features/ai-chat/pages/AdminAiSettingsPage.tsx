@@ -86,7 +86,7 @@ export default function AdminAiSettingsPage() {
           <textarea
             rows={8}
             {...register('system_prompt')}
-            placeholder="Để trống để dùng prompt mặc định…"
+            placeholder="Leave blank to use the default prompt…"
             className="admin-input resize-y font-mono text-xs"
           />
           {errors.system_prompt && (

@@ -42,6 +42,7 @@ export const mockOrderItem = (
   variant_option2_value: null,
   shop_id: null,
   shop_name: null,
+  category_id: null,
   flash_sale_item_id: null,
   order: null as any,
   product_variant: mockProductVariant(),

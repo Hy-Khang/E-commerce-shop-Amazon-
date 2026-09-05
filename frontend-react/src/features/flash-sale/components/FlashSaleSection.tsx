@@ -45,7 +45,7 @@ export function FlashSaleSection() {
           </h2>
           {soonestEnd && (
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-text-secondary">Kết thúc trong</span>
+              <span className="text-xs font-medium text-text-secondary">Ends in</span>
               <CountdownTimer endsAt={soonestEnd} />
             </div>
           )}

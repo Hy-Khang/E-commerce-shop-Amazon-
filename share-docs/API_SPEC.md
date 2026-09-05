@@ -163,6 +163,13 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | COIN_001 | 400 | Insufficient coin balance at redemption time (concurrency race in `redeemForCheckout`; validation otherwise clamps) |
 | COIN_003 | 400 | Invalid coin amount (must be a non-negative integer) |
 | SETTINGS_001 | 400 | Invalid settings value |
+| SELLER_APP_001 | 404 | Seller application not found |
+| SELLER_APP_002 | 409 | User is already a seller (has a shop / seller role) |
+| SELLER_APP_003 | 409 | A pending application already exists for this user |
+| SELLER_APP_004 | 400 | Application not in a reviewable (pending) state |
+| WALLET_001 | 404 | Withdrawal request not found |
+| WALLET_002 | 400 | Insufficient wallet balance for withdrawal |
+| WALLET_003 | 400 | Withdrawal not in a reviewable (pending) state |
 
 > **Coin redemption clamps, it does not reject.** The requested `coins_to_redeem` is resolved to `min(requested, cap, balance)` (cap = 50% of the post-coupon items total). Exceeding the cap or balance is **not** an error — the client's cap is an estimate (computed without flash prices / exact multi-coupon allocation), so an over-request is silently clamped and the applied amount is echoed as `coins_applied`. A disabled feature (`coin.enabled=false`) silently ignores redemption (redeems 0). Only a non-integer request is a hard error (`COIN_003`, defensive — the DTO already enforces `@IsInt`), plus the rare `COIN_001` if the balance is spent by a concurrent checkout between validation and consumption.
 
@@ -302,6 +309,15 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | GET | `/coins/transactions` | My Xu ledger (paginated, newest first) | Customer |
 
 > **Cashback coins (Module 23).** 1 Xu = 1 ₫ (integer). Customers **earn** Xu when an order reaches `completed` (`floor((total_amount − shipping_fee) × earn_rate%)`), **redeem** Xu at checkout via `coins_to_redeem` on `POST /orders` (and `/orders/preview`), and Xu **expires** per batch after `expiry_days`. `GET /coins/balance` returns `{ balance, expiring_soon: [{ amount, expires_at }] }`; `GET /coins/transactions` returns rows `{ id, type, amount, order_id, note, created_at }` where `type ∈ { earn, redeem, expire, reverse_earn, refund }` and `amount` is a positive magnitude (sign implied by type). Config is admin-controlled — see `/admin/settings/coins`.
+
+### Seller Application (Onboarding) — `/api/v1/seller-applications`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/seller-applications` | Apply to become a seller (shop_name, phone, business_name?, tax_id?, description?, logo_url?, banner_url?) | Customer |
+| GET | `/seller-applications/me` | My latest application (`data: null` if never applied) | Customer |
+
+> **Seller onboarding (Module 24).** A customer submits an application; admin reviews it. At most **one pending** application per user (`SELLER_APP_003`); a user who already has a shop / seller role is blocked (`SELLER_APP_002`). Approval grants the `seller` role and creates an **active** shop (skips `pending_verification` — the review is the vetting). After approval the caller's JWT still carries the old role until refreshed, so the frontend refreshes the token + profile before entering the Seller Center.
 
 ### Coupon — `/api/v1/coupons`
 
@@ -560,6 +576,34 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 |--------|------|-------------|------------|
 | GET | `/admin/settings/coins` | Read coin (Hoàn Xu) config | `settings:read` |
 | PATCH | `/admin/settings/coins` | Update coin config (partial) | `settings:update` |
+| GET | `/admin/settings/commission` | Read platform commission config (`{ enabled, mode, rate_percent }`) | `settings:read` |
+| PATCH | `/admin/settings/commission` | Update commission config (partial) | `settings:update` |
+| GET | `/admin/settings/commission/category-rates` | List per-category rate overrides | `settings:read` |
+| PUT | `/admin/settings/commission/category-rates/:categoryId` | Set a category rate override (`{ rate_percent }`) | `settings:update` |
+| DELETE | `/admin/settings/commission/category-rates/:categoryId` | Remove a category rate override (204) | `settings:update` |
+
+> **Commission config (Module 25).** `mode ∈ { flat, category }`. `flat` charges `rate_percent%` platform-wide; `category` charges each order line its category's override rate. A category rate **cascades to sub-categories** — a line's category inherits the nearest ancestor's override when it has none of its own (a child's own override wins), and a category with no ancestor override falls back to `rate_percent`. So setting a rate on a parent category (e.g. "Điện tử") covers products in its child categories too (products are typically assigned to a leaf). `enabled=false` charges no commission and credits no wallet earnings. Defaults `{ enabled: true, mode: flat, rate_percent: 10 }`. `GET/PUT/DELETE …/commission/category-rates` manage the raw (un-cascaded) overrides.
+
+### Admin: Seller Applications — `/api/v1/admin/seller-applications`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/seller-applications` | List applications (paginated, `?status=`) | `seller_applications:read` |
+| GET | `/admin/seller-applications/:id` | Get application detail | `seller_applications:read` |
+| PATCH | `/admin/seller-applications/:id/approve` | Approve → grant seller role + create active shop | `seller_applications:update` |
+| PATCH | `/admin/seller-applications/:id/reject` | Reject (`{ reject_reason? }`) | `seller_applications:update` |
+
+> Only a `pending` application can be reviewed (`SELLER_APP_004`). Approve is idempotent-safe on retry (an existing shop is reused).
+
+### Admin: Withdrawals — `/api/v1/admin/withdrawals`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/withdrawals` | List payout requests (paginated, `?status=`) | `withdrawals:read` |
+| PATCH | `/admin/withdrawals/:id/approve` | Approve (funds paid out-of-band; the hold becomes final) | `withdrawals:update` |
+| PATCH | `/admin/withdrawals/:id/reject` | Reject (`{ reject_reason? }`) → refund the held amount to the wallet | `withdrawals:update` |
+
+> Only a `pending` withdrawal can be reviewed (`WALLET_003`). Reject refunds the held amount as a `withdrawal_refund` wallet entry.
 
 > **Runtime config via `app_settings`.** `GET` returns `{ enabled, earn_rate_percent, redeem_max_percent, expiry_days }`. `PATCH` accepts any subset of those fields and only writes the keys present (idempotent upsert on `app_settings.key`). `enabled=false` blocks both earning and redemption (`COIN_004` at checkout). Missing keys fall back to defaults (`enabled=true`, `earn_rate_percent=1`, `redeem_max_percent=50`, `expiry_days=90`). Admin-only — these are the only two permissions in the `settings` namespace.
 
@@ -650,6 +694,17 @@ All seller endpoints use **permission-based access control** via `@Permissions()
 | DELETE | `/seller/flash-sales/items/:itemId` | Withdraw a **pending** registration (own shop only) | `flash_registrations:delete` |
 
 > **Seller-only namespace `flash_registrations:*`** (separate from admin `flash_sales:*` so sellers can't reach `/admin/flash-sales`). Every endpoint resolves the caller's shop (`SHOP_004` if none) and hard-scopes to it. Registration is validated at `POST`: campaign must be open (`FLASH_SALE_009`), the variant must belong to the shop (`FLASH_SALE_010`), and `flash_price` must clear the campaign's `min_discount_percent` (`FLASH_SALE_011`). Only `pending` registrations can be edited/withdrawn (`FLASH_SALE_013`); touching another shop's registration → `FLASH_SALE_008`. Sellers are notified when a registration is approved/rejected.
+
+### Seller: Wallet & Payout — `/api/v1/seller/wallet`, `/api/v1/seller/withdrawals`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/seller/wallet` | My withdrawable balance (`{ balance }`; self-heals an empty wallet) | `wallet:read` |
+| GET | `/seller/wallet/transactions` | My wallet ledger (paginated, newest first) | `wallet:read` |
+| POST | `/seller/withdrawals` | Request a payout (`{ amount, bank_name, bank_account_number, bank_account_holder }`) — holds the amount immediately | `withdrawals:create` |
+| GET | `/seller/withdrawals` | My withdrawal history (paginated) | `wallet:read` |
+
+> **Seller wallet (Module 25).** The wallet is credited with the **net** (items total − platform commission) when an order reaches `completed`. `POST /seller/withdrawals` atomically debits the balance (insufficient → `WALLET_002`) and creates a `pending` request; admin approve finalizes it, reject refunds it. Ledger types: `sale_earning` / `withdrawal` / `reversal` / `withdrawal_refund`.
 
 ---
 

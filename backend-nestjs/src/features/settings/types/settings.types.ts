@@ -28,3 +28,37 @@ export const DEFAULT_COIN_CONFIG: CoinConfig = {
   redeem_max_percent: 50,
   expiry_days: 90,
 };
+
+/** How the platform commission rate is resolved. */
+export enum CommissionMode {
+  /** A single platform-wide rate. */
+  Flat = 'flat',
+  /** Per-category rates (with the flat rate as the fallback). */
+  Category = 'category',
+}
+
+/**
+ * Platform-commission runtime config, resolved from `app_settings`.
+ */
+export interface CommissionConfig {
+  /** Master on/off — when false, no commission is charged and no net is credited. */
+  enabled: boolean;
+  /** `flat` (one rate) or `category` (per-category overrides + flat fallback). */
+  mode: CommissionMode;
+  /** Platform-wide rate percent (0–100); the fallback in category mode too. */
+  rate_percent: number;
+}
+
+/** `app_settings.key` values backing the commission config. */
+export const COMMISSION_SETTING_KEYS = {
+  ENABLED: 'commission.enabled',
+  MODE: 'commission.mode',
+  RATE_PERCENT: 'commission.rate_percent',
+} as const;
+
+/** Fallback commission config if a key is missing (matches the seeded values). */
+export const DEFAULT_COMMISSION_CONFIG: CommissionConfig = {
+  enabled: true,
+  mode: CommissionMode.Flat,
+  rate_percent: 10,
+};

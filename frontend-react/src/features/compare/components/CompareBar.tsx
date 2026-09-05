@@ -24,7 +24,7 @@ export function CompareBar() {
       <div className="shop-container flex items-center gap-4 py-3">
         <div className="hidden items-center gap-2 text-sm font-semibold text-text-primary sm:flex">
           <Scale className="h-4 w-4 text-text-brand" />
-          So sánh
+          Compare
         </div>
 
         <div className="flex flex-1 items-center gap-2 overflow-x-auto">
@@ -47,7 +47,7 @@ export function CompareBar() {
                 <button
                   type="button"
                   onClick={() => remove(item.product_id)}
-                  aria-label="Xóa khỏi so sánh"
+                  aria-label="Remove from comparison"
                   className="absolute right-0.5 top-0.5 rounded-full bg-black/50 p-0.5 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
                 >
                   <X className="h-3 w-3" />
@@ -69,7 +69,7 @@ export function CompareBar() {
             onClick={clear}
             className="rounded-lg px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover"
           >
-            Xóa tất cả
+            Clear all
           </button>
           <button
             type="button"
@@ -77,7 +77,7 @@ export function CompareBar() {
             disabled={count < 2}
             className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300"
           >
-            So sánh ({count})
+            Compare ({count})
           </button>
         </div>
       </div>

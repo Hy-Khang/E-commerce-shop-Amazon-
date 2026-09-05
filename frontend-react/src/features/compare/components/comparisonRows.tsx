@@ -41,34 +41,34 @@ function optionCell(product: ProductListItem, optionKey: 'option1' | 'option2'):
 
 export const COMPARISON_ROWS: CompareRow[] = [
   {
-    label: 'Giá',
+    label: 'Price',
     render: (p) => <span className="font-bold text-text-price">{priceLabel(p)}</span>,
     signature: priceLabel,
   },
   {
-    label: 'Đánh giá',
+    label: 'Rating',
     render: (p) => <RatingStars rating={p.avgRating ?? 0} count={p.reviewCount ?? 0} />,
     signature: (p) => String(p.avgRating ?? 0),
   },
-  { label: 'Danh mục', render: (p) => p.category?.name ?? '—', signature: (p) => p.category?.name ?? '' },
-  { label: 'Cửa hàng', render: (p) => p.shop?.name ?? '—', signature: (p) => p.shop?.name ?? '' },
+  { label: 'Category', render: (p) => p.category?.name ?? '—', signature: (p) => p.category?.name ?? '' },
+  { label: 'Shop', render: (p) => p.shop?.name ?? '—', signature: (p) => p.shop?.name ?? '' },
   {
-    label: 'Phân loại 1',
+    label: 'Option 1',
     render: (p) => optionCell(p, 'option1'),
     signature: (p) => getUniqueOptionValues(p.variants, 'option1').join(','),
   },
   {
-    label: 'Phân loại 2',
+    label: 'Option 2',
     render: (p) => optionCell(p, 'option2'),
     signature: (p) => getUniqueOptionValues(p.variants, 'option2').join(','),
   },
   {
-    label: 'Tình trạng',
+    label: 'Availability',
     render: (p) =>
       hasAnyStock(p.variants) ? (
-        <span className="text-sm font-medium text-emerald-600">Còn hàng</span>
+        <span className="text-sm font-medium text-emerald-600">In stock</span>
       ) : (
-        <span className="text-sm font-medium text-error-600">Hết hàng</span>
+        <span className="text-sm font-medium text-error-600">Out of stock</span>
       ),
     signature: (p) => (hasAnyStock(p.variants) ? '1' : '0'),
   },

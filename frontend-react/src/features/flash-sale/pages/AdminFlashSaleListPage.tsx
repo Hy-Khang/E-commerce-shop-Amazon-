@@ -135,7 +135,7 @@ export default function AdminFlashSaleListPage() {
           <span className="text-slate-600 dark:text-slate-300">{sale.item_count}</span>
           {sale.pending_count > 0 && (
             <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-              {sale.pending_count} chờ duyệt
+              {sale.pending_count} pending
             </span>
           )}
         </div>

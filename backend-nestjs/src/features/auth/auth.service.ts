@@ -698,6 +698,22 @@ export class AuthService {
     return { ...user, role_id: dto.role_id, role };
   }
 
+  /**
+   * Resolve a role id by its name (e.g. `'seller'`). Exposed for other features
+   * that grant roles programmatically (seller onboarding) so they never reach
+   * into auth's role repository directly. Throws if the role is missing.
+   */
+  async resolveRoleIdByName(name: string): Promise<number> {
+    const role = await this.roleRepository.findByName(name);
+    if (!role) {
+      throw new NotFoundException({
+        code: 'COMMON_001',
+        message: `Role '${name}' not found`,
+      });
+    }
+    return role.id;
+  }
+
   async updateProfile(
     userId: number,
     data: { full_name?: string; phone?: string },

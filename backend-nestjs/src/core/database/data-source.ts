@@ -42,6 +42,12 @@ import { CoinTransaction } from '../../features/coin/entities/coin-transaction.e
 import { AiConversation } from '../../features/ai-chat/entities/ai-conversation.entity';
 import { AiMessage } from '../../features/ai-chat/entities/ai-message.entity';
 import { AiSetting } from '../../features/ai-chat/entities/ai-setting.entity';
+import { SellerApplication } from '../../features/seller-application/entities/seller-application.entity';
+import { CommissionCategoryRate } from '../../features/settings/entities/commission-category-rate.entity';
+import { CommissionTransaction } from '../../features/seller-finance/entities/commission-transaction.entity';
+import { SellerWallet } from '../../features/seller-finance/entities/seller-wallet.entity';
+import { WalletTransaction } from '../../features/seller-finance/entities/wallet-transaction.entity';
+import { WithdrawalRequest } from '../../features/seller-finance/entities/withdrawal-request.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -89,6 +95,12 @@ export const AppDataSource = new DataSource({
     AiConversation,
     AiMessage,
     AiSetting,
+    SellerApplication,
+    CommissionCategoryRate,
+    CommissionTransaction,
+    SellerWallet,
+    WalletTransaction,
+    WithdrawalRequest,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   options: {

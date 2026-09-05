@@ -26,9 +26,9 @@ const STATUS_STYLES: Record<FlashSaleRegistrationStatus, string> = {
   rejected: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
 };
 const STATUS_LABELS: Record<FlashSaleRegistrationStatus, string> = {
-  pending: 'Chờ duyệt',
-  approved: 'Đã duyệt',
-  rejected: 'Từ chối',
+  pending: 'Pending',
+  approved: 'Approved',
+  rejected: 'Rejected',
 };
 
 export default function SellerFlashSaleListPage() {
@@ -53,14 +53,14 @@ export default function SellerFlashSaleListPage() {
           Flash Sale
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Đăng ký sản phẩm của shop vào các chương trình Flash Sale
+          Register your shop's products for Flash Sale campaigns
         </p>
       </div>
 
       {/* Open campaigns */}
       <section>
         <h2 className="mb-3 text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Đang mở đăng ký
+          Open for registration
         </h2>
         {loadingOpen ? (
           <div className="flex h-24 items-center justify-center">
@@ -68,7 +68,7 @@ export default function SellerFlashSaleListPage() {
           </div>
         ) : !campaigns || campaigns.length === 0 ? (
           <p className="admin-card p-6 text-center text-sm text-slate-500 dark:text-slate-400">
-            Hiện chưa có chương trình nào mở đăng ký.
+            No campaigns are open for registration right now.
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -76,14 +76,14 @@ export default function SellerFlashSaleListPage() {
               <div key={c.id} className="admin-card flex flex-col p-4">
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{c.name}</p>
                 <div className="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                  <span>Hạn đăng ký:</span>
+                  <span>Registration ends:</span>
                   <CountdownTimer endsAt={c.registration_ends_at} />
                 </div>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Diễn ra: {formatDate(c.starts_at)} → {formatDate(c.ends_at)}
+                  Runs: {formatDate(c.starts_at)} → {formatDate(c.ends_at)}
                 </p>
                 <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-300">
-                  Giảm tối thiểu {c.min_discount_percent}%
+                  Min discount {c.min_discount_percent}%
                 </p>
                 <button
                   type="button"
@@ -91,7 +91,7 @@ export default function SellerFlashSaleListPage() {
                   className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700"
                 >
                   <Zap className="h-4 w-4" />
-                  Đăng ký
+                  Register
                 </button>
               </div>
             ))}
@@ -103,18 +103,18 @@ export default function SellerFlashSaleListPage() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Đăng ký của tôi
+            My registrations
           </h2>
           <AdminSelect
-            ariaLabel="Lọc theo trạng thái"
+            ariaLabel="Filter by status"
             className="w-44"
             value={statusFilter}
             onChange={setStatusFilter}
             options={[
-              { value: '', label: 'Tất cả trạng thái' },
-              { value: 'pending', label: 'Chờ duyệt' },
-              { value: 'approved', label: 'Đã duyệt' },
-              { value: 'rejected', label: 'Từ chối' },
+              { value: '', label: 'All statuses' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'rejected', label: 'Rejected' },
             ]}
           />
         </div>
@@ -125,7 +125,7 @@ export default function SellerFlashSaleListPage() {
           </div>
         ) : !regs || regs.data.length === 0 ? (
           <p className="admin-card p-6 text-center text-sm text-slate-500 dark:text-slate-400">
-            Chưa có đăng ký nào.
+            No registrations yet.
           </p>
         ) : (
           <div className="admin-card divide-y divide-slate-100 dark:divide-slate-800">
@@ -141,12 +141,12 @@ export default function SellerFlashSaleListPage() {
                     {item.product_name ?? item.sku ?? `Variant #${item.product_variant_id}`}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {formatPrice(item.flash_price)} · SL {item.flash_quantity}
-                    {item.status === 'approved' && ` · đã bán ${item.sold_quantity}`}
+                    {formatPrice(item.flash_price)} · Qty {item.flash_quantity}
+                    {item.status === 'approved' && ` · sold ${item.sold_quantity}`}
                   </p>
                   {item.status === 'rejected' && item.reject_reason && (
                     <p className="mt-0.5 text-xs text-rose-600 dark:text-rose-400">
-                      Lý do: {item.reject_reason}
+                      Reason: {item.reject_reason}
                     </p>
                   )}
                 </div>
@@ -159,7 +159,7 @@ export default function SellerFlashSaleListPage() {
                       type="button"
                       onClick={() => setEditing(item)}
                       className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-                      aria-label="Sửa đăng ký"
+                      aria-label="Edit registration"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
@@ -167,7 +167,7 @@ export default function SellerFlashSaleListPage() {
                       type="button"
                       onClick={() => setWithdrawId(item.id)}
                       className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
-                      aria-label="Rút đăng ký"
+                      aria-label="Withdraw registration"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -188,10 +188,10 @@ export default function SellerFlashSaleListPage() {
 
       <ConfirmModal
         open={withdrawId !== null}
-        title="Rút đăng ký"
-        message="Bạn chắc chắn muốn rút đăng ký này khỏi chương trình?"
+        title="Withdraw registration"
+        message="Are you sure you want to withdraw this registration from the campaign?"
         variant="danger"
-        confirmLabel="Rút"
+        confirmLabel="Withdraw"
         loading={withdraw.isPending}
         onConfirm={() => {
           if (withdrawId !== null) withdraw.mutate(withdrawId, { onSuccess: () => setWithdrawId(null) });
@@ -216,14 +216,14 @@ function EditRegistrationRow({ item, onClose }: { item: FlashSaleItem; onClose: 
   }
 
   return (
-    <Drawer open onClose={onClose} title="Sửa đăng ký" variant="modal" size="md">
+    <Drawer open onClose={onClose} title="Edit registration" variant="modal" size="md">
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Giá Flash Sale</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Flash Sale price</label>
           <input type="number" min={1} step="any" className="admin-input" value={price} onChange={(e) => setPrice(e.target.value)} />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Số lượng</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Quantity</label>
           <input type="number" min={1} className="admin-input" value={qty} onChange={(e) => setQty(e.target.value)} />
         </div>
         <div className="flex justify-end pt-2">
@@ -234,7 +234,7 @@ function EditRegistrationRow({ item, onClose }: { item: FlashSaleItem; onClose: 
             className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
           >
             {update.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            Lưu
+            Save
           </button>
         </div>
       </div>
