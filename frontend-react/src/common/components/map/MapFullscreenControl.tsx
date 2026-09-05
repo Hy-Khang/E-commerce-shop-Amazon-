@@ -20,8 +20,8 @@ export function MapFullscreenControl({ isFullscreen, onToggle }: { isFullscreen:
         <a
           href="#"
           role="button"
-          title={isFullscreen ? 'Thu nhỏ' : 'Phóng to'}
-          aria-label={isFullscreen ? 'Thu nhỏ bản đồ' : 'Phóng to bản đồ'}
+          title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+          aria-label={isFullscreen ? 'Exit fullscreen map' : 'Fullscreen map'}
           onClick={(e) => {
             e.preventDefault();
             onToggle();

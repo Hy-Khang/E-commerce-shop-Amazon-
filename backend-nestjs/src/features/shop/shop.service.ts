@@ -131,6 +131,59 @@ export class ShopService {
     }
   }
 
+  /**
+   * Materialize a shop from an approved seller application. Unlike `createShop`
+   * (which starts `pending_verification`), the shop goes straight to `active`
+   * with `verified_at/verified_by` set — the application review IS the vetting
+   * step. Still guards the 1:1 constraint via SHOP_002.
+   */
+  async createShopFromApplication(
+    userId: number,
+    data: {
+      name: string;
+      description?: string | null;
+      logo_url?: string | null;
+      banner_url?: string | null;
+    },
+    verifiedBy: number,
+  ): Promise<Shop> {
+    let slug = generateSlug(data.name);
+    const slugExists = await this.shopRepository.existsBySlug(slug);
+    if (slugExists) {
+      let suffix = 1;
+      while (await this.shopRepository.existsBySlug(`${slug}-${suffix}`)) {
+        suffix++;
+      }
+      slug = `${slug}-${suffix}`;
+    }
+
+    try {
+      const shop = await this.shopRepository.create({
+        user_id: userId,
+        name: data.name,
+        slug,
+        description: data.description ?? null,
+        logo_url: data.logo_url ?? null,
+        banner_url: data.banner_url ?? null,
+        status: ShopStatus.Active,
+        verified_at: new Date(),
+        verified_by: verifiedBy,
+      });
+      this.logger.log(
+        `Shop created (from application, active): ${shop.name} (${shop.slug}) for user ${userId}`,
+      );
+      return shop;
+    } catch (error: any) {
+      if (error?.number === 2627 || error?.number === 2601) {
+        throw new ConflictException({
+          code: 'SHOP_002',
+          message: 'Shop already exists for this user',
+        });
+      }
+      throw error;
+    }
+  }
+
   async updateMyShop(userId: number, dto: UpdateShopDto): Promise<Shop> {
     const shop = await this.resolveShopByUserId(userId);
     const updated = await this.shopRepository.update(shop.id, dto);

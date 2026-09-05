@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { DollarSign, Banknote, ShoppingCart, Package, Users } from 'lucide-react';
+import { DollarSign, Banknote, ShoppingCart, Package, Users, Percent } from 'lucide-react';
 import { formatPrice } from '@/common/utils/format.util';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { usePeriodParam } from '../hooks/usePeriodParam';
@@ -88,6 +88,13 @@ export default function AdminDashboardPage() {
             icon={Users}
             color="amber"
             index={4}
+          />
+          <StatCard
+            title="Commission Revenue"
+            value={formatPrice(stats.commissionRevenue)}
+            icon={Percent}
+            color="violet"
+            index={5}
           />
         </div>
       ) : (

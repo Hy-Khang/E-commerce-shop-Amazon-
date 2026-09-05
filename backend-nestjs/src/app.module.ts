@@ -24,6 +24,8 @@ import { FlashSaleModule } from './features/flash-sale/flash-sale.module';
 import { RecentlyViewedModule } from './features/recently-viewed/recently-viewed.module';
 import { ChatModule } from './features/chat/chat.module';
 import { AiChatModule } from './features/ai-chat/ai-chat.module';
+import { SellerApplicationModule } from './features/seller-application/seller-application.module';
+import { SellerFinanceModule } from './features/seller-finance/seller-finance.module';
 import { MailModule } from './core/mail/mail.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -55,6 +57,8 @@ import { AppService } from './app.service';
     RecentlyViewedModule,
     ChatModule,
     AiChatModule,
+    SellerApplicationModule,
+    SellerFinanceModule,
     MailModule,
   ],
   controllers: [AppController],

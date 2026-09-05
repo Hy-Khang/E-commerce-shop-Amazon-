@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Outlet, NavLink, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -15,6 +15,9 @@ import {
   Store,
   Coins,
   Bot,
+  ClipboardCheck,
+  Banknote,
+  Percent,
   PanelLeftClose,
   PanelLeftOpen,
   ExternalLink,
@@ -47,8 +50,10 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
       { to: '/admin/categories', label: 'Categories', icon: FolderTree, permission: PERMISSIONS.CATEGORIES_READ },
       { to: '/admin/orders', label: 'Orders', icon: ShoppingCart, permission: PERMISSIONS.ORDERS_READ },
       { to: '/admin/shops', label: 'Shops', icon: Store, permission: PERMISSIONS.SHOPS_READ },
+      { to: '/admin/seller-applications', label: 'Seller Applications', icon: ClipboardCheck, permission: PERMISSIONS.SELLER_APPLICATIONS_READ },
       { to: '/admin/coupons', label: 'Coupons', icon: Tag, permission: PERMISSIONS.COUPONS_READ },
       { to: '/admin/flash-sales', label: 'Flash Sale', icon: Zap, permission: PERMISSIONS.FLASH_SALES_READ },
+      { to: '/admin/withdrawals', label: 'Withdrawals', icon: Banknote, permission: PERMISSIONS.WITHDRAWALS_READ },
     ],
   },
   {
@@ -71,6 +76,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     label: 'System',
     items: [
       { to: '/admin/settings/coins', label: 'Coin Settings', icon: Coins, permission: PERMISSIONS.SETTINGS_READ },
+      { to: '/admin/settings/commission', label: 'Commission', icon: Percent, permission: PERMISSIONS.SETTINGS_READ },
       { to: '/admin/ai-settings', label: 'AI Chatbox', icon: Bot, permission: PERMISSIONS.AI_CHATBOX_UPDATE },
     ],
   },
@@ -80,6 +86,17 @@ const SIDEBAR_KEY = 'admin-sidebar-collapsed';
 
 export function AdminLayout() {
   const { hasPermission } = usePermissions();
+  const { pathname } = useLocation();
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+
+  // The layout is pinned to the viewport (h-screen) so the sidebar and the main
+  // content each scroll inside their OWN overflow container — the window never
+  // scrolls. React Router's ScrollRestoration only touches the window, so reset
+  // the content container on each route change; otherwise a new page inherits
+  // the previous page's scroll position.
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0 });
+  }, [pathname]);
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(SIDEBAR_KEY) === 'true';
@@ -104,7 +121,7 @@ export function AdminLayout() {
     .filter((section) => section.items.length > 0);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       <aside
         className={`${collapsed ? 'w-[68px]' : 'w-64'} flex flex-col border-r border-slate-800 bg-gradient-to-b from-slate-950 to-slate-900 text-white transition-all duration-200`}
       >
@@ -125,7 +142,7 @@ export function AdminLayout() {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <nav className="scrollbar-dark min-h-0 flex-1 overflow-y-auto px-3 py-4">
           {filteredSections.map((section) => (
             <div key={section.label} className="mb-5">
               {!collapsed && (
@@ -175,7 +192,7 @@ export function AdminLayout() {
         </div>
       </aside>
 
-      <main className="flex flex-1 flex-col bg-slate-50 dark:bg-slate-950">
+      <main className="flex min-w-0 flex-1 flex-col bg-slate-50 dark:bg-slate-950">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 md:px-8 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex-1">
             <AdminGlobalSearch />
@@ -183,7 +200,7 @@ export function AdminLayout() {
           <NotificationBell />
           <PortalAccountDropdown />
         </header>
-        <div className="flex-1 overflow-auto p-8">
+        <div ref={mainScrollRef} className="min-h-0 flex-1 overflow-auto p-8">
           <div className="motion-safe:animate-in">
             <Outlet />
           </div>

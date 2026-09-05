@@ -89,6 +89,6 @@ describe('useSendAiMessage', () => {
     expect(messages).toHaveLength(2);
     expect(messages[1].role).toBe('assistant');
     expect(messages[1].pending).toBe(false);
-    expect(messages[1].content).toMatch(/quá nhanh/i);
+    expect(messages[1].content).toMatch(/too fast/i);
   });
 });

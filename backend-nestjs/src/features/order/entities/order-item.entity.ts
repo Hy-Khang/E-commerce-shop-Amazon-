@@ -55,6 +55,11 @@ export class OrderItem {
   @Column({ type: 'nvarchar', length: 100, nullable: true })
   shop_name: string | null;
 
+  // Snapshot of the product's category at checkout (NULL if unknown/deleted).
+  // Used by the platform-commission engine for per-category rates (Module 25).
+  @Column({ type: 'int', nullable: true })
+  category_id: number | null;
+
   // Snapshot of the flash_sale_item this line was purchased under (NULL = not a
   // flash purchase). Needed to reverse sold_quantity on cancel — the cancel
   // event payload alone cannot tell which flash item was consumed.

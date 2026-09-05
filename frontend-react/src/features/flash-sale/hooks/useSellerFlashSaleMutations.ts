@@ -28,7 +28,7 @@ export function useRegisterFlashItem() {
         .then((res) => res.data.data),
     onSuccess: () => {
       invalidate();
-      showSuccessToast('Đã gửi đăng ký Flash Sale');
+      showSuccessToast('Flash Sale registration submitted');
     },
   });
 }
@@ -48,7 +48,7 @@ export function useUpdateFlashRegistration() {
         .then((res) => res.data.data),
     onSuccess: () => {
       invalidate();
-      showSuccessToast('Đã cập nhật đăng ký');
+      showSuccessToast('Registration updated');
     },
   });
 }
@@ -59,7 +59,7 @@ export function useWithdrawFlashRegistration() {
     mutationFn: (itemId: number) => sellerFlashSaleService.withdrawItem(itemId),
     onSuccess: () => {
       invalidate();
-      showSuccessToast('Đã rút đăng ký');
+      showSuccessToast('Registration withdrawn');
     },
   });
 }

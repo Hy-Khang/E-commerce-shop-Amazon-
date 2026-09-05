@@ -80,6 +80,8 @@ export interface IDashboardStats {
   lowStockAlerts: ILowStockAlert[];
   attentionSignals: IAttentionSignals | null;
   topShops: ITopShop[];
+  /** Net platform commission collected within the period (Module 25). */
+  commissionRevenue: number;
 }
 
 export interface ISellerSummaryStats {
@@ -110,6 +112,10 @@ export interface ISellerDashboardStats {
   topProducts: ITopProduct[];
   recentOrders: ISellerRecentOrder[];
   lowStockAlerts: ILowStockAlert[];
+  /** Platform commission taken from this shop within the period (Module 25). */
+  commissionTotal: number;
+  /** grossRevenue − commissionTotal (what the seller keeps). */
+  netRevenue: number;
 }
 
 export interface IShipperSummaryStats {

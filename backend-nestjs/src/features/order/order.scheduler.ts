@@ -6,6 +6,9 @@ import { OrderStatus } from '../../common/constants';
 import { ActorType } from '../notification/types/notification.types';
 import { CoinService } from '../coin/coin.service';
 import { SettingsService } from '../settings/settings.service';
+import { CommissionService } from '../seller-finance/commission.service';
+import { ShopService } from '../shop/shop.service';
+import { toCommissionContext } from './utils/order.util';
 
 const AUTO_COMPLETE_DAYS = 7;
 
@@ -17,6 +20,8 @@ export class OrderScheduler {
     private readonly orderRepository: OrderRepository,
     private readonly coinService: CoinService,
     private readonly settingsService: SettingsService,
+    private readonly commissionService: CommissionService,
+    private readonly shopService: ShopService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -33,9 +38,13 @@ export class OrderScheduler {
     const ids = orders.map((o) => o.id);
     await this.orderRepository.bulkCompleteOrders(ids);
 
-    // Earn Xu for each auto-completed order (best-effort, idempotent). Fetch the
-    // config once for the whole batch.
+    // Fetch coin + commission config once for the whole batch.
     const coinConfig = await this.settingsService.getCoinConfig();
+    const commissionConfig =
+      await this.settingsService.getCommissionConfig();
+    const categoryRates = commissionConfig.enabled
+      ? await this.settingsService.getCommissionCategoryRateMap()
+      : new Map<number, number>();
 
     for (const order of orders) {
       try {
@@ -45,6 +54,27 @@ export class OrderScheduler {
           `Coin award failed for auto-completed order #${order.id}`,
           error instanceof Error ? error.stack : String(error),
         );
+      }
+
+      // Charge platform commission (best-effort, idempotent). The projection
+      // lacks items/shop, so load the full order to build the context.
+      if (commissionConfig.enabled) {
+        try {
+          const full = await this.orderRepository.findByIdWithItems(order.id);
+          if (full?.shop_id) {
+            const shop = await this.shopService.findShopById(full.shop_id);
+            await this.commissionService.chargeForOrder(
+              toCommissionContext(full, shop.user_id),
+              commissionConfig,
+              categoryRates,
+            );
+          }
+        } catch (error) {
+          this.logger.error(
+            `Commission charge failed for auto-completed order #${order.id}`,
+            error instanceof Error ? error.stack : String(error),
+          );
+        }
       }
 
       this.eventEmitter.emit('order.status_updated', {

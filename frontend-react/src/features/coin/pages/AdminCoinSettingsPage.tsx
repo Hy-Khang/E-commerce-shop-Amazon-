@@ -9,9 +9,9 @@ import { useUpdateCoinSettings } from '../hooks/useUpdateCoinSettings';
 
 const schema = z.object({
   enabled: z.boolean(),
-  earn_rate_percent: z.number({ message: 'Bắt buộc' }).min(0).max(100),
-  redeem_max_percent: z.number({ message: 'Bắt buộc' }).min(0).max(100),
-  expiry_days: z.number({ message: 'Bắt buộc' }).int().min(1).max(3650),
+  earn_rate_percent: z.number({ message: 'Required' }).min(0).max(100),
+  redeem_max_percent: z.number({ message: 'Required' }).min(0).max(100),
+  expiry_days: z.number({ message: 'Required' }).int().min(1).max(3650),
 });
 
 type FormData = z.infer<typeof schema>;

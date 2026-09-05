@@ -25,17 +25,17 @@ export function CompareToggleButton({ product }: Props) {
 
     if (active) {
       remove(product.id);
-      toast.info('Đã bỏ khỏi danh sách so sánh');
+      toast.info('Removed from comparison');
       return;
     }
 
     const result = add(product.id, product.category_id);
     if (result === 'added') {
-      toast.success('Đã thêm vào so sánh');
+      toast.success('Added to comparison');
     } else if (result === 'full') {
-      toast.error(`Chỉ so sánh tối đa ${MAX_COMPARE} sản phẩm`);
+      toast.error(`You can compare up to ${MAX_COMPARE} products`);
     } else {
-      toast.error('Chỉ so sánh các sản phẩm cùng danh mục');
+      toast.error('You can only compare products in the same category');
     }
   };
 
@@ -43,14 +43,14 @@ export function CompareToggleButton({ product }: Props) {
     <button
       type="button"
       onClick={handleClick}
-      aria-label={active ? 'Bỏ so sánh' : 'So sánh'}
+      aria-label={active ? 'Remove from comparison' : 'Compare'}
       aria-pressed={active}
       title={
         active
-          ? 'Bỏ khỏi so sánh'
+          ? 'Remove from comparison'
           : blocked
-            ? 'Chỉ so sánh sản phẩm cùng danh mục (tối đa 4)'
-            : 'Thêm vào so sánh'
+            ? 'Only products in the same category can be compared (up to 4)'
+            : 'Add to comparison'
       }
       className={`rounded-full p-1.5 shadow-sm ring-1 transition-colors ${
         active

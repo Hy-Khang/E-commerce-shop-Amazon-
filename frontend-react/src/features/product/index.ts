@@ -26,6 +26,7 @@ export {
 
 // Components
 export { CategoryForm } from './components/CategoryForm';
+export { CategoryCascader } from './components/CategoryCascader';
 export { ProductFilters } from './components/ProductFilters';
 export { ProductCard } from './components/ProductCard';
 export { HomepageProductCard } from './components/HomepageProductCard';

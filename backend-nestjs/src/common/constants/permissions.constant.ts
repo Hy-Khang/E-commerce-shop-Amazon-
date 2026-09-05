@@ -54,9 +54,18 @@ export const PERMISSIONS = {
   FLASH_REGISTRATIONS_READ: 'flash_registrations:read',
   FLASH_REGISTRATIONS_UPDATE: 'flash_registrations:update',
   FLASH_REGISTRATIONS_DELETE: 'flash_registrations:delete',
-  // Settings (admin-only: runtime app config, e.g. coin/Hoàn Xu)
+  // Settings (admin-only: runtime app config, e.g. coin/Hoàn Xu, commission)
   SETTINGS_READ: 'settings:read',
   SETTINGS_UPDATE: 'settings:update',
+  // Seller Applications (admin-only: onboarding moderation queue)
+  SELLER_APPLICATIONS_READ: 'seller_applications:read',
+  SELLER_APPLICATIONS_UPDATE: 'seller_applications:update',
+  // Seller Wallet (seller-only: read own wallet + ledger)
+  WALLET_READ: 'wallet:read',
+  // Withdrawals (seller creates own; admin moderates the payout queue)
+  WITHDRAWALS_CREATE: 'withdrawals:create',
+  WITHDRAWALS_READ: 'withdrawals:read',
+  WITHDRAWALS_UPDATE: 'withdrawals:update',
   // AI Chatbox (admin-only: view conversation history + toggle/settings)
   AI_CHATBOX_READ: 'ai_chatbox:read',
   AI_CHATBOX_UPDATE: 'ai_chatbox:update',

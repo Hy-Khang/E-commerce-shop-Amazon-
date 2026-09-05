@@ -8,9 +8,34 @@ import {
   OrderItemResponseDto,
 } from '../dto/order-response.dto';
 import type { IShippingAddressSnapshot } from '../types/order.types';
+import type { OrderCommissionContext } from '../../seller-finance/types/seller-finance.types';
 
 function parseShippingAddress(raw: string): IShippingAddressSnapshot {
   return JSON.parse(raw);
+}
+
+/**
+ * Map a loaded order (with `order_items`) + its resolved seller into the context
+ * the commission engine consumes. Shared by `OrderService` (completion/cancel
+ * sites) and `OrderScheduler` (auto-complete) so the shape stays in one place.
+ * `line_total` is the pre-discount line amount; `category_id` is the checkout
+ * snapshot (null → platform rate).
+ */
+export function toCommissionContext(
+  order: Order,
+  sellerUserId: number,
+): OrderCommissionContext {
+  return {
+    order_id: order.id,
+    shop_id: order.shop_id,
+    seller_user_id: sellerUserId,
+    total_amount: Number(order.total_amount),
+    shipping_fee: Number(order.shipping_fee),
+    items: (order.order_items ?? []).map((it) => ({
+      line_total: Number(it.price) * it.quantity,
+      category_id: it.category_id ?? null,
+    })),
+  };
 }
 
 function toOrderItemResponse(item: {

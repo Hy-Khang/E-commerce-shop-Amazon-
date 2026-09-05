@@ -18,6 +18,8 @@ import { UserProfileService } from '../user-profile/user-profile.service';
 import { CouponService } from '../coupon/coupon.service';
 import { CoinService } from '../coin/coin.service';
 import { SettingsService } from '../settings/settings.service';
+import { CommissionService } from '../seller-finance/commission.service';
+import type { OrderCommissionContext } from '../seller-finance/types/seller-finance.types';
 import type { CoinConfig } from '../settings/types/settings.types';
 import {
   distributeCheckoutDiscounts,
@@ -63,6 +65,7 @@ import {
   toOrderListItemWithItemsResponse,
   toAdminOrderResponse,
   toSellerOrderResponse,
+  toCommissionContext,
 } from './utils/order.util';
 import {
   OrderStatus,
@@ -90,6 +93,7 @@ export class OrderService {
     private readonly couponService: CouponService,
     private readonly coinService: CoinService,
     private readonly settingsService: SettingsService,
+    private readonly commissionService: CommissionService,
     private readonly shopService: ShopService,
     private readonly flashSaleService: FlashSaleService,
     private readonly eventEmitter: EventEmitter2,
@@ -182,6 +186,8 @@ export class OrderService {
         variant_option2_value: variant.option2 ?? null,
         shop_id: product?.shop_id ?? null,
         shop_name: product?.shop?.name ?? null,
+        // Snapshot the category for the platform-commission engine (Module 25).
+        category_id: product?.category_id ?? null,
         // Snapshot the flash item so sold_quantity can be reversed on cancel.
         flash_sale_item_id: flash ? flash.flashItemId : null,
       };
@@ -670,8 +676,9 @@ export class OrderService {
     const oldStatus = order.status;
     order.status = OrderStatus.Completed;
 
-    // Earn Xu on completion (best-effort, idempotent).
+    // Earn Xu + charge platform commission on completion (best-effort, idempotent).
     await this.awardCoinsForOrderSafe(order);
+    await this.chargeCommissionForOrderSafe(order);
 
     const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([
       order.shop_id,
@@ -778,6 +785,7 @@ export class OrderService {
     await this.handleCouponReversalOnCancel(order);
     await this.handleFlashReversalOnCancel(order);
     await this.reverseCoinsForOrderSafe(order);
+    await this.reverseCommissionForOrderSafe(order);
 
     this.eventEmitter.emit('order.cancelled', {
       orderId: order.id,
@@ -882,6 +890,7 @@ export class OrderService {
       await this.handleCouponReversalOnCancel(order);
       await this.handleFlashReversalOnCancel(order);
       await this.reverseCoinsForOrderSafe(order);
+      await this.reverseCommissionForOrderSafe(order);
 
       this.eventEmitter.emit('order.cancelled', {
         orderId: order.id,
@@ -892,9 +901,10 @@ export class OrderService {
       });
     }
 
-    // Earn Xu when an order reaches completed (best-effort, idempotent).
+    // Earn Xu + charge commission when an order reaches completed (idempotent).
     if (dto.status === OrderStatus.Completed) {
       await this.awardCoinsForOrderSafe(order);
+      await this.chargeCommissionForOrderSafe(order);
     }
 
     this.eventEmitter.emit('order.status_updated', {
@@ -1477,6 +1487,63 @@ export class OrderService {
         error instanceof Error ? error.stack : String(error),
       );
     }
+  }
+
+  /**
+   * Charge the platform commission when an order completes and credit the
+   * seller's net into their wallet. Best-effort: failures are logged and never
+   * break the status transition. Idempotency is enforced in CommissionService.
+   */
+  private async chargeCommissionForOrderSafe(order: Order): Promise<void> {
+    try {
+      const config = await this.settingsService.getCommissionConfig();
+      if (!config.enabled) return;
+      const ctx = await this.buildCommissionContext(order);
+      if (!ctx) return;
+      const categoryRates =
+        await this.settingsService.getCommissionCategoryRateMap();
+      await this.commissionService.chargeForOrder(ctx, config, categoryRates);
+    } catch (error) {
+      this.logger.error(
+        `Commission charge failed for order #${order.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  /**
+   * Reverse a charged order's commission on cancel. Defensive/idempotent — a
+   * `completed` order is not cancellable, so this normally finds nothing to
+   * reverse. Best-effort.
+   */
+  private async reverseCommissionForOrderSafe(order: Order): Promise<void> {
+    try {
+      await this.commissionService.reverseForOrder(order.id);
+    } catch (error) {
+      this.logger.error(
+        `Commission reversal failed for order #${order.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  /**
+   * Build the commission context from a loaded order (with `order_items`).
+   * Resolves the wallet owner from the order's shop. Returns null when the shop
+   * can't be resolved, so commission is skipped rather than throwing.
+   */
+  private async buildCommissionContext(
+    order: Order,
+  ): Promise<OrderCommissionContext | null> {
+    if (!order.shop_id) return null;
+    let sellerUserId: number;
+    try {
+      const shop = await this.shopService.findShopById(order.shop_id);
+      sellerUserId = shop.user_id;
+    } catch {
+      return null;
+    }
+    return toCommissionContext(order, sellerUserId);
   }
 
   private async handleCouponReversalOnCancel(order: Order): Promise<void> {

@@ -1,5 +1,6 @@
-import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Store, Tag, Zap, Star, Heart, MessageCircle, ExternalLink } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Package, ShoppingCart, Store, Tag, Zap, Star, Heart, MessageCircle, Wallet, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
@@ -14,6 +15,7 @@ const sellerLinks: Array<{ to: string; label: string; icon: LucideIcon; permissi
   { to: '/seller/shop', label: 'Shop Settings', icon: Store, permission: PERMISSIONS.SHOPS_READ },
   { to: '/seller/products', label: 'Products', icon: Package, permission: PERMISSIONS.PRODUCTS_READ },
   { to: '/seller/orders', label: 'Orders', icon: ShoppingCart, permission: PERMISSIONS.ORDERS_READ },
+  { to: '/seller/wallet', label: 'Wallet', icon: Wallet, permission: PERMISSIONS.WALLET_READ },
   { to: '/seller/chat', label: 'Messages', icon: MessageCircle, permission: PERMISSIONS.SHOPS_READ },
   { to: '/seller/coupons', label: 'Coupons', icon: Tag, permission: PERMISSIONS.COUPONS_READ },
   { to: '/seller/flash-sales', label: 'Flash Sale', icon: Zap, permission: PERMISSIONS.FLASH_REGISTRATIONS_READ },
@@ -24,14 +26,24 @@ const sellerLinks: Array<{ to: string; label: string; icon: LucideIcon; permissi
 export function SellerLayout() {
   const { hasPermission } = usePermissions();
   const chatUnread = useChatUnreadBadge();
+  const { pathname } = useLocation();
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+
+  // The layout is pinned to the viewport (h-screen) so the sidebar and the main
+  // content each scroll inside their OWN overflow container — the window never
+  // scrolls. Reset the content container on route change so a new page doesn't
+  // inherit the previous page's scroll position.
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0 });
+  }, [pathname]);
 
   const visibleLinks = sellerLinks.filter((link) => hasPermission(link.permission));
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       <aside className="flex w-64 flex-col border-r bg-amber-900 text-white">
         <div className="p-6 text-lg font-bold">Seller Center</div>
-        <nav className="flex flex-1 flex-col gap-1 px-3">
+        <nav className="scrollbar-dark flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3">
           {visibleLinks.map((link) => {
             const Icon = link.icon;
             const badge = link.to === ROUTES.SELLER_CHAT ? chatUnread : 0;
@@ -66,7 +78,7 @@ export function SellerLayout() {
           </Link>
         </div>
       </aside>
-      <main className="flex flex-1 flex-col bg-slate-50/50 dark:bg-slate-950">
+      <main className="flex min-w-0 flex-1 flex-col bg-slate-50/50 dark:bg-slate-950">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 md:px-6 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex-1">
             <SellerGlobalSearch />
@@ -74,7 +86,7 @@ export function SellerLayout() {
           <NotificationBell />
           <PortalAccountDropdown />
         </header>
-        <div className="flex-1 overflow-auto p-6">
+        <div ref={mainScrollRef} className="min-h-0 flex-1 overflow-auto p-6">
           <Outlet />
         </div>
       </main>

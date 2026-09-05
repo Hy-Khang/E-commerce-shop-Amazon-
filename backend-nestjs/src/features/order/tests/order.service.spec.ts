@@ -17,6 +17,7 @@ import { UserProfileService } from '../../user-profile/user-profile.service';
 import { CouponService } from '../../coupon/coupon.service';
 import { CoinService } from '../../coin/coin.service';
 import { SettingsService } from '../../settings/settings.service';
+import { CommissionService } from '../../seller-finance/commission.service';
 import { ShopService } from '../../shop/shop.service';
 import { FlashSaleService } from '../../flash-sale/flash-sale.service';
 import {
@@ -143,6 +144,21 @@ describe('OrderService', () => {
               redeem_max_percent: 50,
               expiry_days: 90,
             }),
+            getCommissionConfig: jest.fn().mockResolvedValue({
+              enabled: false,
+              mode: 'flat',
+              rate_percent: 10,
+            }),
+            getCommissionCategoryRateMap: jest
+              .fn()
+              .mockResolvedValue(new Map()),
+          },
+        },
+        {
+          provide: CommissionService,
+          useValue: {
+            chargeForOrder: jest.fn(),
+            reverseForOrder: jest.fn(),
           },
         },
         {

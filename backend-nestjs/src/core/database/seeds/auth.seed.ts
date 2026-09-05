@@ -27,6 +27,8 @@ const SELLER_PERMISSIONS = [
   'flash_registrations:read',
   'flash_registrations:update',
   'flash_registrations:delete',
+  'wallet:read',
+  'withdrawals:create',
   'portal:seller',
 ];
 
@@ -94,6 +96,20 @@ const SEED_PERMISSIONS = [
   },
   { resource: 'settings', action: 'read', name: 'Read Settings' },
   { resource: 'settings', action: 'update', name: 'Update Settings' },
+  {
+    resource: 'seller_applications',
+    action: 'read',
+    name: 'Read Seller Applications',
+  },
+  {
+    resource: 'seller_applications',
+    action: 'update',
+    name: 'Review Seller Applications',
+  },
+  { resource: 'wallet', action: 'read', name: 'Read Seller Wallet' },
+  { resource: 'withdrawals', action: 'create', name: 'Create Withdrawal' },
+  { resource: 'withdrawals', action: 'read', name: 'Read Withdrawals' },
+  { resource: 'withdrawals', action: 'update', name: 'Review Withdrawals' },
   { resource: 'ai_chatbox', action: 'read', name: 'Read AI Chatbox' },
   { resource: 'ai_chatbox', action: 'update', name: 'Update AI Chatbox' },
   { resource: 'dashboard', action: 'read', name: 'Read Dashboard' },

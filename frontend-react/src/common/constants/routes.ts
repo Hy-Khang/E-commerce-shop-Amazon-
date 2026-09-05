@@ -26,6 +26,7 @@ export const ROUTES = {
   MY_REVIEWS: '/profile/reviews',
   WALLET: '/wallet',
   WISHLIST: '/wishlist',
+  BECOME_SELLER: '/become-seller',
   NOTIFICATIONS: '/notifications',
   CHAT: '/chat',
   CHAT_CONVERSATION: (id: number) => `/chat/${id}`,
@@ -50,6 +51,11 @@ export const ROUTES = {
   ADMIN_COUPONS: '/admin/coupons',
   ADMIN_FLASH_SALES: '/admin/flash-sales',
   ADMIN_COIN_SETTINGS: '/admin/settings/coins',
+  ADMIN_COMMISSION_SETTINGS: '/admin/settings/commission',
+  ADMIN_SELLER_APPLICATIONS: '/admin/seller-applications',
+  ADMIN_SELLER_APPLICATION_DETAIL: (id: number) =>
+    `/admin/seller-applications/${id}`,
+  ADMIN_WITHDRAWALS: '/admin/withdrawals',
   ADMIN_AI_CONVERSATIONS: '/admin/ai-conversations',
   ADMIN_AI_CONVERSATION_DETAIL: (id: number) => `/admin/ai-conversations/${id}`,
   ADMIN_AI_SETTINGS: '/admin/ai-settings',
@@ -67,6 +73,7 @@ export const ROUTES = {
   SELLER_FLASH_SALES: '/seller/flash-sales',
   SELLER_REVIEWS: '/seller/reviews',
   SELLER_WISHLIST: '/seller/wishlist',
+  SELLER_WALLET: '/seller/wallet',
 
   SHIPPER_DASHBOARD: '/shipper/dashboard',
   SHIPPER_DELIVERIES: '/shipper/deliveries',

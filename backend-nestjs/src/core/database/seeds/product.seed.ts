@@ -184,10 +184,18 @@ export const ProductSeed: ISeed = {
       SET IDENTITY_INSERT categories ON;
       INSERT INTO categories (id, parent_id, name, slug) VALUES
         (17, 5, N'Áo khoác',              N'ao-khoac'),
-        (18, 1, N'Phụ kiện thời trang',   N'phu-kien-thoi-trang');
+        (18, 1, N'Phụ kiện thời trang',   N'phu-kien-thoi-trang'),
+        -- Catch-all leaves: a valid fallback when no specific sub-category fits.
+        -- One per root + a standalone root "Khác" (itself a leaf, so it's
+        -- directly selectable under the leaf-only product picker).
+        (19, 1,    N'Khác', N'thoi-trang-khac'),
+        (20, 2,    N'Khác', N'dien-tu-khac'),
+        (21, 3,    N'Khác', N'nha-cua-khac'),
+        (22, 4,    N'Khác', N'sach-khac'),
+        (23, NULL, N'Khác', N'khac');
       SET IDENTITY_INSERT categories OFF;
     `);
-    console.log('  + categories: +2 rows (17-18)');
+    console.log('  + categories: +7 rows (17-23)');
 
     // ── New Products (30) ──
     await qr.query(`
