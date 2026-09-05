@@ -17,6 +17,7 @@ import { TrendingSection } from '../components/TrendingSection';
 import { DiscoverMoreSection } from '../components/DiscoverMoreSection';
 import { FlashSaleSection } from '@/features/flash-sale';
 import { RecentlyViewedCarousel } from '@/features/recently-viewed';
+import { RecommendedForYouCarousel } from '@/features/recommendations';
 
 const HERO_SLIDES = [
   {
@@ -213,6 +214,9 @@ export default function HomePage() {
         products={homepage?.discoverMore ?? []}
         isLoading={isLoadingHomepage}
       />
+
+      {/* ── Recommended for You ── */}
+      <RecommendedForYouCarousel />
 
       {/* ── Recently Viewed ── */}
       <RecentlyViewedCarousel />

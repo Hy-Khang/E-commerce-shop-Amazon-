@@ -10,6 +10,11 @@ import { useFlashPriceMaps } from '@/features/flash-sale';
 import { ReviewList } from '@/features/review';
 import { WishlistButton } from '@/features/wishlist';
 import { RecentlyViewedCarousel, useTrackView } from '@/features/recently-viewed';
+import {
+  SimilarProductsCarousel,
+  FrequentlyBoughtTogetherCarousel,
+  useTrackActivity,
+} from '@/features/recommendations';
 import { ShopInfoCard } from '@/features/shop/components/ShopInfoCard';
 import { useProduct } from '../hooks/useProduct';
 import { useCategories } from '../hooks/useCategories';
@@ -17,7 +22,6 @@ import { ImageGallery } from '../components/ImageGallery';
 import { VariantSelector } from '../components/VariantSelector';
 import { ProductDetailSkeleton } from '../components/ProductDetailSkeleton';
 import { ShopProductsCarousel } from '../components/ShopProductsCarousel';
-import { RelatedProducts } from '../components/RelatedProducts';
 import { getEffectivePrice, isInStock } from '../utils/product.util';
 import type { Category, ProductVariant } from '../types/product.types';
 
@@ -34,6 +38,11 @@ export default function ProductDetailPage() {
 
   // Record the view (DB for customers, localStorage for guests).
   useTrackView(product?.id);
+  useTrackActivity(
+    product?.id
+      ? { action: 'VIEW_PRODUCT', target_type: 'product', target_id: product.id }
+      : undefined,
+  );
 
   if (isLoading) return <ProductDetailSkeleton />;
 
@@ -185,6 +194,7 @@ export default function ProductDetailPage() {
                   <AddToCartButton
                     variantId={active.id}
                     quantity={quantity}
+                    productId={product.id}
                     disabled={isAdding}
                     className="flex-1 border border-border-brand text-text-brand hover:bg-brand-light shadow-sm py-3 text-sm font-bold rounded-lg transition-colors"
                   />
@@ -222,6 +232,8 @@ export default function ProductDetailPage() {
           <ShopInfoCard shop={product.shop} />
         )}
 
+        <FrequentlyBoughtTogetherCarousel productId={product.id} />
+
         <div className="shop-card p-6">
           <h2 className="mb-6 text-lg font-bold tracking-tight text-text-primary">Customer Reviews</h2>
           <ReviewList productId={product.id} />
@@ -235,10 +247,7 @@ export default function ProductDetailPage() {
           />
         )}
 
-        <RelatedProducts
-          categoryId={product.category_id}
-          currentProductId={product.id}
-        />
+        <SimilarProductsCarousel productId={product.id} />
 
         <RecentlyViewedCarousel excludeProductId={product.id} />
       </div>

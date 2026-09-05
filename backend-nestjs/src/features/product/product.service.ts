@@ -802,6 +802,13 @@ export class ProductService {
     return this.productRepository.findActiveByIds(ids);
   }
 
+  /** Active products for a set of ids, enriched with review stats — used by recommendations carousels. */
+  async findActiveByIdsWithStats(
+    ids: number[],
+  ): Promise<(Product & { reviewCount: number; avgRating: number })[]> {
+    return this.productRepository.findActiveByIdsWithStats(ids);
+  }
+
   // ─── Event Listeners ───
 
   @OnEvent('order.created')

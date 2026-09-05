@@ -26,6 +26,7 @@ import { ChatModule } from './features/chat/chat.module';
 import { AiChatModule } from './features/ai-chat/ai-chat.module';
 import { SellerApplicationModule } from './features/seller-application/seller-application.module';
 import { SellerFinanceModule } from './features/seller-finance/seller-finance.module';
+import { RecommendationsModule } from './features/recommendations/recommendations.module';
 import { MailModule } from './core/mail/mail.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -59,6 +60,7 @@ import { AppService } from './app.service';
     AiChatModule,
     SellerApplicationModule,
     SellerFinanceModule,
+    RecommendationsModule,
     MailModule,
   ],
   controllers: [AppController],

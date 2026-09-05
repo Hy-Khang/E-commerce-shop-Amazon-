@@ -218,9 +218,21 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | GET | `/categories` | List category tree | Public |
 | GET | `/categories/:slug` | Get category with products (paginated) | Public |
 | GET | `/products` | List active products (paginated, filtered, sorted). Accepts `?ids=1,2,3` (CSV, max 100) to bulk-fetch a specific set of active products — used by Recently Viewed (guest) and Product Comparison | Public |
+| GET | `/products/suggestions` | Search suggestions for a keyword (`?q=`) — grouped products / categories / shops (Module 12) | Public |
+| POST | `/products/search-by-image` | Visual search — upload an image, AI extracts attributes → similar products (Module 12) | Public |
 | GET | `/products/:slug` | Get product detail (variants + images + shop info) | Public |
 
 > **Bulk `?ids=` path (Recently Viewed guest hydration + Product Comparison):** when `ids` is present the endpoint returns the **full requested set in one call** (no pagination trimming — `meta` is `{ page: 1, limit: ids.length, total, totalPages: 1 }`) and each item is enriched with `avgRating` + `reviewCount` (via one batched grouped query over `reviews`) alongside the joined `category` object. The normal (no-`ids`) listing is unchanged — no stats, standard pagination — so existing consumers are unaffected. Inactive products / products of non-active shops are dropped (visibility filter), so the returned set may be smaller than the requested ids.
+>
+> **Visual Search (`POST /products/search-by-image`, Module 12):** `multipart/form-data` with an image file (JPEG/PNG/WebP, ≤5MB). The backend sends the image to **OpenRouter** (vision model) to extract `{ category, color, material, style }`, builds a dynamic `WHERE` query, and returns matching active products plus the AI-detected tags for display. Rate-limited to **10 requests/min/user** (`@nestjs/throttler`, in-memory) → `429` on exceed.
+
+### Homepage — `/api/v1/homepage`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/homepage` | Aggregated storefront home data: Special Offers, Best Sellers, Trending, Discover More | Public |
+
+> **Bonus feature (outside the 26 core modules).** One call returns the curated product blocks for the home page (each block a product-list-item array, same shape as `GET /products`), so the landing page renders without several round-trips. Served by the dedicated `homepage/` feature module.
 
 ### Shop — `/api/v1/shops`
 
@@ -261,10 +273,13 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | GET | `/orders` | List my orders (paginated) | Customer |
 | GET | `/orders/group/:groupId` | Get all orders in a group (own only) | Customer |
 | GET | `/orders/:id` | Get order detail + order_items + `applied_coupons[]` (own only) | Customer |
+| GET | `/orders/:id/tracking` | Order tracking — status timeline + latest shipper location (own only, Module 16) | Customer |
 | PATCH | `/orders/:id/cancel` | Cancel order (if status = pending) | Customer |
 | PATCH | `/orders/:id/confirm-receipt` | Confirm receipt — delivered → completed | Customer |
 | PATCH | `/orders/:id/return-request` | Request return/refund — delivered → return_requested | Customer |
 
+> **Order Tracking (`GET /orders/:id/tracking`, Module 16):** returns the status **timeline** (from `order_status_history` — each transition with actor + timestamp) plus the shipper's **latest location** (from `order_tracking_locations`) and the snapshotted delivery address (lat/lng). The frontend renders the timeline always, and a Leaflet + OpenStreetMap map (shipper marker + delivery marker) only while the order is `shipping`. The shipper updates their position manually via `PATCH /shipper/orders/:id/location`. The same tracking payload is available to the seller/admin/shipper who own or handle the order.
+>
 > **Multi-shop checkout:** `POST /orders` splits the cart into N orders (1 per shop), all sharing the same `order_group_id` (UUID v4). Returns `CheckoutResponseDto { order_group_id, orders[], total_amount }`. Coupon discount is distributed across sub-orders (see below). Each order has its own `shop_id`, `shop_name` (snapshot), `shipping_fee`, and `total_amount`.
 >
 > **Multi-coupon (Phase 2):** `POST /orders` accepts `coupon_codes?: string[]` — at most **one platform coupon** plus **one coupon per shop** (violations → `COUPON_011 (400)`). The legacy single `coupon_code?: string` is still accepted and mapped into the array. Each coupon is validated and calculated independently on the original subtotal. Per sub-order the discount is `shopCouponDiscount + platformShareAdj`, where the shop coupon lands first and the platform coupon's share (split across shops by applicable subtotal, largest-remainder rounding) fills the remaining headroom (`platformShareAdj = min(platformShare, shopItemsTotal − shopCouponDiscount)`). `orders.coupon_code` snapshots a single code (shop coupon preferred, else platform); the full breakdown is returned on order detail as `applied_coupons: [{ code, discount_amount }]` and sourced from `coupon_usages`.
@@ -346,7 +361,7 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | PATCH | `/notifications/:id/read` | Mark single notification as read (ownership enforced) | Customer |
 | PATCH | `/notifications/read-all` | Mark all notifications as read (HTTP 204) | Customer |
 
-> **Polling-based delivery:** Frontend polls `GET /notifications/unread-count` every 30s. No WebSocket infrastructure. Notifications are created automatically via `order.status_updated` event. Admin/seller status changes notify the customer. Customer-initiated confirm receipt and return requests notify the seller(s). Customer-initiated order placement and cancellation do **not** create notifications.
+> **Delivery — realtime push + polling fallback:** Notifications are pushed in realtime over **Socket.IO** (`NotificationGateway`, JWT verified in the WS handshake, room `user:{id}`, event `new_notification`) — the same shared gateway/connection reused by Chat (Module 20). The REST endpoints remain the cold-load + fallback path: the frontend polls `GET /notifications/unread-count` (~30s) for the badge when the socket is not yet connected, and loads the paginated list / marks read over REST. Notifications are created automatically via the `order.status_updated` event. Admin/seller status changes notify the customer. Customer-initiated confirm receipt and return requests notify the seller(s). Customer-initiated order placement and cancellation do **not** create notifications.
 
 ### Chat — `/api/v1/chat`
 
@@ -388,6 +403,21 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 > **Rate limit:** `POST /ai/chat` is throttled to **10 requests/min** per user (in-memory `@nestjs/throttler` — the repo has no Redis, see `share-docs/TECH_DEBT.md` TD-001) → `429` on exceed. One message = ≤4 internal LLM rounds (cost cap).
 >
 > **Provider + fallback:** tool-calling uses `OPENROUTER_AGENT_MODEL` (a function-calling-capable model; falls back to `OPENROUTER_CHAT_MODEL` when unset — the agent then **self-degrades to plain RAG**, since a model that ignores tools just replies with text). A provider/timeout/`429` error mid-loop breaks the loop and returns a **polite reply with HTTP 200** (still persisted, keeping any actions already performed). A missing API key → `CHATBOT_004 (503)`; a disabled chatbox → `CHATBOT_005 (400)`; the system prompt constrains the model to only recommend retrieved products and forbids claiming an order was placed.
+
+### Recommendations — `/api/v1/activity`, `/api/v1/recommendations`, `/api/v1/products/:id/similar|frequently-bought-together`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/activity` | Record one behavioral signal (`{ action, target_type, target_id?, metadata? }`); best-effort, `204` | Public (customer JWT / guest `x-session-id`) |
+| GET | `/recommendations` | "Recommended for You" — `{ reason, products[] }` (`?limit=12`) | Public (customer JWT / guest `x-session-id`) |
+| GET | `/products/:id/similar` | "Similar Products" — content similarity blended with co-view (`{ products[] }`, `?limit=12`) | Public |
+| GET | `/products/:id/frequently-bought-together` | "Frequently Bought Together" — co-purchase, falls back to similar (`{ products[] }`, `?limit=12`) | Public |
+
+> **Smart Recommendations (Module 22).** Content-based personalization for guest + customer, scored **on-demand** (no Redis). Identity is resolved exactly like the AI chatbox / cart — a JWT populates the user owner, else the `x-session-id` header identifies a guest (both auto-attached by the axios interceptor).
+>
+> **Signal capture is hybrid:** the frontend fires `POST /activity` for `VIEW_PRODUCT` / `VIEW_CATEGORY` / `SEARCH` / `ADD_TO_CART` / `ADD_TO_WISHLIST`, and a server-side `@OnEvent('order.created')` listener logs `PURCHASE` rows (the `order.created` event payload was enriched with an optional `userId`; `ProductService.handleOrderCreated` ignores it). `POST /activity` is **deliberately lenient** — only the DTO enums are validated; a missing identity, or an unknown/stale `target_id`, is a silent no-op (never `204`-blocks the UX).
+>
+> **Scoring:** a profile is built from the caller's last-90-day rows — a category weight map (`PURCHASE`×5, `ADD_TO_CART`×3, `ADD_TO_WISHLIST`×2, `VIEW`×1), a preferred price range, and preferred shops. Candidates in the preferred categories score `+3` (category) · `+2` (price in range) · `+1` (same shop), excluding already-purchased/interacted products; the result is topped up with best-sellers so a carousel is **never blank**, and a cold-start caller falls back to best-sellers → trending with `reason: null`. `reason` (when present) names the dominant category ("Because you like {category}"). `similar` blends co-view ids (self-join on `user_activity_log`) ahead of content-similar (same/sibling category, price proximity); `frequently-bought-together` ranks co-purchase within the same `order_group_id` on completed orders and falls back to `similar` when sparse. All three surfaces hydrate via `ProductService.findActiveByIdsWithStats` (visibility-filtered, with `avgRating`/`reviewCount`), returning the same **product-list-item** shape as `GET /products`. A daily cron deletes activity rows older than 90 days.
 
 ### Flash Sale — `/api/v1/flash-sales`
 
@@ -499,6 +529,7 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 |--------|------|-------------|-------------|
 | GET | `/admin/orders` | List all orders (paginated) | `?search=keyword&status=pending&payment_status=unpaid&user_id=123&sort=created_at&order=desc` |
 | GET | `/admin/orders/:id` | Get order detail + order_items + user info + `applied_coupons[]` | — |
+| GET | `/admin/orders/:id/tracking` | Order tracking — status timeline + shipper location (Module 16) | — |
 | PATCH | `/admin/orders/:id/status` | Update order status (valid transitions only) | — |
 | PATCH | `/admin/orders/:id/payment-status` | Update payment status (unpaid → paid) | — |
 
@@ -647,6 +678,7 @@ All seller endpoints use **permission-based access control** via `@Permissions()
 |--------|------|-------------|------------|
 | GET | `/seller/orders` | List orders for seller's shop (paginated, filterable by status/payment_status) | `orders:read` |
 | GET | `/seller/orders/:id` | Get order detail (seller's shop only) + `applied_coupons[]` | `orders:read` |
+| GET | `/seller/orders/:id/tracking` | Order tracking — status timeline + shipper location (own shop, Module 16) | `orders:read` |
 | PATCH | `/seller/orders/:id/status` | Update order status (seller transitions: pending→confirmed) | `orders:update` |
 | PATCH | `/seller/orders/:id/payment-status` | Update payment status (unpaid → paid) | `orders:update` |
 
@@ -723,8 +755,10 @@ All shipper endpoints use **permission-based access control** via `@Permissions(
 |--------|------|-------------|------------|
 | GET | `/shipper/orders` | List orders (filter: `available` or `my_deliveries`) | `orders:read` |
 | GET | `/shipper/orders/:id` | Get order detail (available orders + own deliveries) | `orders:read` |
+| GET | `/shipper/orders/:id/tracking` | Order tracking — status timeline + shipper location (own deliveries, Module 16) | `orders:read` |
 | PATCH | `/shipper/orders/:id/accept` | Accept order — assigns shipper + confirmed → shipping | `orders:update` |
 | PATCH | `/shipper/orders/:id/deliver` | Mark delivered — shipping → delivered | `orders:update` |
+| PATCH | `/shipper/orders/:id/location` | Update the shipper's current location (`{ latitude, longitude }`) — appends a tracking point (Module 16) | `orders:update` |
 
 > **Order assignment model:** First-come-first-served. Shipper calls `/accept` on a `confirmed` order with no shipper assigned. Atomic conditional UPDATE prevents race conditions — if two shippers accept simultaneously, only one succeeds; the other receives `ORDER_003 (400)`.
 >

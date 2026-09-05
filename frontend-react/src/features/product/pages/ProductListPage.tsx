@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { SlidersHorizontal, X, Sparkles } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
@@ -12,6 +12,7 @@ import { CategorySidebar } from '../components/CategorySidebar';
 import { FilterSidebar } from '../components/FilterSidebar';
 import { SortDropdown } from '../components/SortDropdown';
 import { ROUTES } from '@/common/constants/routes';
+import { useTrackActivityCallback } from '@/features/recommendations';
 import type { ProductListParams, VisualSearchResult } from '../types/product.types';
 
 export default function ProductListPage() {
@@ -35,6 +36,15 @@ export default function ProductListPage() {
 
   const { data, isLoading } = useProducts(filters);
   const { data: categories } = useCategories();
+
+  // SEARCH signal — fire once per distinct keyword.
+  const searchKeyword = searchParams.get('search') || undefined;
+  const track = useTrackActivityCallback();
+  useEffect(() => {
+    if (searchKeyword) {
+      track({ action: 'SEARCH', target_type: 'search', metadata: { keyword: searchKeyword } });
+    }
+  }, [searchKeyword, track]);
 
   function handleCategoryFilter(categoryId: number | null) {
     setSearchParams((prev) => {

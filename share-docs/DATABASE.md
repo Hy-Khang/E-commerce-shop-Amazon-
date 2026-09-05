@@ -138,7 +138,11 @@
 | phone | NVARCHAR(20) | NOT NULL |
 | address_line | NVARCHAR(255) | NOT NULL — street number, street name |
 | city | NVARCHAR(100) | NOT NULL |
+| latitude | DECIMAL(10,7) | NULL — geo coordinate picked on the Leaflet map (Order Tracking) |
+| longitude | DECIMAL(10,7) | NULL — geo coordinate picked on the Leaflet map (Order Tracking) |
 | is_default | BIT | NOT NULL, DEFAULT `0` — marks default address for checkout |
+
+> **`latitude` / `longitude`** are captured by the frontend `AddressMapPicker` (Leaflet + OpenStreetMap) so the delivery address can be shown as a marker on the Order Tracking map. Both nullable — legacy/manual addresses may have none. Added by migration `1751400000000-AddLatLngToAddresses`. Index `idx_addresses_user_id`.
 
 ---
 
@@ -226,6 +230,9 @@
 | product_id | INT | FK → `products.id`, NOT NULL |
 | image_url | NVARCHAR(500) | NOT NULL |
 | sort_order | INT | NOT NULL, DEFAULT `0` — display order |
+| variant_option1 | NVARCHAR(50) | NULL — optional value of variant axis 1 (e.g. "Đen") this image belongs to, so a colour switch swaps its gallery |
+
+> **`variant_option1`** links an image to a specific option1 value (e.g. show the black-colour photos when the customer picks "Đen"). `NULL` = a general product image shown for every variant. Added by migration `1749300004000-AddVariantOption1ToProductImages`.
 
 ---
 
@@ -308,8 +315,11 @@
 | variant_option1_value | NVARCHAR(50) | NULL — **snapshot** of `product_variants.option1` (e.g. "Đen") |
 | variant_option2_label | NVARCHAR(50) | NULL — **snapshot** of `products.option2_label` (e.g. "Kích thước") |
 | variant_option2_value | NVARCHAR(50) | NULL — **snapshot** of `product_variants.option2` (e.g. "L") |
+| category_id | INT | NULL — **snapshot** of the product's category at checkout (Module 25 commission engine; NULL → platform rate) |
+| flash_sale_item_id | INT | FK → `flash_sale_items.id` ON DELETE SET NULL, NULL — which flash registration this line consumed (Module 17), so `sold_quantity` can be reversed on cancel |
 
 > All snapshot fields are copied at purchase time — immune to future product edits/deletions. The `variant_option*` fields preserve the variant attributes (label from product, value from variant) so order history displays correctly even if the product is later modified. `shop_id` and `shop_name` are nullable — historical order_items from before the shop feature may have NULL values.
+> **`category_id`** (Module 25) snapshots the category so the category-mode commission engine never joins products at runtime and survives variant/product deletion (see §2.18). **`flash_sale_item_id`** (Module 17) records the consumed flash registration so cancelling an order can atomically restore that item's `sold_quantity` (see §2.12).
 
 ---
 
@@ -433,6 +443,7 @@
 | title | NVARCHAR(255) | NOT NULL |
 | message | NVARCHAR(500) | NOT NULL |
 | data | NVARCHAR(MAX) | NULL — JSON payload (e.g. `{ orderId, oldStatus, newStatus }`) |
+| context | NVARCHAR(20) | NOT NULL, DEFAULT `'customer'` — which portal the notification is for (`customer` / `seller` / `shipper` / `admin`), so one user acting in multiple roles sees the right feed |
 | is_read | BIT | NOT NULL, DEFAULT `0` |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
@@ -442,6 +453,7 @@
 > - **JSON data field** — stored as `NVARCHAR(MAX)`, parsed safely on read. Contains `orderId`, `oldStatus`, `newStatus` for order status notifications. Extensible for future notification types.
 > - **No `updated_at`** — notifications are write-once + read-mark. Only `is_read` changes after creation.
 > - **CASCADE delete** — when a user is deleted, their notifications are automatically removed.
+> - **`context` (portal scoping)** — added by migration `1749300007000-AddContextToNotifications`. A single user can be e.g. both a customer and a seller; `context` keeps each portal's notification feed and unread badge separate. Listing/unread queries filter by `(user_id, context)` — see index `idx_notifications_user_context_read` in §5.
 > - **Future consideration** — cleanup cron for notifications older than 90 days.
 
 ---
@@ -471,6 +483,43 @@
 > - **Idempotency** — IPN callbacks check `status !== 'pending'` before updating. Duplicate callbacks are no-ops.
 > - **Event-driven** — on successful payment, `payment.completed` event is emitted → `OrderPaymentListener` sets `orders.payment_status = 'paid'`.
 > - **Signature verification** — HMAC-SHA512 for VNPay, HMAC-SHA256 for MoMo. Invalid signatures are rejected before any state change.
+
+---
+
+### 2.11.1 Order Tracking Feature (Module 16)
+
+> Timeline of status changes + manual shipper location for the delivery map. Created by migration `1751400001000-CreateOrderTrackingTables`.
+
+#### `order_status_history` — status timeline
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| order_id | INT | FK → `orders.id`, NOT NULL |
+| from_status | NVARCHAR(20) | NULL — previous status (NULL for the very first entry) |
+| to_status | NVARCHAR(20) | NOT NULL — new status |
+| actor_id | INT | FK → `users.id` ON DELETE SET NULL, NULL — who triggered it (NULL for system/cron) |
+| actor_type | NVARCHAR(20) | NOT NULL — `customer` / `seller` / `shipper` / `admin` / `system` |
+| note | NVARCHAR(255) | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Index:** `idx_order_status_history_order_id (order_id)`.
+
+> One row per status transition, appended whenever an order changes status (customer/seller/shipper/admin action or the auto-complete cron). Powers the customer-facing timeline (`GET /orders/:id/tracking`). `actor_id` is `SET NULL` so history survives account removal.
+
+#### `order_tracking_locations` — shipper location points
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| order_id | INT | FK → `orders.id`, NOT NULL |
+| latitude | DECIMAL(10,7) | NOT NULL |
+| longitude | DECIMAL(10,7) | NOT NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Index:** `idx_order_tracking_locations_order_created (order_id, created_at)`.
+
+> The shipper updates their position **manually** (`PATCH /shipper/orders/:id/location`) — each update appends a row; the latest row is the marker shown on the customer's Leaflet + OpenStreetMap map alongside the delivery address (only while the order is `shipping`). No realtime GPS — a new point per manual update, fit for the demo scale.
 
 ---
 
@@ -770,6 +819,27 @@
 
 ---
 
+### 2.19 Recommendations Feature (Module 22 — Smart Recommendations)
+
+#### `user_activity_log` — behavioral signals (content-based recommendations)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NULL — customer owner |
+| session_id | NVARCHAR(100) | NULL — guest owner (mirrors `carts.session_id`) |
+| action | NVARCHAR(30) | NOT NULL — `VIEW_PRODUCT` / `VIEW_CATEGORY` / `SEARCH` / `ADD_TO_CART` / `ADD_TO_WISHLIST` / `PURCHASE` |
+| target_type | NVARCHAR(20) | NOT NULL — `product` / `category` / `search` |
+| target_id | INT | NULL — product/category id (NULL for `SEARCH`); **deliberately NOT a FK** |
+| metadata | NVARCHAR(MAX) | NULL — JSON (e.g. `{ keyword }` for `SEARCH`) |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:** `idx_user_activity_log_user (user_id, created_at)`, `idx_user_activity_log_session (session_id, created_at)`, `idx_user_activity_log_target (target_type, target_id, action)` (co-view / co-purchase joins), `idx_user_activity_log_created (created_at)` (cleanup cron).
+
+> **Owner = customer (`user_id`) or guest (`session_id`)**, exactly like the AI chatbox / cart. `user_id` FK is **ON DELETE CASCADE** (a single cascade path from `users` — safe). `target_id` is **not a FK**: logging stays lenient (a later product/category delete must not cascade-wipe history or break a write); scoring joins to `products`/`categories` best-effort and drops misses. Rows are captured hybrid — frontend `POST /activity` for VIEW/SEARCH/CART/WISHLIST, and a server-side `@OnEvent('order.created')` listener for PURCHASE (the `order.created` payload was enriched with an optional `userId`). Scoring is **on-demand** over the last 90 days (no Redis); a daily cron deletes rows older than 90 days. Added by migration `1757000000000-CreateUserActivityLogTable` (dev auto-adds via `synchronize`).
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -795,6 +865,7 @@ erDiagram
     users ||--o{ coin_transactions : "Xu ledger"
     users ||--o{ app_settings : "updates config"
     users ||--o{ ai_conversations : "AI chat threads"
+    users ||--o{ user_activity_log : "behavioral signals"
     ai_conversations ||--o{ ai_messages : "contains"
 
     orders ||--o{ coin_batches : "source of earned Xu"
@@ -826,6 +897,8 @@ erDiagram
     orders ||--o{ payment_transactions : "has payments"
     orders ||--o{ reviews : "verified by"
     orders ||--o{ coupon_usages : "applied coupon"
+    orders ||--o{ order_status_history : "status timeline"
+    orders ||--o{ order_tracking_locations : "shipper locations"
 
     coupons ||--o{ coupon_categories : "targets categories"
     coupons ||--o{ coupon_products : "targets products"
@@ -864,6 +937,7 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | refresh_tokens | `idx_refresh_tokens_user_id` | user_id | Logout all devices |
 | refresh_tokens | `idx_refresh_tokens_expires_at` | expires_at | Scheduled cleanup job |
 | oauth_codes | `idx_oauth_codes_code_hash` | code_hash | OAuth code exchange lookup |
+| addresses | `idx_addresses_user_id` | user_id | List a user's addresses |
 | shops | `idx_shops_user_id` | user_id | Lookup shop by user |
 | shops | `idx_shops_status` | status | Filter shops by status |
 | products | `idx_products_category_id` | category_id | Filter products by category |
@@ -873,6 +947,8 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | product_variants | `uq_pv_option1_only` | product_id, option1 | UNIQUE (filtered: option1 NOT NULL, option2 NULL) |
 | product_variants | `uq_pv_no_options` | product_id | UNIQUE (filtered: both NULL) — single-variant product |
 | product_variants | `idx_product_variants_sku` | sku | Already covered by UNIQUE |
+| product_images | `idx_product_images_product_id` | product_id | Load a product's images |
+| product_images | `idx_product_images_variant_option1` | product_id, variant_option1, sort_order | Per-variant image gallery, ordered |
 | order_items | `idx_order_items_order_id` | order_id | Load items for an order |
 | order_items | `idx_order_items_shop_id` | shop_id | Filter order items by shop |
 | orders | `idx_orders_user_id` | user_id | User's order history |
@@ -880,7 +956,11 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | orders | `idx_orders_order_group_id` | order_group_id | Lookup all orders in a checkout group |
 | orders | `idx_orders_shipper_id` | shipper_id | Filter orders by shipper |
 | orders | `idx_orders_delivered_at` | delivered_at | Auto-complete cron: find delivered orders past 7-day window |
+| order_status_history | `idx_order_status_history_order_id` | order_id | Load an order's status timeline |
+| order_tracking_locations | `idx_order_tracking_locations_order_created` | order_id, created_at | Latest shipper location for the tracking map |
 | reviews | `idx_reviews_product_id` | product_id | Product review listing |
+| carts | `idx_carts_user_id` | user_id | Lookup a user's cart |
+| carts | `idx_carts_session_id` | session_id | Lookup a guest cart by session |
 | cart_items | `idx_cart_items_cart_id` | cart_id | Load cart contents |
 | wishlist_items | `uq_wishlist_items_user_product` | user_id, product_id | Unique constraint + "is wishlisted?" check |
 | wishlist_items | `idx_wishlist_items_user_id` | user_id | User's wishlist listing |
@@ -894,7 +974,7 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | coupon_usages | `idx_coupon_usages_coupon_id` | coupon_id | List usages per coupon |
 | coupon_usages | `idx_coupon_usages_user_id_coupon_id` | user_id, coupon_id | Per-user usage count check |
 | coupon_usages | `idx_coupon_usages_order_id` | order_id | Find usage by order (reversal) |
-| notifications | `idx_notifications_user_id_is_read` | user_id, is_read | Paginated listing + unread count |
+| notifications | `idx_notifications_user_context_read` | user_id, context, is_read | Per-portal paginated listing + unread count |
 | notifications | `idx_notifications_created_at` | created_at | Sort by newest first |
 | payment_transactions | `idx_payment_transactions_order_id` | order_id | List transactions for an order |
 | payment_transactions | `idx_payment_transactions_order_group_id` | order_group_id | Lookup transactions by order group |
@@ -913,3 +993,7 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | ai_conversations | `idx_ai_conversations_user_id` | user_id | Customer's AI threads |
 | ai_conversations | `idx_ai_conversations_session_id` | session_id | Guest's AI threads |
 | ai_messages | `idx_ai_messages_conversation_created` | conversation_id, created_at | Ordered thread history |
+| user_activity_log | `idx_user_activity_log_user` | user_id, created_at | Customer profile window |
+| user_activity_log | `idx_user_activity_log_session` | session_id, created_at | Guest profile window |
+| user_activity_log | `idx_user_activity_log_target` | target_type, target_id, action | Co-view / co-purchase joins |
+| user_activity_log | `idx_user_activity_log_created` | created_at | Cleanup cron (>90 days) |
