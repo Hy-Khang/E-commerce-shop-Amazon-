@@ -7,10 +7,12 @@
 - **Kiến trúc:** Feature-based Layered Architecture
 
 ## Mục tiêu:
-- Xây dựng một sàn thương mại điện tử hoàn chỉnh, phục vụ đồng thời 4 nhóm người dùng: Khách hàng mua sắm, Người bán hàng (Seller), Shipper giao hàng và Quản trị viên (Admin).
-- Đảm bảo quy trình mua bán trực tuyến diễn ra liền mạch từ khâu duyệt sản phẩm, thêm giỏ hàng, thanh toán trực tuyến (VNPay, MoMo), theo dõi đơn hàng trên bản đồ cho đến đánh giá sau mua.
+- Xây dựng một sàn thương mại điện tử hoàn chỉnh, phục vụ đồng thời 4 nhóm người dùng chính — Khách hàng mua sắm, Người bán hàng (Seller), Shipper giao hàng và Quản trị viên (Admin) — cùng khách vãng lai (Guest) có thể xem sản phẩm, dùng giỏ hàng và chatbox AI.
+- Đảm bảo quy trình mua bán trực tuyến diễn ra liền mạch từ khâu duyệt sản phẩm, thêm giỏ hàng, thanh toán (COD, VNPay, MoMo), theo dõi đơn hàng trên bản đồ cho đến đánh giá sau mua.
 - Cung cấp hệ thống quản trị linh hoạt giúp Admin kiểm soát toàn bộ hoạt động trên sàn: quản lý người dùng, cửa hàng, sản phẩm, đơn hàng, mã giảm giá, Flash Sale và theo dõi doanh thu.
-- Tích hợp các tính năng nâng cao giúp cải thiện trải nghiệm mua sắm: chat realtime giữa khách hàng và seller, chatbox AI gợi ý sản phẩm thông minh, so sánh sản phẩm và lịch sử sản phẩm đã xem.
+- Tích hợp các tính năng nâng cao giúp cải thiện trải nghiệm mua sắm: chat realtime giữa khách hàng và seller, AI Shopping Agent (không chỉ gợi ý mà còn thao tác thêm giỏ, đề xuất đặt hàng ngay trong khung chat), gợi ý sản phẩm cá nhân hóa, tìm kiếm bằng hình ảnh, so sánh sản phẩm và lịch sử sản phẩm đã xem.
+- Xây dựng hệ sinh thái người bán hoàn chỉnh: khách tự đăng ký bán hàng (admin duyệt), chiết khấu sàn kết hợp ví người bán và quy trình rút tiền, cùng trình trang trí storefront theo khối (block builder).
+- Tăng mức độ gắn kết và tỉ lệ mua lại qua chương trình Hoàn Xu (cashback): tích/tiêu Xu khi mua sắm, kết hợp Flash Sale theo khung giờ và mã giảm giá đa tầng (toàn sàn + theo shop).
 - Hỗ trợ đăng nhập đa nền tảng qua OAuth (Google, Facebook) bên cạnh tài khoản nội bộ, kết hợp hệ thống phân quyền động (Dynamic RBAC) kiểm soát chi tiết đến từng API endpoint.
 - Áp dụng công nghệ web hiện đại, đảm bảo tốc độ truy cập nhanh, giao diện thân thiện trên mọi thiết bị và bảo mật thông tin người dùng.
 
@@ -32,8 +34,8 @@
 | Payment | VNPay, MoMo (sandbox) |
 | Authorization | Dynamic RBAC (Role ↔ Permission → API Endpoint) |
 | Realtime | Socket.IO (NestJS Gateway) |
-| Backend — Cache | Redis + @nestjs/cache-manager (permission cache, Flash Sale, scoring) |
-| AI | Grok |
+| Backend — Cache | In-memory (permission cache per-role TTL 60s, `@nestjs/throttler`). Redis là hướng mở rộng scale-out — xem `TECH_DEBT.md` TD-001 |
+| AI | OpenRouter (chat/agent + visual search vision model; "Grok" chỉ còn trong tên file legacy) |
 
 ## Actor
 
@@ -185,7 +187,7 @@ Phase 3 — Luồng mua hàng (phụ thuộc Phase 2)
 Phase 4 — Tương tác & Thông báo (phụ thuộc Phase 2-3)
   ├── Module 10: Wishlist & Reviews      ← Product, Order (review cần đơn completed)
   ├── Module 11: Notifications           ← Order (event-driven, tạo Socket.IO Gateway dùng chung)
-  └── Module 12: Search & Filter         ← Product Catalog, Grok API (visual search)
+  └── Module 12: Search & Filter         ← Product Catalog, OpenRouter (visual search)
 
 Phase 5 — Dashboard & Tracking (phụ thuộc Phase 3)
   ├── Module 13: Admin Panel             ← All modules (thống kê toàn sàn)
@@ -254,7 +256,7 @@ Xác thực và phân quyền người dùng trên toàn hệ thống, hỗ tr�
 - Email verify: lưu `email_verified` (BIT) + `email_verify_token` trên bảng `users`
 - Forgot password: lưu `password_reset_token` + `password_reset_expires` trên bảng `users`
 - Gửi email qua `nodemailer` / `@nestjs-modules/mailer`
-- **Redis cache**: cache permission list per role → tránh query `role_permissions` mỗi request, invalidate khi admin thay đổi permission
+- **Cache (in-memory)**: cache permission list per role (`Map` TTL 60s) → tránh query `role_permissions` mỗi request, invalidate khi admin thay đổi permission. (Redis là hướng mở rộng — xem `TECH_DEBT.md` TD-001)
 
 ---
 
@@ -568,13 +570,13 @@ Hệ thống thông báo realtime qua WebSocket, đẩy thông báo tức thì �
 - Socket event: `notification_read` (client → server) để đánh dấu đã đọc
 - Nếu user offline → notification lưu DB → hiển thị khi user mở lại app (query REST API)
 - REST API vẫn giữ nguyên cho: danh sách notifications (paginated), mark all as read
-- **Redis cache**: cache unread count per user → giảm query DB cho badge hiển thị
+- **Cache (in-memory)**: cache unread count per user → giảm query DB cho badge hiển thị. (Redis là hướng mở rộng — xem `TECH_DEBT.md` TD-001)
 
 ---
 
 ## Module 12 — Search & Filter
 
-> **Phase 4** · Phụ thuộc: Module 5 (Product Catalog), Module 21 (AI — Grok API cho visual search)
+> **Phase 4** · Phụ thuộc: Module 5 (Product Catalog), Module 21 (AI — OpenRouter cho visual search)
 
 ### Mô tả
 
@@ -589,7 +591,7 @@ Tìm kiếm và lọc sản phẩm — tính năng cốt lõi giúp khách hàng
 ### Chức năng — Tìm kiếm bằng ảnh (Visual Search)
 
 - User **upload ảnh** hoặc **chụp từ camera** trên web
-- Backend gửi ảnh đến **Grok API** (multimodal — tái sử dụng từ Module 21) để phân tích
+- Backend gửi ảnh đến **OpenRouter** (vision/multimodal — tái sử dụng từ Module 21) để phân tích
 - AI trích xuất thuộc tính sản phẩm: **loại sản phẩm, màu sắc, chất liệu, phong cách...**
 - Dùng kết quả phân tích để query sản phẩm trên DB → trả về danh sách sản phẩm tương tự
 - Hiển thị tag AI đã nhận diện (ví dụ: "Áo thun · Đen · Nam") để user tinh chỉnh kết quả
@@ -616,7 +618,7 @@ Tìm kiếm và lọc sản phẩm — tính năng cốt lõi giúp khách hàng
 - Phân trang kết quả tìm kiếm (paginated) với `page` + `limit`
 - Filter giá dựa trên `MIN(product_variants.price)` của mỗi sản phẩm (giá thấp nhất trong các variant)
 - Kết quả chỉ hiển thị sản phẩm `is_active = true` và thuộc shop `status = 'active'`
-- **Visual Search**: gọi Grok API (multimodal) với ảnh upload → nhận JSON mô tả `{ category, color, material, style }` → build dynamic WHERE query
+- **Visual Search**: gọi OpenRouter (vision/multimodal) với ảnh upload → nhận JSON mô tả `{ category, color, material, style }` → build dynamic WHERE query
 - API endpoint: `POST /api/v1/products/search-by-image` (multipart/form-data) — Public
 - Rate limiting visual search: tối đa **10 request/phút/user** (tốn API cost)
 
@@ -751,7 +753,7 @@ Theo dõi đơn hàng trực quan: timeline trạng thái + bản đồ vị tr�
 
 - Sử dụng **Leaflet.js + OpenStreetMap** (miễn phí, không cần API key)
 - Bảng `order_status_history` (id, order_id, status, note, created_at) — lưu mỗi lần chuyển trạng thái
-- Bảng `order_tracking` (id, order_id, latitude, longitude, updated_at) — lưu vị trí shipper cập nhật
+- Bảng `order_tracking_locations` (id, order_id, latitude, longitude, created_at) — lưu vị trí shipper cập nhật
 - API: `PATCH /api/v1/shipper/orders/:id/location` — shipper cập nhật tọa độ
 - API: `GET /api/v1/orders/:id/tracking` — customer xem timeline + vị trí shipper
 - Không cần GPS realtime — shipper cập nhật thủ công, phù hợp demo trên web
@@ -796,7 +798,7 @@ Campaign:   scheduled → active → ended
 - `FlashSaleService.getActiveFlashPriceMap` lọc thêm `status='approved'` → nguồn chân lý giá cho checkout/preview/coupon; `consume` chống oversell + yêu cầu `approved` + campaign còn live
 - Cron chuyển trạng thái campaign `scheduled → active → ended`; item duyệt lúc campaign `active` lên giá ngay
 - Event `flash_sale.registration_reviewed` → `NotificationListener` báo seller khi được duyệt/từ chối
-- **Redis cache** (dự kiến): cache Flash Sale data trong khung giờ cao điểm
+- **Cache**: hiện in-memory; cache Flash Sale data trong khung giờ cao điểm bằng Redis là hướng mở rộng (xem `TECH_DEBT.md` TD-001)
 
 ---
 
@@ -985,7 +987,7 @@ Hệ thống gợi ý sản phẩm cá nhân hóa dựa trên hành vi người 
   - `GET /api/v1/recommendations` — lấy danh sách gợi ý cá nhân hóa
   - `GET /api/v1/products/:id/similar` — sản phẩm tương tự
 - Scoring service chạy **on-demand** khi gọi API (không cần pre-compute cho quy mô đồ án)
-- **Redis cache**: cache scoring result per user (TTL ~30 phút) → tránh tính lại mỗi lần load trang chủ
+- **Cache**: scoring chạy on-demand; cache scoring result per user (TTL ~30 phút) để tránh tính lại mỗi lần load trang chủ bằng Redis là hướng mở rộng (xem `TECH_DEBT.md` TD-001)
 - Kết hợp Module 18 (Recently Viewed) — không gợi ý lại SP đã xem gần đây
 - Seed data: tạo ~50-100 activity records mẫu cho 3-5 user để demo có ý nghĩa
 
@@ -1023,7 +1025,7 @@ Giao dịch (ledger types): earn / redeem / expire / reverse_earn / refund
 - **Phân bổ Xu đa-shop:** tái dùng `allocateWithCaps` (từ coupon-distribution.util) — weights/caps = headroom mỗi shop (`itemsTotal − couponDiscount`), đảm bảo `total_amount ≥ 0`; số Xu thực dùng = Σ allocation (có thể < yêu cầu khi coupon lớn).
 - **Earn base = `total_amount − shipping_fee`** (total đã trừ coupon & Xu) → tự động loại ship và phần trả bằng Xu.
 - **Permission:** `settings:read` / `settings:update` (admin-only) cho cấu hình; endpoint Xu của customer chỉ JWT.
-- **Cron:** `@Cron(EVERY_DAY_AT_1AM)` quét lô hết hạn. **Redis cache** (dự kiến): cache số dư/scoring nếu cần.
+- **Cron:** `@Cron(EVERY_DAY_AT_1AM)` quét lô hết hạn. **Cache**: cache số dư bằng Redis là hướng mở rộng nếu cần (xem `TECH_DEBT.md` TD-001).
 
 ---
 
@@ -1128,5 +1130,5 @@ Cho phép **Seller tùy biến giao diện storefront** của shop mình bằng 
 | **Bảo mật** | JWT + Refresh Token, Dynamic RBAC, input validation (Zod), SQL injection prevention (TypeORM) |
 | **SEO** | Auto-generate slug cho product và category |
 | **Data Integrity** | Immutable snapshot cho order, coupon reversal giữ audit trail |
-| **Caching** | Redis cache cho permission, Flash Sale, notification count, recommendation scoring — giảm tải DB |
+| **Caching** | Hiện dùng in-memory (permission cache per-role, `@nestjs/throttler`). Redis (permission, Flash Sale, notification count, recommendation scoring) là hướng mở rộng scale-out — xem `TECH_DEBT.md` TD-001 |
 | **Realtime** | Socket.IO cho chat và notifications (dùng chung gateway) |

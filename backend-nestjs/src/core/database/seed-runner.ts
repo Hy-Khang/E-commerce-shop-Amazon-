@@ -12,6 +12,7 @@ import { FlashSaleSeed } from './seeds/flash-sale.seed';
 import { ChatSeed } from './seeds/chat.seed';
 import { CoinSeed } from './seeds/coin.seed';
 import { AiChatSeed } from './seeds/ai-chat.seed';
+import { UserActivitySeed } from './seeds/user-activity.seed';
 
 const ALL_SEEDS: ISeed[] = [
   AuthSeed,
@@ -26,10 +27,12 @@ const ALL_SEEDS: ISeed[] = [
   ChatSeed,
   CoinSeed,
   AiChatSeed,
+  UserActivitySeed,
 ].sort((a, b) => a.order - b.order);
 
 // Global delete order: reverse of FK dependency (children before parents, cross-seed aware)
 const DELETE_ORDER = [
+  'user_activity_log',
   'ai_messages',
   'ai_conversations',
   'ai_settings',

@@ -42,7 +42,6 @@ export { VisualSearchModal } from './components/VisualSearchModal';
 export { ProductCardSkeleton } from './components/ProductCardSkeleton';
 export { ProductDetailSkeleton } from './components/ProductDetailSkeleton';
 export { ShopProductsCarousel } from './components/ShopProductsCarousel';
-export { RelatedProducts } from './components/RelatedProducts';
 export { SpecialOffersSection } from './components/SpecialOffersSection';
 export { FeaturedCategoriesSection } from './components/FeaturedCategoriesSection';
 export { PromotionalBanner } from './components/PromotionalBanner';

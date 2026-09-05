@@ -380,6 +380,7 @@ export class OrderService {
       for (const order of createdOrders) {
         this.eventEmitter.emit('order.created', {
           orderId: order.id,
+          userId,
           items: order.order_items.map((item) => ({
             productVariantId: item.product_variant_id,
             quantity: item.quantity,

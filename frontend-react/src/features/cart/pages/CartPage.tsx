@@ -8,6 +8,7 @@ import {
   useAppliedCouponsStore,
 } from '@/features/coupon';
 import { RecentlyViewedCarousel } from '@/features/recently-viewed';
+import { RecommendedForYouCarousel } from '@/features/recommendations';
 import { useCart } from '../hooks/useCart';
 import { useUpdateCartItem } from '../hooks/useUpdateCartItem';
 import { useRemoveCartItem } from '../hooks/useRemoveCartItem';
@@ -75,6 +76,7 @@ export default function CartPage() {
             Browse Products
           </Link>
         </div>
+        <RecommendedForYouCarousel />
         <RecentlyViewedCarousel />
       </div>
     );
@@ -124,7 +126,8 @@ export default function CartPage() {
         </div>
       </div>
 
-      <div className="mt-10">
+      <div className="mt-10 space-y-8">
+        <RecommendedForYouCarousel />
         <RecentlyViewedCarousel />
       </div>
 

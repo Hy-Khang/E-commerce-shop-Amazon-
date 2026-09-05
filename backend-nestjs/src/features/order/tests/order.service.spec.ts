@@ -229,6 +229,7 @@ describe('OrderService', () => {
       // Assert — event emitted after commit
       expect(eventEmitter.emit).toHaveBeenCalledWith('order.created', {
         orderId: 42,
+        userId,
         items: [
           { productVariantId: cart.items[0].product_variant_id, quantity: 1 },
         ],

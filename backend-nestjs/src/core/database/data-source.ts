@@ -48,6 +48,7 @@ import { CommissionTransaction } from '../../features/seller-finance/entities/co
 import { SellerWallet } from '../../features/seller-finance/entities/seller-wallet.entity';
 import { WalletTransaction } from '../../features/seller-finance/entities/wallet-transaction.entity';
 import { WithdrawalRequest } from '../../features/seller-finance/entities/withdrawal-request.entity';
+import { UserActivityLog } from '../../features/recommendations/entities/user-activity-log.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -101,6 +102,7 @@ export const AppDataSource = new DataSource({
     SellerWallet,
     WalletTransaction,
     WithdrawalRequest,
+    UserActivityLog,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   options: {

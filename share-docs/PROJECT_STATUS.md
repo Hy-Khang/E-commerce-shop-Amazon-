@@ -1,6 +1,6 @@
 # Project Status — E-Commerce Platform
 
-> **Cập nhật:** 2026-09-01
+> **Cập nhật:** 2026-09-05
 > **Tổng quan:** 22 modules theo PROJECT_MODULES.md
 
 ---
@@ -30,7 +30,7 @@
 | 19 | Product Comparison | 6 | 0% | 0% | **0%** | Chưa làm — FE-only (Zustand), không cần BE |
 | 20 | Chat Realtime | 6 | 100% | 100% | **100%** | Hoàn chỉnh (Customer ↔ Seller realtime chat trên shared Socket.IO gateway; typing/presence/read-receipts; unread badge) |
 | 21 | AI Chatbox → Shopping Agent | 6 | 100% | 100% | **100%** | Hoàn chỉnh + nâng cấp **AI Agent**: tool-calling (search/cart/order/address) human-in-the-loop, đề xuất checkout → mini-checkout trong widget gọi `POST /orders`, actions snapshot vào `ai_messages.actions`, admin xem action; fallback RAG khi model không hỗ trợ tool. Seller-agent để phase sau |
-| 22 | Smart Recommendations | 6 | 0% | 0% | **0%** | Chưa làm |
+| 22 | Smart Recommendations | 6 | 100% | 100% | **100%** | Hoàn chỉnh (content-based scoring on-demand, hybrid signal capture: `POST /activity` + `order.created` PURCHASE listener; "Recommended for You"/"Similar"/"Frequently Bought Together" carousels với co-view/co-purchase blend + best-seller fallback; reason label; cleanup cron; seed activity) |
 
 ---
 
@@ -38,11 +38,11 @@
 
 | Trạng thái | Số module | Danh sách |
 |------------|:---------:|-----------|
-| Hoàn chỉnh (100%) | **17** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard, Recently Viewed, Chat Realtime, AI Chatbox |
+| Hoàn chỉnh (100%) | **18** | Auth, User Profile, Image Upload, Shop, Product, Cart, Order, Payment Gateway, Coupons, Wishlist & Reviews, Notifications, Admin Panel, Seller Dashboard, Shipper Dashboard, Recently Viewed, Chat Realtime, AI Chatbox, Smart Recommendations |
 | Gần hoàn chỉnh (80-99%) | **1** | Search & Filter (95%) |
-| Chưa làm (0%) | **3** | Order Tracking, Product Comparison, Smart Recommendations |
+| Chưa làm (0%) | **2** | Order Tracking, Product Comparison |
 
-**Tổng tiến độ ước tính: ~86% (18/22 modules hoạt động)**
+**Tổng tiến độ ước tính: ~91% (19/22 modules hoạt động)**
 
 ---
 
@@ -180,9 +180,11 @@ Hoàn chỉnh. Nhắn tin realtime Customer ↔ Seller trên **shared Socket.IO 
 
 Hoàn chỉnh + nâng cấp thành **AI Agent**. Nền RAG (retrieve sản phẩm theo keyword → LLM qua OpenRouter) + widget nổi guest+customer + FAQ + admin xem lịch sử/bật-tắt/prompt. **Agent (tool-calling human-in-the-loop):** vòng lặp ≤4 LLM/tin nhắn, model trả `tool_calls` → `ToolDispatcher` gọi service thật (search/cart/order/address). Read + cart-write chạy tự động; **tiền bị chặn** — `propose_checkout` chỉ `previewCheckout` (advisory) → thẻ **mini-checkout** trong widget, khách bấm Xác nhận mới gọi `POST /orders` (+`payments/create` cho VNPay/MoMo). Owner-scope đơn (`findMyOrders`/`cancelOrder`), guest-gated tool → `needs_login`. `actions[]` snapshot vào `ai_messages.actions`. Model qua `OPENROUTER_AGENT_MODEL` (fallback `OPENROUTER_CHAT_MODEL` → tự thoái lui RAG). Test: BE 8 (agent loop + dispatcher), FE mini-checkout card. **Seller-agent để phase sau.**
 
-#### Module 22: Smart Recommendations — 0% ❌
+#### Module 22: Smart Recommendations — 100% ✅
 
-Chưa làm. Không có bảng `user_activity_log`, không có scoring service, không có recommendation endpoints.
+**Backend:** feature `recommendations/` — bảng `user_activity_log` (guest `session_id` + customer `user_id`, `target_id` không FK để log lenient), 4 route `@Public` (`POST /activity`, `GET /recommendations`, `GET /products/:id/similar`, `GET /products/:id/frequently-bought-together`). Scoring **content-based on-demand** (không Redis): profile 90 ngày (category weight PURCHASE×5/CART×3/WISHLIST×2/VIEW×1, price range, shop) → điểm `+3` category/`+2` price/`+1` shop, loại SP đã mua/đã xem, top-up best-seller nên carousel không bao giờ trống. Similar = co-view blend content-similar; FBT = co-purchase (cùng `order_group_id`) fallback similar. Hydrate qua `ProductService.findActiveByIdsWithStats`. Hybrid capture: PURCHASE qua `@OnEvent('order.created')` (payload thêm `userId` optional). Cleanup cron xoá row >90 ngày. Seed ~52 activity rows. Migration `1757000000000-CreateUserActivityLogTable`.
+
+**Frontend:** feature `recommendations/` — carousel "Recommended for You" (Home + Cart, có reason subtitle), "Similar Products" + "Frequently Bought Together" (Product Detail, thay `RelatedProducts` cũ), tái dùng shell scroll/skeleton của Recently Viewed + `ProductCard`. Activity tracking: `useTrackActivity` (VIEW_PRODUCT/VIEW_CATEGORY/SEARCH) + opt-in ADD_TO_CART (AddToCartButton) & ADD_TO_WISHLIST (WishlistButton). JWT/`x-session-id` auto-attach nên guest + customer chạy chung.
 
 ---
 
