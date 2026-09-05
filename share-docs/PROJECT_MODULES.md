@@ -47,7 +47,7 @@
 
 ---
 
-## Mục lục Module (25 modules)
+## Mục lục Module (26 modules)
 
 | # | Module | Phase | Mô tả ngắn |
 |:-:|--------|:-----:|-------------|
@@ -76,6 +76,7 @@
 | 23 | [Hoàn Xu (Cashback Coins)](#module-23--hoàn-xu-cashback-coins) | 6 | Tích/tiêu Xu hoàn tiền, hết hạn theo lô, cấu hình động |
 | 24 | [Seller Onboarding](#module-24--seller-onboarding-đăng-ký-bán-hàng) | 6 | Khách đăng ký bán hàng, admin duyệt → cấp role + tạo shop |
 | 25 | [Commission & Wallet](#module-25--commission--wallet-chiết-khấu--ví-người-bán) | 6 | Chiết khấu sàn (flat/danh mục), ví seller, rút tiền |
+| 26 | [Shop Decoration](#module-26--shop-decoration-trang-trí-shop) | 6 | Trình dựng trang storefront theo khối (block builder) cho seller |
 
 ---
 
@@ -94,6 +95,7 @@
 | Tạo cửa hàng | — | — | ✅ | — | — |
 | Sửa cửa hàng mình | — | — | ✅ | — | — |
 | Duyệt / suspend / ban shop | — | — | — | — | ✅ |
+| Trang trí storefront shop mình (block builder) | — | — | ✅ | — | — |
 | Xem shop công khai | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Product** |
 | Xem sản phẩm (public) | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -200,7 +202,8 @@ Phase 6 — Tính năng nâng cao (phụ thuộc Phase 2-3, triển khai độc 
   ├── Module 22: Smart Recommendations  ← Product Catalog, AI Chatbox (optional)
   ├── Module 23: Hoàn Xu (Cashback)     ← Order (earn on completed, redeem at checkout)
   ├── Module 24: Seller Onboarding      ← Auth, Shop (đăng ký → cấp role + tạo shop)
-  └── Module 25: Commission & Wallet    ← Order (charge on completed → credit wallet → payout)
+  ├── Module 25: Commission & Wallet    ← Order (charge on completed → credit wallet → payout)
+  └── Module 26: Shop Decoration        ← Shop, Product Catalog (block builder storefront)
 ```
 
 ---
@@ -1086,6 +1089,33 @@ Withdrawal:        pending → approved | rejected
 - **Cascade 1785:** `wallet_transactions.withdrawal_id`/`order_id` để NO ACTION/SET NULL.
 - Bảng mới: `commission_transactions`, `seller_wallets`, `wallet_transactions`, `withdrawal_requests`, `commission_category_rates`; keys `commission.*` trong `app_settings`.
 - Errors: `WALLET_001..003`. Permission: seller `wallet:read`/`withdrawals:create`, admin `withdrawals:read/update` + `settings:read/update`.
+
+---
+
+## Module 26 — Shop Decoration (Trang trí Shop)
+
+> **Phase 6** · Phụ thuộc: Module 4 (Shop), Module 5 (Product Catalog) · *Triển khai độc lập*
+
+### Mô tả
+
+Cho phép **Seller tùy biến giao diện storefront** của shop mình bằng một **trình dựng trang theo khối (block-based page builder)** kiểu Shopee Shop Decoration — kéo/sắp xếp các khối nội dung hiển thị phía trên danh mục sản phẩm ở trang shop công khai (`/shops/:slug`).
+
+### Chức năng
+
+- Seller thêm / sắp xếp / xóa các **khối** trong Seller Center (`/seller/shop/decoration`), có **live preview** dùng đúng component storefront.
+- Loại khối phase này: **`hero`** (slideshow 1–5 ảnh + heading/tagline/CTA), **`rich_text`** (văn bản thuần, plain-text — chống XSS), **`image`** (banner ảnh đơn), **`product_grid`** (ghim ≤12 sản phẩm của shop, hydrate qua `GET /products?ids=`).
+- **Theme accent** (màu nhấn) áp cho nút trong các khối (CSS var scoped `--shop-accent`).
+- **Bổ sung, không thay thế:** khối trang trí render **phía trên**, danh mục "All Products" **luôn** hiển thị bên dưới → shop chỉ thêm 1 hero vẫn còn đủ sản phẩm.
+- **Tương thích ngược:** `decoration_config = NULL` → layout mặc định như cũ. Reset về mặc định = gửi `null`.
+
+### Ghi chú kỹ thuật
+
+- **Không thêm bảng / endpoint:** 1 cột JSON `shops.decoration_config` (NVARCHAR(MAX), nullable) + tái dùng `PATCH /seller/shop` (ghi), `GET /shops/:slug` & `GET /seller/shop` (đọc), `GET /products?ids=` (hydrate sản phẩm ghim).
+- **Schema:** envelope có version `{ version: 1, theme?, blocks: [{ id, type, data }] }` — mở rộng được (thêm khối `video`… sau chỉ cần 1 union entry + 1 registry + 1 editor + 1 DTO branch, không đổi cột/endpoint).
+- **Validate ghi:** nested class-validator DTO + custom `@ValidatorConstraint` (validate `data` theo `type`, mẫu `common/validators/is-image-path`) → `422 VALIDATION_001`; cap 16 KB serialized → `SHOP_006 (400)`.
+- **Resilience khi đọc/render:** service parse JSON bọc try/catch (malformed → `null`); FE renderer switch theo `version`, registry-driven, bỏ qua khối lạ, mỗi khối bọc error boundary.
+- **Permission:** dùng sẵn `shops:update` (seller đã có) — không cần seed mới.
+- **2 design language:** builder = portal (slate/amber + dark); block components (kể cả trong preview) = storefront semantic tokens.
 
 ---
 

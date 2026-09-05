@@ -155,6 +155,7 @@
 | description | NVARCHAR(MAX) | NULL |
 | logo_url | NVARCHAR(500) | NULL |
 | banner_url | NVARCHAR(500) | NULL |
+| decoration_config | NVARCHAR(MAX) | NULL — **JSON** storefront decoration (Shop Decoration block builder); NULL = default layout |
 | status | NVARCHAR(30) | NOT NULL, DEFAULT `'pending_verification'`, CHECK IN (`pending_verification`, `active`, `suspended`, `banned`) |
 | verified_at | DATETIME2 | NULL — set when admin approves (preserved permanently) |
 | verified_by | INT | FK → `users.id` ON DELETE SET NULL, NULL — admin who approved |
@@ -166,6 +167,7 @@
 > **1:1 with users:** Each seller has exactly one shop. UNIQUE constraint on `user_id` enforces this. Race condition on concurrent POST handled by catching SQL Server error 2627/2601 → mapped to SHOP_002.
 > **Status lifecycle:** `pending_verification` → `active` → `suspended`/`banned`. `verified_at`/`verified_by` are set once on first approval and preserved permanently. `suspended_at`/`banned_at` are overwritten on each state change.
 > **Public visibility:** Products from shops with `status != 'active'` are hidden from the public storefront. All public product queries join shops and filter `shops.status = 'active'`.
+> **Shop Decoration (`decoration_config`):** A versioned JSON envelope `{ version: 1, theme?: { accent? }, blocks: [{ id, type, data }] }` describing the seller's customized storefront (block-based page builder). Stored as a raw `NVARCHAR(MAX)` string (repo JSON convention — manual `JSON.stringify`/`JSON.parse` in the service, like `orders.shipping_address` / `ai_messages.actions`), not a TypeORM transformer. Block types: `hero` / `rich_text` / `image` / `product_grid` (extensible — a `video` block can be added later without a schema/column change). Validated at write via nested class-validator DTOs (≤20 blocks, hero 1–5 images, grid 1–12 product ids, serialized ≤16 KB → `SHOP_006`); parsed defensively on read (malformed → `null`). NULL = default layout, so existing shops are unaffected. Added by migration `1756900000000-AddDecorationConfigToShops` (dev auto-adds via `synchronize`).
 
 ---
 

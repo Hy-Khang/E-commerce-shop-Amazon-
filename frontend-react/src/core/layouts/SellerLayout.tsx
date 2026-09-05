@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Store, Tag, Zap, Star, Heart, MessageCircle, Wallet, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Store, Palette, Tag, Zap, Star, Heart, MessageCircle, Wallet, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
@@ -10,9 +10,10 @@ import { ROUTES } from '@/common/constants/routes';
 import { PortalAccountDropdown } from './PortalAccountDropdown';
 import { SellerGlobalSearch } from './SellerGlobalSearch';
 
-const sellerLinks: Array<{ to: string; label: string; icon: LucideIcon; permission: string }> = [
+const sellerLinks: Array<{ to: string; label: string; icon: LucideIcon; permission: string; end?: boolean }> = [
   { to: '/seller/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: PERMISSIONS.DASHBOARD_READ },
-  { to: '/seller/shop', label: 'Shop Settings', icon: Store, permission: PERMISSIONS.SHOPS_READ },
+  { to: '/seller/shop', label: 'Shop Settings', icon: Store, permission: PERMISSIONS.SHOPS_READ, end: true },
+  { to: '/seller/shop/decoration', label: 'Shop Decoration', icon: Palette, permission: PERMISSIONS.SHOPS_UPDATE },
   { to: '/seller/products', label: 'Products', icon: Package, permission: PERMISSIONS.PRODUCTS_READ },
   { to: '/seller/orders', label: 'Orders', icon: ShoppingCart, permission: PERMISSIONS.ORDERS_READ },
   { to: '/seller/wallet', label: 'Wallet', icon: Wallet, permission: PERMISSIONS.WALLET_READ },
@@ -51,6 +52,7 @@ export function SellerLayout() {
               <NavLink
                 key={link.to}
                 to={link.to}
+                end={link.end}
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 rounded px-3 py-2 text-sm ${isActive ? 'bg-amber-800' : 'hover:bg-amber-800/60'}`
                 }

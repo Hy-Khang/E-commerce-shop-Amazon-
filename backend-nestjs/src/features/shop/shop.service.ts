@@ -13,12 +13,38 @@ import { Shop } from './entities/shop.entity';
 import { ShopStatus } from '../../common/constants';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { generateSlug } from '../../common/utils/slug.util';
+import { DECORATION_LIMITS } from './dto/decoration-config.dto';
+
+/** A shop with its `decoration_config` column parsed from JSON into an object. */
+type ShopWithDecoration = Omit<Shop, 'decoration_config'> & {
+  decoration_config: unknown;
+};
 
 @Injectable()
 export class ShopService {
   private readonly logger = new Logger(ShopService.name);
 
   constructor(private readonly shopRepository: ShopRepository) {}
+
+  /**
+   * Parse the raw `decoration_config` JSON string into an object for responses.
+   * Defensive (like `notifications.data`): a malformed value degrades to null
+   * rather than throwing, so a bad row never breaks the shop page.
+   */
+  private withParsedDecoration<T extends Shop>(shop: T): ShopWithDecoration {
+    let parsed: unknown = null;
+    if (shop.decoration_config) {
+      try {
+        parsed = JSON.parse(shop.decoration_config);
+      } catch {
+        this.logger.warn(
+          `Malformed decoration_config for shop ${shop.id} — serving default`,
+        );
+        parsed = null;
+      }
+    }
+    return { ...shop, decoration_config: parsed };
+  }
 
   // ─── Helpers (consumed by other features via DI) ───
 
@@ -71,7 +97,7 @@ export class ShopService {
     }
     const { shop, productCount, avgRating, totalSales } = result;
     return {
-      ...shop,
+      ...this.withParsedDecoration(shop),
       product_count: productCount,
       average_rating: avgRating,
       total_sales: totalSales,
@@ -91,8 +117,9 @@ export class ShopService {
 
   // ─── Seller ───
 
-  async getMyShop(userId: number): Promise<Shop> {
-    return this.resolveShopByUserId(userId);
+  async getMyShop(userId: number): Promise<ShopWithDecoration> {
+    const shop = await this.resolveShopByUserId(userId);
+    return this.withParsedDecoration(shop);
   }
 
   async createShop(userId: number, dto: CreateShopDto): Promise<Shop> {
@@ -184,11 +211,36 @@ export class ShopService {
     }
   }
 
-  async updateMyShop(userId: number, dto: UpdateShopDto): Promise<Shop> {
+  async updateMyShop(
+    userId: number,
+    dto: UpdateShopDto,
+  ): Promise<ShopWithDecoration> {
     const shop = await this.resolveShopByUserId(userId);
-    const updated = await this.shopRepository.update(shop.id, dto);
+
+    // Map the validated decoration_config object → JSON string for storage.
+    // `null` resets to the default layout; an absent key leaves it unchanged.
+    const { decoration_config, ...rest } = dto;
+    const patch: Partial<Shop> = { ...rest };
+    if (decoration_config !== undefined) {
+      if (decoration_config === null) {
+        patch.decoration_config = null;
+      } else {
+        const serialized = JSON.stringify(decoration_config);
+        if (
+          Buffer.byteLength(serialized, 'utf8') > DECORATION_LIMITS.MAX_BYTES
+        ) {
+          throw new BadRequestException({
+            code: 'SHOP_006',
+            message: 'Decoration config exceeds size limit',
+          });
+        }
+        patch.decoration_config = serialized;
+      }
+    }
+
+    const updated = await this.shopRepository.update(shop.id, patch);
     this.logger.log(`Shop updated: ${shop.id} by user ${userId}`);
-    return updated!;
+    return this.withParsedDecoration(updated!);
   }
 
   // ─── Admin ───

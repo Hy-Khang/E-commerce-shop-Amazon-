@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { PaginationParams } from '@/common/types/common.types';
+import type { DecorationConfig } from './decoration.types';
 
 export type ShopStatus = 'pending_verification' | 'active' | 'suspended' | 'banned';
 
@@ -11,6 +12,8 @@ export interface Shop {
   description: string | null;
   logo_url: string | null;
   banner_url: string | null;
+  /** Parsed storefront decoration (null = default layout). */
+  decoration_config: DecorationConfig | null;
   status: ShopStatus;
   created_at: string;
   updated_at: string;
@@ -45,6 +48,8 @@ export interface UpdateShopRequest {
   description?: string;
   logo_url?: string;
   banner_url?: string;
+  /** Save a decoration layout, or `null` to reset to the default. */
+  decoration_config?: DecorationConfig | null;
 }
 
 export const createShopSchema = z.object({

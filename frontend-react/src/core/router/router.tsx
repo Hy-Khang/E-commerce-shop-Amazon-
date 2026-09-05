@@ -80,6 +80,7 @@ const SellerOrderDetailPage = lazy(() => import('@/features/order/pages/SellerOr
 
 const ShopProfilePage = lazy(() => import('@/features/shop/pages/ShopProfilePage'));
 const SellerShopSettingsPage = lazy(() => import('@/features/shop/pages/SellerShopSettingsPage'));
+const SellerShopDecorationPage = lazy(() => import('@/features/shop/pages/SellerShopDecorationPage'));
 const SellerCouponListPage = lazy(() => import('@/features/coupon/pages/SellerCouponListPage'));
 const SellerFlashSaleListPage = lazy(() => import('@/features/flash-sale/pages/SellerFlashSaleListPage'));
 const SellerReviewListPage = lazy(() => import('@/features/review/pages/SellerReviewListPage'));
@@ -221,6 +222,7 @@ export const router = createBrowserRouter([
               { path: 'seller/orders', element: <SuspenseWrapper><SellerOrderListPage /></SuspenseWrapper> },
               { path: 'seller/orders/:id', element: <SuspenseWrapper><SellerOrderDetailPage /></SuspenseWrapper> },
               { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
+              { path: 'seller/shop/decoration', element: <SuspenseWrapper><SellerShopDecorationPage /></SuspenseWrapper> },
               { path: 'seller/wallet', element: <SuspenseWrapper><SellerWalletPage /></SuspenseWrapper> },
               { path: 'seller/chat', element: <SuspenseWrapper><SellerChatPage /></SuspenseWrapper> },
               { path: 'seller/coupons', element: <SuspenseWrapper><SellerCouponListPage /></SuspenseWrapper> },
