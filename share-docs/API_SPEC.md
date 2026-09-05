@@ -131,6 +131,7 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | SHOP_003 | 409 | Duplicate shop slug |
 | SHOP_004 | 400 | Shop not set up (seller tries product CRUD without a shop) |
 | SHOP_005 | 403 | Shop is not active (status != 'active') |
+| SHOP_006 | 400 | Decoration config exceeds size limit (serialized JSON > 16 KB) |
 | NOTIFICATION_001 | 404 | Notification not found |
 | CHAT_001 | 404 | Conversation not found |
 | CHAT_002 | 403 | Not a participant in this conversation |
@@ -226,16 +227,20 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | GET | `/shops` | List active shops (paginated, searchable) | Public |
-| GET | `/shops/:slug` | Get shop profile with stats (product_count, average_rating, total_sales) | Public |
+| GET | `/shops/:slug` | Get shop profile with stats (product_count, average_rating, total_sales) + parsed `decoration_config` | Public |
 | GET | `/shops/:slug/products` | List shop's products (paginated, filtered) | Public |
+
+> **Shop Decoration (`decoration_config`):** `GET /shops/:slug` and `GET /seller/shop` return `decoration_config` as a **parsed object** (`{ version, theme?, blocks[] }`) or `null` (default layout / never decorated / malformed → degraded to null). The storefront renders decoration blocks **above** the always-present "All Products" catalog (decoration is additive, never a replacement). Block types: `hero` / `rich_text` / `image` / `product_grid`.
 
 ### Seller Shop — `/api/v1/seller/shop`
 
 | Method | Path | Description | Permission |
 |--------|------|-------------|------------|
-| GET | `/seller/shop` | Get current seller's shop | `shops:read` |
+| GET | `/seller/shop` | Get current seller's shop (incl. parsed `decoration_config`) | `shops:read` |
 | POST | `/seller/shop` | Create shop (one per seller; slug auto-generated, immutable) | `shops:create` |
-| PATCH | `/seller/shop` | Update shop (name, description, logo_url, banner_url; slug immutable) | `shops:update` |
+| PATCH | `/seller/shop` | Update shop (name, description, logo_url, banner_url, `decoration_config`; slug immutable) | `shops:update` |
+
+> **Updating decoration (`PATCH /seller/shop`):** the body accepts an optional `decoration_config` — a full validated envelope `{ version: 1, theme?: { accent? }, blocks: [{ id, type, data }] }` to save the layout, or `null` to reset to the default. Validated by nested class-validator DTOs (unknown block type / extra field / >20 blocks / hero not 1–5 images / grid not 1–12 unique ids → `422 VALIDATION_001` + `details[]`); the serialized JSON is additionally capped at 16 KB (`SHOP_006`). Omitting the key leaves the existing decoration unchanged. `product_grid` pins reference the seller's own product ids and are hydrated for the storefront via `GET /products?ids=` (visibility-filtered).
 
 ### Cart — `/api/v1/cart`
 

@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToOne,
-  OneToMany,
   ManyToOne,
   JoinColumn,
   Index,
@@ -34,6 +33,15 @@ export class Shop {
 
   @Column({ type: 'nvarchar', length: 500, nullable: true })
   banner_url: string | null;
+
+  /**
+   * Storefront decoration (Shop Decoration block builder). A versioned JSON
+   * envelope `{ version, theme?, blocks[] }` stored as a raw NVARCHAR(MAX)
+   * string (repo convention — manual JSON.stringify/parse in the service, like
+   * `orders.shipping_address` / `ai_messages.actions`). NULL = default layout.
+   */
+  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  decoration_config: string | null;
 
   @Column({ type: 'nvarchar', length: 30, default: 'pending_verification' })
   status: string;
