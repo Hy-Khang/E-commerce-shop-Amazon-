@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Zap } from 'lucide-react';
+import { Zap, Sparkles } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { WishlistButton } from '@/features/wishlist';
@@ -14,24 +14,41 @@ interface Props {
   /** Denser layout for tight contexts (e.g. AI chat suggestions) — smaller
    *  padding + type so the thumbnail reads compact. Default keeps the full card. */
   compact?: boolean;
+  /**
+   * `recommended` marks a card in the personalized "Recommended for You" rail:
+   * a subtle brand ring + a "For You" chip. Opt-in so only that rail carries it
+   * (the single top-level reason names the set, not each product — so the chip
+   * is a set-level cue, not a per-item explanation). Default = plain card.
+   */
+  variant?: 'default' | 'recommended';
   /** Extra classes on the card root — e.g. `h-full` to stretch to an
    *  equal-height grid cell so sibling actions line up across a row. */
   className?: string;
 }
 
-export function ProductCard({ product, compact = false, className = '' }: Props) {
+export function ProductCard({
+  product,
+  compact = false,
+  variant = 'default',
+  className = '',
+}: Props) {
   const prefetch = usePrefetchProduct();
   const { byProduct } = useFlashPriceMaps();
   const priceRange = getPriceRange(product.variants);
   const inStock = hasAnyStock(product.variants);
   const flash = byProduct.get(product.id) ?? null;
   const priceSize = compact ? 'text-xs' : 'text-sm';
+  const isRecommended = variant === 'recommended';
 
   return (
     <Link
       to={ROUTES.PRODUCT_DETAIL(product.slug)}
       onMouseEnter={() => prefetch(product.slug)}
-      className={`group block overflow-hidden rounded-xl border border-border-default bg-elevated transition-all hover:border-border-strong hover:shadow-sm ${className}`}
+      className={`group flex h-full flex-col overflow-hidden rounded-xl border bg-elevated transition-all hover:shadow-sm ${
+        isRecommended
+          ? 'border-border-brand/40 ring-1 ring-border-brand/20 hover:border-border-brand'
+          : 'border-border-default hover:border-border-strong'
+      } ${className}`}
     >
       <div className="relative aspect-square overflow-hidden bg-surface-hover">
         {product.thumbnail_url ? (
@@ -49,14 +66,22 @@ export function ProductCard({ product, compact = false, className = '' }: Props)
           <WishlistButton productId={product.id} size="sm" />
           <CompareToggleButton product={product} />
         </div>
-        {flash && (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-0.5 rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-            <Zap className="h-2.5 w-2.5 fill-current" />
-            Flash
-          </span>
-        )}
+        <div className="absolute left-2 top-2 flex flex-col items-start gap-1.5">
+          {flash && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              <Zap className="h-2.5 w-2.5 fill-current" />
+              Flash
+            </span>
+          )}
+          {isRecommended && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-text-inverse shadow-sm">
+              <Sparkles className="h-2.5 w-2.5" />
+              For You
+            </span>
+          )}
+        </div>
       </div>
-      <div className={compact ? 'p-2' : 'p-4'}>
+      <div className={`flex flex-1 flex-col ${compact ? 'p-2' : 'p-4'}`}>
         <h3
           className={`truncate font-semibold text-text-primary group-hover:text-text-brand transition-colors ${
             compact ? 'text-xs' : 'text-sm'
@@ -64,7 +89,7 @@ export function ProductCard({ product, compact = false, className = '' }: Props)
         >
           {product.name}
         </h3>
-        <div className="mt-1">
+        <div className="mt-auto pt-1">
           {flash ? (
             <div className="flex flex-wrap items-baseline gap-x-2">
               <span className={`${priceSize} font-bold text-amber-600 dark:text-amber-400`}>

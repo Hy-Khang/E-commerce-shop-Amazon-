@@ -963,11 +963,13 @@ Hệ thống gợi ý sản phẩm cá nhân hóa dựa trên hành vi người 
   - Khoảng giá thường mua (price range)
   - Thuộc tính sản phẩm hay chọn (color, size, brand...)
 - Tính **điểm tương đồng** giữa sản phẩm và user profile:
-  - Cùng category → +3 điểm
-  - Giá nằm trong khoảng thường mua → +2 điểm
+  - Cùng category → tối đa **+3 điểm, tỉ lệ theo độ ưa thích** (`3 × categoryWeight/maxWeight` —
+    category mạnh nhất được full 3, category yếu hơn ít điểm hơn; không còn +3 nhị phân)
+  - Giá nằm trong khoảng thường mua → +2 điểm (khoảng giá lấy **percentile 10–90**, chống outlier)
   - Thuộc cùng shop đã mua → +1 điểm
-  - Đã mua rồi → loại bỏ (không gợi ý lại)
-- Sắp xếp sản phẩm theo điểm → trả về top N gợi ý
+  - Đã mua rồi / đã tương tác → loại bỏ (không gợi ý lại)
+  - Tín hiệu hành vi được **giảm trọng số theo thời gian** (recency decay, half-life 30 ngày)
+- Sắp xếp sản phẩm theo điểm (đồng điểm → tie-break theo best-seller) → trả về top N gợi ý
 
 ### Chức năng — Hiển thị gợi ý
 

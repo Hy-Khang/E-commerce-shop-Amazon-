@@ -10,6 +10,7 @@ import vnpayConfig from './vnpay.config';
 import momoConfig from './momo.config';
 import visualSearchConfig from './grok.config';
 import chatbotConfig from './chatbot.config';
+import recommendationsConfig from './recommendations.config';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import chatbotConfig from './chatbot.config';
         momoConfig,
         visualSearchConfig,
         chatbotConfig,
+        recommendationsConfig,
       ],
       validationSchema: Joi.object({
         APP_PORT: Joi.number().default(3000),
@@ -94,6 +96,11 @@ import chatbotConfig from './chatbot.config';
           .default('google/gemma-4-31b-it:free'),
         // AI Shopping Agent — tool-calling-capable model (optional; falls back to OPENROUTER_CHAT_MODEL)
         OPENROUTER_AGENT_MODEL: Joi.string().optional().allow('').default(''),
+        // Smart Recommendations — opt-in AI-phrased reason copy (optional; default off)
+        RECOMMENDATIONS_AI_REASON: Joi.string()
+          .optional()
+          .valid('true', 'false')
+          .default('false'),
       }),
     }),
   ],

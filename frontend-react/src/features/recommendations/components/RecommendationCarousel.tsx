@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { ProductCard, ProductCardSkeleton } from '@/features/product';
 import type { ProductListItem } from '@/features/product';
 
@@ -9,6 +9,13 @@ interface Props {
   subtitle?: string | null;
   products: ProductListItem[];
   isLoading: boolean;
+  /**
+   * Personalized "signature" treatment — a brand gradient panel, a Sparkles
+   * badge, and the reason rendered as a brand pill. Opt-in so only the
+   * "Recommended for You" rail stands apart; the Similar / Frequently-bought
+   * rails keep the plain shop-card shell.
+   */
+  accent?: boolean;
 }
 
 const SCROLL_AMOUNT = 560;
@@ -23,6 +30,7 @@ export function RecommendationCarousel({
   subtitle,
   products,
   isLoading,
+  accent = false,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -50,15 +58,34 @@ export function RecommendationCarousel({
   if (!isLoading && products.length === 0) return null;
 
   return (
-    <section className="shop-card p-6">
+    <section
+      className={
+        accent
+          ? 'relative overflow-hidden rounded-xl border border-border-brand/25 bg-gradient-to-br from-brand-light via-surface to-surface p-6 shadow-sm'
+          : 'shop-card p-6'
+      }
+    >
       <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight text-text-primary">
-            {title}
-          </h2>
-          {subtitle && (
-            <p className="mt-0.5 text-sm text-text-secondary">{subtitle}</p>
+        <div className="flex items-start gap-3">
+          {accent && (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-text-inverse shadow-sm">
+              <Sparkles className="h-5 w-5" />
+            </span>
           )}
+          <div>
+            <h2 className="text-lg font-bold tracking-tight text-text-primary">
+              {title}
+            </h2>
+            {subtitle &&
+              (accent ? (
+                <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-0.5 text-xs font-medium text-text-brand">
+                  <Sparkles className="h-3 w-3" />
+                  {subtitle}
+                </span>
+              ) : (
+                <p className="mt-0.5 text-sm text-text-secondary">{subtitle}</p>
+              ))}
+          </div>
         </div>
       </div>
 
@@ -88,7 +115,10 @@ export function RecommendationCarousel({
               ))
             : products.map((product) => (
                 <div key={product.id} className="w-[180px] flex-shrink-0" style={{ scrollSnapAlign: 'start' }}>
-                  <ProductCard product={product} />
+                  <ProductCard
+                    product={product}
+                    variant={accent ? 'recommended' : 'default'}
+                  />
                 </div>
               ))}
         </div>
