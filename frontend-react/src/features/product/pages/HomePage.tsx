@@ -17,7 +17,7 @@ import { TrendingSection } from '../components/TrendingSection';
 import { DiscoverMoreSection } from '../components/DiscoverMoreSection';
 import { FlashSaleSection } from '@/features/flash-sale';
 import { RecentlyViewedCarousel } from '@/features/recently-viewed';
-import { RecommendedForYouCarousel } from '@/features/recommendations';
+import { RecommendedForYouCarousel, useRecommendedForYou } from '@/features/recommendations';
 
 const HERO_SLIDES = [
   {
@@ -82,6 +82,15 @@ export default function HomePage() {
   const { data: newArrivals, isLoading: isLoadingNewArrivals } = useProducts({ page: 1, limit: 12, sort: 'created_at', order: 'desc' });
   const { data: categories } = useCategories();
   const { data: homepage, isLoading: isLoadingHomepage } = useHomepage();
+
+  // Placement gate for the personalized rail: a caller with an actual reason
+  // (i.e. real behavior → a personalized set) earns the prime slot right under
+  // the hero; a cold-start caller (reason null, best-seller fallback) keeps it
+  // lower down. While loading we optimistically hold the top slot so a
+  // returning shopper sees the skeleton in place, not a jump after fetch.
+  // Reads the same cached query as the carousel (deduped) — no extra request.
+  const { reason: recReason, isLoading: isLoadingRec } = useRecommendedForYou();
+  const recAtTop = isLoadingRec || !!recReason;
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -164,6 +173,9 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* ── Recommended for You (prime slot when personalized) ── */}
+      {recAtTop && <RecommendedForYouCarousel />}
+
       {/* ── 2. Value Propositions Banner ── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 border border-border-default/80 bg-surface-hover/40 rounded-xl p-6">
         {VALUE_PROPS.map((prop, i) => {
@@ -215,8 +227,8 @@ export default function HomePage() {
         isLoading={isLoadingHomepage}
       />
 
-      {/* ── Recommended for You ── */}
-      <RecommendedForYouCarousel />
+      {/* ── Recommended for You (fallback slot for cold-start callers) ── */}
+      {!recAtTop && <RecommendedForYouCarousel />}
 
       {/* ── Recently Viewed ── */}
       <RecentlyViewedCarousel />

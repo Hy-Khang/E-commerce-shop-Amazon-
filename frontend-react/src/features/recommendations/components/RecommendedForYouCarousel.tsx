@@ -11,6 +11,7 @@ export function RecommendedForYouCarousel() {
       subtitle={reason}
       products={products}
       isLoading={isLoading}
+      accent
     />
   );
 }
