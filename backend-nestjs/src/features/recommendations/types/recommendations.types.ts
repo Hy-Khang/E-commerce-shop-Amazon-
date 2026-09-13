@@ -31,6 +31,9 @@ export interface InteractedProduct {
   shopId: number | null;
   price: number | null;
   action: string;
+  /** When the signal was recorded — drives recency decay in the profile.
+   *  Optional: candidate rows (and older callers) omit it → decay defaults to 1. */
+  createdAt?: Date | string | null;
 }
 
 /** Content-based profile derived on-demand from the caller's recent activity. */

@@ -431,6 +431,132 @@ export const OrderSeed: ISeed = {
     `);
     console.log('  + order_items: 47 rows');
 
+    // ══════════════════════════════════════════════════════════════
+    // ── CO-PURCHASE DEMO (Module 22 "Frequently Bought Together") ──
+    //    Extra COMPLETED orders that repeat natural product pairs so each pair
+    //    is co-purchased in ≥2 completed order groups → it clears the co-purchase
+    //    min-support threshold (≥2) instead of always falling back to Similar.
+    //    Pairs reinforced: AirPods↔Sạc, sneaker↔dép, iPhone↔Samsung, DNT↔Atomic,
+    //    and iPhone↔Sạc (cross-shop group). Ids continue after the existing rows.
+    // ══════════════════════════════════════════════════════════════
+    await qr.query(`
+      SET IDENTITY_INSERT orders ON;
+      INSERT INTO orders (id, user_id, shop_id, shop_name, order_group_id, status, payment_method, payment_status, shipping_fee, total_amount, shipping_address, coupon_code, discount_amount, created_at) VALUES
+        -- AirPods + Sạc (shop 6) — 2 completed orders (order 6 already had 1)
+        (38, 2, 6, N'Lan Accessories', N'dd000001-0000-0000-0000-000000000001',
+          N'completed', N'momo', N'paid', 0, 6039000,
+          N'{"full_name":"Nguyễn Văn An","phone":"0901000001","address_line":"123 Lê Lợi, Quận 1","city":"Hồ Chí Minh","latitude":10.7726,"longitude":106.6981}',
+          NULL, 0, '2026-09-04T10:00:00'),
+        (39, 3, 6, N'Lan Accessories', N'dd000002-0000-0000-0000-000000000002',
+          N'completed', N'cod', N'paid', 0, 6039000,
+          N'{"full_name":"Trần Thị Bình","phone":"0901000002","address_line":"789 Trần Hưng Đạo, Quận 5","city":"Hồ Chí Minh","latitude":10.7548,"longitude":106.6632}',
+          NULL, 0, '2026-09-04T14:00:00'),
+
+        -- Sneaker + Dép (shop 7) — 2 completed orders (order 11 already had 1)
+        (40, 4, 7, N'Sơn Sneakers', N'dd000003-0000-0000-0000-000000000003',
+          N'completed', N'cod', N'paid', 30000, 1070000,
+          N'{"full_name":"Lê Hoàng Cường","phone":"0901000003","address_line":"12 Hoàng Diệu, Hải Châu","city":"Đà Nẵng","latitude":16.0678,"longitude":108.2208}',
+          NULL, 0, '2026-09-05T09:30:00'),
+        (41, 5, 7, N'Sơn Sneakers', N'dd000004-0000-0000-0000-000000000004',
+          N'completed', N'vnpay', N'paid', 30000, 1070000,
+          N'{"full_name":"Phạm Minh Đức","phone":"0901000004","address_line":"34 Tràng Tiền, Hoàn Kiếm","city":"Hà Nội","latitude":21.0245,"longitude":105.8568}',
+          NULL, 0, '2026-09-05T15:00:00'),
+
+        -- iPhone + Samsung (shop 2) — 2 completed orders
+        (42, 6, 2, N'TechZone VN', N'dd000005-0000-0000-0000-000000000005',
+          N'completed', N'vnpay', N'paid', 0, 62980000,
+          N'{"full_name":"Hoàng Thị Nga","phone":"0901000005","address_line":"56 Bà Triệu, Hai Bà Trưng","city":"Hà Nội","latitude":21.0115,"longitude":105.8505}',
+          NULL, 0, '2026-09-06T11:00:00'),
+        (43, 7, 2, N'TechZone VN', N'dd000006-0000-0000-0000-000000000006',
+          N'completed', N'vnpay', N'paid', 0, 62980000,
+          N'{"full_name":"Đỗ Văn Khoa","phone":"0901000006","address_line":"78 Hùng Vương, Thanh Khê","city":"Đà Nẵng","latitude":16.0680,"longitude":108.2060}',
+          NULL, 0, '2026-09-06T16:30:00'),
+
+        -- DNT + Atomic Habits (shop 4) — extra completed order (orders 4 & 15 had 2)
+        (44, 8, 4, N'Bảo Books', N'dd000007-0000-0000-0000-000000000007',
+          N'completed', N'cod', N'paid', 30000, 218000,
+          N'{"full_name":"Bùi Minh Tâm","phone":"0901000007","address_line":"90 Nguyễn Trãi, Quận 5","city":"Hồ Chí Minh","latitude":10.7540,"longitude":106.6614}',
+          NULL, 0, '2026-09-07T10:15:00'),
+
+        -- iPhone + Sạc (cross-shop) — group 1 (orders 45+46) and group 2 (orders 47+48)
+        (45, 2, 2, N'TechZone VN', N'dd000008-0000-0000-0000-000000000008',
+          N'completed', N'vnpay', N'paid', 0, 32990000,
+          N'{"full_name":"Nguyễn Văn An","phone":"0901000001","address_line":"123 Lê Lợi, Quận 1","city":"Hồ Chí Minh","latitude":10.7726,"longitude":106.6981}',
+          NULL, 0, '2026-09-08T09:00:00'),
+        (46, 2, 6, N'Lan Accessories', N'dd000008-0000-0000-0000-000000000008',
+          N'completed', N'vnpay', N'paid', 0, 549000,
+          N'{"full_name":"Nguyễn Văn An","phone":"0901000001","address_line":"123 Lê Lợi, Quận 1","city":"Hồ Chí Minh","latitude":10.7726,"longitude":106.6981}',
+          NULL, 0, '2026-09-08T09:00:00'),
+        (47, 3, 2, N'TechZone VN', N'dd000009-0000-0000-0000-000000000009',
+          N'completed', N'cod', N'paid', 0, 32990000,
+          N'{"full_name":"Trần Thị Bình","phone":"0901000002","address_line":"789 Trần Hưng Đạo, Quận 5","city":"Hồ Chí Minh","latitude":10.7548,"longitude":106.6632}',
+          NULL, 0, '2026-09-09T13:00:00'),
+        (48, 3, 6, N'Lan Accessories', N'dd000009-0000-0000-0000-000000000009',
+          N'completed', N'cod', N'paid', 0, 549000,
+          N'{"full_name":"Trần Thị Bình","phone":"0901000002","address_line":"789 Trần Hưng Đạo, Quận 5","city":"Hồ Chí Minh","latitude":10.7548,"longitude":106.6632}',
+          NULL, 0, '2026-09-09T13:00:00');
+      SET IDENTITY_INSERT orders OFF;
+    `);
+    console.log('  + orders: +11 completed co-purchase rows (38-48)');
+
+    await qr.query(`
+      SET IDENTITY_INSERT order_items ON;
+      INSERT INTO order_items (id, order_id, product_variant_id, shop_id, shop_name, product_name, sku, price, quantity, thumbnail_url, variant_option1_label, variant_option1_value, variant_option2_label, variant_option2_value) VALUES
+        -- Order 38: AirPods + Sạc
+        (48, 38, 36, 6, N'Lan Accessories', N'Tai nghe AirPods Pro 2', N'APP2-USBC', 5490000, 1,
+          N'https://picsum.photos/seed/airpods-pro-2/400/400', NULL, NULL, NULL, NULL),
+        (49, 38, 37, 6, N'Lan Accessories', N'Sạc nhanh 65W GaN', N'SN65W-GAN', 549000, 1,
+          N'https://picsum.photos/seed/sac-65w-gan/400/400', NULL, NULL, NULL, NULL),
+        -- Order 39: AirPods + Sạc
+        (50, 39, 36, 6, N'Lan Accessories', N'Tai nghe AirPods Pro 2', N'APP2-USBC', 5490000, 1,
+          N'https://picsum.photos/seed/airpods-pro-2/400/400', NULL, NULL, NULL, NULL),
+        (51, 39, 37, 6, N'Lan Accessories', N'Sạc nhanh 65W GaN', N'SN65W-GAN', 549000, 1,
+          N'https://picsum.photos/seed/sac-65w-gan/400/400', NULL, NULL, NULL, NULL),
+        -- Order 40: Sneaker + Dép
+        (52, 40, 22, 7, N'Sơn Sneakers', N'Giày sneaker trắng', N'GST-41', 790000, 1,
+          N'https://picsum.photos/seed/sneaker-trang/400/400', N'Kích thước', N'41', NULL, NULL),
+        (53, 40, 25, 7, N'Sơn Sneakers', N'Dép quai ngang nam', N'DQN-40', 250000, 1,
+          N'https://picsum.photos/seed/dep-quai-ngang/400/400', N'Kích thước', N'40', NULL, NULL),
+        -- Order 41: Sneaker + Dép
+        (54, 41, 22, 7, N'Sơn Sneakers', N'Giày sneaker trắng', N'GST-41', 790000, 1,
+          N'https://picsum.photos/seed/sneaker-trang/400/400', N'Kích thước', N'41', NULL, NULL),
+        (55, 41, 25, 7, N'Sơn Sneakers', N'Dép quai ngang nam', N'DQN-40', 250000, 1,
+          N'https://picsum.photos/seed/dep-quai-ngang/400/400', N'Kích thước', N'40', NULL, NULL),
+        -- Order 42: iPhone + Samsung
+        (56, 42, 28, 2, N'TechZone VN', N'iPhone 15 Pro Max', N'IP15PM-256-TT', 32990000, 1,
+          N'https://picsum.photos/seed/iphone-15-promax/400/400', N'Dung lượng', N'256GB', N'Màu', N'Titan tự nhiên'),
+        (57, 42, 31, 2, N'TechZone VN', N'Samsung Galaxy S24 Ultra', N'SS24U-256-DEN', 29990000, 1,
+          N'https://picsum.photos/seed/samsung-s24/400/400', N'Dung lượng', N'256GB', N'Màu', N'Đen'),
+        -- Order 43: iPhone + Samsung
+        (58, 43, 28, 2, N'TechZone VN', N'iPhone 15 Pro Max', N'IP15PM-256-TT', 32990000, 1,
+          N'https://picsum.photos/seed/iphone-15-promax/400/400', N'Dung lượng', N'256GB', N'Màu', N'Titan tự nhiên'),
+        (59, 43, 31, 2, N'TechZone VN', N'Samsung Galaxy S24 Ultra', N'SS24U-256-DEN', 29990000, 1,
+          N'https://picsum.photos/seed/samsung-s24/400/400', N'Dung lượng', N'256GB', N'Màu', N'Đen'),
+        -- Order 44: DNT + Atomic Habits
+        (60, 44, 44, 4, N'Bảo Books', N'Đắc Nhân Tâm', N'DNT-01', 69000, 1,
+          N'https://picsum.photos/seed/dac-nhan-tam/400/400', NULL, NULL, NULL, NULL),
+        (61, 44, 45, 4, N'Bảo Books', N'Atomic Habits', N'AH-01', 119000, 1,
+          N'https://picsum.photos/seed/atomic-habits/400/400', NULL, NULL, NULL, NULL),
+        -- Order 45+46 (group): iPhone (shop 2) + Sạc (shop 6)
+        (62, 45, 28, 2, N'TechZone VN', N'iPhone 15 Pro Max', N'IP15PM-256-TT', 32990000, 1,
+          N'https://picsum.photos/seed/iphone-15-promax/400/400', N'Dung lượng', N'256GB', N'Màu', N'Titan tự nhiên'),
+        (63, 46, 37, 6, N'Lan Accessories', N'Sạc nhanh 65W GaN', N'SN65W-GAN', 549000, 1,
+          N'https://picsum.photos/seed/sac-65w-gan/400/400', NULL, NULL, NULL, NULL),
+        -- Order 47+48 (group): iPhone (shop 2) + Sạc (shop 6)
+        (64, 47, 28, 2, N'TechZone VN', N'iPhone 15 Pro Max', N'IP15PM-256-TT', 32990000, 1,
+          N'https://picsum.photos/seed/iphone-15-promax/400/400', N'Dung lượng', N'256GB', N'Màu', N'Titan tự nhiên'),
+        (65, 48, 37, 6, N'Lan Accessories', N'Sạc nhanh 65W GaN', N'SN65W-GAN', 549000, 1,
+          N'https://picsum.photos/seed/sac-65w-gan/400/400', NULL, NULL, NULL, NULL);
+      SET IDENTITY_INSERT order_items OFF;
+    `);
+    console.log('  + order_items: +18 co-purchase rows (48-65)');
+
+    // Completed co-purchase orders get a delivered_at + shipper for realism.
+    await qr.query(`
+      UPDATE orders SET shipper_id = 16, delivered_at = DATEADD(DAY, 3, created_at)
+      WHERE id BETWEEN 38 AND 48;
+    `);
+
     // Assign shipper (user_id=16) to delivered & shipping orders + set delivered_at
     await qr.query(`
       UPDATE orders SET shipper_id = 16, delivered_at = DATEADD(DAY, 2, created_at)

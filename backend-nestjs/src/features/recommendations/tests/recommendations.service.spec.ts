@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { RecommendationsService } from '../recommendations.service';
+import { RecommendationReasonService } from '../recommendation-reason.service';
 import { UserActivityLogRepository } from '../repositories/user-activity-log.repository';
 import { ProductService } from '../../product/product.service';
 import { ActivityAction } from '../types/recommendations.types';
@@ -22,6 +24,7 @@ describe('RecommendationsService', () => {
           useValue: {
             getInteractedProducts: jest.fn().mockResolvedValue([]),
             getViewedCategories: jest.fn().mockResolvedValue([]),
+            getSearchedCategories: jest.fn().mockResolvedValue([]),
             getCandidatesByCategories: jest.fn().mockResolvedValue([]),
             getBestSellerProductIds: jest.fn().mockResolvedValue([]),
             getTrendingProductIds: jest.fn().mockResolvedValue([]),
@@ -40,6 +43,12 @@ describe('RecommendationsService', () => {
                 Promise.resolve(ids.map((id) => product(id))),
               ),
           },
+        },
+        RecommendationReasonService,
+        {
+          // aiReason off + no api key → describe() returns the rule-based label.
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
         },
       ],
     }).compile();
@@ -132,6 +141,106 @@ describe('RecommendationsService', () => {
 
       expect(result.products.map((p) => p.id)).toContain(10);
       expect(result.products.map((p) => p.id)).toContain(80);
+    });
+
+    it('personalizes from SEARCH-derived categories when no other signal exists', async () => {
+      // Only signal: the user searched keywords that map to category 7.
+      repo.getSearchedCategories.mockResolvedValue([{ categoryId: 7, count: 2 }]);
+      repo.getCandidatesByCategories.mockResolvedValue([
+        { action: '', productId: 70, categoryId: 7, shopId: 1, price: 100 },
+      ]);
+      productService.findActiveByIdsWithStats.mockImplementation((ids: number[]) =>
+        Promise.resolve(ids.map((id) => product(id, 7))),
+      );
+
+      const result = await service.getRecommendations(
+        { userId: 1, sessionId: null },
+        12,
+      );
+
+      // Not treated as cold-start; the searched category drives candidates + reason.
+      expect(repo.getCandidatesByCategories).toHaveBeenCalledWith([7]);
+      expect(result.products.map((p) => p.id)).toContain(70);
+      expect(result.reason).toBe('Because you like Cat7');
+    });
+
+    it('ranks a stronger-preference category above a weaker one (weighted, not binary)', async () => {
+      // Category 5 far outweighs 8 (Purchase×5 vs a single View). With the old
+      // binary +3 both candidates would tie; weighted scoring separates them.
+      repo.getInteractedProducts.mockResolvedValue([
+        { action: ActivityAction.Purchase, productId: 1, categoryId: 5, shopId: null, price: null },
+        { action: ActivityAction.ViewProduct, productId: 2, categoryId: 8, shopId: null, price: null },
+      ]);
+      repo.getCandidatesByCategories.mockResolvedValue([
+        { action: '', productId: 80, categoryId: 8, shopId: null, price: null },
+        { action: '', productId: 50, categoryId: 5, shopId: null, price: null },
+      ]);
+
+      const result = await service.getRecommendations({ userId: 1, sessionId: null }, 12);
+
+      const ids = result.products.map((p) => p.id);
+      expect(ids[0]).toBe(50); // stronger category wins despite candidate array order
+      expect(ids.indexOf(50)).toBeLessThan(ids.indexOf(80));
+    });
+
+    it('breaks equal scores by best-seller rank', async () => {
+      // Both candidates: same category, no price/shop signal → identical score.
+      repo.getInteractedProducts.mockResolvedValue([
+        { action: ActivityAction.ViewProduct, productId: 1, categoryId: 5, shopId: null, price: null },
+      ]);
+      repo.getCandidatesByCategories.mockResolvedValue([
+        { action: '', productId: 50, categoryId: 5, shopId: null, price: null },
+        { action: '', productId: 51, categoryId: 5, shopId: null, price: null },
+      ]);
+      repo.getBestSellerProductIds.mockResolvedValue([51, 50]); // 51 ranks first
+
+      const result = await service.getRecommendations({ userId: 1, sessionId: null }, 12);
+
+      expect(result.products.map((p) => p.id)).toEqual([51, 50]);
+    });
+
+    it('uses a percentile price band so an outlier does not widen it (no free +2)', async () => {
+      // 9 items ~100 + one 10000 outlier. Raw max would let a 5000 candidate score
+      // +2; the p90 band (~100) excludes it, so the in-band candidate ranks first.
+      const rows = Array.from({ length: 9 }, (_, i) => ({
+        action: ActivityAction.ViewProduct,
+        productId: i + 1,
+        categoryId: 5,
+        shopId: null,
+        price: 100,
+      }));
+      rows.push({ action: ActivityAction.ViewProduct, productId: 10, categoryId: 5, shopId: null, price: 10000 });
+      repo.getInteractedProducts.mockResolvedValue(rows);
+      repo.getCandidatesByCategories.mockResolvedValue([
+        { action: '', productId: 51, categoryId: 5, shopId: null, price: 5000 }, // out of band
+        { action: '', productId: 50, categoryId: 5, shopId: null, price: 100 }, // in band → +2
+      ]);
+
+      const result = await service.getRecommendations({ userId: 1, sessionId: null }, 12);
+
+      const ids = result.products.map((p) => p.id);
+      expect(ids[0]).toBe(50);
+      expect(ids.indexOf(50)).toBeLessThan(ids.indexOf(51));
+    });
+
+    it('decays old signals so a recent weaker signal outranks an older stronger one', async () => {
+      const recent = new Date();
+      const old = new Date(Date.now() - 60 * 86_400_000); // ~2 half-lives → ×0.25
+      // Raw weight: cat 8 (2 views) > cat 5 (1 view). After decay: cat5=1 > cat8=0.5.
+      repo.getInteractedProducts.mockResolvedValue([
+        { action: ActivityAction.ViewProduct, productId: 1, categoryId: 5, shopId: null, price: null, createdAt: recent },
+        { action: ActivityAction.ViewProduct, productId: 2, categoryId: 8, shopId: null, price: null, createdAt: old },
+        { action: ActivityAction.ViewProduct, productId: 3, categoryId: 8, shopId: null, price: null, createdAt: old },
+      ]);
+      repo.getCandidatesByCategories.mockResolvedValue([
+        { action: '', productId: 80, categoryId: 8, shopId: null, price: null },
+        { action: '', productId: 50, categoryId: 5, shopId: null, price: null },
+      ]);
+
+      const result = await service.getRecommendations({ userId: 1, sessionId: null }, 12);
+
+      // Recency flips what raw counts would have ranked first.
+      expect(result.products.map((p) => p.id)[0]).toBe(50);
     });
   });
 

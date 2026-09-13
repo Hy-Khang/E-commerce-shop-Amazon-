@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RecommendationsController } from './recommendations.controller';
 import { RecommendationsService } from './recommendations.service';
+import { RecommendationReasonService } from './recommendation-reason.service';
 import { ActivityService } from './activity.service';
 import { RecommendationsListener } from './recommendations.listener';
 import { RecommendationsScheduler } from './recommendations.scheduler';
@@ -14,6 +15,7 @@ import { ProductModule } from '../product/product.module';
   controllers: [RecommendationsController],
   providers: [
     RecommendationsService,
+    RecommendationReasonService,
     ActivityService,
     UserActivityLogRepository,
     RecommendationsListener,

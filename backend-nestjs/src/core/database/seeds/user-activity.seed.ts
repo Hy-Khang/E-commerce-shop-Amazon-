@@ -85,6 +85,36 @@ export const UserActivitySeed: ISeed = {
     `);
     console.log('  + user_activity_log: 50 rows (4 customers + 1 guest session)');
 
+    // ── Co-view reinforcement (Module 22 "Similar Products") ──
+    // Extra VIEW_PRODUCT rows so more product PAIRS are co-viewed by ≥2 distinct
+    // owners → they clear the co-view min-support threshold (≥2) instead of always
+    // falling back. Reinforces books (18/19/20 — previously single-owner) and
+    // fashion (1/2/3), plus a books↔electronics cross session.
+    await qr.query(`
+      INSERT INTO user_activity_log
+        (user_id, session_id, action, target_type, target_id, metadata, created_at) VALUES
+      -- user 2 · adds product 3 so Áo sơ mi gains a second viewer (co-view with user 6)
+      (2, NULL, N'VIEW_PRODUCT', N'product', 3, NULL, '2026-09-05T21:30:00'),
+
+      -- user 6 · fashion (co-view with user 2 / guest-1 on 1/2/3)
+      (6, NULL, N'VIEW_PRODUCT',  N'product',  1,  NULL, '2026-09-05T10:00:00'),
+      (6, NULL, N'VIEW_PRODUCT',  N'product',  2,  NULL, '2026-09-05T10:05:00'),
+      (6, NULL, N'VIEW_PRODUCT',  N'product',  3,  NULL, '2026-09-05T10:10:00'),
+      (6, NULL, N'VIEW_CATEGORY', N'category', 15, NULL, '2026-09-05T10:11:00'),
+
+      -- user 7 · books (co-view with user 4 → 18/19/20 clear min-support)
+      (7, NULL, N'VIEW_PRODUCT', N'product', 18, NULL, '2026-09-06T09:00:00'),
+      (7, NULL, N'VIEW_PRODUCT', N'product', 19, NULL, '2026-09-06T09:05:00'),
+      (7, NULL, N'VIEW_PRODUCT', N'product', 20, NULL, '2026-09-06T09:10:00'),
+
+      -- guest session 2 · books + electronics cross (more co-view mass)
+      (NULL, N'demo-session-guest-2', N'VIEW_PRODUCT', N'product', 18, NULL, '2026-09-07T11:00:00'),
+      (NULL, N'demo-session-guest-2', N'VIEW_PRODUCT', N'product', 19, NULL, '2026-09-07T11:05:00'),
+      (NULL, N'demo-session-guest-2', N'VIEW_PRODUCT', N'product', 8,  NULL, '2026-09-07T11:10:00'),
+      (NULL, N'demo-session-guest-2', N'VIEW_PRODUCT', N'product', 13, NULL, '2026-09-07T11:15:00');
+    `);
+    console.log('  + user_activity_log: +12 co-view reinforcement rows');
+
     await qr.release();
   },
 };

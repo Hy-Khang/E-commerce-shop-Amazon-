@@ -53,3 +53,67 @@ thiếu sót riêng lẻ.
 - **Không block Module 21 (AI Chatbox):** module này chạy throttler in-memory (10 req/phút)
   + toggle `ai_settings` đọc DB (cache in-memory nhẹ tùy chọn) — đúng hiện trạng repo. Khi
   làm TD-001 thì AI Chatbox tự hưởng lợi qua Redis throttler store mà không phải sửa gì.
+
+---
+
+## TD-002 — Module 22 (Smart Recommendations): cải tiến chất lượng gợi ý
+
+- **Ngày ghi nhận:** 2026-09-11
+- **Trạng thái:** ✅ TASK-1 + TASK-2 + TASK-4 (ranking quality A+B) ĐÃ LÀM (2026-09-11);
+  ⏸️ TASK-3 + TASK-5 (cache) DEFERRED
+- **Mức độ:** Thấp (v1 đã đạt đủ tiêu chí đề tài; các mục dưới là điểm cộng trải nghiệm)
+- **Khu vực:** `backend-nestjs/src/features/recommendations/`, tích hợp `product` + `Module 21 (AI Chatbox)`
+
+### Bối cảnh
+Module 22 v1 dùng content-based scoring on-demand (category ×N / price / shop), reason label
+rule-based, hydrate qua `ProductService.findActiveByIdsWithStats`. Đã verify e2e đạt đủ tiêu chí
+`PROJECT_MODULES.md` §Module 22. Ba khoản dưới **cố ý để lại** để không mở scope commit gốc.
+
+### Task cải tiến
+
+**TASK-1 — Đưa SEARCH signal vào scoring (keyword → category bias)** — ✅ DONE (2026-09-11)
+- Repo `getSearchedCategories(owner)`: `JSON_VALUE(metadata,'$.keyword')` match `products.name`
+  bằng `LIKE`, group theo `category_id`, đếm `COUNT(DISTINCT ual.id)` (mỗi search cộng 1 điểm cho
+  category chạm tới). Keyword là **data trong SQL** (không nối chuỗi → không injection); metadata
+  hỏng/thiếu key → `JSON_VALUE` NULL → drop (lenient).
+- `buildProfile` cộng vào `categoryWeights` với `SEARCH_CATEGORY_WEIGHT=1` (nhẹ hơn VIEW). Guest chỉ
+  search cũng **thoát cold-start** và được bias đúng category (verify live: search "áo thun" → gợi ý
+  áo thun + reason). Không thêm bảng, không đổi API/DTO/schema.
+
+**TASK-2 — AI diễn giải reason (OpenRouter, opt-in)** — ✅ DONE (2026-09-11)
+- `RecommendationReasonService`: gate bằng env `RECOMMENDATIONS_AI_REASON` (**mặc định false**), tái
+  dùng key/model của AI Chatbox (`chatbot.apiKey/baseUrl/chatModel`). Gọi 1 lần OpenRouter (timeout
+  4s, `AbortController`), cache in-memory theo `categoryId` (TTL 6h). **Fallback ngay** về rule-based
+  `"Because you like {category}"` khi: flag off / thiếu key / HTTP lỗi / timeout / response rỗng.
+  Contract response giữ nguyên (`reason: string|null`); mặc định off nên không thêm latency/cost.
+- Khi bật + có Redis (TD-001) có thể chuyển cache category→reason sang Redis để chia sẻ đa-instance.
+
+**TASK-3 — (nice-to-have) Throttle `POST /activity` chống log spam** — ⏸️ DEFERRED
+- Hiện trạng: `POST /activity` `@Public`, lenient, không rate-limit (chủ ý v1 — analytics signal).
+- Hướng làm: thêm `@Throttle` riêng cho route (in-memory hiện tại, hoặc Redis store sau TD-001)
+  nếu xuất hiện spam log. Chưa cần khi quy mô đồ án.
+
+**TASK-4 — Nâng chất lượng ranking (Tầng A + B)** — ✅ DONE (2026-09-11)
+- **Weighted category** (`scoreCandidates`): thay `+3` nhị phân bằng `3 × categoryWeight/maxWeight`
+  (dùng đúng profile vector; category dominant full 3, yếu hơn tỉ lệ). Div-guard `max(1,…)`.
+- **Tiebreak** đồng điểm theo best-seller rank (SP ngoài pool → cuối). Best-seller pool fetch **1 lần**
+  sau cold-start guard, dùng chung cho cả tiebreak + top-up (refactor `getFallbackIds` nhận preloaded).
+- **Percentile price** 10–90 thay raw min/max (chống outlier phình range → `+2` không còn "cho không").
+- **Recency decay** `0.5^(ageDays/30)` cho tín hiệu per-row (`getInteractedProducts` thêm `created_at`;
+  `InteractedProduct.createdAt?` optional). *Giới hạn:* viewed/searched categories là aggregate → không decay.
+- **Co-view/co-purchase**: `HAVING COUNT(*) >= 2` (min-support, bỏ nhiễu cnt=1); co-view thêm dampen
+  popularity `count/SQRT(pop)`, co-purchase **không** dampen (phụ kiện phổ biến đáng hiện; heuristic
+  không phải lift thật). Min keyword length SEARCH nâng lên 3.
+- Không đổi schema/contract/DTO/FE. `tsc` sạch, 28 test recommendations pass. Docs (context.md,
+  API_SPEC §Scoring, PROJECT_MODULES §Module 22) cập nhật cho khớp.
+
+**TASK-5 — (nice-to-have) Cache scoring per-owner** — ⏸️ DEFERRED
+- Hiện trạng: mỗi `GET /recommendations` chạy lại full profile + scoring queries on-demand.
+- Hướng làm: in-memory `Map<ownerKey,{result,exp}>` TTL ~10' (mirror cache của `RecommendationReasonService`).
+  Hoãn: single-instance chưa cần; khi làm TD-001 chuyển thẳng sang Redis-backed cache (chia sẻ đa-instance).
+
+### Ghi chú
+- Các task **không đổi schema `user_activity_log`** và **không đổi contract 4 endpoint** hiện có
+  → có thể làm dần từng task ở commit riêng, không block nhau.
+- TASK-2 phụ thuộc mềm Module 21 (OpenRouter đã có sẵn client) và hưởng lợi TD-001 (cache scoring).
+- TASK-5 hưởng lợi trực tiếp TD-001 (đổi Map → Redis khi scale-out).

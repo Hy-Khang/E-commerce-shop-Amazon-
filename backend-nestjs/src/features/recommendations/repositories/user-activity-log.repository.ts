@@ -11,6 +11,8 @@ import {
 
 const PROFILE_WINDOW_DAYS = 90;
 const COMPLETED_STATUSES = "('delivered', 'completed')";
+/** Minimum co-occurrence before a pair counts — drops one-off noise (cnt=1). */
+const MIN_CO_SUPPORT = 2;
 
 /**
  * All QueryBuilder for Smart Recommendations lives here (per BE feature rules —
@@ -73,6 +75,7 @@ export class UserActivityLogRepository {
     const qb = this.mgr
       .createQueryBuilder()
       .select('ual.action', 'action')
+      .addSelect('ual.created_at', 'createdAt')
       .addSelect('p.id', 'productId')
       .addSelect('p.category_id', 'categoryId')
       .addSelect('p.shop_id', 'shopId')
@@ -91,6 +94,7 @@ export class UserActivityLogRepository {
     const rows = await qb.getRawMany();
     return rows.map((r) => ({
       action: r.action,
+      createdAt: r.createdAt ?? null,
       productId: Number(r.productId),
       categoryId: r.categoryId != null ? Number(r.categoryId) : null,
       shopId: r.shopId != null ? Number(r.shopId) : null,
@@ -121,6 +125,47 @@ export class UserActivityLogRepository {
       categoryId: Number(r.categoryId),
       count: parseInt(r.cnt, 10),
     }));
+  }
+
+  /**
+   * SEARCH signals → category weights. Each SEARCH row's `metadata.keyword` is
+   * matched against active product names (`LIKE`), and the categories of the
+   * matched products are counted (one point per search that touches a category).
+   * A weak but real personalization signal (a keyword the user searched implies
+   * interest in that category). `JSON_VALUE` extracts the keyword at query time,
+   * so it is data — never concatenated into SQL text (no injection). Malformed
+   * metadata / missing keyword → `JSON_VALUE` is NULL → the row drops (lenient).
+   */
+  async getSearchedCategories(
+    owner: RecommendationOwner,
+  ): Promise<{ categoryId: number; count: number }[]> {
+    const qb = this.mgr
+      .createQueryBuilder()
+      .select('p.category_id', 'categoryId')
+      .addSelect('COUNT(DISTINCT ual.id)', 'cnt')
+      .from('user_activity_log', 'ual')
+      .innerJoin(
+        'products',
+        'p',
+        "p.is_active = 1 AND p.name LIKE '%' + JSON_VALUE(ual.metadata, '$.keyword') + '%'",
+      )
+      .where('ual.action = :act', { act: ActivityAction.Search })
+      .andWhere('ual.metadata IS NOT NULL')
+      // Keyword ≥ 3 chars: shorter terms ("áo") match nearly everything and add noise.
+      .andWhere("LEN(JSON_VALUE(ual.metadata, '$.keyword')) >= 3")
+      .andWhere(
+        `ual.created_at >= DATEADD(DAY, -${PROFILE_WINDOW_DAYS}, GETUTCDATE())`,
+      )
+      .groupBy('p.category_id');
+    this.applyOwner(qb, owner);
+
+    const rows = await qb.getRawMany();
+    return rows
+      .filter((r) => r.categoryId != null)
+      .map((r) => ({
+        categoryId: Number(r.categoryId),
+        count: parseInt(r.cnt, 10),
+      }));
   }
 
   /**
@@ -274,14 +319,24 @@ export class UserActivityLogRepository {
   }
 
   /**
-   * Co-view ids: products viewed by owners who also viewed `:productId`,
-   * ranked by co-occurrence. Self-join on user_id OR session_id.
+   * Co-view ids: products viewed by owners who also viewed `:productId`.
+   * Self-join on user_id OR session_id. Requires a minimum co-occurrence
+   * (`MIN_CO_SUPPORT`) to drop one-off noise, and ranks by a popularity-dampened
+   * score `co-count / SQRT(total views of the candidate)` — so a blockbuster that
+   * co-occurs with everything doesn't dominate purely by being viewed a lot.
    */
   async getCoViewedIds(productId: number, limit: number): Promise<number[]> {
     const rows = await this.mgr
       .createQueryBuilder()
       .select('other.target_id', 'productId')
       .addSelect('COUNT(*)', 'cnt')
+      .addSelect(
+        `CAST(COUNT(*) AS FLOAT) / SQRT(NULLIF((
+           SELECT COUNT(*) FROM user_activity_log v
+           WHERE v.action = 'VIEW_PRODUCT' AND v.target_id = other.target_id
+         ), 0))`,
+        'damped',
+      )
       .from('user_activity_log', 'me')
       .innerJoin(
         'user_activity_log',
@@ -297,7 +352,8 @@ export class UserActivityLogRepository {
       .andWhere('me.target_id = :productId', { productId })
       .andWhere('other.target_id IS NOT NULL')
       .groupBy('other.target_id')
-      .orderBy('cnt', 'DESC')
+      .having('COUNT(*) >= :minSup', { minSup: MIN_CO_SUPPORT })
+      .orderBy('damped', 'DESC')
       .limit(limit)
       .getRawMany();
     return rows.map((r) => Number(r.productId));
@@ -305,7 +361,10 @@ export class UserActivityLogRepository {
 
   /**
    * Co-purchase ids: products bought in the same checkout group as `:productId`
-   * on completed orders, ranked by co-occurrence.
+   * on completed orders, ranked by co-occurrence. Requires a minimum co-occurrence
+   * (`MIN_CO_SUPPORT`) to drop one-off noise. Deliberately NOT popularity-dampened
+   * (unlike co-view): a genuinely popular complement — a case, a charger — *should*
+   * surface here, and co-purchase is already a strong intentful signal.
    */
   async getCoPurchasedIds(productId: number, limit: number): Promise<number[]> {
     const rows = await this.mgr
@@ -323,6 +382,7 @@ export class UserActivityLogRepository {
       .andWhere(`o1.status IN ${COMPLETED_STATUSES}`)
       .andWhere(`o2.status IN ${COMPLETED_STATUSES}`)
       .groupBy('pv2.product_id')
+      .having('COUNT(*) >= :minSup', { minSup: MIN_CO_SUPPORT })
       .orderBy('cnt', 'DESC')
       .limit(limit)
       .getRawMany();
