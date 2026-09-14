@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Zap, Sparkles } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
@@ -21,6 +22,12 @@ interface Props {
    * is a set-level cue, not a per-item explanation). Default = plain card.
    */
   variant?: 'default' | 'recommended';
+  /**
+   * Optional badge shown in the top-left stack (below the flash / "For You"
+   * chips) — e.g. a "New" tag on the New Arrivals grid. Kept in the shared
+   * stack so badges never overlap.
+   */
+  badge?: ReactNode;
   /** Extra classes on the card root — e.g. `h-full` to stretch to an
    *  equal-height grid cell so sibling actions line up across a row. */
   className?: string;
@@ -30,6 +37,7 @@ export function ProductCard({
   product,
   compact = false,
   variant = 'default',
+  badge,
   className = '',
 }: Props) {
   const prefetch = usePrefetchProduct();
@@ -68,7 +76,7 @@ export function ProductCard({
         </div>
         <div className="absolute left-2 top-2 flex flex-col items-start gap-1.5">
           {flash && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
               <Zap className="h-2.5 w-2.5 fill-current" />
               Flash
             </span>
@@ -79,6 +87,7 @@ export function ProductCard({
               For You
             </span>
           )}
+          {badge}
         </div>
       </div>
       <div className={`flex flex-1 flex-col ${compact ? 'p-2' : 'p-4'}`}>
@@ -92,7 +101,7 @@ export function ProductCard({
         <div className="mt-auto pt-1">
           {flash ? (
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <span className={`${priceSize} font-bold text-amber-600 dark:text-amber-400`}>
+              <span className={`${priceSize} font-bold text-orange-600 dark:text-orange-400`}>
                 {formatPrice(flash.flash_price)}
               </span>
               {flash.original_price != null && flash.original_price > flash.flash_price && (

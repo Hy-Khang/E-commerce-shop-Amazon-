@@ -48,8 +48,8 @@ export function CountdownTimer({ endsAt, onExpire, className = '' }: Props) {
     <div className={`flex items-center gap-1 ${className}`} aria-label="Time remaining">
       {segments.map((value, i) => (
         <span key={i} className="flex items-center gap-1">
-          {i > 0 && <span className="text-amber-600 dark:text-amber-400">:</span>}
-          <span className="min-w-[1.75rem] rounded-md bg-amber-600 px-1.5 py-0.5 text-center text-xs font-bold tabular-nums text-white dark:bg-amber-500">
+          {i > 0 && <span className="text-orange-600 dark:text-orange-400">:</span>}
+          <span className="min-w-[1.75rem] rounded-md bg-orange-600 px-1.5 py-0.5 text-center text-xs font-bold tabular-nums text-white dark:bg-orange-500">
             {pad(value)}
           </span>
         </span>

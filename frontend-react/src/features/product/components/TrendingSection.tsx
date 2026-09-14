@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { TrendingUp, Heart } from 'lucide-react';
-import { motion } from 'motion/react';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
+import { SectionPanel } from '@/common/components/ui/SectionPanel';
 import { WishlistButton } from '@/features/wishlist';
 import { usePrefetchProduct } from '../hooks/usePrefetchProduct';
 import { ProductCardSkeleton } from './ProductCardSkeleton';
@@ -67,20 +67,10 @@ export function TrendingSection({ products, isLoading }: Props) {
   if (!isLoading && products.length === 0) return null;
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
+    <SectionPanel
+      title="Trending Now"
+      icon={<TrendingUp className="h-5 w-5 text-primary-500" />}
     >
-      <div className="flex items-center gap-2">
-        <TrendingUp className="h-5 w-5 text-primary-500" />
-        <h2 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
-          Trending Now
-        </h2>
-      </div>
-
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
@@ -90,6 +80,6 @@ export function TrendingSection({ products, isLoading }: Props) {
               <TrendingCard key={product.id} product={product} />
             ))}
       </div>
-    </motion.section>
+    </SectionPanel>
   );
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { SectionPanel } from '@/common/components/ui/SectionPanel';
 import { ProductCard, ProductCardSkeleton } from '@/features/product';
 import type { ProductListItem } from '@/features/product';
 
@@ -10,10 +11,10 @@ interface Props {
   products: ProductListItem[];
   isLoading: boolean;
   /**
-   * Personalized "signature" treatment — a brand gradient panel, a Sparkles
-   * badge, and the reason rendered as a brand pill. Opt-in so only the
-   * "Recommended for You" rail stands apart; the Similar / Frequently-bought
-   * rails keep the plain shop-card shell.
+   * Personalized "signature" treatment — a brand-tinted panel, a Sparkles
+   * badge, the reason as a brand pill, and a "For You" chip on each card.
+   * Opt-in so only the "Recommended for You" rail carries it; the Similar /
+   * Frequently-bought rails keep the plain white panel.
    */
   accent?: boolean;
 }
@@ -21,9 +22,9 @@ interface Props {
 const SCROLL_AMOUNT = 560;
 
 /**
- * Shared horizontal-scroll carousel shell for the recommendation surfaces —
- * identical scroll/snap/chevron/skeleton behavior to RecentlyViewedCarousel,
- * so all storefront carousels read as one system. Renders nothing when empty.
+ * Shared horizontal-scroll carousel for the recommendation surfaces, wrapped in
+ * the common `SectionPanel` shell so it reads as one system with the other home
+ * rails. Renders nothing when empty.
  */
 export function RecommendationCarousel({
   title,
@@ -58,37 +59,23 @@ export function RecommendationCarousel({
   if (!isLoading && products.length === 0) return null;
 
   return (
-    <section
-      className={
-        accent
-          ? 'relative overflow-hidden rounded-xl border border-border-brand/25 bg-gradient-to-br from-brand-light via-surface to-surface p-6 shadow-sm'
-          : 'shop-card p-6'
+    <SectionPanel
+      title={title}
+      accent={accent ? 'brand' : 'none'}
+      icon={accent ? <Sparkles className="h-5 w-5" /> : undefined}
+      subtitle={
+        subtitle ? (
+          accent ? (
+            <>
+              <Sparkles className="h-3 w-3" />
+              {subtitle}
+            </>
+          ) : (
+            subtitle
+          )
+        ) : undefined
       }
     >
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-start gap-3">
-          {accent && (
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-text-inverse shadow-sm">
-              <Sparkles className="h-5 w-5" />
-            </span>
-          )}
-          <div>
-            <h2 className="text-lg font-bold tracking-tight text-text-primary">
-              {title}
-            </h2>
-            {subtitle &&
-              (accent ? (
-                <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-0.5 text-xs font-medium text-text-brand">
-                  <Sparkles className="h-3 w-3" />
-                  {subtitle}
-                </span>
-              ) : (
-                <p className="mt-0.5 text-sm text-text-secondary">{subtitle}</p>
-              ))}
-          </div>
-        </div>
-      </div>
-
       <div className="group relative">
         {canScrollLeft && (
           <button
@@ -135,6 +122,6 @@ export function RecommendationCarousel({
           </button>
         )}
       </div>
-    </section>
+    </SectionPanel>
   );
 }

@@ -1,20 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Truck, ShieldCheck, HelpCircle, Sparkles, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, ShieldCheck, HelpCircle, Sparkles, ArrowRight, PackagePlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ROUTES } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
 import { useProducts } from '../hooks/useProducts';
 import { useCategories } from '../hooks/useCategories';
 import { useHomepage } from '../hooks/useHomepage';
+import { SectionPanel } from '@/common/components/ui/SectionPanel';
 import { ProductCard } from '../components/ProductCard';
 import { ProductCardSkeleton } from '../components/ProductCardSkeleton';
-import { SpecialOffersSection } from '../components/SpecialOffersSection';
 import { FeaturedCategoriesSection } from '../components/FeaturedCategoriesSection';
 import { PromotionalBanner } from '../components/PromotionalBanner';
 import { BestSellersSection } from '../components/BestSellersSection';
 import { TrendingSection } from '../components/TrendingSection';
-import { DiscoverMoreSection } from '../components/DiscoverMoreSection';
 import { FlashSaleSection } from '@/features/flash-sale';
 import { RecentlyViewedCarousel } from '@/features/recently-viewed';
 import { RecommendedForYouCarousel, useRecommendedForYou } from '@/features/recommendations';
@@ -173,10 +172,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── Recommended for You (prime slot when personalized) ── */}
-      {recAtTop && <RecommendedForYouCarousel />}
-
-      {/* ── 2. Value Propositions Banner ── */}
+      {/* ── Value Propositions Banner ── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 border border-border-default/80 bg-surface-hover/40 rounded-xl p-6">
         {VALUE_PROPS.map((prop, i) => {
           const Icon = prop.icon;
@@ -197,62 +193,33 @@ export default function HomePage() {
       {/* ── Flash Sale ── */}
       <FlashSaleSection />
 
-      {/* ── 3. Special Offers ── */}
-      <SpecialOffersSection
-        products={homepage?.specialOffers ?? []}
-        isLoading={isLoadingHomepage}
-      />
+      {/* ── Recommended for You (prime slot when personalized) ── */}
+      {recAtTop && <RecommendedForYouCarousel />}
 
-      {/* ── 4. Featured Categories ── */}
+      {/* ── Featured Categories ── */}
       {categories && <FeaturedCategoriesSection categories={categories} />}
 
-      {/* ── 5. Promotional Banner ── */}
+      {/* ── Promotional Banner ── */}
       <PromotionalBanner />
 
-      {/* ── 6. Best Sellers ── */}
+      {/* ── Best Sellers ── */}
       <BestSellersSection
         products={homepage?.bestSellers ?? []}
         isLoading={isLoadingHomepage}
       />
 
-      {/* ── 7. Trending Now ── */}
+      {/* ── Trending Now ── */}
       <TrendingSection
         products={homepage?.trending ?? []}
         isLoading={isLoadingHomepage}
       />
 
-      {/* ── 8. Discover More ── */}
-      <DiscoverMoreSection
-        products={homepage?.discoverMore ?? []}
-        isLoading={isLoadingHomepage}
-      />
-
-      {/* ── Recommended for You (fallback slot for cold-start callers) ── */}
-      {!recAtTop && <RecommendedForYouCarousel />}
-
-      {/* ── Recently Viewed ── */}
-      <RecentlyViewedCarousel />
-
-      {/* ── 9. New Arrivals ── */}
-      <motion.section
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.15 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-6"
+      {/* ── New Arrivals ── */}
+      <SectionPanel
+        title="New Arrivals"
+        viewAllHref={ROUTES.PRODUCTS}
+        icon={<PackagePlus className="h-5 w-5 text-primary-500" />}
       >
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
-            New Arrivals
-          </h2>
-          <Link
-            to={ROUTES.PRODUCTS}
-            className="text-sm font-semibold text-text-brand hover:text-primary-700 transition-colors"
-          >
-            View all
-          </Link>
-        </div>
-
         {isLoadingNewArrivals ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -262,18 +229,27 @@ export default function HomePage() {
         ) : newArrivals && newArrivals.data.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {newArrivals.data.map((product) => (
-              <div key={product.id} className="relative">
-                <ProductCard product={product} />
-                <span className="absolute left-2 top-2 z-10 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-bold text-white">
-                  NEW
-                </span>
-              </div>
+              <ProductCard
+                key={product.id}
+                product={product}
+                badge={
+                  <span className="inline-flex items-center rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                    New
+                  </span>
+                }
+              />
             ))}
           </div>
         ) : (
           <div className="py-12 text-center text-text-secondary">No products available yet.</div>
         )}
-      </motion.section>
+      </SectionPanel>
+
+      {/* ── Recently Viewed ── */}
+      <RecentlyViewedCarousel />
+
+      {/* ── Recommended for You (fallback slot for cold-start callers) ── */}
+      {!recAtTop && <RecommendedForYouCarousel />}
     </div>
   );
 }
