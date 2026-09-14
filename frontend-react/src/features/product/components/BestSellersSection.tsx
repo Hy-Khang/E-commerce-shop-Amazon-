@@ -1,5 +1,5 @@
 import { Trophy } from 'lucide-react';
-import { motion } from 'motion/react';
+import { SectionPanel } from '@/common/components/ui/SectionPanel';
 import { HomepageProductCard } from './HomepageProductCard';
 import { ProductCardSkeleton } from './ProductCardSkeleton';
 import type { HomepageProductItem } from '../types/product.types';
@@ -28,20 +28,10 @@ export function BestSellersSection({ products, isLoading }: Props) {
   if (!isLoading && products.length === 0) return null;
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
+    <SectionPanel
+      title="Best Sellers"
+      icon={<Trophy className="h-5 w-5 text-amber-500" />}
     >
-      <div className="flex items-center gap-2">
-        <Trophy className="h-5 w-5 text-amber-500" />
-        <h2 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
-          Best Sellers
-        </h2>
-      </div>
-
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
@@ -55,6 +45,6 @@ export function BestSellersSection({ products, isLoading }: Props) {
               />
             ))}
       </div>
-    </motion.section>
+    </SectionPanel>
   );
 }

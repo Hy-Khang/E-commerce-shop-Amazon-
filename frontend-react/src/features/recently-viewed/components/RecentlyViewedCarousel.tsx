@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, History } from 'lucide-react';
+import { SectionPanel } from '@/common/components/ui/SectionPanel';
 import { ProductCard, ProductCardSkeleton } from '@/features/product';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 
@@ -40,13 +41,10 @@ export function RecentlyViewedCarousel({ excludeProductId }: Props) {
   if (!isLoading && items.length === 0) return null;
 
   return (
-    <section className="shop-card p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold tracking-tight text-text-primary">
-          Recently Viewed
-        </h2>
-      </div>
-
+    <SectionPanel
+      title="Recently Viewed"
+      icon={<History className="h-5 w-5 text-text-secondary" />}
+    >
       <div className="group relative">
         {canScrollLeft && (
           <button
@@ -86,6 +84,6 @@ export function RecentlyViewedCarousel({ excludeProductId }: Props) {
           </button>
         )}
       </div>
-    </section>
+    </SectionPanel>
   );
 }
