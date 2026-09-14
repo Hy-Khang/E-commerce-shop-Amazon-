@@ -25,7 +25,7 @@ export class CommissionCategoryRate {
   @Column({ type: 'int', nullable: true })
   updated_by: number | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   updated_at: Date;
 
   @ManyToOne(() => Category, { onDelete: 'CASCADE' })

@@ -20,23 +20,23 @@ export class Coupon {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 50, unique: true })
+  @Column({ type: 'varchar', length: 50, unique: true })
   code: string;
 
   // NULL = platform-wide coupon (admin). NOT NULL = shop coupon (seller-owned).
   @Column({ type: 'int', nullable: true })
   shop_id: number | null;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   description: string;
 
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   discount_type: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   discount_value: number;
 
-  @Column({ type: 'nvarchar', length: 20, default: 'all' })
+  @Column({ type: 'varchar', length: 20, default: 'all' })
   scope: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
@@ -54,25 +54,25 @@ export class Coupon {
   @Column({ type: 'int', default: 0 })
   current_uses: number;
 
-  @Column({ type: 'datetime2' })
+  @Column({ type: 'timestamptz' })
   starts_at: Date;
 
-  @Column({ type: 'datetime2' })
+  @Column({ type: 'timestamptz' })
   expires_at: Date;
 
-  @Column({ type: 'bit', default: true })
+  @Column({ type: 'boolean', default: true })
   is_active: boolean;
 
   // Sticky admin moderation lock (shop coupons only). When 1, the coupon is
   // treated as inactive and the owning seller cannot re-enable it — only an
   // admin can unlock it.
-  @Column({ type: 'bit', default: false })
+  @Column({ type: 'boolean', default: false })
   admin_disabled: boolean;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   updated_at: Date;
 
   @ManyToOne(() => Shop, { onDelete: 'NO ACTION' })

@@ -3,15 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Conversation } from '../entities/conversation.entity';
 import { SenderType } from '../types/chat.types';
-
-// SQL Server unique/duplicate-key error numbers (concurrent findOrCreate race).
-const SQL_UNIQUE_VIOLATION = 2627;
-const SQL_DUPLICATE_KEY = 2601;
-
-function isUniqueViolation(err: unknown): boolean {
-  const n = (err as { number?: number })?.number;
-  return n === SQL_UNIQUE_VIOLATION || n === SQL_DUPLICATE_KEY;
-}
+import { isUniqueViolation } from '../../../common/utils/db-error.util';
 
 /** A conversation joined with shop + customer display fields for list rendering. */
 export interface IConversationListRow {

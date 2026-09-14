@@ -7,10 +7,10 @@ export class Role {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 50, unique: true })
+  @Column({ type: 'varchar', length: 50, unique: true })
   name: string;
 
-  @Column({ type: 'bit', default: false })
+  @Column({ type: 'boolean', default: false })
   is_system: boolean;
 
   @OneToMany(() => User, (user) => user.role)

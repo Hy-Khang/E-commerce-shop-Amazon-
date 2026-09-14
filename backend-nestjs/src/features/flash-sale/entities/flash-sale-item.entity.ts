@@ -49,7 +49,7 @@ export class FlashSaleItem {
   sold_quantity: number;
 
   // pending | approved | rejected — seller registers as pending, admin moderates.
-  @Column({ type: 'nvarchar', length: 20, default: 'pending' })
+  @Column({ type: 'varchar', length: 20, default: 'pending' })
   status: string;
 
   // Seller user who registered (audit). SET NULL if the user is deleted.
@@ -60,10 +60,10 @@ export class FlashSaleItem {
   @Column({ type: 'int', nullable: true })
   reviewed_by: number | null;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   reviewed_at: Date | null;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   reject_reason: string | null;
 
   @ManyToOne(() => FlashSale, (sale) => sale.items, { onDelete: 'CASCADE' })

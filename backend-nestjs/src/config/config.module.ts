@@ -11,6 +11,7 @@ import momoConfig from './momo.config';
 import visualSearchConfig from './grok.config';
 import chatbotConfig from './chatbot.config';
 import recommendationsConfig from './recommendations.config';
+import storageConfig from './storage.config';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import recommendationsConfig from './recommendations.config';
         visualSearchConfig,
         chatbotConfig,
         recommendationsConfig,
+        storageConfig,
       ],
       validationSchema: Joi.object({
         APP_PORT: Joi.number().default(3000),
@@ -36,10 +38,13 @@ import recommendationsConfig from './recommendations.config';
           .valid('development', 'production', 'test')
           .default('development'),
         DB_HOST: Joi.string().required(),
-        DB_PORT: Joi.number().default(1433),
+        DB_PORT: Joi.number().default(5432),
         DB_USERNAME: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
         DB_DATABASE: Joi.string().required(),
+        DB_SSL: Joi.string().valid('true', 'false').default('true'),
+        DB_SYNCHRONIZE: Joi.string().valid('true', 'false').default('false'),
+        DB_LOGGING: Joi.string().valid('true', 'false').default('false'),
         JWT_ACCESS_SECRET: Joi.string().required(),
         JWT_ACCESS_EXPIRY: Joi.string().default('15m'),
         JWT_REFRESH_SECRET: Joi.string().required(),
@@ -101,6 +106,11 @@ import recommendationsConfig from './recommendations.config';
           .optional()
           .valid('true', 'false')
           .default('false'),
+        // Supabase Storage (Module 3 — image upload). Optional so the app boots
+        // without it; uploads fail clearly until configured.
+        SUPABASE_URL: Joi.string().optional().allow('').default(''),
+        SUPABASE_SERVICE_ROLE_KEY: Joi.string().optional().allow('').default(''),
+        SUPABASE_BUCKET: Joi.string().optional().default('product-images'),
       }),
     }),
   ],

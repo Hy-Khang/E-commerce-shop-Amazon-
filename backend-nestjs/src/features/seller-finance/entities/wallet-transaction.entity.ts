@@ -26,7 +26,7 @@ export class WalletTransaction {
   user_id: number;
 
   // sale_earning | withdrawal | reversal | withdrawal_refund
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   type: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
@@ -38,10 +38,10 @@ export class WalletTransaction {
   @Column({ type: 'int', nullable: true })
   withdrawal_id: number | null;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   note: string | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })

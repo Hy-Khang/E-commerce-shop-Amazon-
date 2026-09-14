@@ -30,13 +30,13 @@ export class ProductVariant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 50, unique: true })
+  @Column({ type: 'varchar', length: 50, unique: true })
   sku: string;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   option1: string | null;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   option2: string | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })

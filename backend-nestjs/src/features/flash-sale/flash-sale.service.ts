@@ -1,3 +1,4 @@
+import { isUniqueViolation } from '../../common/utils/db-error.util';
 import {
   BadRequestException,
   ConflictException,
@@ -459,7 +460,7 @@ export class FlashSaleService {
         created_by: userId,
       });
     } catch (error: any) {
-      if (error?.number === 2627 || error?.number === 2601) {
+      if (isUniqueViolation(error)) {
         throw new ConflictException({
           code: 'FLASH_SALE_004',
           message: 'This variant is already registered in the campaign',

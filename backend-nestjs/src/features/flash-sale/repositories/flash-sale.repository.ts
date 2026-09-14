@@ -66,7 +66,7 @@ export class FlashSaleRepository {
       .leftJoinAndSelect('fs.items', 'items');
 
     if (query.search) {
-      qb.andWhere('fs.name LIKE :search', { search: `%${query.search}%` });
+      qb.andWhere('fs.name ILIKE :search', { search: `%${query.search}%` });
     }
     if (query.status) {
       qb.andWhere('fs.status = :status', { status: query.status });
@@ -151,9 +151,9 @@ export class FlashSaleRepository {
       .update(FlashSale)
       .set({
         status: FlashSaleStatus.Active,
-        updated_at: () => 'SYSUTCDATETIME()',
+        updated_at: () => 'now()',
       })
-      .where('is_active = 1')
+      .where('is_active = true')
       .andWhere('status = :scheduled', { scheduled: FlashSaleStatus.Scheduled })
       .andWhere('starts_at <= :now', { now })
       .andWhere('ends_at > :now', { now })
@@ -168,7 +168,7 @@ export class FlashSaleRepository {
       .update(FlashSale)
       .set({
         status: FlashSaleStatus.Ended,
-        updated_at: () => 'SYSUTCDATETIME()',
+        updated_at: () => 'now()',
       })
       .where('status != :ended', { ended: FlashSaleStatus.Ended })
       .andWhere('ends_at <= :now', { now })

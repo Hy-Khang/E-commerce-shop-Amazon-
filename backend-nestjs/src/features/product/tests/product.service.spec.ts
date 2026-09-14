@@ -11,6 +11,7 @@ import { CategoryRepository } from '../repositories/category.repository';
 import { ProductRepository } from '../repositories/product.repository';
 import { ProductVariantRepository } from '../repositories/product-variant.repository';
 import { ProductImageRepository } from '../repositories/product-image.repository';
+import { StorageService } from '../../../core/storage/storage.service';
 import {
   mockCategory,
   mockCategoryWithChildren,
@@ -107,6 +108,14 @@ describe('ProductService', () => {
             findShopById: jest.fn(),
             resolveShopByUserId: jest.fn(),
             assertShopIsActive: jest.fn(),
+          },
+        },
+        {
+          provide: StorageService,
+          useValue: {
+            upload: jest.fn(),
+            remove: jest.fn(),
+            parsePathFromPublicUrl: jest.fn().mockReturnValue(null),
           },
         },
       ],

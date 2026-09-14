@@ -5,7 +5,7 @@
 ```mermaid
 graph TB
     Client["React 19 (Vite)"] -->|HTTP/REST| API["NestJS API Monolith"]
-    API -->|TypeORM| DB["SQL Server"]
+    API -->|TypeORM| DB["Supabase (PostgreSQL)"]
 
     subgraph API["NestJS Monolith — api/v1"]
         direction TB
@@ -47,7 +47,7 @@ src/
 │
 ├── config/
 │   ├── app.config.ts                    — port, CORS, global prefix (api/v1)
-│   ├── database.config.ts               — TypeORM SQL Server connection
+│   ├── database.config.ts               — TypeORM Supabase (PostgreSQL) connection
 │   ├── jwt.config.ts                    — access secret/expiry (15m), refresh expiry (7d)
 │   ├── mail.config.ts                   — SMTP host/port/credentials (Mailtrap for dev)
 │   ├── oauth.config.ts                  — Google/Facebook OAuth client IDs/secrets (optional)
@@ -67,7 +67,7 @@ src/
 │
 ├── core/                                — initialized once at app bootstrap
 │   ├── database/
-│   │   ├── database.module.ts           — TypeOrmModule.forRootAsync with SQL Server config
+│   │   ├── database.module.ts           — TypeOrmModule.forRootAsync with Supabase (PostgreSQL) config
 │   │   ├── migrations/                  — timestamp-based migration files
 │   │   └── seeds/                       — roles (customer, admin, seller, shipper), permissions, role_permissions, test data
 │   ├── mail/
@@ -121,7 +121,7 @@ graph LR
     P --> C[Controller<br/>routing only]
     C --> S[Service<br/>business logic]
     S --> Repo[Repository<br/>data access]
-    Repo --> DB[(SQL Server)]
+    Repo --> DB[(Supabase PostgreSQL)]
     S --> EV[EventEmitter2<br/>side effects]
     C --> I[Interceptor<br/>TransformResponse]
     I --> Res[Response]

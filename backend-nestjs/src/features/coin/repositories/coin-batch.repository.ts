@@ -18,7 +18,7 @@ export class CoinBatchRepository {
       .select('COALESCE(SUM(b.amount_remaining), 0)', 'balance')
       .where('b.user_id = :userId', { userId })
       .andWhere('b.status = :status', { status: CoinBatchStatus.Active })
-      .andWhere('b.expires_at > SYSUTCDATETIME()')
+      .andWhere('b.expires_at > now()')
       .getRawOne<{ balance: string }>();
 
     return parseInt(result?.balance ?? '0', 10);
@@ -31,8 +31,8 @@ export class CoinBatchRepository {
       .where('b.user_id = :userId', { userId })
       .andWhere('b.status = :status', { status: CoinBatchStatus.Active })
       .andWhere('b.amount_remaining > 0')
-      .andWhere('b.expires_at > SYSUTCDATETIME()')
-      .andWhere('b.expires_at <= DATEADD(day, :days, SYSUTCDATETIME())', {
+      .andWhere('b.expires_at > now()')
+      .andWhere('b.expires_at <= now() + make_interval(days => :days)', {
         days,
       })
       .orderBy('b.expires_at', 'ASC')
@@ -52,7 +52,7 @@ export class CoinBatchRepository {
       .where('b.user_id = :userId', { userId })
       .andWhere('b.status = :status', { status: CoinBatchStatus.Active })
       .andWhere('b.amount_remaining > 0')
-      .andWhere('b.expires_at > SYSUTCDATETIME()')
+      .andWhere('b.expires_at > now()')
       .orderBy('b.expires_at', 'ASC')
       .addOrderBy('b.id', 'ASC')
       .getMany();
@@ -100,7 +100,7 @@ export class CoinBatchRepository {
     return this.repo
       .createQueryBuilder('b')
       .where('b.status = :status', { status: CoinBatchStatus.Active })
-      .andWhere('b.expires_at <= SYSUTCDATETIME()')
+      .andWhere('b.expires_at <= now()')
       .andWhere('b.amount_remaining > 0')
       .getMany();
   }

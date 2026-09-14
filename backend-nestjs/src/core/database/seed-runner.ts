@@ -89,10 +89,13 @@ async function cleanTables() {
 
   for (const table of DELETE_ORDER) {
     try {
-      await AppDataSource.query(`DELETE FROM [${table}]`);
+      // Double-quote the identifier (Postgres). DELETE (not TRUNCATE CASCADE) so
+      // a stray FK never drags in a table outside DELETE_ORDER.
+      await AppDataSource.query(`DELETE FROM "${table}"`);
       console.log(`  - ${table}: cleared`);
     } catch (err: any) {
-      if (err.message?.includes('Invalid object name')) {
+      // undefined_table (42P01) → table not synced yet; ignore. Others: log.
+      if (err.code === '42P01') {
         // Table doesn't exist yet (not synced)
       } else {
         console.log(`  - ${table}: skipped (${err.message?.substring(0, 60)})`);
@@ -100,9 +103,36 @@ async function cleanTables() {
     }
 
     try {
-      await AppDataSource.query(`DBCC CHECKIDENT('${table}', RESEED, 0)`);
+      // Reset the id sequence so re-seeds start ids at 1 again. `false` marks the
+      // sequence "uncalled" → the next nextval() returns 1. pg_get_serial_sequence
+      // resolves the sequence backing "table".id (NULL if none → caught below).
+      await AppDataSource.query(
+        `SELECT setval(pg_get_serial_sequence('"${table}"', 'id'), 1, false)`,
+      );
     } catch {
-      // No identity column or table doesn't exist
+      // No identity/serial column or table doesn't exist — ignore.
+    }
+  }
+}
+
+/**
+ * Seeds INSERT explicit ids, but the id sequences were reset to 1 by
+ * cleanTables — so without this the app's next insert would collide on the PK.
+ * Advance each table's sequence to MAX(id) so the next nextval() is MAX(id)+1.
+ */
+async function resyncSequences() {
+  console.log('\n--- Re-syncing id sequences ---');
+  for (const table of DELETE_ORDER) {
+    try {
+      await AppDataSource.query(
+        `SELECT setval(
+           pg_get_serial_sequence('"${table}"', 'id'),
+           COALESCE((SELECT MAX(id) FROM "${table}"), 1),
+           true
+         )`,
+      );
+    } catch {
+      // No serial id column / empty table / table missing — ignore.
     }
   }
 }
@@ -138,6 +168,8 @@ async function main() {
       console.log(`\n[${seed.name}]`);
       await seed.run(AppDataSource);
     }
+
+    await resyncSequences();
 
     console.log('\n=== Seed complete ===');
   } catch (err) {

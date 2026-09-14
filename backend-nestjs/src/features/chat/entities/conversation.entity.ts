@@ -24,10 +24,10 @@ export class Conversation {
   @Column()
   shop_id: number;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   last_message_at: Date | null;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   last_message_preview: string | null;
 
   @Column({ type: 'int', default: 0 })
@@ -36,7 +36,7 @@ export class Conversation {
   @Column({ type: 'int', default: 0 })
   seller_unread: number;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })

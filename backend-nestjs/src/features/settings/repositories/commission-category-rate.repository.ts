@@ -26,7 +26,7 @@ export class CommissionCategoryRateRepository {
       .set({
         rate_percent: ratePercent,
         updated_by: updatedBy,
-        updated_at: () => 'SYSUTCDATETIME()',
+        updated_at: () => 'now()',
       })
       .where('category_id = :categoryId', { categoryId })
       .execute();

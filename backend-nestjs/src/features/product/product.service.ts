@@ -34,14 +34,11 @@ import {
   analyzeProductImage,
   VisualSearchAttributes,
 } from './utils/grok-visual-search.util';
-import { unlink } from 'fs/promises';
-import { join } from 'path';
+import { StorageService } from '../../core/storage/storage.service';
 
 @Injectable()
 export class ProductService {
   private readonly logger = new Logger(ProductService.name);
-
-  private readonly uploadDir: string;
 
   constructor(
     private readonly categoryRepository: CategoryRepository,
@@ -50,9 +47,8 @@ export class ProductService {
     private readonly productImageRepository: ProductImageRepository,
     private readonly configService: ConfigService,
     private readonly shopService: ShopService,
-  ) {
-    this.uploadDir = this.configService.get<string>('app.uploadDir')!;
-  }
+    private readonly storageService: StorageService,
+  ) {}
 
   // ─── Public: Categories ───
 
@@ -575,17 +571,11 @@ export class ProductService {
   }
 
   private async tryDeleteFile(imageUrl: string): Promise<void> {
-    if (!imageUrl.startsWith('/uploads/')) return;
-
-    const relativePath = imageUrl.replace(/^\/uploads\//, '');
-    const filePath = join(this.uploadDir, relativePath);
-
-    try {
-      await unlink(filePath);
-      this.logger.log(`File deleted: ${filePath}`);
-    } catch {
-      this.logger.warn(`Could not delete file: ${filePath}`);
-    }
+    // Only delete objects that live in our Supabase bucket; external/legacy URLs
+    // (or the old `/uploads/...` paths) are left untouched.
+    const path = this.storageService.parsePathFromPublicUrl(imageUrl);
+    if (!path) return;
+    await this.storageService.remove(path);
   }
 
   private validateOptionConsistency(

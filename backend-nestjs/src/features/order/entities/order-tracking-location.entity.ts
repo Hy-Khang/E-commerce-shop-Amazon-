@@ -23,7 +23,7 @@ export class OrderTrackingLocation {
   @Column({ type: 'decimal', precision: 10, scale: 7 })
   longitude: number;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => Order)

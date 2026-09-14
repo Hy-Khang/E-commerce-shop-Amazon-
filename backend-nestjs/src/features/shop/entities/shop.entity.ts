@@ -19,19 +19,19 @@ export class Shop {
   @Column({ type: 'int', unique: true })
   user_id: number;
 
-  @Column({ type: 'nvarchar', length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ type: 'nvarchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100, unique: true })
   slug: string;
 
-  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   logo_url: string | null;
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   banner_url: string | null;
 
   /**
@@ -40,28 +40,28 @@ export class Shop {
    * string (repo convention — manual JSON.stringify/parse in the service, like
    * `orders.shipping_address` / `ai_messages.actions`). NULL = default layout.
    */
-  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  @Column({ type: 'text', nullable: true })
   decoration_config: string | null;
 
-  @Column({ type: 'nvarchar', length: 30, default: 'pending_verification' })
+  @Column({ type: 'varchar', length: 30, default: 'pending_verification' })
   status: string;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   verified_at: Date | null;
 
   @Column({ type: 'int', nullable: true })
   verified_by: number | null;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   suspended_at: Date | null;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   banned_at: Date | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   updated_at: Date;
 
   @OneToOne(() => User)

@@ -29,7 +29,7 @@
 | Backend — Events | @nestjs/event-emitter (notification, order events) |
 | Backend — Email | @nestjs-modules/mailer + nodemailer (verify email, forgot password) |
 | Backend — Docs | @nestjs/swagger (Swagger UI tại `/api/v1/docs`) |
-| Database | SQL Server 2022 |
+| Database | Supabase (PostgreSQL) — migrated from SQL Server 2022 |
 | Auth | JWT + Refresh Token, OAuth 2.0 (Google, Facebook) |
 | Payment | VNPay, MoMo (sandbox) |
 | Authorization | Dynamic RBAC (Role ↔ Permission → API Endpoint) |

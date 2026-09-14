@@ -10,12 +10,12 @@ export class AiSetting {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'bit', default: true })
+  @Column({ type: 'boolean', default: true })
   chatbox_enabled: boolean;
 
-  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  @Column({ type: 'text', nullable: true })
   system_prompt: string | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   updated_at: Date;
 }

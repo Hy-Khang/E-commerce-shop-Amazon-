@@ -124,7 +124,7 @@ export class ProductRepository {
       .createQueryBuilder()
       .select('r.product_id', 'productId')
       .addSelect('COUNT(*)', 'reviewCount')
-      .addSelect('COALESCE(AVG(CAST(r.rating AS FLOAT)), 0)', 'avgRating')
+      .addSelect('COALESCE(AVG(r.rating::float8), 0)', 'avgRating')
       .from('reviews', 'r')
       .where('r.product_id IN (:...ids)', { ids: products.map((p) => p.id) })
       .groupBy('r.product_id')
@@ -194,7 +194,7 @@ export class ProductRepository {
     const stats = await this.repo.manager
       .createQueryBuilder()
       .select('COUNT(*)', 'reviewCount')
-      .addSelect('COALESCE(AVG(CAST(r.rating AS FLOAT)), 0)', 'avgRating')
+      .addSelect('COALESCE(AVG(r.rating::float8), 0)', 'avgRating')
       .from('reviews', 'r')
       .where('r.product_id = :id', { id })
       .getRawOne();
@@ -314,7 +314,7 @@ export class ProductRepository {
         shopStatus: ShopStatus.Active,
       })
       .where('product.is_active = :isActive', { isActive: true })
-      .andWhere('product.name LIKE :q', { q: `%${query}%` })
+      .andWhere('product.name ILIKE :q', { q: `%${query}%` })
       .orderBy('product.name', 'ASC')
       .limit(limit)
       .getMany();
@@ -328,7 +328,7 @@ export class ProductRepository {
       .createQueryBuilder()
       .select(['c.name AS name', 'c.slug AS slug'])
       .from('categories', 'c')
-      .where('c.name LIKE :q', { q: `%${query}%` })
+      .where('c.name ILIKE :q', { q: `%${query}%` })
       .orderBy('c.name', 'ASC')
       .limit(limit)
       .getRawMany();
@@ -363,17 +363,17 @@ export class ProductRepository {
 
     if (attrs.category) {
       params.vsCat = `%${attrs.category}%`;
-      orClauses.push('category.name LIKE :vsCat');
-      scoreExprs.push('CASE WHEN category.name LIKE :vsCat THEN 5 ELSE 0 END');
+      orClauses.push('category.name ILIKE :vsCat');
+      scoreExprs.push('CASE WHEN category.name ILIKE :vsCat THEN 5 ELSE 0 END');
     }
 
     if (attrs.color) {
       params.vsColor = `%${attrs.color}%`;
       orClauses.push(
-        `product.id IN (SELECT pv_c.product_id FROM product_variants pv_c WHERE pv_c.option1 LIKE :vsColor OR pv_c.option2 LIKE :vsColor)`,
+        `product.id IN (SELECT pv_c.product_id FROM product_variants pv_c WHERE pv_c.option1 ILIKE :vsColor OR pv_c.option2 ILIKE :vsColor)`,
       );
       scoreExprs.push(
-        `CASE WHEN product.id IN (SELECT pv_c2.product_id FROM product_variants pv_c2 WHERE pv_c2.option1 LIKE :vsColor OR pv_c2.option2 LIKE :vsColor) THEN 3 ELSE 0 END`,
+        `CASE WHEN product.id IN (SELECT pv_c2.product_id FROM product_variants pv_c2 WHERE pv_c2.option1 ILIKE :vsColor OR pv_c2.option2 ILIKE :vsColor) THEN 3 ELSE 0 END`,
       );
     }
 
@@ -386,10 +386,10 @@ export class ProductRepository {
     textTerms.forEach((term, i) => {
       params[`vsT${i}`] = `%${term}%`;
       orClauses.push(
-        `(product.name LIKE :vsT${i} OR product.description LIKE :vsT${i})`,
+        `(product.name ILIKE :vsT${i} OR product.description ILIKE :vsT${i})`,
       );
       scoreExprs.push(
-        `CASE WHEN product.name LIKE :vsT${i} THEN 2 WHEN product.description LIKE :vsT${i} THEN 1 ELSE 0 END`,
+        `CASE WHEN product.name ILIKE :vsT${i} THEN 2 WHEN product.description ILIKE :vsT${i} THEN 1 ELSE 0 END`,
       );
     });
 
@@ -423,11 +423,11 @@ export class ProductRepository {
     if (filter.search) {
       if (filter.globalSearch) {
         qb.andWhere(
-          '(product.name LIKE :search OR product.description LIKE :search OR category.name LIKE :search OR shop.name LIKE :search)',
+          '(product.name ILIKE :search OR product.description ILIKE :search OR category.name ILIKE :search OR shop.name ILIKE :search)',
           { search: `%${filter.search}%` },
         );
       } else {
-        qb.andWhere('product.name LIKE :search', {
+        qb.andWhere('product.name ILIKE :search', {
           search: `%${filter.search}%`,
         });
       }
@@ -463,7 +463,7 @@ export class ProductRepository {
 
     if (filter.min_rating !== undefined) {
       qb.andWhere(
-        `EXISTS (SELECT 1 FROM reviews r WHERE r.product_id = product.id GROUP BY r.product_id HAVING AVG(CAST(r.rating AS FLOAT)) >= :minRating)`,
+        `EXISTS (SELECT 1 FROM reviews r WHERE r.product_id = product.id GROUP BY r.product_id HAVING AVG(r.rating::float8) >= :minRating)`,
         { minRating: filter.min_rating },
       );
     }
@@ -504,7 +504,7 @@ export class ProductRepository {
 
       case ProductSortBy.Rating:
         qb.addSelect(
-          `(SELECT COALESCE(AVG(CAST(r.rating AS FLOAT)), 0) FROM reviews r WHERE r.product_id = product.id)`,
+          `(SELECT COALESCE(AVG(r.rating::float8), 0) FROM reviews r WHERE r.product_id = product.id)`,
           'avg_rating_sort',
         );
         qb.orderBy('avg_rating_sort', sortOrder);
@@ -522,11 +522,11 @@ export class ProductRepository {
         if (filter.search && filter.globalSearch) {
           qb.addSelect(
             `CASE
-              WHEN product.name LIKE :exactSearch THEN 1
-              WHEN product.name LIKE :search THEN 2
-              WHEN product.description LIKE :search THEN 3
-              WHEN category.name LIKE :search THEN 4
-              WHEN shop.name LIKE :search THEN 5
+              WHEN product.name ILIKE :exactSearch THEN 1
+              WHEN product.name ILIKE :search THEN 2
+              WHEN product.description ILIKE :search THEN 3
+              WHEN category.name ILIKE :search THEN 4
+              WHEN shop.name ILIKE :search THEN 5
               ELSE 6
             END`,
             'relevance_score',

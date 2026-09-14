@@ -46,7 +46,7 @@ export class SellerWalletRepository {
       .update(SellerWallet)
       .set({
         balance: () => 'balance + :amount',
-        updated_at: () => 'SYSUTCDATETIME()',
+        updated_at: () => 'now()',
       })
       .where('user_id = :userId', { userId })
       .setParameter('amount', amount)
@@ -68,7 +68,7 @@ export class SellerWalletRepository {
       .update(SellerWallet)
       .set({
         balance: () => 'balance - :amount',
-        updated_at: () => 'SYSUTCDATETIME()',
+        updated_at: () => 'now()',
       })
       .where('user_id = :userId AND balance >= :amount', { userId, amount })
       .setParameter('amount', amount)
@@ -90,7 +90,7 @@ export class SellerWalletRepository {
       .update(SellerWallet)
       .set({
         balance: () => 'balance - :amount',
-        updated_at: () => 'SYSUTCDATETIME()',
+        updated_at: () => 'now()',
       })
       .where('user_id = :userId', { userId })
       .setParameter('amount', amount)

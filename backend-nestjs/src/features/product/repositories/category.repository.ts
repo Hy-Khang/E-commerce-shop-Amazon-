@@ -50,7 +50,7 @@ export class CategoryRepository {
       .loadRelationCountAndMap('category.productCount', 'category.products');
 
     if (filter.search) {
-      qb.andWhere('category.name LIKE :search', {
+      qb.andWhere('category.name ILIKE :search', {
         search: `%${filter.search}%`,
       });
     }
@@ -94,8 +94,8 @@ export class CategoryRepository {
 
   async findDescendantIds(id: number): Promise<number[]> {
     const result = await this.repo.query(
-      `WITH category_tree AS (
-        SELECT id FROM categories WHERE id = @0
+      `WITH RECURSIVE category_tree AS (
+        SELECT id FROM categories WHERE id = $1
         UNION ALL
         SELECT c.id FROM categories c
         INNER JOIN category_tree ct ON c.parent_id = ct.id

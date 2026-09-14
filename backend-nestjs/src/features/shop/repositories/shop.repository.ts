@@ -45,7 +45,7 @@ export class ShopRepository {
     const stats = await this.repo.manager
       .createQueryBuilder()
       .select('COUNT(DISTINCT p.id)', 'productCount')
-      .addSelect('COALESCE(AVG(CAST(r.rating AS FLOAT)), 0)', 'avgRating')
+      .addSelect('COALESCE(AVG(r.rating::float8), 0)', 'avgRating')
       .addSelect('COALESCE(SUM(oi.quantity), 0)', 'totalSales')
       .from('products', 'p')
       .leftJoin('reviews', 'r', 'r.product_id = p.id')
@@ -79,7 +79,7 @@ export class ShopRepository {
       .where('shop.status = :status', { status: ShopStatus.Active });
 
     if (filter.search) {
-      qb.andWhere('shop.name LIKE :search', { search: `%${filter.search}%` });
+      qb.andWhere('shop.name ILIKE :search', { search: `%${filter.search}%` });
     }
 
     const sortColumn = resolveShopSortColumn(filter.sort);
@@ -109,7 +109,7 @@ export class ShopRepository {
     }
 
     if (filter.search) {
-      qb.andWhere('shop.name LIKE :search', { search: `%${filter.search}%` });
+      qb.andWhere('shop.name ILIKE :search', { search: `%${filter.search}%` });
     }
 
     const sortColumn = resolveShopSortColumn(filter.sort);
@@ -155,7 +155,7 @@ export class ShopRepository {
       .andWhere('product.is_active = :isActive', { isActive: true });
 
     if (filter.search) {
-      qb.andWhere('product.name LIKE :search', {
+      qb.andWhere('product.name ILIKE :search', {
         search: `%${filter.search}%`,
       });
     }
@@ -187,7 +187,7 @@ export class ShopRepository {
       .createQueryBuilder('shop')
       .select(['shop.name', 'shop.slug', 'shop.logo_url'])
       .where('shop.status = :status', { status: ShopStatus.Active })
-      .andWhere('shop.name LIKE :q', { q: `%${query}%` })
+      .andWhere('shop.name ILIKE :q', { q: `%${query}%` })
       .orderBy('shop.name', 'ASC')
       .limit(limit)
       .getMany();

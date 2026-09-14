@@ -29,15 +29,15 @@ export class UserActivityLog {
   @Column({ type: 'int', nullable: true })
   user_id: number | null;
 
-  @Column({ type: 'nvarchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   session_id: string | null;
 
   // VIEW_PRODUCT / VIEW_CATEGORY / SEARCH / ADD_TO_CART / ADD_TO_WISHLIST / PURCHASE
-  @Column({ type: 'nvarchar', length: 30 })
+  @Column({ type: 'varchar', length: 30 })
   action: string;
 
   // product / category / search
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   target_type: string;
 
   // product/category id (NULL for SEARCH). Not a FK — see class doc.
@@ -45,10 +45,10 @@ export class UserActivityLog {
   target_id: number | null;
 
   // JSON — e.g. { keyword } for SEARCH.
-  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  @Column({ type: 'text', nullable: true })
   metadata: string | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })

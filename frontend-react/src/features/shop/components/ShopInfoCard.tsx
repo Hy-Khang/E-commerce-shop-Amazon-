@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Store } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
+import { getImageUrl } from '@/common/utils/format.util';
 import { ChatWithShopButton } from '@/features/chat';
 import type { ShopSummary } from '@/features/product/types/product.types';
 
@@ -17,7 +18,7 @@ export function ShopInfoCard({ shop }: Props) {
       >
         {shop.logo_url ? (
           <img
-            src={shop.logo_url}
+            src={getImageUrl(shop.logo_url)}
             alt={shop.name}
             className="h-12 w-12 rounded-full object-cover border border-border-default shadow-xs"
           />

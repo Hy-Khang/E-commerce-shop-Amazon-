@@ -1,5 +1,6 @@
 import { Store, Package, Star, ShoppingBag } from 'lucide-react';
 import { useAuthStore } from '@/features/auth';
+import { getImageUrl } from '@/common/utils/format.util';
 import { ChatWithShopButton } from '@/features/chat';
 import type { ShopProfile } from '../types/shop.types';
 
@@ -16,7 +17,7 @@ export function ShopHeader({ shop }: Props) {
       {shop.banner_url ? (
         <div className="h-40 w-full bg-surface-hover sm:h-52">
           <img
-            src={shop.banner_url}
+            src={getImageUrl(shop.banner_url)}
             alt=""
             className="h-full w-full object-cover"
           />
@@ -29,7 +30,7 @@ export function ShopHeader({ shop }: Props) {
         <div className="flex items-end gap-4">
           {shop.logo_url ? (
             <img
-              src={shop.logo_url}
+              src={getImageUrl(shop.logo_url)}
               alt={shop.name}
               className="h-20 w-20 flex-shrink-0 rounded-full border-4 border-surface bg-surface object-cover shadow"
             />

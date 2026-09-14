@@ -16,23 +16,23 @@ export class Permission {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   name: string;
 
   @Index('idx_permissions_resource')
-  @Column({ type: 'nvarchar', length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   resource: string;
 
-  @Column({ type: 'nvarchar', length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   action: string;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   description: string | null;
 
-  @CreateDateColumn({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @UpdateDateColumn({ type: 'timestamptz', default: () => 'now()' })
   updated_at: Date;
 
   @OneToMany(() => RolePermission, (rp) => rp.permission)

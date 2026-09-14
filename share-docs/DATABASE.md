@@ -2,15 +2,20 @@
 
 ## 1. Overview
 
-- **Database:** SQL Server
-- **ORM:** TypeORM (NestJS integration)
+- **Database:** Supabase (managed **PostgreSQL**) — migrated from SQL Server 2022. Connect via the **Session pooler** (IPv4, port 5432, user `postgres.<project-ref>`); the direct host is IPv6-only. SSL required (`DB_SSL=true`). Run the app/ETL with `TZ=UTC`.
+- **ORM:** TypeORM (NestJS integration), driver `pg`
 - **Naming conventions:**
   - Tables & columns: `snake_case`
   - Indexes: `idx_{table}_{column}`
-- **Unicode:** All string columns use `NVARCHAR` (Vietnamese product names, addresses)
-- **Timestamps:** `DATETIME2` with `SYSUTCDATETIME()` default — store UTC, convert in app layer
-- **Money:** `DECIMAL(10,2)` — never use `FLOAT`
-- **Booleans:** `BIT` (`1`/`0`)
+- **Unicode:** All string columns use `varchar` / `text` (PostgreSQL text is Unicode by default — Vietnamese product names, addresses)
+- **Timestamps:** `timestamptz` with `now()` default — store UTC, convert in app layer
+- **Money:** `numeric(10,2)` (`DECIMAL`) — never use `FLOAT`. A global pg type parser (`src/core/database/pg-type-parsers.ts`) coerces `numeric`→JS `number` (and `bigint`→`number`) so money arithmetic and aggregate `SUM`/`AVG` return numbers, not strings.
+- **Booleans:** `boolean` (`true`/`false`)
+- **Search:** case-insensitive matching uses `ILIKE` (Postgres `LIKE` is case-sensitive, unlike SQL Server). `ILIKE` is accent-sensitive; enable the `unaccent` extension if accent-insensitive search is required.
+- **JSON:** JSON payload columns stay `text` with manual `JSON.stringify`/`parse` (unchanged). Raw queries that read JSON cast in-place, e.g. `metadata::jsonb->>'keyword'`.
+- **Type mapping (SQL Server → Postgres):** `nvarchar`→`varchar`, `nvarchar(MAX)`→`text`, `datetime2`→`timestamptz`, `bit`→`boolean`, `SYSUTCDATETIME()`→`now()`. Legacy T-SQL migrations are archived under `src/core/database/migrations/_archive_mssql/`; the Postgres schema is a single generated baseline (`npm run migration:generate`) or `DB_SYNCHRONIZE=true` in dev.
+
+> **One-time data migration (SQL Server → Supabase):** `scripts/migrate-mssql-to-pg.ts` (`npm run migrate:etl -- --with-files`) copies every row preserving primary keys, re-syncs id sequences, and uploads local `uploads/**` images to Supabase Storage while rewriting the URL columns. Prereq: the target schema already exists. Keeps the `mssql` driver installed until the migration is done.
 
 ---
 

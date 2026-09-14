@@ -1,8 +1,12 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { DataSource } from 'typeorm';
+import { registerPgTypeParsers } from './pg-type-parsers';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
+// Fix numeric/bigint → number before any connection is established (Postgres).
+registerPgTypeParsers();
 
 import { Role } from '../../features/auth/entities/role.entity';
 import { User } from '../../features/auth/entities/user.entity';
@@ -51,12 +55,12 @@ import { WithdrawalRequest } from '../../features/seller-finance/entities/withdr
 import { UserActivityLog } from '../../features/recommendations/entities/user-activity-log.entity';
 
 export const AppDataSource = new DataSource({
-  type: 'mssql',
+  type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT ?? '1433', 10),
-  username: process.env.DB_USERNAME || 'sa',
+  port: parseInt(process.env.DB_PORT ?? '5432', 10),
+  username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_DATABASE || 'ecommerce_shop',
+  database: process.env.DB_DATABASE || 'postgres',
   entities: [
     Role,
     User,
@@ -105,8 +109,7 @@ export const AppDataSource = new DataSource({
     UserActivityLog,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
-  options: {
-    trustServerCertificate: true,
-    useUTC: true,
-  },
+  ssl:
+    process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  extra: { options: '-c timezone=UTC' },
 });

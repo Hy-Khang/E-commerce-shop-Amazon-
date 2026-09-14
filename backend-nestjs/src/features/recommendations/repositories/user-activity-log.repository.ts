@@ -87,7 +87,7 @@ export class UserActivityLogRepository {
       .innerJoin('products', 'p', 'p.id = ual.target_id')
       .where('ual.target_type = :ptype', { ptype: ActivityTargetType.Product })
       .andWhere(
-        `ual.created_at >= DATEADD(DAY, -${PROFILE_WINDOW_DAYS}, GETUTCDATE())`,
+        `ual.created_at >= now() - make_interval(days => ${PROFILE_WINDOW_DAYS})`,
       );
     this.applyOwner(qb, owner);
 
@@ -115,7 +115,7 @@ export class UserActivityLogRepository {
       .andWhere('ual.action = :act', { act: ActivityAction.ViewCategory })
       .andWhere('ual.target_id IS NOT NULL')
       .andWhere(
-        `ual.created_at >= DATEADD(DAY, -${PROFILE_WINDOW_DAYS}, GETUTCDATE())`,
+        `ual.created_at >= now() - make_interval(days => ${PROFILE_WINDOW_DAYS})`,
       )
       .groupBy('ual.target_id');
     this.applyOwner(qb, owner);
@@ -147,14 +147,14 @@ export class UserActivityLogRepository {
       .innerJoin(
         'products',
         'p',
-        "p.is_active = 1 AND p.name LIKE '%' + JSON_VALUE(ual.metadata, '$.keyword') + '%'",
+        "p.is_active = true AND p.name ILIKE '%' || (ual.metadata::jsonb->>'keyword') || '%'",
       )
       .where('ual.action = :act', { act: ActivityAction.Search })
       .andWhere('ual.metadata IS NOT NULL')
       // Keyword ≥ 3 chars: shorter terms ("áo") match nearly everything and add noise.
-      .andWhere("LEN(JSON_VALUE(ual.metadata, '$.keyword')) >= 3")
+      .andWhere("char_length(ual.metadata::jsonb->>'keyword') >= 3")
       .andWhere(
-        `ual.created_at >= DATEADD(DAY, -${PROFILE_WINDOW_DAYS}, GETUTCDATE())`,
+        `ual.created_at >= now() - make_interval(days => ${PROFILE_WINDOW_DAYS})`,
       )
       .groupBy('p.category_id');
     this.applyOwner(qb, owner);
@@ -185,7 +185,7 @@ export class UserActivityLogRepository {
       .from('products', 'p')
       .innerJoin('product_variants', 'pv', 'pv.product_id = p.id')
       .innerJoin('shops', 's', 's.id = p.shop_id')
-      .where('p.is_active = 1')
+      .where('p.is_active = true')
       .andWhere("s.status = 'active'")
       .andWhere('p.category_id IN (:...categoryIds)', { categoryIds })
       .groupBy('p.id')
@@ -213,7 +213,7 @@ export class UserActivityLogRepository {
       .innerJoin('orders', 'o', 'o.id = oi.order_id')
       .where(`o.status IN ${COMPLETED_STATUSES}`)
       .groupBy('pv.product_id')
-      .orderBy('totalSold', 'DESC')
+      .orderBy('"totalSold"', 'DESC')
       .limit(limit)
       .getRawMany();
     return rows.map((r) => Number(r.productId));
@@ -226,9 +226,9 @@ export class UserActivityLogRepository {
       .select('wi.product_id', 'productId')
       .addSelect('COUNT(*)', 'wishlistCount')
       .from('wishlist_items', 'wi')
-      .where('wi.created_at >= DATEADD(DAY, -30, GETUTCDATE())')
+      .where("wi.created_at >= now() - interval '30 days'")
       .groupBy('wi.product_id')
-      .orderBy('wishlistCount', 'DESC')
+      .orderBy('"wishlistCount"', 'DESC')
       .limit(limit)
       .getRawMany();
     return rows.map((r) => Number(r.productId));
@@ -275,7 +275,7 @@ export class UserActivityLogRepository {
         .from('products', 'p')
         .innerJoin('product_variants', 'pv', 'pv.product_id = p.id')
         .innerJoin('shops', 's', 's.id = p.shop_id')
-        .where('p.is_active = 1')
+        .where('p.is_active = true')
         .andWhere("s.status = 'active'")
         .andWhere('p.id <> :productId', { productId })
         .andWhere('p.category_id IN (:...catIds)', { catIds })
@@ -331,7 +331,7 @@ export class UserActivityLogRepository {
       .select('other.target_id', 'productId')
       .addSelect('COUNT(*)', 'cnt')
       .addSelect(
-        `CAST(COUNT(*) AS FLOAT) / SQRT(NULLIF((
+        `COUNT(*)::float8 / SQRT(NULLIF((
            SELECT COUNT(*) FROM user_activity_log v
            WHERE v.action = 'VIEW_PRODUCT' AND v.target_id = other.target_id
          ), 0))`,
@@ -395,7 +395,7 @@ export class UserActivityLogRepository {
       .createQueryBuilder()
       .delete()
       .from(UserActivityLog)
-      .where(`created_at < DATEADD(DAY, -${days}, GETUTCDATE())`)
+      .where(`created_at < now() - make_interval(days => ${days})`)
       .execute();
     return result.affected ?? 0;
   }

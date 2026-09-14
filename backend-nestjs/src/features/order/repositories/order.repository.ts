@@ -94,9 +94,9 @@ export class OrderRepository {
       const orderId = /^\d+$/.test(search) ? Number(search) : null;
       qb.andWhere(
         new Brackets((w) => {
-          w.where('order.shop_name LIKE :like', { like })
-            .orWhere('user.full_name LIKE :like', { like })
-            .orWhere('user.email LIKE :like', { like });
+          w.where('order.shop_name ILIKE :like', { like })
+            .orWhere('user.full_name ILIKE :like', { like })
+            .orWhere('user.email ILIKE :like', { like });
           if (orderId !== null) {
             w.orWhere('order.id = :orderId', { orderId });
           }
@@ -154,8 +154,8 @@ export class OrderRepository {
       const orderId = /^\d+$/.test(search) ? Number(search) : null;
       qb.andWhere(
         new Brackets((w) => {
-          w.where('user.full_name LIKE :like', { like }).orWhere(
-            'user.email LIKE :like',
+          w.where('user.full_name ILIKE :like', { like }).orWhere(
+            'user.email ILIKE :like',
             { like },
           );
           if (orderId !== null) {

@@ -27,19 +27,19 @@ export class Order {
   @Column()
   shop_id: number;
 
-  @Column({ type: 'nvarchar', length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   shop_name: string;
 
-  @Column({ type: 'nvarchar', length: 36 })
+  @Column({ type: 'varchar', length: 36 })
   order_group_id: string;
 
-  @Column({ type: 'nvarchar', length: 20, default: 'pending' })
+  @Column({ type: 'varchar', length: 20, default: 'pending' })
   status: string;
 
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   payment_method: string;
 
-  @Column({ type: 'nvarchar', length: 20, default: 'unpaid' })
+  @Column({ type: 'varchar', length: 20, default: 'unpaid' })
   payment_status: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
@@ -48,10 +48,10 @@ export class Order {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_amount: number;
 
-  @Column({ type: 'nvarchar', length: 'MAX' })
+  @Column({ type: 'text' })
   shipping_address: string;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   coupon_code: string | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
@@ -62,10 +62,10 @@ export class Order {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   coin_discount: number;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   delivered_at: Date | null;
 
   @Column({ type: 'int', nullable: true })
