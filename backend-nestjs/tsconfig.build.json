@@ -1,7 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src"
+    "rootDir": "./src",
+    // Full, deterministic emit for prod/CI. The base tsconfig enables
+    // `incremental` for fast dev rebuilds, but a persisted .tsbuildinfo (Render
+    // caches it between deploys) makes tsc skip "unchanged" files when the
+    // output layout changes → a partial dist missing files like app.config.js.
+    "incremental": false
   },
   "exclude": [
     "node_modules",
