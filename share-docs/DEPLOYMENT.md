@@ -43,7 +43,10 @@ Web service **free** trên Render **spin down sau ~15 phút không có request**
 
 **Cách B — Thủ công:** New + → Web Service → chọn repo, cấu hình:
 - **Root Directory:** `backend-nestjs`
-- **Build Command:** `npm ci && npm run build`
+- **Build Command:** `npm ci --include=dev && npm run build`
+  > ⚠️ Phải có `--include=dev`. Vì `NODE_ENV=production`, `npm ci` mặc định bỏ qua
+  > devDependencies → thiếu `@nestjs/cli`/`typescript` → build lỗi `sh: 1: nest: not found`.
+  > `--include=dev` buộc cài chúng cho bước build; runtime (`node dist/main`) không cần.
 - **Start Command:** `npm run start:prod`
 - **Health Check Path:** `/api/v1/health`
 
@@ -129,4 +132,5 @@ Return/IPN URL phải trỏ về Render public URL (gateway gọi ngược về)
 | CORS blocked | `CORS_ORIGIN` sai/thiếu domain Vercel | Set đúng origin, không dấu `/` cuối, redeploy |
 | OAuth redirect mismatch | Callback URL còn localhost | Cập nhật ở Google/Meta console + biến env |
 | Mất ảnh sau redeploy | (Đã tránh) uploads lên Supabase Storage, không ghi disk Render | — |
+| Build lỗi `sh: 1: nest: not found` | `NODE_ENV=production` → `npm ci` bỏ qua devDependencies (chứa `@nestjs/cli`) | Build Command: `npm ci --include=dev && npm run build` |
 | Sai giờ / lệch ngày | Thiếu `TZ=UTC` | Set `TZ=UTC` trên Render |
