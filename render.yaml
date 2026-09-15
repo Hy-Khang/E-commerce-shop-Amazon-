@@ -10,7 +10,10 @@ services:
     plan: free # ⚠ free spins down after ~15m idle → cron jobs + Socket.IO pause.
     # Upgrade to "starter" for always-on, or keep free + external keep-alive ping.
     rootDir: backend-nestjs
-    buildCommand: npm ci && npm run build
+    # --include=dev forces devDependencies (@nestjs/cli, typescript) to install
+    # even though NODE_ENV=production would otherwise skip them → `nest build`
+    # needs them. Runtime (`node dist/main`) needs none of them.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run start:prod
     healthCheckPath: /api/v1/health
     autoDeploy: true
