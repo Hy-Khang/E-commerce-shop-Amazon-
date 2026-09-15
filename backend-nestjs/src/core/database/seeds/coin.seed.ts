@@ -16,7 +16,7 @@ export const CoinSeed: ISeed = {
     const qr = ds.createQueryRunner();
 
     await qr.query(`
-      INSERT INTO app_settings ([key], value) VALUES
+      INSERT INTO app_settings ("key", value) VALUES
         ('coin.enabled',            'true'),
         ('coin.earn_rate_percent',  '1'),
         ('coin.redeem_max_percent', '50'),

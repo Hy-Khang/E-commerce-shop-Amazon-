@@ -25,7 +25,11 @@ registerPgTypeParsers();
           ? { rejectUnauthorized: false }
           : false,
         // Store/return UTC consistently (mirrors the old tedious useUTC:true).
-        extra: { options: '-c timezone=UTC' },
+        // `max` caps the pg pool for the Supabase pooler (see database.config).
+        extra: {
+          options: '-c timezone=UTC',
+          max: config.get<number>('database.poolMax') ?? 5,
+        },
       }),
     }),
   ],
