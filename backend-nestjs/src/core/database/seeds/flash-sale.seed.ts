@@ -21,8 +21,8 @@ export const FlashSaleSeed: ISeed = {
     await qr.query(`
       INSERT INTO flash_sales
         (id, name, registration_starts_at, registration_ends_at, starts_at, ends_at, min_discount_percent, status, is_active) VALUES
-        (1, 'Flash Sale Cuối Tuần',  '2026-08-01T00:00:00', '2026-08-10T00:00:00', '2026-08-15T00:00:00', '2026-12-31T23:59:59', 10, 'active',    1),
-        (2, 'Flash Sale Giáng Sinh', '2026-08-25T00:00:00', '2026-09-30T00:00:00', '2026-10-01T00:00:00', '2026-10-07T23:59:59', 15, 'scheduled', 1);
+        (1, 'Flash Sale Cuối Tuần',  '2026-08-01T00:00:00', '2026-08-10T00:00:00', '2026-08-15T00:00:00', '2026-12-31T23:59:59', 10, 'active',    true),
+        (2, 'Flash Sale Giáng Sinh', '2026-08-25T00:00:00', '2026-09-30T00:00:00', '2026-10-01T00:00:00', '2026-10-07T23:59:59', 15, 'scheduled', true);
     `);
     console.log('  + flash_sales: 2 rows');
 
@@ -30,11 +30,12 @@ export const FlashSaleSeed: ISeed = {
     // seed created — never hardcode ids (they drift). Only variants whose product
     // belongs to a shop can be flash-registered.
     const variants: VariantRow[] = await qr.query(
-      `SELECT TOP 6 v.id, v.price, p.shop_id, s.user_id
+      `SELECT v.id, v.price, p.shop_id, s.user_id
          FROM product_variants v
          INNER JOIN products p ON p.id = v.product_id
          INNER JOIN shops s ON s.id = p.shop_id
-        ORDER BY v.id ASC`,
+        ORDER BY v.id ASC
+        LIMIT 6`,
     );
 
     if (variants.length === 0) {

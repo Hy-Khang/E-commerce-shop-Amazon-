@@ -42,10 +42,10 @@ export class Order {
   @Column({ type: 'varchar', length: 20, default: 'unpaid' })
   payment_status: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
   shipping_fee: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   total_amount: number;
 
   @Column({ type: 'text' })
@@ -54,12 +54,12 @@ export class Order {
   @Column({ type: 'varchar', length: 50, nullable: true })
   coupon_code: string | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
   discount_amount: number;
 
   // Xu (Hoàn Xu) redeemed against this sub-order — snapshot so it can be refunded
   // on cancel. `total_amount = shopItemsTotal − discount_amount − coin_discount + shipping_fee`.
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
   coin_discount: number;
 
   @Column({ type: 'timestamptz', default: () => 'now()' })

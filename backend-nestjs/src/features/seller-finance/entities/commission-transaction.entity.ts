@@ -31,13 +31,13 @@ export class CommissionTransaction {
   @Column({ type: 'int', nullable: true })
   order_id: number | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   base_amount: number;
 
   @Column({ type: 'decimal', precision: 5, scale: 2 })
   rate_percent: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   commission_amount: number;
 
   // charge | reverse

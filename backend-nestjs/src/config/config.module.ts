@@ -45,6 +45,7 @@ import storageConfig from './storage.config';
         DB_SSL: Joi.string().valid('true', 'false').default('true'),
         DB_SYNCHRONIZE: Joi.string().valid('true', 'false').default('false'),
         DB_LOGGING: Joi.string().valid('true', 'false').default('false'),
+        DB_POOL_MAX: Joi.number().default(10),
         JWT_ACCESS_SECRET: Joi.string().required(),
         JWT_ACCESS_EXPIRY: Joi.string().default('15m'),
         JWT_REFRESH_SECRET: Joi.string().required(),

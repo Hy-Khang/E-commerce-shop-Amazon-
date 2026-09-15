@@ -23,7 +23,7 @@ export class WithdrawalRequest {
   @Column()
   user_id: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   amount: number;
 
   // pending | approved | rejected

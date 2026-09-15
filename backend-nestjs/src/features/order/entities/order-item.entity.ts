@@ -28,7 +28,7 @@ export class OrderItem {
   @Column({ type: 'varchar', length: 50 })
   sku: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   price: number;
 
   @Column({ type: 'int' })

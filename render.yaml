@@ -1,0 +1,124 @@
+# Render Blueprint — backend (NestJS API).
+# Deploy via Render Dashboard → "New +" → "Blueprint" → pick this repo.
+# Secrets (sync:false) are left blank here and filled in the Render dashboard,
+# so nothing sensitive is committed. See share-docs/DEPLOYMENT.md for the full
+# checklist (OAuth callbacks, payment URLs, Supabase, keep-alive).
+services:
+  - type: web
+    name: ecommerce-backend
+    runtime: node
+    plan: free # ⚠ free spins down after ~15m idle → cron jobs + Socket.IO pause.
+    # Upgrade to "starter" for always-on, or keep free + external keep-alive ping.
+    rootDir: backend-nestjs
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: TZ
+        value: UTC
+      - key: APP_PREFIX
+        value: api/v1
+      # --- Public URLs (fill after the service + Vercel URLs exist) ---
+      - key: CORS_ORIGIN # e.g. https://your-app.vercel.app
+        sync: false
+      - key: APP_URL # this API's public URL, e.g. https://ecommerce-backend.onrender.com
+        sync: false
+      - key: FRONTEND_URL # Vercel origin, used in email links + OAuth redirects
+        sync: false
+      # --- Database (Supabase Session pooler, port 5432) ---
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_USERNAME # postgres.<project-ref>
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_SSL
+        value: "true"
+      - key: DB_SYNCHRONIZE # MUST stay false in production
+        value: "false"
+      - key: DB_POOL_MAX
+        value: "5"
+      # --- Supabase Storage (image uploads) ---
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: product-images
+      # --- JWT ---
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRY
+        value: 15m
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRY
+        value: 7d
+      # --- SMTP (email verify / password reset) ---
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      # --- OAuth (optional; blank disables). Callback URLs must point at APP_URL ---
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL # https://<APP_URL>/api/v1/auth/google/callback
+        sync: false
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
+        sync: false
+      - key: FACEBOOK_CALLBACK_URL # https://<APP_URL>/api/v1/auth/facebook/callback
+        sync: false
+      # --- VNPay (optional). Return URL must point at APP_URL ---
+      - key: VNPAY_TMN_CODE
+        sync: false
+      - key: VNPAY_HASH_SECRET
+        sync: false
+      - key: VNPAY_PAYMENT_URL
+        value: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+      - key: VNPAY_RETURN_URL # https://<APP_URL>/api/v1/payments/vnpay/return
+        sync: false
+      # --- MoMo (optional). Return + IPN URLs must point at APP_URL ---
+      - key: MOMO_PARTNER_CODE
+        sync: false
+      - key: MOMO_ACCESS_KEY
+        sync: false
+      - key: MOMO_SECRET_KEY
+        sync: false
+      - key: MOMO_ENDPOINT
+        value: https://test-payment.momo.vn/v2/gateway/api/create
+      - key: MOMO_RETURN_URL # https://<APP_URL>/api/v1/payments/momo/return
+        sync: false
+      - key: MOMO_IPN_URL # https://<APP_URL>/api/v1/payments/momo/ipn
+        sync: false
+      # --- AI (OpenRouter — Visual Search + Chatbox/Agent) ---
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: OPENROUTER_MODEL
+        sync: false
+      - key: OPENROUTER_CHAT_MODEL
+        sync: false
+      - key: OPENROUTER_AGENT_MODEL
+        sync: false
+      - key: RECOMMENDATIONS_AI_REASON
+        value: "false"
