@@ -20,12 +20,12 @@ export class Cart {
   @Column({ nullable: true })
   user_id: number;
 
-  @Column({ type: 'nvarchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   session_id: string;
 
   @Column({
-    type: 'datetime2',
-    default: () => 'SYSUTCDATETIME()',
+    type: 'timestamptz',
+    default: () => 'now()',
   })
   created_at: Date;
 

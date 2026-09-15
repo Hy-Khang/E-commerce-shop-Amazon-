@@ -21,16 +21,16 @@ export class Message {
   @Column()
   sender_id: number;
 
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   sender_type: string;
 
-  @Column({ type: 'nvarchar', length: 2000 })
+  @Column({ type: 'varchar', length: 2000 })
   content: string;
 
-  @Column({ type: 'nvarchar', length: 20, default: 'sent' })
+  @Column({ type: 'varchar', length: 20, default: 'sent' })
   status: string;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => Conversation, { onDelete: 'CASCADE' })

@@ -19,36 +19,36 @@ export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'nvarchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
 
-  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   thumbnail_url: string;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   option1_label: string | null;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   option2_label: string | null;
 
-  @Column({ type: 'bit', default: true })
+  @Column({ type: 'boolean', default: true })
   is_active: boolean;
 
   @Column({
-    type: 'datetime2',
-    default: () => 'SYSUTCDATETIME()',
+    type: 'timestamptz',
+    default: () => 'now()',
   })
   created_at: Date;
 
   @Column({
-    type: 'datetime2',
-    default: () => 'SYSUTCDATETIME()',
+    type: 'timestamptz',
+    default: () => 'now()',
   })
   updated_at: Date;
 

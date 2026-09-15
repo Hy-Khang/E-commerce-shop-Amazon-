@@ -14,47 +14,47 @@ export const OrderTrackingSeed: ISeed = {
     await qr.query(`
       INSERT INTO order_status_history (order_id, from_status, to_status, actor_id, actor_type, created_at) VALUES
         -- Order 1: completed flow (user_id=2, shipper_id=16)
-        (1, NULL,        N'pending',   2,    N'CUSTOMER', '2026-03-05T09:15:00'),
-        (1, N'pending',  N'confirmed', NULL, N'SYSTEM',   '2026-03-05T10:00:00'),
-        (1, N'confirmed',N'shipping',  16,   N'SHIPPER',  '2026-03-06T08:00:00'),
-        (1, N'shipping', N'delivered', 16,   N'SHIPPER',  '2026-03-06T14:30:00'),
-        (1, N'delivered',N'completed', NULL, N'SYSTEM',   '2026-03-13T14:30:00'),
+        (1, NULL,        'pending',   2,    'CUSTOMER', '2026-03-05T09:15:00'),
+        (1, 'pending',  'confirmed', NULL, 'SYSTEM',   '2026-03-05T10:00:00'),
+        (1, 'confirmed','shipping',  16,   'SHIPPER',  '2026-03-06T08:00:00'),
+        (1, 'shipping', 'delivered', 16,   'SHIPPER',  '2026-03-06T14:30:00'),
+        (1, 'delivered','completed', NULL, 'SYSTEM',   '2026-03-13T14:30:00'),
 
         -- Order 3: completed flow (user_id=3, shipper_id=16)
-        (3, NULL,        N'pending',   3,    N'CUSTOMER', '2026-03-08T14:30:00'),
-        (3, N'pending',  N'confirmed', NULL, N'SYSTEM',   '2026-03-08T15:00:00'),
-        (3, N'confirmed',N'shipping',  16,   N'SHIPPER',  '2026-03-09T09:00:00'),
-        (3, N'shipping', N'delivered', 16,   N'SHIPPER',  '2026-03-09T16:00:00'),
-        (3, N'delivered',N'completed', NULL, N'SYSTEM',   '2026-03-16T16:00:00'),
+        (3, NULL,        'pending',   3,    'CUSTOMER', '2026-03-08T14:30:00'),
+        (3, 'pending',  'confirmed', NULL, 'SYSTEM',   '2026-03-08T15:00:00'),
+        (3, 'confirmed','shipping',  16,   'SHIPPER',  '2026-03-09T09:00:00'),
+        (3, 'shipping', 'delivered', 16,   'SHIPPER',  '2026-03-09T16:00:00'),
+        (3, 'delivered','completed', NULL, 'SYSTEM',   '2026-03-16T16:00:00'),
 
         -- Order 5: cancelled (user_id=5)
-        (5, NULL,        N'pending',   5,    N'CUSTOMER', '2026-03-15T16:20:00'),
-        (5, N'pending',  N'cancelled', 5,    N'CUSTOMER', '2026-03-15T17:00:00'),
+        (5, NULL,        'pending',   5,    'CUSTOMER', '2026-03-15T16:20:00'),
+        (5, 'pending',  'cancelled', 5,    'CUSTOMER', '2026-03-15T17:00:00'),
 
         -- Shipping orders: pending → confirmed → shipping (orders 19,20,23,25,26,33)
-        (19, NULL,        N'pending',   2,  N'CUSTOMER', '2026-05-25T09:00:00'),
-        (19, N'pending',  N'confirmed', NULL, N'SYSTEM', '2026-05-25T10:00:00'),
-        (19, N'confirmed',N'shipping',  16, N'SHIPPER',  '2026-05-26T08:00:00'),
+        (19, NULL,        'pending',   2,  'CUSTOMER', '2026-05-25T09:00:00'),
+        (19, 'pending',  'confirmed', NULL, 'SYSTEM', '2026-05-25T10:00:00'),
+        (19, 'confirmed','shipping',  16, 'SHIPPER',  '2026-05-26T08:00:00'),
 
-        (20, NULL,        N'pending',   2,  N'CUSTOMER', '2026-05-25T09:00:00'),
-        (20, N'pending',  N'confirmed', NULL, N'SYSTEM', '2026-05-25T10:00:00'),
-        (20, N'confirmed',N'shipping',  16, N'SHIPPER',  '2026-05-26T08:00:00'),
+        (20, NULL,        'pending',   2,  'CUSTOMER', '2026-05-25T09:00:00'),
+        (20, 'pending',  'confirmed', NULL, 'SYSTEM', '2026-05-25T10:00:00'),
+        (20, 'confirmed','shipping',  16, 'SHIPPER',  '2026-05-26T08:00:00'),
 
-        (23, NULL,        N'pending',   6,  N'CUSTOMER', '2026-06-10T14:00:00'),
-        (23, N'pending',  N'confirmed', NULL, N'SYSTEM', '2026-06-10T15:00:00'),
-        (23, N'confirmed',N'shipping',  16, N'SHIPPER',  '2026-06-11T09:00:00'),
+        (23, NULL,        'pending',   6,  'CUSTOMER', '2026-06-10T14:00:00'),
+        (23, 'pending',  'confirmed', NULL, 'SYSTEM', '2026-06-10T15:00:00'),
+        (23, 'confirmed','shipping',  16, 'SHIPPER',  '2026-06-11T09:00:00'),
 
-        (25, NULL,        N'pending',   7,  N'CUSTOMER', '2026-06-15T10:00:00'),
-        (25, N'pending',  N'confirmed', NULL, N'SYSTEM', '2026-06-15T11:00:00'),
-        (25, N'confirmed',N'shipping',  16, N'SHIPPER',  '2026-06-16T08:30:00'),
+        (25, NULL,        'pending',   7,  'CUSTOMER', '2026-06-15T10:00:00'),
+        (25, 'pending',  'confirmed', NULL, 'SYSTEM', '2026-06-15T11:00:00'),
+        (25, 'confirmed','shipping',  16, 'SHIPPER',  '2026-06-16T08:30:00'),
 
-        (26, NULL,        N'pending',   6,  N'CUSTOMER', '2026-05-28T08:15:00'),
-        (26, N'pending',  N'confirmed', NULL, N'SYSTEM', '2026-05-28T09:00:00'),
-        (26, N'confirmed',N'shipping',  16, N'SHIPPER',  '2026-05-29T08:00:00'),
+        (26, NULL,        'pending',   6,  'CUSTOMER', '2026-05-28T08:15:00'),
+        (26, 'pending',  'confirmed', NULL, 'SYSTEM', '2026-05-28T09:00:00'),
+        (26, 'confirmed','shipping',  16, 'SHIPPER',  '2026-05-29T08:00:00'),
 
-        (33, NULL,        N'pending',   2,  N'CUSTOMER', '2026-07-20T10:00:00'),
-        (33, N'pending',  N'confirmed', NULL, N'SYSTEM', '2026-07-20T11:00:00'),
-        (33, N'confirmed',N'shipping',  16, N'SHIPPER',  '2026-07-21T08:00:00');
+        (33, NULL,        'pending',   2,  'CUSTOMER', '2026-07-20T10:00:00'),
+        (33, 'pending',  'confirmed', NULL, 'SYSTEM', '2026-07-20T11:00:00'),
+        (33, 'confirmed','shipping',  16, 'SHIPPER',  '2026-07-21T08:00:00');
     `);
     console.log('  + order_status_history: 30 rows');
 

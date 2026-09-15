@@ -26,13 +26,13 @@ export class AiMessage {
   @Column({ type: 'int' })
   conversation_id: number;
 
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   role: string;
 
-  @Column({ type: 'nvarchar', length: 'MAX' })
+  @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  @Column({ type: 'text', nullable: true })
   product_ids: string | null;
 
   /**
@@ -40,10 +40,10 @@ export class AiMessage {
    * cart_updated / checkout_proposal / order_cancelled / needs_login — so the
    * frontend can re-render them on resume and Admin can review them.
    */
-  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  @Column({ type: 'text', nullable: true })
   actions: string | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => AiConversation, { onDelete: 'CASCADE' })

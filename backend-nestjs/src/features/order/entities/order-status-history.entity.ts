@@ -18,22 +18,22 @@ export class OrderStatusHistory {
   @Column()
   order_id: number;
 
-  @Column({ type: 'nvarchar', length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   from_status: string | null;
 
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   to_status: string;
 
   @Column({ type: 'int', nullable: true })
   actor_id: number | null;
 
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   actor_type: string;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   note: string | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => Order)

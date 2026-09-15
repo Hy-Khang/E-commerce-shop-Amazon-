@@ -54,7 +54,7 @@ export class CouponRepository {
     }
 
     if (query.search) {
-      qb.andWhere('coupon.code LIKE :search', {
+      qb.andWhere('coupon.code ILIKE :search', {
         search: `%${query.search}%`,
       });
     }

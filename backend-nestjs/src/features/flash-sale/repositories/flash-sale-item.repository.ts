@@ -149,7 +149,7 @@ export class FlashSaleItemRepository {
       .andWhere('item.status = :approved', {
         approved: FlashSaleItemStatus.Approved,
       })
-      .andWhere('fs.is_active = 1')
+      .andWhere('fs.is_active = true')
       .andWhere('fs.status = :status', { status: FlashSaleStatus.Active })
       .andWhere('fs.starts_at <= :now', { now })
       .andWhere('fs.ends_at > :now', { now })
@@ -178,7 +178,7 @@ export class FlashSaleItemRepository {
         approved: FlashSaleItemStatus.Approved,
       })
       .andWhere('fs.id != :excludeId', { excludeId: excludeFlashSaleId })
-      .andWhere('fs.is_active = 1')
+      .andWhere('fs.is_active = true')
       .andWhere('fs.status != :ended', { ended: FlashSaleStatus.Ended })
       .andWhere('fs.starts_at < :endsAt', { endsAt })
       .andWhere('fs.ends_at > :startsAt', { startsAt })
@@ -212,7 +212,7 @@ export class FlashSaleItemRepository {
         `EXISTS (
           SELECT 1 FROM flash_sales fs
           WHERE fs.id = flash_sale_items.flash_sale_id
-            AND fs.is_active = 1
+            AND fs.is_active = true
             AND fs.status = :activeStatus
             AND fs.starts_at <= :now
             AND fs.ends_at > :now

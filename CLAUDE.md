@@ -6,7 +6,7 @@ A full-featured e-commerce platform. Includes product catalog, user authenticati
 ## Tech Stack
 - **Frontend:** React 19 + Vite, TypeScript, TanStack Query v5, Zustand, Tailwind CSS v4, React Router v7, React Hook Form + Zod
 - **Backend:** NestJS v11, TypeScript, TypeORM
-- **Database:** SQL Server
+- **Database:** Supabase (PostgreSQL) — migrated from SQL Server; image uploads on Supabase Storage
 
 ## Structure
 ```

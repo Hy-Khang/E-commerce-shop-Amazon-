@@ -28,6 +28,7 @@ import { SellerApplicationModule } from './features/seller-application/seller-ap
 import { SellerFinanceModule } from './features/seller-finance/seller-finance.module';
 import { RecommendationsModule } from './features/recommendations/recommendations.module';
 import { MailModule } from './core/mail/mail.module';
+import { StorageModule } from './core/storage/storage.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -35,6 +36,7 @@ import { AppService } from './app.service';
   imports: [
     AppConfigModule,
     DatabaseModule,
+    StorageModule,
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),

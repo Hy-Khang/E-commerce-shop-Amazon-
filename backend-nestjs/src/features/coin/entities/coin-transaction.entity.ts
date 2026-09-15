@@ -24,7 +24,7 @@ export class CoinTransaction {
   @Column()
   user_id: number;
 
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   type: string;
 
   @Column({ type: 'int' })
@@ -36,10 +36,10 @@ export class CoinTransaction {
   @Column({ type: 'int', nullable: true })
   batch_id: number | null;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   note: string | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })

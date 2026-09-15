@@ -26,7 +26,7 @@ export class AiSettingRepository {
     const current = await this.get();
     await this.repo.update(current.id, {
       ...patch,
-      updated_at: () => 'SYSUTCDATETIME()',
+      updated_at: () => 'now()',
     });
     return this.get();
   }

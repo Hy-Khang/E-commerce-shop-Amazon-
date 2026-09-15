@@ -33,13 +33,13 @@ export class CoinBatch {
   @Column({ type: 'int' })
   amount_remaining: number;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   earned_at: Date;
 
-  @Column({ type: 'datetime2' })
+  @Column({ type: 'timestamptz' })
   expires_at: Date;
 
-  @Column({ type: 'nvarchar', length: 20, default: 'active' })
+  @Column({ type: 'varchar', length: 20, default: 'active' })
   status: string;
 
   // source_order_id → orders.id (SET NULL): a batch outlives its source order.

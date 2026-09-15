@@ -23,7 +23,7 @@ export class SellerWallet {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   balance: number;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   updated_at: Date;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })

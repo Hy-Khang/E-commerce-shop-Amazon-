@@ -15,22 +15,22 @@ export class FlashSale {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 150 })
+  @Column({ type: 'varchar', length: 150 })
   name: string;
 
   // Seller registration window — sellers may register products only while
   // now ∈ [registration_starts_at, registration_ends_at]. Must close on/before
   // the deal opens: registration_starts_at < registration_ends_at ≤ starts_at.
-  @Column({ type: 'datetime2' })
+  @Column({ type: 'timestamptz' })
   registration_starts_at: Date;
 
-  @Column({ type: 'datetime2' })
+  @Column({ type: 'timestamptz' })
   registration_ends_at: Date;
 
-  @Column({ type: 'datetime2' })
+  @Column({ type: 'timestamptz' })
   starts_at: Date;
 
-  @Column({ type: 'datetime2' })
+  @Column({ type: 'timestamptz' })
   ends_at: Date;
 
   // Mandatory minimum discount (% off the variant's original price) a seller
@@ -39,16 +39,16 @@ export class FlashSale {
   min_discount_percent: number;
 
   // scheduled | active | ended — driven by FlashSaleScheduler cron.
-  @Column({ type: 'nvarchar', length: 20, default: 'scheduled' })
+  @Column({ type: 'varchar', length: 20, default: 'scheduled' })
   status: string;
 
-  @Column({ type: 'bit', default: true })
+  @Column({ type: 'boolean', default: true })
   is_active: boolean;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   updated_at: Date;
 
   @OneToMany(() => FlashSaleItem, (item) => item.flash_sale, { cascade: true })

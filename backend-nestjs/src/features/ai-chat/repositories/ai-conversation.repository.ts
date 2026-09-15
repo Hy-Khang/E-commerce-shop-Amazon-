@@ -20,7 +20,7 @@ export class AiConversationRepository {
   }
 
   async touch(id: number): Promise<void> {
-    await this.repo.update(id, { updated_at: () => 'SYSUTCDATETIME()' });
+    await this.repo.update(id, { updated_at: () => 'now()' });
   }
 
   /** Admin: paginated list, newest activity first. */

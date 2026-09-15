@@ -117,3 +117,26 @@ rule-based, hydrate qua `ProductService.findActiveByIdsWithStats`. Đã verify e
   → có thể làm dần từng task ở commit riêng, không block nhau.
 - TASK-2 phụ thuộc mềm Module 21 (OpenRouter đã có sẵn client) và hưởng lợi TD-001 (cache scoring).
 - TASK-5 hưởng lợi trực tiếp TD-001 (đổi Map → Redis khi scale-out).
+
+---
+
+## TD-SUPABASE — Migrate SQL Server → Supabase (Postgres) + Supabase Storage — ✅ DONE (code), ⏸️ follow-ups
+
+Driver swap `mssql`→`pg`, entity column types + raw SQL ported to Postgres, error codes
+(`23505`/`23503` via `common/utils/db-error.util.ts`), image storage moved to Supabase Storage
+(`core/storage`). Data moved by `scripts/migrate-mssql-to-pg.ts` (`npm run migrate:etl -- --with-files`).
+
+**Follow-ups (not blocking):**
+- **Accent-insensitive search** — `ILIKE` is case-insensitive but **accent-sensitive** (SQL Server's
+  collation may have been accent-insensitive). If "ao" must match "áo", enable the `unaccent` extension
+  and switch search predicates to `unaccent(col) ILIKE unaccent(:q)` (or use `citext`). Deferred until the
+  live collation behaviour is confirmed.
+- **Seed image URLs** — the dev seeds still write `/uploads/products/*` paths. With static serving removed,
+  fresh-seeded dev shows broken images (real prod data is rewritten to Supabase URLs by the ETL). Point the
+  seeds at the uploaded bucket URLs or an external placeholder if fresh-dev images matter.
+- **Remove `mssql` driver** — kept installed for the one-time ETL (needs both drivers). Remove from
+  `package.json` after the migration is verified.
+- **`session_replication_role`** — the ETL tries to disable FK checks during load; the Supabase `postgres`
+  role may lack the privilege, in which case it relies on the parent-first insert order (works for the
+  current schema, incl. self-referencing `categories`).
+- **`app.uploadDir`** config + `NestExpressApplication` static serving are now unused (kept harmless).

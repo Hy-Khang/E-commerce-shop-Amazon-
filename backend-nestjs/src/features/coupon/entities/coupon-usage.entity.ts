@@ -30,10 +30,10 @@ export class CouponUsage {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   discount_amount: number;
 
-  @Column({ type: 'nvarchar', length: 20, default: 'applied' })
+  @Column({ type: 'varchar', length: 20, default: 'applied' })
   status: string;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => Coupon, (coupon) => coupon.usages)

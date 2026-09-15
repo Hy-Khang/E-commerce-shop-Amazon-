@@ -24,7 +24,7 @@ export class WishlistItem {
   @Column()
   product_id: number;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => User)

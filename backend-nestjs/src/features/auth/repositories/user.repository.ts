@@ -53,7 +53,7 @@ export class UserRepository {
       .innerJoinAndSelect('user.role', 'role');
 
     if (filter.search) {
-      qb.andWhere('(user.email LIKE :search OR user.full_name LIKE :search)', {
+      qb.andWhere('(user.email ILIKE :search OR user.full_name ILIKE :search)', {
         search: `%${filter.search}%`,
       });
     }

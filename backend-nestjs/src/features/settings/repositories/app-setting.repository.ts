@@ -30,7 +30,7 @@ export class AppSettingRepository {
       .set({
         value,
         updated_by: updatedBy,
-        updated_at: () => 'SYSUTCDATETIME()',
+        updated_at: () => 'now()',
       })
       .where('[key] = :key', { key })
       .execute();

@@ -24,7 +24,7 @@ export class RecentlyViewed {
   @Column()
   product_id: number;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   viewed_at: Date;
 
   @ManyToOne(() => User)

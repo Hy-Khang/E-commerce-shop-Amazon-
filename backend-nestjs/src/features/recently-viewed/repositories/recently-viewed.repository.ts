@@ -2,18 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RecentlyViewed } from '../entities/recently-viewed.entity';
-
-// SQL Server unique/duplicate-key error numbers.
-const SQL_UNIQUE_VIOLATION = 2627;
-const SQL_DUPLICATE_KEY = 2601;
-// SQL Server FK violation — a stale product id from guest history whose product
-// was deleted; skip it rather than fail the whole merge.
-const SQL_FK_VIOLATION = 547;
-
-function isUniqueViolation(err: unknown): boolean {
-  const n = (err as { number?: number })?.number;
-  return n === SQL_UNIQUE_VIOLATION || n === SQL_DUPLICATE_KEY;
-}
+import { isUniqueViolation, isFkViolation } from '../../../common/utils/db-error.util';
 
 @Injectable()
 export class RecentlyViewedRepository {
@@ -25,7 +14,7 @@ export class RecentlyViewedRepository {
   /**
    * Record (or refresh) a view. On the UNIQUE (user_id, product_id) pair, an
    * existing row has its `viewed_at` bumped to now; otherwise a new row is
-   * inserted. `viewed_at` uses SYSUTCDATETIME() to stay UTC-consistent. The
+   * inserted. `viewed_at` uses now() to stay UTC-consistent. The
    * insert path catches the concurrent-insert race (unique violation → re-bump).
    */
   async upsertView(userId: number, productId: number): Promise<void> {
@@ -36,7 +25,7 @@ export class RecentlyViewedRepository {
 
     if (existing) {
       await this.repo.update(existing.id, {
-        viewed_at: () => 'SYSUTCDATETIME()',
+        viewed_at: () => 'now()',
       });
       return;
     }
@@ -47,7 +36,7 @@ export class RecentlyViewedRepository {
       if (!isUniqueViolation(err)) throw err;
       await this.repo.update(
         { user_id: userId, product_id: productId },
-        { viewed_at: () => 'SYSUTCDATETIME()' },
+        { viewed_at: () => 'now()' },
       );
     }
   }
@@ -68,9 +57,10 @@ export class RecentlyViewedRepository {
     // `keep` is an internal constant, never user input — safe to inline.
     await this.repo.query(
       `DELETE FROM recently_viewed
-       WHERE user_id = @0 AND id NOT IN (
-         SELECT TOP (${keep}) id FROM recently_viewed
-         WHERE user_id = @0 ORDER BY viewed_at DESC, id DESC
+       WHERE user_id = $1 AND id NOT IN (
+         SELECT id FROM recently_viewed
+         WHERE user_id = $1 ORDER BY viewed_at DESC, id DESC
+         LIMIT ${keep}
        )`,
       [userId],
     );
@@ -102,10 +92,7 @@ export class RecentlyViewedRepository {
         });
       } catch (err) {
         // Unique race → another insert won; FK → stale product id. Both: skip.
-        if (
-          !isUniqueViolation(err) &&
-          (err as { number?: number })?.number !== SQL_FK_VIOLATION
-        ) {
+        if (!isUniqueViolation(err) && !isFkViolation(err)) {
           throw err;
         }
       }

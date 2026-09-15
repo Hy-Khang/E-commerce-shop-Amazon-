@@ -1,3 +1,4 @@
+import { isUniqueViolation } from '../../common/utils/db-error.util';
 import {
   BadRequestException,
   ConflictException,
@@ -725,7 +726,7 @@ export class CouponService {
         expires_at: new Date(dto.expires_at),
       });
     } catch (error: any) {
-      if (error?.number === 2627 || error?.number === 2601) {
+      if (isUniqueViolation(error)) {
         throw new ConflictException({
           code: 'COUPON_007',
           message: 'Coupon code already exists',

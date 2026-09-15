@@ -17,16 +17,16 @@ export class Address {
   @Column()
   user_id: number;
 
-  @Column({ type: 'nvarchar', length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   full_name: string;
 
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   phone: string;
 
-  @Column({ type: 'nvarchar', length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   address_line: string;
 
-  @Column({ type: 'nvarchar', length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   city: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
@@ -35,7 +35,7 @@ export class Address {
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   longitude: number | null;
 
-  @Column({ type: 'bit', default: false })
+  @Column({ type: 'boolean', default: false })
   is_default: boolean;
 
   @ManyToOne(() => User)

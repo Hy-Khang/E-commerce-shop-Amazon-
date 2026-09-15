@@ -32,9 +32,9 @@ export class DashboardRepository {
 
     // Current window: [now-days, now]; previous window: [now-2*days, now-days].
     // Both computed in a single scan via conditional SUM.
-    const CUR = 'o.created_at >= DATEADD(DAY, :curStart, GETUTCDATE())';
+    const CUR = 'o.created_at >= now() + make_interval(days => :curStart)';
     const PREV =
-      'o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE()) AND o.created_at < DATEADD(DAY, :curStart, GETUTCDATE())';
+      'o.created_at >= now() + make_interval(days => :prevStart) AND o.created_at < now() + make_interval(days => :curStart)';
 
     const [flowResult, productResult, userResult] = await Promise.all([
       mgr
@@ -64,20 +64,20 @@ export class DashboardRepository {
           `COALESCE(SUM(CASE WHEN o.status <> 'cancelled' AND ${PREV} THEN 1 ELSE 0 END), 0)`,
           'prevOrders',
         )
-        .where('o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE())')
+        .where('o.created_at >= now() + make_interval(days => :prevStart)')
         .setParameters({ curStart: -days, prevStart: -2 * days })
         .getRawOne(),
       mgr
         .createQueryBuilder()
         .select('COUNT(*)', 'totalProducts')
         .from('products', 'p')
-        .where('p.is_active = 1')
+        .where('p.is_active = true')
         .getRawOne(),
       mgr
         .createQueryBuilder()
         .select('COUNT(*)', 'totalUsers')
         .from('users', 'u')
-        .where('u.is_active = 1')
+        .where('u.is_active = true')
         .getRawOne(),
     ]);
 
@@ -120,8 +120,8 @@ export class DashboardRepository {
   ): Promise<IRevenueDataPoint[]> {
     const isMonth = granularity === 'month';
     const bucketExpr = isMonth
-      ? 'CONVERT(varchar(7), o.created_at, 126)'
-      : 'CAST(o.created_at AS DATE)';
+      ? "to_char(o.created_at, 'YYYY-MM')"
+      : 'o.created_at::date';
     const revenueExpr = shopId
       ? 'COALESCE(SUM(oi.price * oi.quantity), 0)'
       : 'COALESCE(SUM(o.total_amount), 0)';
@@ -142,7 +142,7 @@ export class DashboardRepository {
       .addSelect(revenueExpr, 'revenue')
       .where("o.payment_status = 'paid'")
       .andWhere("o.status = 'completed'")
-      .andWhere('o.created_at >= DATEADD(DAY, :days, GETUTCDATE())', {
+      .andWhere('o.created_at >= now() + make_interval(days => :days)', {
         days: -days,
       });
 
@@ -202,7 +202,7 @@ export class DashboardRepository {
         's.name AS name',
         's.slug AS slug',
         'COALESCE(SUM(oi.price * oi.quantity), 0) AS revenue',
-        'COUNT(DISTINCT o.id) AS orderCount',
+        'COUNT(DISTINCT o.id) AS "orderCount"',
       ])
       .from('order_items', 'oi')
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
@@ -245,11 +245,11 @@ export class DashboardRepository {
       .createQueryBuilder()
       .select([
         'o.id AS id',
-        'u.full_name AS customerName',
+        'u.full_name AS "customerName"',
         'o.status AS status',
-        'o.payment_status AS paymentStatus',
-        'o.total_amount AS totalAmount',
-        'o.created_at AS createdAt',
+        'o.payment_status AS "paymentStatus"',
+        'o.total_amount AS "totalAmount"',
+        'o.created_at AS "createdAt"',
       ])
       .from('orders', 'o')
       .innerJoin('users', 'u', 'o.user_id = u.id')
@@ -273,7 +273,7 @@ export class DashboardRepository {
       .select('r.name', 'role')
       .addSelect('COUNT(u.id)', 'count')
       .from('roles', 'r')
-      .leftJoin('users', 'u', 'u.role_id = r.id AND u.is_active = 1')
+      .leftJoin('users', 'u', 'u.role_id = r.id AND u.is_active = true')
       .groupBy('r.name')
       .orderBy('count', 'DESC')
       .getRawMany();
@@ -290,9 +290,9 @@ export class DashboardRepository {
       .select([
         'p.id AS id',
         'p.name AS name',
-        'p.thumbnail_url AS thumbnailUrl',
-        'SUM(oi.quantity) AS totalOrdered',
-        'SUM(oi.price * oi.quantity) AS totalRevenue',
+        'p.thumbnail_url AS "thumbnailUrl"',
+        'SUM(oi.quantity) AS "totalOrdered"',
+        'SUM(oi.price * oi.quantity) AS "totalRevenue"',
       ])
       .from('order_items', 'oi')
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
@@ -303,7 +303,7 @@ export class DashboardRepository {
       .groupBy('p.id')
       .addGroupBy('p.name')
       .addGroupBy('p.thumbnail_url')
-      .orderBy('totalOrdered', 'DESC')
+      .orderBy('"totalOrdered"', 'DESC')
       .limit(limit)
       .getRawMany();
 
@@ -321,16 +321,16 @@ export class DashboardRepository {
       .createQueryBuilder()
       .select([
         'pv.id AS id',
-        'p.name AS productName',
+        'p.name AS "productName"',
         'pv.sku AS sku',
         'pv.option1 AS option1',
         'pv.option2 AS option2',
-        'pv.stock_quantity AS stockQuantity',
+        'pv.stock_quantity AS "stockQuantity"',
       ])
       .from('product_variants', 'pv')
       .innerJoin('products', 'p', 'pv.product_id = p.id')
       .where('pv.stock_quantity < :threshold', { threshold })
-      .andWhere('p.is_active = 1')
+      .andWhere('p.is_active = true')
       .orderBy('pv.stock_quantity', 'ASC')
       .limit(20)
       .getRawMany();
@@ -351,9 +351,9 @@ export class DashboardRepository {
   ): Promise<ISellerSummaryStats> {
     const mgr = this.repo.manager;
 
-    const CUR = 'o.created_at >= DATEADD(DAY, :curStart, GETUTCDATE())';
+    const CUR = 'o.created_at >= now() + make_interval(days => :curStart)';
     const PREV =
-      'o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE()) AND o.created_at < DATEADD(DAY, :curStart, GETUTCDATE())';
+      'o.created_at >= now() + make_interval(days => :prevStart) AND o.created_at < now() + make_interval(days => :curStart)';
 
     const [flowResult, orderResult, productResult, lowStockResult] =
       await Promise.all([
@@ -378,7 +378,7 @@ export class DashboardRepository {
             'prevCollected',
           )
           .where('o.shop_id = :shopId')
-          .andWhere('o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE())')
+          .andWhere('o.created_at >= now() + make_interval(days => :prevStart)')
           .setParameters({ shopId, curStart: -days, prevStart: -2 * days })
           .getRawOne(),
         mgr
@@ -393,7 +393,7 @@ export class DashboardRepository {
             'prevOrders',
           )
           .where('o.shop_id = :shopId')
-          .andWhere('o.created_at >= DATEADD(DAY, :prevStart, GETUTCDATE())')
+          .andWhere('o.created_at >= now() + make_interval(days => :prevStart)')
           .setParameters({ shopId, curStart: -days, prevStart: -2 * days })
           .getRawOne(),
         mgr
@@ -401,7 +401,7 @@ export class DashboardRepository {
           .select('COUNT(*)', 'totalProducts')
           .from('products', 'p')
           .where('p.shop_id = :shopId', { shopId })
-          .andWhere('p.is_active = 1')
+          .andWhere('p.is_active = true')
           .getRawOne(),
         mgr
           .createQueryBuilder()
@@ -409,7 +409,7 @@ export class DashboardRepository {
           .from('product_variants', 'pv')
           .innerJoin('products', 'p', 'pv.product_id = p.id')
           .where('p.shop_id = :shopId', { shopId })
-          .andWhere('p.is_active = 1')
+          .andWhere('p.is_active = true')
           .andWhere('pv.stock_quantity < :threshold', { threshold: 10 })
           .getRawOne(),
       ]);
@@ -450,9 +450,9 @@ export class DashboardRepository {
       .select([
         'p.id AS id',
         'p.name AS name',
-        'p.thumbnail_url AS thumbnailUrl',
-        'SUM(oi.quantity) AS totalOrdered',
-        'SUM(oi.price * oi.quantity) AS totalRevenue',
+        'p.thumbnail_url AS "thumbnailUrl"',
+        'SUM(oi.quantity) AS "totalOrdered"',
+        'SUM(oi.price * oi.quantity) AS "totalRevenue"',
       ])
       .from('order_items', 'oi')
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
@@ -464,7 +464,7 @@ export class DashboardRepository {
       .groupBy('p.id')
       .addGroupBy('p.name')
       .addGroupBy('p.thumbnail_url')
-      .orderBy('totalOrdered', 'DESC')
+      .orderBy('"totalOrdered"', 'DESC')
       .limit(limit)
       .getRawMany();
 
@@ -485,11 +485,11 @@ export class DashboardRepository {
       .createQueryBuilder()
       .select([
         'o.id AS id',
-        'u.full_name AS customerName',
+        'u.full_name AS "customerName"',
         'o.status AS status',
-        'o.payment_status AS paymentStatus',
-        'SUM(oi.price * oi.quantity) AS sellerSubtotal',
-        'o.created_at AS createdAt',
+        'o.payment_status AS "paymentStatus"',
+        'SUM(oi.price * oi.quantity) AS "sellerSubtotal"',
+        'o.created_at AS "createdAt"',
       ])
       .from('order_items', 'oi')
       .innerJoin('orders', 'o', 'oi.order_id = o.id')
@@ -522,16 +522,16 @@ export class DashboardRepository {
       .createQueryBuilder()
       .select([
         'pv.id AS id',
-        'p.name AS productName',
+        'p.name AS "productName"',
         'pv.sku AS sku',
         'pv.option1 AS option1',
         'pv.option2 AS option2',
-        'pv.stock_quantity AS stockQuantity',
+        'pv.stock_quantity AS "stockQuantity"',
       ])
       .from('product_variants', 'pv')
       .innerJoin('products', 'p', 'pv.product_id = p.id')
       .where('p.shop_id = :shopId', { shopId })
-      .andWhere('p.is_active = 1')
+      .andWhere('p.is_active = true')
       .andWhere('pv.stock_quantity < :threshold', { threshold })
       .orderBy('pv.stock_quantity', 'ASC')
       .limit(20)
@@ -559,18 +559,18 @@ export class DashboardRepository {
     // falls in the current window [now-days, now], compared against the previous
     // window [now-2*days, now-days]. The other three counts are live snapshots.
     const DELIVERED = "o.status IN ('delivered','completed')";
-    const CUR = 'o.delivered_at >= DATEADD(DAY, :curStart, GETUTCDATE())';
+    const CUR = 'o.delivered_at >= now() + make_interval(days => :curStart)';
     const PREV =
-      'o.delivered_at >= DATEADD(DAY, :prevStart, GETUTCDATE()) AND o.delivered_at < DATEADD(DAY, :curStart, GETUTCDATE())';
+      'o.delivered_at >= now() + make_interval(days => :prevStart) AND o.delivered_at < now() + make_interval(days => :curStart)';
 
     const result = await mgr
       .createQueryBuilder()
       .select([
-        `COALESCE(SUM(CASE WHEN ${DELIVERED} AND ${CUR} THEN 1 ELSE 0 END), 0) AS curDelivered`,
-        `COALESCE(SUM(CASE WHEN ${DELIVERED} AND ${PREV} THEN 1 ELSE 0 END), 0) AS prevDelivered`,
-        `SUM(CASE WHEN o.status = 'shipping' THEN 1 ELSE 0 END) AS activeDeliveries`,
-        `(SELECT COUNT(*) FROM orders WHERE status = 'confirmed' AND shipper_id IS NULL) AS availableForPickup`,
-        `SUM(CASE WHEN ${DELIVERED} AND CAST(o.delivered_at AS DATE) = CAST(GETUTCDATE() AS DATE) THEN 1 ELSE 0 END) AS deliveredToday`,
+        `COALESCE(SUM(CASE WHEN ${DELIVERED} AND ${CUR} THEN 1 ELSE 0 END), 0) AS "curDelivered"`,
+        `COALESCE(SUM(CASE WHEN ${DELIVERED} AND ${PREV} THEN 1 ELSE 0 END), 0) AS "prevDelivered"`,
+        `SUM(CASE WHEN o.status = 'shipping' THEN 1 ELSE 0 END) AS "activeDeliveries"`,
+        `(SELECT COUNT(*) FROM orders WHERE status = 'confirmed' AND shipper_id IS NULL) AS "availableForPickup"`,
+        `SUM(CASE WHEN ${DELIVERED} AND o.delivered_at::date = now()::date THEN 1 ELSE 0 END) AS "deliveredToday"`,
       ])
       .from('orders', 'o')
       .where('o.shipper_id = :shipperId', { shipperId })
@@ -600,8 +600,8 @@ export class DashboardRepository {
   ): Promise<IShipperDeliveryDataPoint[]> {
     const isMonth = granularity === 'month';
     const bucketExpr = isMonth
-      ? 'CONVERT(varchar(7), o.delivered_at, 126)'
-      : 'CAST(o.delivered_at AS DATE)';
+      ? "to_char(o.delivered_at, 'YYYY-MM')"
+      : 'o.delivered_at::date';
 
     const rows = await this.repo.manager
       .createQueryBuilder()
@@ -610,7 +610,7 @@ export class DashboardRepository {
       .from('orders', 'o')
       .where('o.shipper_id = :shipperId', { shipperId })
       .andWhere("o.status IN ('delivered','completed')")
-      .andWhere('o.delivered_at >= DATEADD(DAY, :days, GETUTCDATE())', {
+      .andWhere('o.delivered_at >= now() + make_interval(days => :days)', {
         days: -days,
       })
       .groupBy(bucketExpr)
@@ -640,10 +640,10 @@ export class DashboardRepository {
       .select([
         'o.id AS id',
         'o.status AS status',
-        'o.total_amount AS totalAmount',
-        'o.shipping_address AS shippingAddress',
-        'o.created_at AS createdAt',
-        'o.delivered_at AS deliveredAt',
+        'o.total_amount AS "totalAmount"',
+        'o.shipping_address AS "shippingAddress"',
+        'o.created_at AS "createdAt"',
+        'o.delivered_at AS "deliveredAt"',
       ])
       .from('orders', 'o')
       .where('o.shipper_id = :shipperId', { shipperId })
