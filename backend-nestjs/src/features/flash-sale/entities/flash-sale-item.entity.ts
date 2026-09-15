@@ -39,7 +39,7 @@ export class FlashSaleItem {
   @Column()
   shop_id: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   flash_price: number;
 
   @Column({ type: 'int' })

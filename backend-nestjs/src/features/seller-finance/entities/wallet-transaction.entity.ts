@@ -29,7 +29,7 @@ export class WalletTransaction {
   @Column({ type: 'varchar', length: 20 })
   type: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   amount: number;
 
   @Column({ type: 'int', nullable: true })

@@ -27,7 +27,7 @@ export class CouponUsage {
   @Column()
   order_id: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   discount_amount: number;
 
   @Column({ type: 'varchar', length: 20, default: 'applied' })

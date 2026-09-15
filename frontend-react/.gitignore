@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Local env files (real values — keep out of git; .env.example is the template)
+.env
+.env.vercel
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

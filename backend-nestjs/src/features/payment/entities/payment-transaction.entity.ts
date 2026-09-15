@@ -28,7 +28,7 @@ export class PaymentTransaction {
   @Column({ type: 'varchar', length: 20 })
   gateway: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   amount: number;
 
   @Column({ type: 'varchar', length: 20, default: 'pending' })

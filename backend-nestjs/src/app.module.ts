@@ -30,6 +30,7 @@ import { RecommendationsModule } from './features/recommendations/recommendation
 import { MailModule } from './core/mail/mail.module';
 import { StorageModule } from './core/storage/storage.module';
 import { AppController } from './app.controller';
+import { HealthController } from './health.controller';
 import { AppService } from './app.service';
 
 @Module({
@@ -65,7 +66,7 @@ import { AppService } from './app.service';
     RecommendationsModule,
     MailModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [AppService],
 })
 export class AppModule {}

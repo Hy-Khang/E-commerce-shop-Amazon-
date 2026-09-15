@@ -20,7 +20,7 @@ export class SellerWallet {
   @Column({ type: 'int', unique: true })
   user_id: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
   balance: number;
 
   @Column({ type: 'timestamptz', default: () => 'now()' })
