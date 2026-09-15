@@ -33,16 +33,16 @@ export class Coupon {
   @Column({ type: 'varchar', length: 20 })
   discount_type: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   discount_value: number;
 
   @Column({ type: 'varchar', length: 20, default: 'all' })
   scope: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true })
   min_order_amount: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true })
   max_discount_amount: number;
 
   @Column({ type: 'int', nullable: true })

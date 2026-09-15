@@ -39,10 +39,10 @@ export class ProductVariant {
   @Column({ type: 'varchar', length: 50, nullable: true })
   option2: string | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   price: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true })
   sale_price: number;
 
   @Column({ type: 'int', default: 0 })
