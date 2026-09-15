@@ -15,11 +15,12 @@ import { ShopModule } from '../shop/shop.module';
     ProductModule,
     ShopModule,
   ],
-  controllers: [WishlistController, AdminWishlistController, SellerWishlistController],
-  providers: [
-    WishlistService,
-    WishlistItemRepository,
+  controllers: [
+    WishlistController,
+    AdminWishlistController,
+    SellerWishlistController,
   ],
+  providers: [WishlistService, WishlistItemRepository],
   exports: [WishlistService],
 })
 export class WishlistModule {}

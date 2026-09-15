@@ -46,35 +46,62 @@ export class SellerProductController {
 
   @Get('products')
   @Permissions(PERMISSIONS.PRODUCTS_READ)
-  @ApiOperation({ summary: 'List seller\'s products (paginated)' })
-  @ApiResponse({ status: 200, description: 'Returns paginated product list', type: [ProductResponseDto] })
-  async findAll(@CurrentUser() user: ICurrentUser, @Query() query: ProductQueryDto) {
+  @ApiOperation({ summary: "List seller's products (paginated)" })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated product list',
+    type: [ProductResponseDto],
+  })
+  async findAll(
+    @CurrentUser() user: ICurrentUser,
+    @Query() query: ProductQueryDto,
+  ) {
     return this.productService.findSellerProducts(user.id, query);
   }
 
   @Get('products/:id')
   @Permissions(PERMISSIONS.PRODUCTS_READ)
-  @ApiOperation({ summary: 'Get seller\'s product detail (variants + images + review stats)' })
-  @ApiResponse({ status: 200, description: 'Returns product detail', type: AdminProductDetailResponseDto })
+  @ApiOperation({
+    summary: "Get seller's product detail (variants + images + review stats)",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns product detail',
+    type: AdminProductDetailResponseDto,
+  })
   @ApiResponse({ status: 403, description: 'Product not owned by seller' })
-  async findOne(@CurrentUser() user: ICurrentUser, @Param('id', ParseIntPipe) id: number) {
+  async findOne(
+    @CurrentUser() user: ICurrentUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     return this.productService.findSellerProductById(user.id, id);
   }
 
   @Post('products')
   @Permissions(PERMISSIONS.PRODUCTS_CREATE)
   @ApiOperation({ summary: 'Create product (auto-assigns shop_id)' })
-  @ApiResponse({ status: 201, description: 'Product created', type: ProductResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Product created',
+    type: ProductResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'PRODUCT_004: Category not found' })
   @ApiResponse({ status: 409, description: 'PRODUCT_005: Duplicate slug' })
-  async create(@CurrentUser() user: ICurrentUser, @Body() dto: CreateProductDto) {
+  async create(
+    @CurrentUser() user: ICurrentUser,
+    @Body() dto: CreateProductDto,
+  ) {
     return this.productService.createProductForSeller(user.id, dto);
   }
 
   @Patch('products/:id')
   @Permissions(PERMISSIONS.PRODUCTS_UPDATE)
-  @ApiOperation({ summary: 'Update seller\'s product' })
-  @ApiResponse({ status: 200, description: 'Product updated', type: ProductResponseDto })
+  @ApiOperation({ summary: "Update seller's product" })
+  @ApiResponse({
+    status: 200,
+    description: 'Product updated',
+    type: ProductResponseDto,
+  })
   @ApiResponse({ status: 403, description: 'Product not owned by seller' })
   @ApiResponse({ status: 409, description: 'PRODUCT_005: Duplicate slug' })
   async update(
@@ -87,10 +114,17 @@ export class SellerProductController {
 
   @Patch('products/:id/activate')
   @Permissions(PERMISSIONS.PRODUCTS_UPDATE)
-  @ApiOperation({ summary: 'Toggle seller\'s product is_active' })
-  @ApiResponse({ status: 200, description: 'Product activation toggled', type: ProductResponseDto })
+  @ApiOperation({ summary: "Toggle seller's product is_active" })
+  @ApiResponse({
+    status: 200,
+    description: 'Product activation toggled',
+    type: ProductResponseDto,
+  })
   @ApiResponse({ status: 403, description: 'Product not owned by seller' })
-  async toggleActivate(@CurrentUser() user: ICurrentUser, @Param('id', ParseIntPipe) id: number) {
+  async toggleActivate(
+    @CurrentUser() user: ICurrentUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     return this.productService.toggleProductActiveForSeller(user.id, id);
   }
 
@@ -98,8 +132,12 @@ export class SellerProductController {
 
   @Post('products/:id/variants')
   @Permissions(PERMISSIONS.PRODUCTS_CREATE)
-  @ApiOperation({ summary: 'Add variant to seller\'s product' })
-  @ApiResponse({ status: 201, description: 'Variant created', type: VariantResponseDto })
+  @ApiOperation({ summary: "Add variant to seller's product" })
+  @ApiResponse({
+    status: 201,
+    description: 'Variant created',
+    type: VariantResponseDto,
+  })
   @ApiResponse({ status: 403, description: 'Product not owned by seller' })
   @ApiResponse({ status: 409, description: 'PRODUCT_003: Duplicate SKU' })
   async addVariant(
@@ -112,8 +150,12 @@ export class SellerProductController {
 
   @Patch('variants/:id')
   @Permissions(PERMISSIONS.PRODUCTS_UPDATE)
-  @ApiOperation({ summary: 'Update variant of seller\'s product' })
-  @ApiResponse({ status: 200, description: 'Variant updated', type: VariantResponseDto })
+  @ApiOperation({ summary: "Update variant of seller's product" })
+  @ApiResponse({
+    status: 200,
+    description: 'Variant updated',
+    type: VariantResponseDto,
+  })
   @ApiResponse({ status: 403, description: 'Product not owned by seller' })
   @ApiResponse({ status: 409, description: 'PRODUCT_003: Duplicate SKU' })
   async updateVariant(
@@ -127,10 +169,13 @@ export class SellerProductController {
   @Delete('variants/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Permissions(PERMISSIONS.PRODUCTS_DELETE)
-  @ApiOperation({ summary: 'Delete variant of seller\'s product' })
+  @ApiOperation({ summary: "Delete variant of seller's product" })
   @ApiResponse({ status: 204, description: 'Variant deleted' })
   @ApiResponse({ status: 403, description: 'Product not owned by seller' })
-  async deleteVariant(@CurrentUser() user: ICurrentUser, @Param('id', ParseIntPipe) id: number) {
+  async deleteVariant(
+    @CurrentUser() user: ICurrentUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     await this.productService.deleteVariantForSeller(user.id, id);
   }
 
@@ -138,8 +183,12 @@ export class SellerProductController {
 
   @Post('products/:id/images')
   @Permissions(PERMISSIONS.PRODUCTS_CREATE)
-  @ApiOperation({ summary: 'Add image to seller\'s product' })
-  @ApiResponse({ status: 201, description: 'Image created', type: ImageResponseDto })
+  @ApiOperation({ summary: "Add image to seller's product" })
+  @ApiResponse({
+    status: 201,
+    description: 'Image created',
+    type: ImageResponseDto,
+  })
   @ApiResponse({ status: 403, description: 'Product not owned by seller' })
   async addImage(
     @CurrentUser() user: ICurrentUser,
@@ -151,8 +200,12 @@ export class SellerProductController {
 
   @Patch('images/:id')
   @Permissions(PERMISSIONS.PRODUCTS_UPDATE)
-  @ApiOperation({ summary: 'Update image sort order of seller\'s product' })
-  @ApiResponse({ status: 200, description: 'Image updated', type: ImageResponseDto })
+  @ApiOperation({ summary: "Update image sort order of seller's product" })
+  @ApiResponse({
+    status: 200,
+    description: 'Image updated',
+    type: ImageResponseDto,
+  })
   @ApiResponse({ status: 403, description: 'Product not owned by seller' })
   async updateImage(
     @CurrentUser() user: ICurrentUser,
@@ -165,10 +218,13 @@ export class SellerProductController {
   @Delete('images/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Permissions(PERMISSIONS.PRODUCTS_DELETE)
-  @ApiOperation({ summary: 'Delete image of seller\'s product' })
+  @ApiOperation({ summary: "Delete image of seller's product" })
   @ApiResponse({ status: 204, description: 'Image deleted' })
   @ApiResponse({ status: 403, description: 'Product not owned by seller' })
-  async deleteImage(@CurrentUser() user: ICurrentUser, @Param('id', ParseIntPipe) id: number) {
+  async deleteImage(
+    @CurrentUser() user: ICurrentUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     await this.productService.deleteImageForSeller(user.id, id);
   }
 }

@@ -15,54 +15,54 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   password_hash: string | null;
 
-  @Column({ type: 'nvarchar', length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   full_name: string;
 
-  @Column({ type: 'nvarchar', length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string;
 
-  @Column({ type: 'bit', default: true })
+  @Column({ type: 'boolean', default: true })
   is_active: boolean;
 
-  @Column({ type: 'bit', default: false })
+  @Column({ type: 'boolean', default: false })
   email_verified: boolean;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   email_verify_token: string | null;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   email_verify_expires: Date | null;
 
   @Column({ type: 'int', default: 0 })
   email_verify_count: number;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   email_verify_count_reset: Date | null;
 
   @Column({ type: 'int', default: 0 })
   email_verify_attempts: number;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   password_reset_token_hash: string | null;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   password_reset_expires_at: Date | null;
 
   @Column({
-    type: 'datetime2',
-    default: () => 'SYSUTCDATETIME()',
+    type: 'timestamptz',
+    default: () => 'now()',
   })
   created_at: Date;
 
   @Column({
-    type: 'datetime2',
-    default: () => 'SYSUTCDATETIME()',
+    type: 'timestamptz',
+    default: () => 'now()',
   })
   updated_at: Date;
 

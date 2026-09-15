@@ -131,11 +131,17 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | SHOP_003 | 409 | Duplicate shop slug |
 | SHOP_004 | 400 | Shop not set up (seller tries product CRUD without a shop) |
 | SHOP_005 | 403 | Shop is not active (status != 'active') |
+| SHOP_006 | 400 | Decoration config exceeds size limit (serialized JSON > 16 KB) |
 | NOTIFICATION_001 | 404 | Notification not found |
 | CHAT_001 | 404 | Conversation not found |
 | CHAT_002 | 403 | Not a participant in this conversation |
 | CHAT_003 | 400 | Cannot start a conversation with your own shop |
 | CHAT_004 | 400 | Message content empty or exceeds 2000 characters |
+| CHATBOT_001 | 404 | AI conversation not found |
+| CHATBOT_002 | 400 | Message empty or exceeds 2000 characters (or missing session/JWT) |
+| CHATBOT_003 | 403 | Conversation does not belong to the caller (owner mismatch) |
+| CHATBOT_004 | 503 | AI chatbox not configured (missing OpenRouter API key) |
+| CHATBOT_005 | 400 | AI chatbox is disabled by admin |
 | PAYMENT_001 | 400 | Order not eligible for payment (COD, cancelled, already paid) |
 | PAYMENT_002 | 400 | Active payment already pending for this order |
 | PAYMENT_003 | 404 | Payment transaction not found |
@@ -155,6 +161,18 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | FLASH_SALE_011 | 400 | Flash price ≥ original, or below the campaign's minimum discount |
 | FLASH_SALE_012 | 400 | Cannot approve: variant already approved in an overlapping campaign |
 | FLASH_SALE_013 | 400 | Invalid registration status (edit/withdraw/approve requires the right state) |
+| COIN_001 | 400 | Insufficient coin balance at redemption time (concurrency race in `redeemForCheckout`; validation otherwise clamps) |
+| COIN_003 | 400 | Invalid coin amount (must be a non-negative integer) |
+| SETTINGS_001 | 400 | Invalid settings value |
+| SELLER_APP_001 | 404 | Seller application not found |
+| SELLER_APP_002 | 409 | User is already a seller (has a shop / seller role) |
+| SELLER_APP_003 | 409 | A pending application already exists for this user |
+| SELLER_APP_004 | 400 | Application not in a reviewable (pending) state |
+| WALLET_001 | 404 | Withdrawal request not found |
+| WALLET_002 | 400 | Insufficient wallet balance for withdrawal |
+| WALLET_003 | 400 | Withdrawal not in a reviewable (pending) state |
+
+> **Coin redemption clamps, it does not reject.** The requested `coins_to_redeem` is resolved to `min(requested, cap, balance)` (cap = 50% of the post-coupon items total). Exceeding the cap or balance is **not** an error — the client's cap is an estimate (computed without flash prices / exact multi-coupon allocation), so an over-request is silently clamped and the applied amount is echoed as `coins_applied`. A disabled feature (`coin.enabled=false`) silently ignores redemption (redeems 0). Only a non-integer request is a hard error (`COIN_003`, defensive — the DTO already enforces `@IsInt`), plus the rare `COIN_001` if the balance is spent by a concurrent checkout between validation and consumption.
 
 ---
 
@@ -200,23 +218,41 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | GET | `/categories` | List category tree | Public |
 | GET | `/categories/:slug` | Get category with products (paginated) | Public |
 | GET | `/products` | List active products (paginated, filtered, sorted). Accepts `?ids=1,2,3` (CSV, max 100) to bulk-fetch a specific set of active products — used by Recently Viewed (guest) and Product Comparison | Public |
+| GET | `/products/suggestions` | Search suggestions for a keyword (`?q=`) — grouped products / categories / shops (Module 12) | Public |
+| POST | `/products/search-by-image` | Visual search — upload an image, AI extracts attributes → similar products (Module 12) | Public |
 | GET | `/products/:slug` | Get product detail (variants + images + shop info) | Public |
+
+> **Bulk `?ids=` path (Recently Viewed guest hydration + Product Comparison):** when `ids` is present the endpoint returns the **full requested set in one call** (no pagination trimming — `meta` is `{ page: 1, limit: ids.length, total, totalPages: 1 }`) and each item is enriched with `avgRating` + `reviewCount` (via one batched grouped query over `reviews`) alongside the joined `category` object. The normal (no-`ids`) listing is unchanged — no stats, standard pagination — so existing consumers are unaffected. Inactive products / products of non-active shops are dropped (visibility filter), so the returned set may be smaller than the requested ids.
+>
+> **Visual Search (`POST /products/search-by-image`, Module 12):** `multipart/form-data` with an image file (JPEG/PNG/WebP, ≤5MB). The backend sends the image to **OpenRouter** (vision model) to extract `{ category, color, material, style }`, builds a dynamic `WHERE` query, and returns matching active products plus the AI-detected tags for display. Rate-limited to **10 requests/min/user** (`@nestjs/throttler`, in-memory) → `429` on exceed.
+
+### Homepage — `/api/v1/homepage`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/homepage` | Aggregated storefront home data: Special Offers, Best Sellers, Trending, Discover More | Public |
+
+> **Bonus feature (outside the 26 core modules).** One call returns the curated product blocks for the home page (each block a product-list-item array, same shape as `GET /products`), so the landing page renders without several round-trips. Served by the dedicated `homepage/` feature module.
 
 ### Shop — `/api/v1/shops`
 
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
 | GET | `/shops` | List active shops (paginated, searchable) | Public |
-| GET | `/shops/:slug` | Get shop profile with stats (product_count, average_rating, total_sales) | Public |
+| GET | `/shops/:slug` | Get shop profile with stats (product_count, average_rating, total_sales) + parsed `decoration_config` | Public |
 | GET | `/shops/:slug/products` | List shop's products (paginated, filtered) | Public |
+
+> **Shop Decoration (`decoration_config`):** `GET /shops/:slug` and `GET /seller/shop` return `decoration_config` as a **parsed object** (`{ version, theme?, blocks[] }`) or `null` (default layout / never decorated / malformed → degraded to null). The storefront renders decoration blocks **above** the always-present "All Products" catalog (decoration is additive, never a replacement). Block types: `hero` / `rich_text` / `image` / `product_grid`.
 
 ### Seller Shop — `/api/v1/seller/shop`
 
 | Method | Path | Description | Permission |
 |--------|------|-------------|------------|
-| GET | `/seller/shop` | Get current seller's shop | `shops:read` |
+| GET | `/seller/shop` | Get current seller's shop (incl. parsed `decoration_config`) | `shops:read` |
 | POST | `/seller/shop` | Create shop (one per seller; slug auto-generated, immutable) | `shops:create` |
-| PATCH | `/seller/shop` | Update shop (name, description, logo_url, banner_url; slug immutable) | `shops:update` |
+| PATCH | `/seller/shop` | Update shop (name, description, logo_url, banner_url, `decoration_config`; slug immutable) | `shops:update` |
+
+> **Updating decoration (`PATCH /seller/shop`):** the body accepts an optional `decoration_config` — a full validated envelope `{ version: 1, theme?: { accent? }, blocks: [{ id, type, data }] }` to save the layout, or `null` to reset to the default. Validated by nested class-validator DTOs (unknown block type / extra field / >20 blocks / hero not 1–5 images / grid not 1–12 unique ids → `422 VALIDATION_001` + `details[]`); the serialized JSON is additionally capped at 16 KB (`SHOP_006`). Omitting the key leaves the existing decoration unchanged. `product_grid` pins reference the seller's own product ids and are hydrated for the storefront via `GET /products?ids=` (visibility-filtered).
 
 ### Cart — `/api/v1/cart`
 
@@ -237,10 +273,13 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | GET | `/orders` | List my orders (paginated) | Customer |
 | GET | `/orders/group/:groupId` | Get all orders in a group (own only) | Customer |
 | GET | `/orders/:id` | Get order detail + order_items + `applied_coupons[]` (own only) | Customer |
+| GET | `/orders/:id/tracking` | Order tracking — status timeline + latest shipper location (own only, Module 16) | Customer |
 | PATCH | `/orders/:id/cancel` | Cancel order (if status = pending) | Customer |
 | PATCH | `/orders/:id/confirm-receipt` | Confirm receipt — delivered → completed | Customer |
 | PATCH | `/orders/:id/return-request` | Request return/refund — delivered → return_requested | Customer |
 
+> **Order Tracking (`GET /orders/:id/tracking`, Module 16):** returns the status **timeline** (from `order_status_history` — each transition with actor + timestamp) plus the shipper's **latest location** (from `order_tracking_locations`) and the snapshotted delivery address (lat/lng). The frontend renders the timeline always, and a Leaflet + OpenStreetMap map (shipper marker + delivery marker) only while the order is `shipping`. The shipper updates their position manually via `PATCH /shipper/orders/:id/location`. The same tracking payload is available to the seller/admin/shipper who own or handle the order.
+>
 > **Multi-shop checkout:** `POST /orders` splits the cart into N orders (1 per shop), all sharing the same `order_group_id` (UUID v4). Returns `CheckoutResponseDto { order_group_id, orders[], total_amount }`. Coupon discount is distributed across sub-orders (see below). Each order has its own `shop_id`, `shop_name` (snapshot), `shipping_fee`, and `total_amount`.
 >
 > **Multi-coupon (Phase 2):** `POST /orders` accepts `coupon_codes?: string[]` — at most **one platform coupon** plus **one coupon per shop** (violations → `COUPON_011 (400)`). The legacy single `coupon_code?: string` is still accepted and mapped into the array. Each coupon is validated and calculated independently on the original subtotal. Per sub-order the discount is `shopCouponDiscount + platformShareAdj`, where the shop coupon lands first and the platform coupon's share (split across shops by applicable subtotal, largest-remainder rounding) fills the remaining headroom (`platformShareAdj = min(platformShare, shopItemsTotal − shopCouponDiscount)`). `orders.coupon_code` snapshots a single code (shop coupon preferred, else platform); the full breakdown is returned on order detail as `applied_coupons: [{ code, discount_amount }]` and sourced from `coupon_usages`.
@@ -249,7 +288,9 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 >
 > **Platform-discount waterfall:** When a shop coupon consumes most of a shop's headroom, that shop's platform share is capped at `min(applicable, headroom)` and the **leftover is redistributed** to shops that still have room (largest-remainder rounding). The platform discount is never silently lost — the total given equals `min(nominal, Σ per-shop caps)`. `checkout` and `POST /orders/preview` share the same pure distributor, so the preview always matches what checkout charges.
 >
-> **`POST /orders/preview`** returns `CheckoutPreviewResponseDto { subtotal, discount_total, shipping_total, grand_total, shops[], applied_coupons[] }`. Body is `{ coupon_code?, coupon_codes? }` (same coupon fields as checkout). It is **advisory, exact-at-the-time — NOT a reservation**: it writes nothing (no `coupon_usages`, no stock/usage hold), and `POST /orders` re-validates and remains the sole source of truth (a coupon may run out or expire in between). Invalid coupons return the same `COUPON_0xx` errors as checkout.
+> **`POST /orders/preview`** returns `CheckoutPreviewResponseDto { subtotal, discount_total, coin_discount, coins_applied, shipping_total, grand_total, shops[], applied_coupons[] }`. Body is `{ coupon_code?, coupon_codes?, coins_to_redeem? }` (same coupon fields as checkout, plus Xu). It is **advisory, exact-at-the-time — NOT a reservation**: it writes nothing (no `coupon_usages`, no coin consumption, no stock/usage hold), and `POST /orders` re-validates and remains the sole source of truth (a coupon may run out, or the balance change, in between). Invalid coupons return the same `COUPON_0xx` errors as checkout.
+>
+> **Coin redemption (Module 23):** `POST /orders` and `POST /orders/preview` accept `coins_to_redeem?: number` (integer Xu). The amount is **clamped** to `min(requested, 50% of the post-coupon items total, balance)` — an over-request is not an error (see COIN codes above), a disabled feature ignores it, and only a non-integer is rejected (`COIN_003`). The accepted Xu is distributed across shop sub-orders by headroom (`itemsTotal − couponDiscount`) with the same `allocateWithCaps` distributor as the platform coupon, so the **actually-applied** total (`coins_applied`, echoed by preview) may be **less** than requested when a large coupon leaves little room. Each order snapshots its share in `orders.coin_discount`; the sub-order formula becomes `total_amount = shopItemsTotal − discount_amount − coin_discount + shipping_fee`. Redemption is consumed FIFO (soonest-to-expire batch first) atomically inside the checkout transaction.
 
 ### Review — `/api/v1/reviews`
 
@@ -280,6 +321,24 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 
 > **Guest vs customer:** Guests are tracked entirely on the frontend (localStorage, newest 20). On login the list is POSTed to `/recently-viewed/merge` (mirrors cart merge) and cleared. The carousel renders on Home, Product Detail, and Cart. All three endpoints return the same **product-list-item** shape as `GET /products` (Product + variants/images), so the guest path (hydrated via `GET /products?ids=`) and the customer path render identically. `GET /recently-viewed` and merge are visibility-filtered (only `is_active` products of `active` shops), so a product deactivated after viewing drops out. Recording a view UPSERTs on `(user_id, product_id)` — a re-view bumps `viewed_at` (no duplicate) and the list is trimmed to the newest 20. Unknown/inactive product on record → `PRODUCT_001 (404)`.
 
+### Coin (Hoàn Xu) — `/api/v1/coins`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/coins/balance` | My spendable Xu balance + batches expiring within 30 days | Customer |
+| GET | `/coins/transactions` | My Xu ledger (paginated, newest first) | Customer |
+
+> **Cashback coins (Module 23).** 1 Xu = 1 ₫ (integer). Customers **earn** Xu when an order reaches `completed` (`floor((total_amount − shipping_fee) × earn_rate%)`), **redeem** Xu at checkout via `coins_to_redeem` on `POST /orders` (and `/orders/preview`), and Xu **expires** per batch after `expiry_days`. `GET /coins/balance` returns `{ balance, expiring_soon: [{ amount, expires_at }] }`; `GET /coins/transactions` returns rows `{ id, type, amount, order_id, note, created_at }` where `type ∈ { earn, redeem, expire, reverse_earn, refund }` and `amount` is a positive magnitude (sign implied by type). Config is admin-controlled — see `/admin/settings/coins`.
+
+### Seller Application (Onboarding) — `/api/v1/seller-applications`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/seller-applications` | Apply to become a seller (shop_name, phone, business_name?, tax_id?, description?, logo_url?, banner_url?) | Customer |
+| GET | `/seller-applications/me` | My latest application (`data: null` if never applied) | Customer |
+
+> **Seller onboarding (Module 24).** A customer submits an application; admin reviews it. At most **one pending** application per user (`SELLER_APP_003`); a user who already has a shop / seller role is blocked (`SELLER_APP_002`). Approval grants the `seller` role and creates an **active** shop (skips `pending_verification` — the review is the vetting). After approval the caller's JWT still carries the old role until refreshed, so the frontend refreshes the token + profile before entering the Seller Center.
+
 ### Coupon — `/api/v1/coupons`
 
 | Method | Path | Description | Auth |
@@ -302,7 +361,7 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | PATCH | `/notifications/:id/read` | Mark single notification as read (ownership enforced) | Customer |
 | PATCH | `/notifications/read-all` | Mark all notifications as read (HTTP 204) | Customer |
 
-> **Polling-based delivery:** Frontend polls `GET /notifications/unread-count` every 30s. No WebSocket infrastructure. Notifications are created automatically via `order.status_updated` event. Admin/seller status changes notify the customer. Customer-initiated confirm receipt and return requests notify the seller(s). Customer-initiated order placement and cancellation do **not** create notifications.
+> **Delivery — realtime push + polling fallback:** Notifications are pushed in realtime over **Socket.IO** (`NotificationGateway`, JWT verified in the WS handshake, room `user:{id}`, event `new_notification`) — the same shared gateway/connection reused by Chat (Module 20). The REST endpoints remain the cold-load + fallback path: the frontend polls `GET /notifications/unread-count` (~30s) for the badge when the socket is not yet connected, and loads the paginated list / marks read over REST. Notifications are created automatically via the `order.status_updated` event. Admin/seller status changes notify the customer. Customer-initiated confirm receipt and return requests notify the seller(s). Customer-initiated order placement and cancellation do **not** create notifications.
 
 ### Chat — `/api/v1/chat`
 
@@ -320,6 +379,45 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 > **Shared Socket.IO gateway** (default namespace `/`, JWT verified in the WS handshake — the same shared client socket as Notifications, not a second connection). The `ChatGateway` runs its own handshake verify. Rooms: `user:{id}` (personal, drives the badge) and `conversation:{id}` (per thread). **Persist-then-emit:** the REST call persists the message, then the gateway emits it. Initial receipt status is resolved from the recipient's live presence — in the conversation room ⇒ `read`, merely online ⇒ `delivered`, else `sent`; `PATCH …/read` promotes to `read`.
 >
 > **Socket events:** `chat:new_message` (server → conversation room + recipient `user:{id}`) carries the message DTO; `chat:read` `{ conversationId, status }`; `chat:typing` `{ conversationId, userId, isTyping }` (client ↔ server); `chat:presence` `{ conversationId, userId, online }`; `chat:join` / `chat:leave` `{ conversationId }` (client → server, membership-checked). Chat unread is **independent** of notifications — no `notifications` rows are created for chat; the badge cold-loads from `GET /chat/unread-count`.
+
+### AI Chatbox — `/api/v1/ai`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/ai/config` | Whether the storefront chatbox is enabled (FE gate) | Public |
+| POST | `/ai/chat` | Send a message → `{ conversation_id, reply, products[], actions?[] }` | Public (guest `x-session-id` / customer JWT) |
+| GET | `/ai/conversations/:id` | Get a conversation (own only) to resume | Public (owner-scoped) |
+
+> **AI Shopping Agent (Module 21).** Floating storefront assistant for **guest + customer**. Beyond RAG suggestions + policy FAQ, it is a **tool-calling agent** that can *act* on the shopper's behalf: search products, add/update/remove cart items, list available coupons, look up & cancel (pending) orders, list addresses, and **propose checkout**. `POST /ai/chat` body is `{ message: string(≤2000), conversation_id?: number }`; the response is `{ conversation_id, reply, products[], actions?[] }`. Both turns are **persisted** (`ai_conversations` / `ai_messages` — the assistant turn snapshots `product_ids` **and** `actions`) so Admin can review them and the thread can resume with its cards intact.
+>
+> **Tool-calling loop (human-in-the-loop):** each `POST /ai/chat` runs a bounded loop (≤ **4** LLM rounds). When the model returns `tool_calls`, the backend `ToolDispatcher` executes them against the real feature services (`ProductService` / `CartService` / `OrderService` / `UserProfileService` / `CouponService`) using the request-derived owner — **tool args are never trusted for identity** — feeds results back, and loops. Read tools and cart-writes run **automatically**; identical tool calls are de-duplicated to avoid double side-effects. The `add_to_cart` tool + system prompt require every variant axis (e.g. colour AND size) to be chosen before adding — the agent asks for a missing option instead of guessing a value, using `ask_choice` to render tap-to-answer chips. `list_coupons` (customer-only; `getAvailableCouponsForCart`) lets the agent surface eligible vouchers and pass chosen codes into `propose_checkout.coupon_codes`. `ask_choice({ question, options[] })` is a no-side-effect, guest-safe tool that emits a `quick_replies` action.
+>
+> **`actions[]`** are the agent's UI cards, each `{ type, data }`: `cart_updated` (cart summary after a cart write), `checkout_proposal` (advisory `previewCheckout` totals + chosen `coupon_codes`/`coins_to_redeem`), `order_cancelled` (`{ order_id, status }`), `needs_login` (a guest hit a customer-only tool → `{ tool }`), `quick_replies` (`{ prompt?, options: [{ label, value }] }` — tap-to-answer chips from the `ask_choice` tool: variant colour/size or coupon pick; a tap sends the option `value` as the next message). The storefront `checkout_proposal` mini-checkout also has an **inline voucher** field — applying/removing a code re-runs `POST /orders/preview` for exact totals, and the confirmed order sends the edited codes to `POST /orders`. Suggested product cards prefer the agent's `search_products` results, then keyword-seed products **filtered to the dominant category** (a filler-only follow-up like "size M đi" seeds nothing).
+>
+> **Money is gated:** the `propose_checkout` tool calls `OrderService.previewCheckout` (**advisory, writes nothing**) and returns a `checkout_proposal` — it **never** places an order. The storefront widget renders a **mini-checkout** card (address + payment method) and the customer's explicit confirm calls the existing **`POST /orders`** (then `POST /payments/create` for VNPay/MoMo). The LLM cannot move money.
+>
+> **Guest gating:** checkout / order-lookup / address / coupon-listing tools require a logged-in user; for a guest they short-circuit to `{ needs_login: true }` (+ a `needs_login` action) instead of touching a service — cart tools still work for guests (session cart).
+>
+> **Ownership:** a conversation is owned by the customer (`user_id` from JWT) or the guest (`session_id` from the `x-session-id` header, auto-attached by the axios interceptor like the cart). Touching someone else's conversation → `CHATBOT_003 (403)`; unknown id → `CHATBOT_001 (404)`. Order tools are additionally owner-scoped (`findMyOrders`/`findMyOrderById`, `cancelOrder` → `ORDER_004`).
+>
+> **Rate limit:** `POST /ai/chat` is throttled to **10 requests/min** per user (in-memory `@nestjs/throttler` — the repo has no Redis, see `share-docs/TECH_DEBT.md` TD-001) → `429` on exceed. One message = ≤4 internal LLM rounds (cost cap).
+>
+> **Provider + fallback:** tool-calling uses `OPENROUTER_AGENT_MODEL` (a function-calling-capable model; falls back to `OPENROUTER_CHAT_MODEL` when unset — the agent then **self-degrades to plain RAG**, since a model that ignores tools just replies with text). A provider/timeout/`429` error mid-loop breaks the loop and returns a **polite reply with HTTP 200** (still persisted, keeping any actions already performed). A missing API key → `CHATBOT_004 (503)`; a disabled chatbox → `CHATBOT_005 (400)`; the system prompt constrains the model to only recommend retrieved products and forbids claiming an order was placed.
+
+### Recommendations — `/api/v1/activity`, `/api/v1/recommendations`, `/api/v1/products/:id/similar|frequently-bought-together`
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/activity` | Record one behavioral signal (`{ action, target_type, target_id?, metadata? }`); best-effort, `204` | Public (customer JWT / guest `x-session-id`) |
+| GET | `/recommendations` | "Recommended for You" — `{ reason, products[] }` (`?limit=12`) | Public (customer JWT / guest `x-session-id`) |
+| GET | `/products/:id/similar` | "Similar Products" — content similarity blended with co-view (`{ products[] }`, `?limit=12`) | Public |
+| GET | `/products/:id/frequently-bought-together` | "Frequently Bought Together" — co-purchase, falls back to similar (`{ products[] }`, `?limit=12`) | Public |
+
+> **Smart Recommendations (Module 22).** Content-based personalization for guest + customer, scored **on-demand** (no Redis). Identity is resolved exactly like the AI chatbox / cart — a JWT populates the user owner, else the `x-session-id` header identifies a guest (both auto-attached by the axios interceptor).
+>
+> **Signal capture is hybrid:** the frontend fires `POST /activity` for `VIEW_PRODUCT` / `VIEW_CATEGORY` / `SEARCH` / `ADD_TO_CART` / `ADD_TO_WISHLIST`, and a server-side `@OnEvent('order.created')` listener logs `PURCHASE` rows (the `order.created` event payload was enriched with an optional `userId`; `ProductService.handleOrderCreated` ignores it). `POST /activity` is **deliberately lenient** — only the DTO enums are validated; a missing identity, or an unknown/stale `target_id`, is a silent no-op (never `204`-blocks the UX).
+>
+> **Scoring:** a profile is built from the caller's last-90-day rows — a category weight map (`PURCHASE`×5, `ADD_TO_CART`×3, `ADD_TO_WISHLIST`×2, `VIEW`×1, plus `SEARCH`×1 where a searched keyword — ≥3 chars — matches active product names → their categories), a preferred price range, and preferred shops. Per-row interaction signals are **recency-decayed** (30-day half-life) so recent behavior weighs more (aggregate category/search counts are not decayed); the price band is the **10–90 percentile** of interacted prices so an outlier can't widen it. Candidates in the preferred categories score category fit **scaled by preference strength** (`3 × categoryWeight ⁄ maxCategoryWeight`, i.e. the dominant category earns the full 3 and weaker preferred categories proportionally less — not a flat `+3`) · `+2` (price in range) · `+1` (same shop), with **ties broken by best-seller rank** for a stable order. Excludes already-purchased **and already-interacted** products (both from the scored set **and** the best-seller top-up); the result is topped up with best-sellers so a carousel is **never blank**, and a cold-start caller falls back to best-sellers → trending with `reason: null`. `reason` (when present) names the dominant category — a deterministic label ("Because you like {category}"), or an AI-phrased one-liner when `RECOMMENDATIONS_AI_REASON=true` (opt-in; reuses the AI-chatbox OpenRouter model, cached per category, and **falls back to the deterministic label** on any miss so the `reason: string|null` contract and latency are unchanged by default). `similar` blends co-view ids (self-join on `user_activity_log`, min-support ≥2, popularity-dampened) ahead of content-similar (same/sibling category, price proximity); `frequently-bought-together` ranks co-purchase (min-support ≥2) within the same `order_group_id` on completed orders and falls back to `similar` when sparse. All three surfaces hydrate via `ProductService.findActiveByIdsWithStats` (visibility-filtered, with `avgRating`/`reviewCount`), returning the same **product-list-item** shape as `GET /products`. A daily cron deletes activity rows older than 90 days.
 
 ### Flash Sale — `/api/v1/flash-sales`
 
@@ -431,6 +529,7 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 |--------|------|-------------|-------------|
 | GET | `/admin/orders` | List all orders (paginated) | `?search=keyword&status=pending&payment_status=unpaid&user_id=123&sort=created_at&order=desc` |
 | GET | `/admin/orders/:id` | Get order detail + order_items + user info + `applied_coupons[]` | — |
+| GET | `/admin/orders/:id/tracking` | Order tracking — status timeline + shipper location (Module 16) | — |
 | PATCH | `/admin/orders/:id/status` | Update order status (valid transitions only) | — |
 | PATCH | `/admin/orders/:id/payment-status` | Update payment status (unpaid → paid) | — |
 
@@ -507,6 +606,54 @@ All admin endpoints use **permission-based access control** via `@Permissions()`
 
 > **Status transitions:** Admin can set status to `active`, `suspended`, or `banned`. Setting to `active` populates `verified_at`/`verified_by` if not already set. `suspended_at`/`banned_at` are updated on each respective status change.
 
+### Admin: Settings — `/api/v1/admin/settings`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/settings/coins` | Read coin (Hoàn Xu) config | `settings:read` |
+| PATCH | `/admin/settings/coins` | Update coin config (partial) | `settings:update` |
+| GET | `/admin/settings/commission` | Read platform commission config (`{ enabled, mode, rate_percent }`) | `settings:read` |
+| PATCH | `/admin/settings/commission` | Update commission config (partial) | `settings:update` |
+| GET | `/admin/settings/commission/category-rates` | List per-category rate overrides | `settings:read` |
+| PUT | `/admin/settings/commission/category-rates/:categoryId` | Set a category rate override (`{ rate_percent }`) | `settings:update` |
+| DELETE | `/admin/settings/commission/category-rates/:categoryId` | Remove a category rate override (204) | `settings:update` |
+
+> **Commission config (Module 25).** `mode ∈ { flat, category }`. `flat` charges `rate_percent%` platform-wide; `category` charges each order line its category's override rate. A category rate **cascades to sub-categories** — a line's category inherits the nearest ancestor's override when it has none of its own (a child's own override wins), and a category with no ancestor override falls back to `rate_percent`. So setting a rate on a parent category (e.g. "Điện tử") covers products in its child categories too (products are typically assigned to a leaf). `enabled=false` charges no commission and credits no wallet earnings. Defaults `{ enabled: true, mode: flat, rate_percent: 10 }`. `GET/PUT/DELETE …/commission/category-rates` manage the raw (un-cascaded) overrides.
+
+### Admin: Seller Applications — `/api/v1/admin/seller-applications`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/seller-applications` | List applications (paginated, `?status=`) | `seller_applications:read` |
+| GET | `/admin/seller-applications/:id` | Get application detail | `seller_applications:read` |
+| PATCH | `/admin/seller-applications/:id/approve` | Approve → grant seller role + create active shop | `seller_applications:update` |
+| PATCH | `/admin/seller-applications/:id/reject` | Reject (`{ reject_reason? }`) | `seller_applications:update` |
+
+> Only a `pending` application can be reviewed (`SELLER_APP_004`). Approve is idempotent-safe on retry (an existing shop is reused).
+
+### Admin: Withdrawals — `/api/v1/admin/withdrawals`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/withdrawals` | List payout requests (paginated, `?status=`) | `withdrawals:read` |
+| PATCH | `/admin/withdrawals/:id/approve` | Approve (funds paid out-of-band; the hold becomes final) | `withdrawals:update` |
+| PATCH | `/admin/withdrawals/:id/reject` | Reject (`{ reject_reason? }`) → refund the held amount to the wallet | `withdrawals:update` |
+
+> Only a `pending` withdrawal can be reviewed (`WALLET_003`). Reject refunds the held amount as a `withdrawal_refund` wallet entry.
+
+> **Runtime config via `app_settings`.** `GET` returns `{ enabled, earn_rate_percent, redeem_max_percent, expiry_days }`. `PATCH` accepts any subset of those fields and only writes the keys present (idempotent upsert on `app_settings.key`). `enabled=false` blocks both earning and redemption (`COIN_004` at checkout). Missing keys fall back to defaults (`enabled=true`, `earn_rate_percent=1`, `redeem_max_percent=50`, `expiry_days=90`). Admin-only — these are the only two permissions in the `settings` namespace.
+
+### Admin: AI Chatbox — `/api/v1/admin/ai`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/admin/ai/conversations` | List AI conversations (paginated, newest activity) | `ai_chatbox:read` |
+| GET | `/admin/ai/conversations/:id` | Get a conversation with its messages (+ hydrated products) | `ai_chatbox:read` |
+| GET | `/admin/ai/settings` | Read AI chatbox settings | `ai_chatbox:read` |
+| PATCH | `/admin/ai/settings` | Update settings (`{ chatbox_enabled?, system_prompt? }`) | `ai_chatbox:update` |
+
+> **Admin AI Chatbox (Module 13 × 21).** `ai_chatbox:*` are admin-only permissions (admin holds all). `chatbox_enabled=false` hides the storefront widget (via `GET /ai/config`) and makes `POST /ai/chat` return `CHATBOT_005`. `system_prompt` (nullable) overrides the built-in default prompt; blank/omitted keeps the default. Settings live in the single-row `ai_settings` table.
+
 ### Admin: Dashboard — `/api/v1/admin/dashboard`
 
 | Method | Path | Description | Permission |
@@ -531,6 +678,7 @@ All seller endpoints use **permission-based access control** via `@Permissions()
 |--------|------|-------------|------------|
 | GET | `/seller/orders` | List orders for seller's shop (paginated, filterable by status/payment_status) | `orders:read` |
 | GET | `/seller/orders/:id` | Get order detail (seller's shop only) + `applied_coupons[]` | `orders:read` |
+| GET | `/seller/orders/:id/tracking` | Order tracking — status timeline + shipper location (own shop, Module 16) | `orders:read` |
 | PATCH | `/seller/orders/:id/status` | Update order status (seller transitions: pending→confirmed) | `orders:update` |
 | PATCH | `/seller/orders/:id/payment-status` | Update payment status (unpaid → paid) | `orders:update` |
 
@@ -584,6 +732,17 @@ All seller endpoints use **permission-based access control** via `@Permissions()
 
 > **Seller-only namespace `flash_registrations:*`** (separate from admin `flash_sales:*` so sellers can't reach `/admin/flash-sales`). Every endpoint resolves the caller's shop (`SHOP_004` if none) and hard-scopes to it. Registration is validated at `POST`: campaign must be open (`FLASH_SALE_009`), the variant must belong to the shop (`FLASH_SALE_010`), and `flash_price` must clear the campaign's `min_discount_percent` (`FLASH_SALE_011`). Only `pending` registrations can be edited/withdrawn (`FLASH_SALE_013`); touching another shop's registration → `FLASH_SALE_008`. Sellers are notified when a registration is approved/rejected.
 
+### Seller: Wallet & Payout — `/api/v1/seller/wallet`, `/api/v1/seller/withdrawals`
+
+| Method | Path | Description | Permission |
+|--------|------|-------------|------------|
+| GET | `/seller/wallet` | My withdrawable balance (`{ balance }`; self-heals an empty wallet) | `wallet:read` |
+| GET | `/seller/wallet/transactions` | My wallet ledger (paginated, newest first) | `wallet:read` |
+| POST | `/seller/withdrawals` | Request a payout (`{ amount, bank_name, bank_account_number, bank_account_holder }`) — holds the amount immediately | `withdrawals:create` |
+| GET | `/seller/withdrawals` | My withdrawal history (paginated) | `wallet:read` |
+
+> **Seller wallet (Module 25).** The wallet is credited with the **net** (items total − platform commission) when an order reaches `completed`. `POST /seller/withdrawals` atomically debits the balance (insufficient → `WALLET_002`) and creates a `pending` request; admin approve finalizes it, reject refunds it. Ledger types: `sale_earning` / `withdrawal` / `reversal` / `withdrawal_refund`.
+
 ---
 
 ## 9. Shipper Endpoints
@@ -596,8 +755,10 @@ All shipper endpoints use **permission-based access control** via `@Permissions(
 |--------|------|-------------|------------|
 | GET | `/shipper/orders` | List orders (filter: `available` or `my_deliveries`) | `orders:read` |
 | GET | `/shipper/orders/:id` | Get order detail (available orders + own deliveries) | `orders:read` |
+| GET | `/shipper/orders/:id/tracking` | Order tracking — status timeline + shipper location (own deliveries, Module 16) | `orders:read` |
 | PATCH | `/shipper/orders/:id/accept` | Accept order — assigns shipper + confirmed → shipping | `orders:update` |
 | PATCH | `/shipper/orders/:id/deliver` | Mark delivered — shipping → delivered | `orders:update` |
+| PATCH | `/shipper/orders/:id/location` | Update the shipper's current location (`{ latitude, longitude }`) — appends a tracking point (Module 16) | `orders:update` |
 
 > **Order assignment model:** First-come-first-served. Shipper calls `/accept` on a `confirmed` order with no shipper assigned. Atomic conditional UPDATE prevents race conditions — if two shippers accept simultaneously, only one succeeds; the other receives `ORDER_003 (400)`.
 >

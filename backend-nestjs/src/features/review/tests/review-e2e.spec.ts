@@ -71,7 +71,8 @@ describe('Review (e2e)', () => {
         { provide: APP_GUARD, useClass: MockJwtAuthGuard },
         {
           provide: APP_GUARD,
-          useFactory: (reflector: Reflector) => new MockPermissionsGuard(reflector),
+          useFactory: (reflector: Reflector) =>
+            new MockPermissionsGuard(reflector),
           inject: [Reflector],
         },
       ],

@@ -22,10 +22,10 @@ export class OrderItem {
   @Column({ nullable: true })
   product_variant_id: number;
 
-  @Column({ type: 'nvarchar', length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   product_name: string;
 
-  @Column({ type: 'nvarchar', length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   sku: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
@@ -34,26 +34,31 @@ export class OrderItem {
   @Column({ type: 'int' })
   quantity: number;
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   thumbnail_url: string;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   variant_option1_label: string | null;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   variant_option1_value: string | null;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   variant_option2_label: string | null;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   variant_option2_value: string | null;
 
   @Column({ type: 'int', nullable: true })
   shop_id: number | null;
 
-  @Column({ type: 'nvarchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   shop_name: string | null;
+
+  // Snapshot of the product's category at checkout (NULL if unknown/deleted).
+  // Used by the platform-commission engine for per-category rates (Module 25).
+  @Column({ type: 'int', nullable: true })
+  category_id: number | null;
 
   // Snapshot of the flash_sale_item this line was purchased under (NULL = not a
   // flash purchase). Needed to reverse sold_quantity on cancel — the cancel

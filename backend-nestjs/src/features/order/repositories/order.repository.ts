@@ -94,9 +94,9 @@ export class OrderRepository {
       const orderId = /^\d+$/.test(search) ? Number(search) : null;
       qb.andWhere(
         new Brackets((w) => {
-          w.where('order.shop_name LIKE :like', { like })
-            .orWhere('user.full_name LIKE :like', { like })
-            .orWhere('user.email LIKE :like', { like });
+          w.where('order.shop_name ILIKE :like', { like })
+            .orWhere('user.full_name ILIKE :like', { like })
+            .orWhere('user.email ILIKE :like', { like });
           if (orderId !== null) {
             w.orWhere('order.id = :orderId', { orderId });
           }
@@ -154,8 +154,8 @@ export class OrderRepository {
       const orderId = /^\d+$/.test(search) ? Number(search) : null;
       qb.andWhere(
         new Brackets((w) => {
-          w.where('user.full_name LIKE :like', { like }).orWhere(
-            'user.email LIKE :like',
+          w.where('user.full_name ILIKE :like', { like }).orWhere(
+            'user.email ILIKE :like',
             { like },
           );
           if (orderId !== null) {
@@ -223,10 +223,7 @@ export class OrderRepository {
     return total > 0 && total === cancelledCount;
   }
 
-  async findByIdAndUserId(
-    id: number,
-    userId: number,
-  ): Promise<Order | null> {
+  async findByIdAndUserId(id: number, userId: number): Promise<Order | null> {
     return this.repo.findOne({ where: { id, user_id: userId } });
   }
 
@@ -251,12 +248,22 @@ export class OrderRepository {
     await this.repo.update(id, { payment_status: paymentStatus });
   }
 
-  async findExpiredDeliveredOrders(
-    cutoff: Date,
-  ): Promise<{ id: number; user_id: number }[]> {
+  async findExpiredDeliveredOrders(cutoff: Date): Promise<
+    {
+      id: number;
+      user_id: number;
+      total_amount: number;
+      shipping_fee: number;
+    }[]
+  > {
     return this.repo
       .createQueryBuilder('order')
-      .select(['order.id', 'order.user_id'])
+      .select([
+        'order.id',
+        'order.user_id',
+        'order.total_amount',
+        'order.shipping_fee',
+      ])
       .where('order.status = :status', { status: OrderStatus.Delivered })
       .andWhere('order.delivered_at <= :cutoff', { cutoff })
       .getMany();

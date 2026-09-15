@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, MapPin, MessageSquare, Package, LogOut, ChevronDown } from 'lucide-react';
+import { User, MapPin, MessageSquare, Package, Store, LogOut, ChevronDown } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { ROUTES } from '@/common/constants/routes';
+import { PERMISSIONS } from '@/common/constants/permissions';
 import { getVisiblePortals } from './portal-links.util';
 
 export function UserDropdown() {
@@ -58,6 +59,8 @@ export function UserDropdown() {
             </DropdownLink>
           </div>
 
+          <BecomeSellerLink onClose={() => setIsOpen(false)} />
+
           <PortalSection onClose={() => setIsOpen(false)} />
 
           <div className="border-t border-border-default py-1">
@@ -86,6 +89,25 @@ function DropdownLink({ to, icon, onClick, children }: { to: string; icon: React
       {icon}
       {children}
     </Link>
+  );
+}
+
+/** Shown only to logged-in users who are not yet sellers (no seller portal). */
+function BecomeSellerLink({ onClose }: { onClose: () => void }) {
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  if (hasPermission(PERMISSIONS.PORTAL_SELLER)) return null;
+
+  return (
+    <div className="border-t border-border-default py-1">
+      <Link
+        to={ROUTES.BECOME_SELLER}
+        onClick={onClose}
+        className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-text-brand hover:bg-surface-hover transition-colors"
+      >
+        <Store className="h-4 w-4" />
+        Become a seller
+      </Link>
+    </div>
   );
 }
 

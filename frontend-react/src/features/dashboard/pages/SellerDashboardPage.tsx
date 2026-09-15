@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { DollarSign, Banknote, ShoppingCart, Package, AlertTriangle } from 'lucide-react';
+import { DollarSign, Banknote, ShoppingCart, Package, AlertTriangle, Percent, Wallet } from 'lucide-react';
 import { formatPrice } from '@/common/utils/format.util';
 import { useSellerDashboardStats } from '../hooks/useSellerDashboardStats';
 import { usePeriodParam } from '../hooks/usePeriodParam';
@@ -77,6 +77,23 @@ export default function SellerDashboardPage() {
       ) : (
         <SectionError title="Summary" onRetry={refetch} />
       )}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StatCard
+          title="Platform Commission"
+          value={formatPrice(stats.commissionTotal)}
+          icon={Percent}
+          color="violet"
+          index={0}
+        />
+        <StatCard
+          title="Net Revenue"
+          value={formatPrice(stats.netRevenue)}
+          icon={Wallet}
+          color="emerald"
+          index={1}
+        />
+      </div>
 
       <DashboardSection label="Performance">
         <Suspense fallback={<ChartFallback />}>

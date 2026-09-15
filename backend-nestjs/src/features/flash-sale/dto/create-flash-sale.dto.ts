@@ -16,11 +16,17 @@ export class CreateFlashSaleDto {
   @MaxLength(150)
   name: string;
 
-  @ApiProperty({ example: '2026-08-25T00:00:00Z', description: 'Registration window opens' })
+  @ApiProperty({
+    example: '2026-08-25T00:00:00Z',
+    description: 'Registration window opens',
+  })
   @IsDateString()
   registration_starts_at: string;
 
-  @ApiProperty({ example: '2026-08-31T00:00:00Z', description: 'Registration deadline (≤ starts_at)' })
+  @ApiProperty({
+    example: '2026-08-31T00:00:00Z',
+    description: 'Registration deadline (≤ starts_at)',
+  })
   @IsDateString()
   registration_ends_at: string;
 
@@ -32,7 +38,10 @@ export class CreateFlashSaleDto {
   @IsDateString()
   ends_at: string;
 
-  @ApiProperty({ example: 10, description: 'Mandatory minimum discount percent (0-100)' })
+  @ApiProperty({
+    example: 10,
+    description: 'Mandatory minimum discount percent (0-100)',
+  })
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Max(100)

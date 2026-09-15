@@ -29,7 +29,11 @@ export class AdminReviewController {
   @Get()
   @Permissions(PERMISSIONS.REVIEWS_READ)
   @ApiOperation({ summary: 'List all reviews (paginated)' })
-  @ApiResponse({ status: 200, description: 'Returns paginated review list', type: [AdminReviewResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated review list',
+    type: [AdminReviewResponseDto],
+  })
   async findAll(@Query() query: ReviewQueryDto) {
     return this.reviewService.findAllReviews(query);
   }

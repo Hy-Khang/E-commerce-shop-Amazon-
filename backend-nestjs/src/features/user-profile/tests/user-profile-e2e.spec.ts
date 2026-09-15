@@ -1,10 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CanActivate, ExecutionContext, INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import request from 'supertest';
 import { UserProfileController } from '../user-profile.controller';
 import { UserProfileService } from '../user-profile.service';
-import { mockAddress, mockDefaultAddress, mockUserProfile } from './mocks/user-profile.mock';
+import {
+  mockAddress,
+  mockDefaultAddress,
+  mockUserProfile,
+} from './mocks/user-profile.mock';
 
 class MockJwtGuard implements CanActivate {
   canActivate(context: ExecutionContext) {
@@ -43,7 +52,11 @@ describe('UserProfile (e2e)', () => {
 
     app = module.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -87,7 +100,11 @@ describe('UserProfile (e2e)', () => {
     it('should return 400 when city is missing', async () => {
       await request(app.getHttpServer())
         .post('/addresses')
-        .send({ full_name: 'Test', phone: '0901234567', address_line: '123 St' })
+        .send({
+          full_name: 'Test',
+          phone: '0901234567',
+          address_line: '123 St',
+        })
         .expect(400);
     });
 
@@ -224,9 +241,7 @@ describe('UserProfile (e2e)', () => {
       service.deleteAddress.mockResolvedValue(undefined);
 
       // Act & Assert
-      await request(app.getHttpServer())
-        .delete('/addresses/5')
-        .expect(204);
+      await request(app.getHttpServer()).delete('/addresses/5').expect(204);
 
       expect(service.deleteAddress).toHaveBeenCalled();
     });

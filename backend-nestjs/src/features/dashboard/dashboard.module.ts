@@ -9,10 +9,20 @@ import { ShipperDashboardController } from './shipper-dashboard.controller';
 import { ShipperDashboardService } from './shipper-dashboard.service';
 import { DashboardRepository } from './repositories/dashboard.repository';
 import { ShopModule } from '../shop/shop.module';
+import { SellerFinanceModule } from '../seller-finance/seller-finance.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order]), ShopModule],
-  controllers: [DashboardController, SellerDashboardController, ShipperDashboardController],
-  providers: [DashboardService, SellerDashboardService, ShipperDashboardService, DashboardRepository],
+  imports: [TypeOrmModule.forFeature([Order]), ShopModule, SellerFinanceModule],
+  controllers: [
+    DashboardController,
+    SellerDashboardController,
+    ShipperDashboardController,
+  ],
+  providers: [
+    DashboardService,
+    SellerDashboardService,
+    ShipperDashboardService,
+    DashboardRepository,
+  ],
 })
 export class DashboardModule {}

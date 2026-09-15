@@ -1,8 +1,12 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { DataSource } from 'typeorm';
+import { registerPgTypeParsers } from './pg-type-parsers';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
+// Fix numeric/bigint → number before any connection is established (Postgres).
+registerPgTypeParsers();
 
 import { Role } from '../../features/auth/entities/role.entity';
 import { User } from '../../features/auth/entities/user.entity';
@@ -36,14 +40,27 @@ import { FlashSaleItem } from '../../features/flash-sale/entities/flash-sale-ite
 import { RecentlyViewed } from '../../features/recently-viewed/entities/recently-viewed.entity';
 import { Conversation } from '../../features/chat/entities/conversation.entity';
 import { Message } from '../../features/chat/entities/message.entity';
+import { AppSetting } from '../../features/settings/entities/app-setting.entity';
+import { CoinBatch } from '../../features/coin/entities/coin-batch.entity';
+import { CoinTransaction } from '../../features/coin/entities/coin-transaction.entity';
+import { AiConversation } from '../../features/ai-chat/entities/ai-conversation.entity';
+import { AiMessage } from '../../features/ai-chat/entities/ai-message.entity';
+import { AiSetting } from '../../features/ai-chat/entities/ai-setting.entity';
+import { SellerApplication } from '../../features/seller-application/entities/seller-application.entity';
+import { CommissionCategoryRate } from '../../features/settings/entities/commission-category-rate.entity';
+import { CommissionTransaction } from '../../features/seller-finance/entities/commission-transaction.entity';
+import { SellerWallet } from '../../features/seller-finance/entities/seller-wallet.entity';
+import { WalletTransaction } from '../../features/seller-finance/entities/wallet-transaction.entity';
+import { WithdrawalRequest } from '../../features/seller-finance/entities/withdrawal-request.entity';
+import { UserActivityLog } from '../../features/recommendations/entities/user-activity-log.entity';
 
 export const AppDataSource = new DataSource({
-  type: 'mssql',
+  type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT ?? '1433', 10),
-  username: process.env.DB_USERNAME || 'sa',
+  port: parseInt(process.env.DB_PORT ?? '5432', 10),
+  username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_DATABASE || 'ecommerce_shop',
+  database: process.env.DB_DATABASE || 'postgres',
   entities: [
     Role,
     User,
@@ -77,10 +94,22 @@ export const AppDataSource = new DataSource({
     RecentlyViewed,
     Conversation,
     Message,
+    AppSetting,
+    CoinBatch,
+    CoinTransaction,
+    AiConversation,
+    AiMessage,
+    AiSetting,
+    SellerApplication,
+    CommissionCategoryRate,
+    CommissionTransaction,
+    SellerWallet,
+    WalletTransaction,
+    WithdrawalRequest,
+    UserActivityLog,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
-  options: {
-    trustServerCertificate: true,
-    useUTC: true,
-  },
+  ssl:
+    process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  extra: { options: '-c timezone=UTC' },
 });

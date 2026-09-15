@@ -50,7 +50,7 @@ describe('ChatGateway', () => {
     });
 
     it('is "delivered" once the recipient connects (online, not in room)', () => {
-      jwtService.verify.mockReturnValue({ sub: RECIPIENT } as never);
+      jwtService.verify.mockReturnValue({ sub: RECIPIENT });
       const socket = makeSocket('s1', 'tok');
       gateway.handleConnection(socket as never);
 
@@ -60,7 +60,7 @@ describe('ChatGateway', () => {
     });
 
     it('is "read" once the recipient joins the conversation room', async () => {
-      jwtService.verify.mockReturnValue({ sub: RECIPIENT } as never);
+      jwtService.verify.mockReturnValue({ sub: RECIPIENT });
       chatService.assertParticipant.mockResolvedValue({} as never);
       const socket = makeSocket('s1', 'tok');
       gateway.handleConnection(socket as never);
@@ -72,7 +72,7 @@ describe('ChatGateway', () => {
     });
 
     it('falls back to "sent" after the recipient disconnects', async () => {
-      jwtService.verify.mockReturnValue({ sub: RECIPIENT } as never);
+      jwtService.verify.mockReturnValue({ sub: RECIPIENT });
       chatService.assertParticipant.mockResolvedValue({} as never);
       const socket = makeSocket('s1', 'tok');
       gateway.handleConnection(socket as never);
@@ -86,7 +86,7 @@ describe('ChatGateway', () => {
     });
 
     it('stays online across multiple tabs until the last disconnects', () => {
-      jwtService.verify.mockReturnValue({ sub: RECIPIENT } as never);
+      jwtService.verify.mockReturnValue({ sub: RECIPIENT });
       const tab1 = makeSocket('s1', 'tok');
       const tab2 = makeSocket('s2', 'tok');
       gateway.handleConnection(tab1 as never);
@@ -104,7 +104,7 @@ describe('ChatGateway', () => {
     });
 
     it('rejects a join the caller is not a participant of (no presence)', async () => {
-      jwtService.verify.mockReturnValue({ sub: 999 } as never);
+      jwtService.verify.mockReturnValue({ sub: 999 });
       chatService.assertParticipant.mockRejectedValue(new Error('CHAT_002'));
       const socket = makeSocket('s1', 'tok');
       gateway.handleConnection(socket as never);

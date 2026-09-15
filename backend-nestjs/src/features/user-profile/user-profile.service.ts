@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { AddressRepository } from './repositories/address.repository';
 import { CreateAddressDto } from './dto/create-address.dto';
@@ -32,7 +28,10 @@ export class UserProfileService {
     };
   }
 
-  async updateProfile(userId: number, dto: UpdateProfileDto): Promise<IUserProfileResponse> {
+  async updateProfile(
+    userId: number,
+    dto: UpdateProfileDto,
+  ): Promise<IUserProfileResponse> {
     const user = await this.authService.updateProfile(userId, dto);
     return {
       id: user.id,
@@ -62,7 +61,11 @@ export class UserProfileService {
     return address;
   }
 
-  async updateAddress(userId: number, id: number, dto: UpdateAddressDto): Promise<Address> {
+  async updateAddress(
+    userId: number,
+    id: number,
+    dto: UpdateAddressDto,
+  ): Promise<Address> {
     const address = await this.addressRepository.findByIdAndUserId(id, userId);
     if (!address) {
       throw new NotFoundException({
@@ -94,7 +97,10 @@ export class UserProfileService {
 
   // ─── Cross-feature: consumed by order ───
 
-  async findAddressById(userId: number, addressId: number): Promise<Address | null> {
+  async findAddressById(
+    userId: number,
+    addressId: number,
+  ): Promise<Address | null> {
     return this.addressRepository.findByIdAndUserId(addressId, userId);
   }
 

@@ -19,31 +19,31 @@ export class PaymentTransaction {
   @Column()
   order_id: number;
 
-  @Column({ type: 'nvarchar', length: 36, nullable: true })
+  @Column({ type: 'varchar', length: 36, nullable: true })
   order_group_id: string | null;
 
-  @Column({ type: 'nvarchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100, unique: true })
   transaction_ref: string;
 
-  @Column({ type: 'nvarchar', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   gateway: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
-  @Column({ type: 'nvarchar', length: 20, default: 'pending' })
+  @Column({ type: 'varchar', length: 20, default: 'pending' })
   status: string;
 
-  @Column({ type: 'nvarchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   gateway_transaction_id: string | null;
 
-  @Column({ type: 'nvarchar', length: 'max', nullable: true })
+  @Column({ type: 'text', nullable: true })
   gateway_response: string | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   updated_at: Date;
 
   @ManyToOne(() => Order)

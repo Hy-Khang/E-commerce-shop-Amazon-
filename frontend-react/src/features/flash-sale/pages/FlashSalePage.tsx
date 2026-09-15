@@ -16,7 +16,7 @@ export default function FlashSalePage() {
           </h1>
         </div>
         <p className="mt-1 text-sm text-white/90">
-          Ưu đãi có hạn — nhanh tay kẻo lỡ!
+          Limited-time deals — grab them before they're gone!
         </p>
       </div>
 
@@ -48,7 +48,7 @@ export default function FlashSalePage() {
               </h2>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-text-secondary">
-                  Kết thúc trong
+                  Ends in
                 </span>
                 <CountdownTimer endsAt={campaign.ends_at} />
               </div>

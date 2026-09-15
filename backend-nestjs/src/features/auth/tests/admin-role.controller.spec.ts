@@ -51,7 +51,11 @@ describe('AdminRoleController', () => {
   describe('findOne', () => {
     it('should call authService.findRoleById with correct id', async () => {
       // Arrange
-      const role = mockRoleWithUserCount({ id: 1, name: 'customer', userCount: 10 });
+      const role = mockRoleWithUserCount({
+        id: 1,
+        name: 'customer',
+        userCount: 10,
+      });
       service.findRoleById.mockResolvedValue(role);
 
       // Act

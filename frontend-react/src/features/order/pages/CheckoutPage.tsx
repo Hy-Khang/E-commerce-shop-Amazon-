@@ -14,6 +14,11 @@ import {
   estimateCouponDiscount,
   useAppliedCouponsStore,
 } from '@/features/coupon';
+import {
+  CoinRedeemCard,
+  useCoinBalance,
+  useCoinRedemptionStore,
+} from '@/features/coin';
 import { useCreatePayment } from '@/features/payment';
 import { useCheckout } from '../hooks/useCheckout';
 import { usePreviewCheckout } from '../hooks/usePreviewCheckout';
@@ -39,6 +44,11 @@ export default function CheckoutPage() {
   const applyCoupon = useAppliedCouponsStore((s) => s.apply);
   const removeCoupon = useAppliedCouponsStore((s) => s.remove);
   const clearCoupons = useAppliedCouponsStore((s) => s.clear);
+  // Xu (Hoàn Xu) redemption — the user's picked amount + their balance.
+  const coins = useCoinRedemptionStore((s) => s.coins);
+  const setCoins = useCoinRedemptionStore((s) => s.setCoins);
+  const clearCoins = useCoinRedemptionStore((s) => s.clear);
+  const { data: coinBalance } = useCoinBalance();
 
   // One scoped voucher picker shared by the platform row + every shop group,
   // mirroring the Cart page.
@@ -82,18 +92,53 @@ export default function CheckoutPage() {
   // on any add/remove/quantity/price change.
   const cartSig = useMemo(() => cartSignature(cart?.items ?? []), [cart]);
   const hasCartItems = !!cart && cart.items.length > 0;
-  const preview = usePreviewCheckout(couponCodes, cartSig, hasCartItems);
+
+  // Redeem ceiling for the Xu card: min(balance, 50% of items after coupons).
+  // Uses a LOCAL coupon estimate so it's stable and available before the preview
+  // fetch. The server re-validates and returns the exact `coins_applied`.
+  const subtotalRaw = (cart?.items ?? []).reduce((sum, item) => {
+    const price = item.variant.sale_price ?? item.variant.price;
+    return sum + price * item.quantity;
+  }, 0);
+  const couponDiscountEst = Math.min(
+    appliedCoupons.reduce(
+      (sum, c) => sum + estimateCouponDiscount(c.validation, subtotalRaw),
+      0,
+    ),
+    subtotalRaw,
+  );
+  const redeemCap = Math.floor(Math.max(0, subtotalRaw - couponDiscountEst) * 0.5);
+  const coinBalanceValue = coinBalance?.balance ?? 0;
+  const maxRedeemable = Math.max(0, Math.min(coinBalanceValue, redeemCap));
+  // Clamp the pick to the ceiling before sending it anywhere.
+  const effectiveCoins = Math.min(coins, maxRedeemable);
+
+  const preview = usePreviewCheckout(
+    couponCodes,
+    cartSig,
+    effectiveCoins,
+    hasCartItems,
+  );
 
   function onSubmit(data: CheckoutFormData) {
+    // Send the exact amount the server allocated (coins_applied) when the preview
+    // is authoritative — guaranteed to pass checkout re-validation; else the
+    // locally-clamped pick.
+    const coinsToRedeem =
+      preview.data && preview.data.shops.length > 0
+        ? preview.data.coins_applied
+        : effectiveCoins;
     const request = {
       ...data,
       coupon_codes: appliedCoupons.map((c) => c.code),
+      coins_to_redeem: coinsToRedeem > 0 ? coinsToRedeem : undefined,
     };
     checkout.mutate(request, {
       onSuccess: (result) => {
         // Order placed — the selection has been consumed; clear it so returning
         // to the cart doesn't re-show stale vouchers.
         clearCoupons();
+        clearCoins();
         if (data.payment_method === 'cod') {
           navigate(`/checkout/success?orderGroupId=${result.order_group_id}`);
           return;
@@ -185,9 +230,14 @@ export default function CheckoutPage() {
   // included) so the numbers can never disagree with each other or with checkout.
   const displaySubtotal = usingPreview ? preview.data!.subtotal : subtotal;
   const shippingTotal = usingPreview ? preview.data!.shipping_total : null;
+  // Xu applied: authoritative from the preview, else the locally-clamped pick.
+  const coinDiscountApplied = usingPreview
+    ? preview.data!.coin_discount
+    : effectiveCoins;
+  const coinsApplied = usingPreview ? preview.data!.coins_applied : effectiveCoins;
   const estimatedTotal = usingPreview
     ? preview.data!.grand_total
-    : subtotal - discountAmount;
+    : Math.max(0, subtotal - discountAmount - effectiveCoins);
 
   return (
     <div className="space-y-6">
@@ -327,6 +377,15 @@ export default function CheckoutPage() {
               )}
             </div>
 
+            {/* Xu (Hoàn Xu) redemption */}
+            <CoinRedeemCard
+              balance={coinBalanceValue}
+              max={maxRedeemable}
+              coins={effectiveCoins}
+              onChange={setCoins}
+              applied={coinsApplied}
+            />
+
             {/* Order Items Preview — grouped by shop, each with its shop voucher */}
             <div className="space-y-4">
               {groupItemsByShop(cart.items).map((group) => (
@@ -358,6 +417,12 @@ export default function CheckoutPage() {
                     <span>-{formatPrice(c.amount)}</span>
                   </div>
                 ))}
+                {coinDiscountApplied > 0 && (
+                  <div className="flex justify-between text-sm text-amber-600">
+                    <span>Coins ({coinsApplied.toLocaleString('vi-VN')})</span>
+                    <span>-{formatPrice(coinDiscountApplied)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm text-text-secondary">
                   <span>Shipping</span>
                   {shippingTotal !== null ? (

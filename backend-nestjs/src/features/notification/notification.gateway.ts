@@ -12,7 +12,10 @@ import { NotificationResponseDto } from './dto/notification-response.dto';
 
 @WebSocketGateway({
   cors: {
-    origin: (origin: string, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       callback(null, true);
     },
     credentials: true,

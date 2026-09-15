@@ -7,10 +7,12 @@
 - **Kiến trúc:** Feature-based Layered Architecture
 
 ## Mục tiêu:
-- Xây dựng một sàn thương mại điện tử hoàn chỉnh, phục vụ đồng thời 4 nhóm người dùng: Khách hàng mua sắm, Người bán hàng (Seller), Shipper giao hàng và Quản trị viên (Admin).
-- Đảm bảo quy trình mua bán trực tuyến diễn ra liền mạch từ khâu duyệt sản phẩm, thêm giỏ hàng, thanh toán trực tuyến (VNPay, MoMo), theo dõi đơn hàng trên bản đồ cho đến đánh giá sau mua.
+- Xây dựng một sàn thương mại điện tử hoàn chỉnh, phục vụ đồng thời 4 nhóm người dùng chính — Khách hàng mua sắm, Người bán hàng (Seller), Shipper giao hàng và Quản trị viên (Admin) — cùng khách vãng lai (Guest) có thể xem sản phẩm, dùng giỏ hàng và chatbox AI.
+- Đảm bảo quy trình mua bán trực tuyến diễn ra liền mạch từ khâu duyệt sản phẩm, thêm giỏ hàng, thanh toán (COD, VNPay, MoMo), theo dõi đơn hàng trên bản đồ cho đến đánh giá sau mua.
 - Cung cấp hệ thống quản trị linh hoạt giúp Admin kiểm soát toàn bộ hoạt động trên sàn: quản lý người dùng, cửa hàng, sản phẩm, đơn hàng, mã giảm giá, Flash Sale và theo dõi doanh thu.
-- Tích hợp các tính năng nâng cao giúp cải thiện trải nghiệm mua sắm: chat realtime giữa khách hàng và seller, chatbox AI gợi ý sản phẩm thông minh, so sánh sản phẩm và lịch sử sản phẩm đã xem.
+- Tích hợp các tính năng nâng cao giúp cải thiện trải nghiệm mua sắm: chat realtime giữa khách hàng và seller, AI Shopping Agent (không chỉ gợi ý mà còn thao tác thêm giỏ, đề xuất đặt hàng ngay trong khung chat), gợi ý sản phẩm cá nhân hóa, tìm kiếm bằng hình ảnh, so sánh sản phẩm và lịch sử sản phẩm đã xem.
+- Xây dựng hệ sinh thái người bán hoàn chỉnh: khách tự đăng ký bán hàng (admin duyệt), chiết khấu sàn kết hợp ví người bán và quy trình rút tiền, cùng trình trang trí storefront theo khối (block builder).
+- Tăng mức độ gắn kết và tỉ lệ mua lại qua chương trình Hoàn Xu (cashback): tích/tiêu Xu khi mua sắm, kết hợp Flash Sale theo khung giờ và mã giảm giá đa tầng (toàn sàn + theo shop).
 - Hỗ trợ đăng nhập đa nền tảng qua OAuth (Google, Facebook) bên cạnh tài khoản nội bộ, kết hợp hệ thống phân quyền động (Dynamic RBAC) kiểm soát chi tiết đến từng API endpoint.
 - Áp dụng công nghệ web hiện đại, đảm bảo tốc độ truy cập nhanh, giao diện thân thiện trên mọi thiết bị và bảo mật thông tin người dùng.
 
@@ -27,13 +29,13 @@
 | Backend — Events | @nestjs/event-emitter (notification, order events) |
 | Backend — Email | @nestjs-modules/mailer + nodemailer (verify email, forgot password) |
 | Backend — Docs | @nestjs/swagger (Swagger UI tại `/api/v1/docs`) |
-| Database | SQL Server 2022 |
+| Database | Supabase (PostgreSQL) — migrated from SQL Server 2022 |
 | Auth | JWT + Refresh Token, OAuth 2.0 (Google, Facebook) |
 | Payment | VNPay, MoMo (sandbox) |
 | Authorization | Dynamic RBAC (Role ↔ Permission → API Endpoint) |
 | Realtime | Socket.IO (NestJS Gateway) |
-| Backend — Cache | Redis + @nestjs/cache-manager (permission cache, Flash Sale, scoring) |
-| AI | Grok |
+| Backend — Cache | In-memory (permission cache per-role TTL 60s, `@nestjs/throttler`). Redis là hướng mở rộng scale-out — xem `TECH_DEBT.md` TD-001 |
+| AI | OpenRouter (chat/agent + visual search vision model; "Grok" chỉ còn trong tên file legacy) |
 
 ## Actor
 
@@ -47,7 +49,7 @@
 
 ---
 
-## Mục lục Module (22 modules)
+## Mục lục Module (26 modules)
 
 | # | Module | Phase | Mô tả ngắn |
 |:-:|--------|:-----:|-------------|
@@ -71,8 +73,12 @@
 | 18 | [Recently Viewed](#module-18--recently-viewed-sản-phẩm-đã-xem-gần-đây) | 6 | Lịch sử sản phẩm đã xem |
 | 19 | [Product Comparison](#module-19--product-comparison-so-sánh-sản-phẩm) | 6 | So sánh sản phẩm side-by-side |
 | 20 | [Chat Realtime](#module-20--chat-realtime) | 6 | Nhắn tin Customer ↔ Seller |
-| 21 | [AI Chatbox](#module-21--ai-chatbox-gợi-ý-thông-minh) | 6 | Gợi ý sản phẩm bằng AI, FAQ |
+| 21 | [AI Chatbox → Shopping Agent](#module-21--ai-chatbox--ai-shopping-agent-gợi-ý--thao-tác-thông-minh) | 6 | AI Agent: gợi ý + thêm giỏ, đặt hàng qua chat (tool-calling) |
 | 22 | [Smart Recommendations](#module-22--smart-recommendations-gợi-ý-thông-minh) | 6 | Gợi ý cá nhân hóa dựa trên hành vi người dùng |
+| 23 | [Hoàn Xu (Cashback Coins)](#module-23--hoàn-xu-cashback-coins) | 6 | Tích/tiêu Xu hoàn tiền, hết hạn theo lô, cấu hình động |
+| 24 | [Seller Onboarding](#module-24--seller-onboarding-đăng-ký-bán-hàng) | 6 | Khách đăng ký bán hàng, admin duyệt → cấp role + tạo shop |
+| 25 | [Commission & Wallet](#module-25--commission--wallet-chiết-khấu--ví-người-bán) | 6 | Chiết khấu sàn (flat/danh mục), ví seller, rút tiền |
+| 26 | [Shop Decoration](#module-26--shop-decoration-trang-trí-shop) | 6 | Trình dựng trang storefront theo khối (block builder) cho seller |
 
 ---
 
@@ -91,6 +97,7 @@
 | Tạo cửa hàng | — | — | ✅ | — | — |
 | Sửa cửa hàng mình | — | — | ✅ | — | — |
 | Duyệt / suspend / ban shop | — | — | — | — | ✅ |
+| Trang trí storefront shop mình (block builder) | — | — | ✅ | — | — |
 | Xem shop công khai | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Product** |
 | Xem sản phẩm (public) | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -140,6 +147,18 @@
 | Sử dụng AI Chatbox | ✅ | ✅ | — | — | — |
 | **Smart Recommendations** |
 | Xem gợi ý cá nhân hóa | ✅ (session) | ✅ | — | — | — |
+| **Hoàn Xu (Cashback)** |
+| Tích Xu khi đơn hoàn thành | — | ✅ | — | — | — |
+| Dùng Xu khi thanh toán | — | ✅ | — | — | — |
+| Xem ví Xu / lịch sử | — | ✅ | — | — | — |
+| Cấu hình Xu (rate/cap/expiry/bật-tắt) | — | — | — | — | ✅ |
+| **Seller Onboarding** |
+| Nộp đơn đăng ký bán hàng | — | ✅ | — | — | — |
+| Duyệt / từ chối đơn đăng ký | — | — | — | — | ✅ |
+| **Commission & Wallet** |
+| Xem ví / lịch sử / rút tiền (seller) | — | — | ✅ | — | — |
+| Duyệt / từ chối yêu cầu rút tiền | — | — | — | — | ✅ |
+| Cấu hình chiết khấu (flat/danh mục) | — | — | — | — | ✅ |
 
 > **Lưu ý:** Đây là permission mặc định. Dynamic RBAC cho phép Admin tạo custom role với tập permission tùy ý.
 
@@ -168,7 +187,7 @@ Phase 3 — Luồng mua hàng (phụ thuộc Phase 2)
 Phase 4 — Tương tác & Thông báo (phụ thuộc Phase 2-3)
   ├── Module 10: Wishlist & Reviews      ← Product, Order (review cần đơn completed)
   ├── Module 11: Notifications           ← Order (event-driven, tạo Socket.IO Gateway dùng chung)
-  └── Module 12: Search & Filter         ← Product Catalog, Grok API (visual search)
+  └── Module 12: Search & Filter         ← Product Catalog, OpenRouter (visual search)
 
 Phase 5 — Dashboard & Tracking (phụ thuộc Phase 3)
   ├── Module 13: Admin Panel             ← All modules (thống kê toàn sàn)
@@ -181,8 +200,12 @@ Phase 6 — Tính năng nâng cao (phụ thuộc Phase 2-3, triển khai độc 
   ├── Module 18: Recently Viewed         ← Product Catalog
   ├── Module 19: So sánh sản phẩm       ← Product Catalog
   ├── Module 20: Chat Realtime           ← Auth, Shop (tái sử dụng Socket.IO Gateway từ Module 11)
-  ├── Module 21: AI Chatbox              ← Product Catalog
-  └── Module 22: Smart Recommendations  ← Product Catalog, AI Chatbox (optional)
+  ├── Module 21: AI Chatbox/Agent        ← Product Catalog, Cart, Order (tool-calling)
+  ├── Module 22: Smart Recommendations  ← Product Catalog, AI Chatbox (optional)
+  ├── Module 23: Hoàn Xu (Cashback)     ← Order (earn on completed, redeem at checkout)
+  ├── Module 24: Seller Onboarding      ← Auth, Shop (đăng ký → cấp role + tạo shop)
+  ├── Module 25: Commission & Wallet    ← Order (charge on completed → credit wallet → payout)
+  └── Module 26: Shop Decoration        ← Shop, Product Catalog (block builder storefront)
 ```
 
 ---
@@ -233,7 +256,7 @@ Xác thực và phân quyền người dùng trên toàn hệ thống, hỗ tr�
 - Email verify: lưu `email_verified` (BIT) + `email_verify_token` trên bảng `users`
 - Forgot password: lưu `password_reset_token` + `password_reset_expires` trên bảng `users`
 - Gửi email qua `nodemailer` / `@nestjs-modules/mailer`
-- **Redis cache**: cache permission list per role → tránh query `role_permissions` mỗi request, invalidate khi admin thay đổi permission
+- **Cache (in-memory)**: cache permission list per role (`Map` TTL 60s) → tránh query `role_permissions` mỗi request, invalidate khi admin thay đổi permission. (Redis là hướng mở rộng — xem `TECH_DEBT.md` TD-001)
 
 ---
 
@@ -547,13 +570,13 @@ Hệ thống thông báo realtime qua WebSocket, đẩy thông báo tức thì �
 - Socket event: `notification_read` (client → server) để đánh dấu đã đọc
 - Nếu user offline → notification lưu DB → hiển thị khi user mở lại app (query REST API)
 - REST API vẫn giữ nguyên cho: danh sách notifications (paginated), mark all as read
-- **Redis cache**: cache unread count per user → giảm query DB cho badge hiển thị
+- **Cache (in-memory)**: cache unread count per user → giảm query DB cho badge hiển thị. (Redis là hướng mở rộng — xem `TECH_DEBT.md` TD-001)
 
 ---
 
 ## Module 12 — Search & Filter
 
-> **Phase 4** · Phụ thuộc: Module 5 (Product Catalog), Module 21 (AI — Grok API cho visual search)
+> **Phase 4** · Phụ thuộc: Module 5 (Product Catalog), Module 21 (AI — OpenRouter cho visual search)
 
 ### Mô tả
 
@@ -568,7 +591,7 @@ Tìm kiếm và lọc sản phẩm — tính năng cốt lõi giúp khách hàng
 ### Chức năng — Tìm kiếm bằng ảnh (Visual Search)
 
 - User **upload ảnh** hoặc **chụp từ camera** trên web
-- Backend gửi ảnh đến **Grok API** (multimodal — tái sử dụng từ Module 21) để phân tích
+- Backend gửi ảnh đến **OpenRouter** (vision/multimodal — tái sử dụng từ Module 21) để phân tích
 - AI trích xuất thuộc tính sản phẩm: **loại sản phẩm, màu sắc, chất liệu, phong cách...**
 - Dùng kết quả phân tích để query sản phẩm trên DB → trả về danh sách sản phẩm tương tự
 - Hiển thị tag AI đã nhận diện (ví dụ: "Áo thun · Đen · Nam") để user tinh chỉnh kết quả
@@ -595,7 +618,7 @@ Tìm kiếm và lọc sản phẩm — tính năng cốt lõi giúp khách hàng
 - Phân trang kết quả tìm kiếm (paginated) với `page` + `limit`
 - Filter giá dựa trên `MIN(product_variants.price)` của mỗi sản phẩm (giá thấp nhất trong các variant)
 - Kết quả chỉ hiển thị sản phẩm `is_active = true` và thuộc shop `status = 'active'`
-- **Visual Search**: gọi Grok API (multimodal) với ảnh upload → nhận JSON mô tả `{ category, color, material, style }` → build dynamic WHERE query
+- **Visual Search**: gọi OpenRouter (vision/multimodal) với ảnh upload → nhận JSON mô tả `{ category, color, material, style }` → build dynamic WHERE query
 - API endpoint: `POST /api/v1/products/search-by-image` (multipart/form-data) — Public
 - Rate limiting visual search: tối đa **10 request/phút/user** (tốn API cost)
 
@@ -730,7 +753,7 @@ Theo dõi đơn hàng trực quan: timeline trạng thái + bản đồ vị tr�
 
 - Sử dụng **Leaflet.js + OpenStreetMap** (miễn phí, không cần API key)
 - Bảng `order_status_history` (id, order_id, status, note, created_at) — lưu mỗi lần chuyển trạng thái
-- Bảng `order_tracking` (id, order_id, latitude, longitude, updated_at) — lưu vị trí shipper cập nhật
+- Bảng `order_tracking_locations` (id, order_id, latitude, longitude, created_at) — lưu vị trí shipper cập nhật
 - API: `PATCH /api/v1/shipper/orders/:id/location` — shipper cập nhật tọa độ
 - API: `GET /api/v1/orders/:id/tracking` — customer xem timeline + vị trí shipper
 - Không cần GPS realtime — shipper cập nhật thủ công, phù hợp demo trên web
@@ -775,7 +798,7 @@ Campaign:   scheduled → active → ended
 - `FlashSaleService.getActiveFlashPriceMap` lọc thêm `status='approved'` → nguồn chân lý giá cho checkout/preview/coupon; `consume` chống oversell + yêu cầu `approved` + campaign còn live
 - Cron chuyển trạng thái campaign `scheduled → active → ended`; item duyệt lúc campaign `active` lên giá ngay
 - Event `flash_sale.registration_reviewed` → `NotificationListener` báo seller khi được duyệt/từ chối
-- **Redis cache** (dự kiến): cache Flash Sale data trong khung giờ cao điểm
+- **Cache**: hiện in-memory; cache Flash Sale data trong khung giờ cao điểm bằng Redis là hướng mở rộng (xem `TECH_DEBT.md` TD-001)
 
 ---
 
@@ -873,31 +896,43 @@ sent → delivered → read
 
 ---
 
-## Module 21 — AI Chatbox (Gợi ý thông minh)
+## Module 21 — AI Chatbox → AI Shopping Agent (Gợi ý & thao tác thông minh)
 
-> **Phase 6** · Phụ thuộc: Module 5 (Product Catalog) · *Triển khai độc lập*
+> **Phase 6** · Phụ thuộc: Module 5 (Product Catalog), Module 6 (Cart), Module 7 (Order) · *Triển khai độc lập*
 
 ### Mô tả
 
-Chatbox AI tích hợp trên sàn, hỗ trợ khách hàng tìm kiếm sản phẩm, trả lời câu hỏi thường gặp và gợi ý sản phẩm phù hợp.
+Chatbox AI tích hợp trên sàn — không chỉ **tư vấn** mà còn là một **AI Agent** giúp khách **thao tác mua hàng** ngay trong khung chat: tìm sản phẩm, thêm/sửa giỏ, xem coupon/Xu, tra/hủy đơn và **đặt hàng** với xác nhận của khách.
 
-### Chức năng
+### Chức năng — Tư vấn (RAG)
 
-- **Gợi ý sản phẩm** dựa trên mô tả nhu cầu của khách hàng bằng ngôn ngữ tự nhiên
+- **Gợi ý sản phẩm** dựa trên mô tả nhu cầu bằng ngôn ngữ tự nhiên
   - Ví dụ: "Tôi cần áo thun nam size L màu đen giá dưới 300k" → trả về danh sách sản phẩm phù hợp
-- **Trả lời FAQ** về chính sách: đổi trả, vận chuyển, thanh toán, mã giảm giá
-- **Tóm tắt thông tin sản phẩm** — hỏi chatbox để so sánh hoặc tìm hiểu nhanh về sản phẩm
-- Widget chatbox **floating** ở góc phải dưới màn hình, mở rộng/thu gọn được
-- Lưu **lịch sử hội thoại** trong phiên làm việc
+- **Trả lời FAQ** về chính sách: đổi trả, vận chuyển, thanh toán, mã giảm giá, Hoàn Xu
+- **Tóm tắt thông tin sản phẩm** — hỏi chatbox để tìm hiểu nhanh
+- Widget chatbox **floating** ở góc phải dưới, mở rộng/thu gọn; lưu lịch sử hội thoại
+
+### Chức năng — Agent thao tác (tool-calling, human-in-the-loop)
+
+- **Giỏ hàng:** thêm / cập nhật số lượng / xóa item — chạy **tự động** trong hội thoại (guest + customer)
+- **Đơn hàng:** liệt kê đơn, xem chi tiết, **hủy đơn pending** (owner-scoped)
+- **Địa chỉ:** liệt kê sổ địa chỉ để chọn khi đặt hàng
+- **Đặt hàng (money-gated):** AI chỉ **đề xuất** (`propose_checkout` → bảng tạm tính, KHÔNG ghi DB). Khách bấm **Xác nhận** trên thẻ **mini-checkout** (chọn địa chỉ + phương thức) → gọi `POST /orders` thật. LLM **không bao giờ** tự trừ tiền
+- **Guest** thao tác giỏ được; checkout/đơn/địa chỉ yêu cầu đăng nhập → agent điều hướng đăng nhập
 
 ### Ghi chú kỹ thuật
 
-- Backend gọi **Grok API** để xử lý ngôn ngữ tự nhiên
-- Sử dụng **RAG (Retrieval-Augmented Generation)**: query sản phẩm từ DB → đưa vào context cho AI trả lời chính xác
-- System prompt được cấu hình sẵn với thông tin về sàn, chính sách, hướng dẫn trả lời
-- API endpoint: `POST /api/v1/ai/chat` — nhận `message` + `conversation_history`, trả về response của AI
-- Rate limiting: giới hạn số request/phút để kiểm soát chi phí API (**Redis store** cho `@nestjs/throttler`)
-- Fallback: nếu AI service không khả dụng → hiển thị thông báo và gợi ý liên hệ trực tiếp với seller
+- **Vòng lặp tool-calling** (chuẩn OpenAI/OpenRouter `tools[]`), giới hạn **≤ 4 vòng LLM**/tin nhắn. Model trả `tool_calls` → `ToolDispatcher` gọi service thật (`ProductService`/`CartService`/`OrderService`/`UserProfileService`) → feed kết quả lại → lặp
+- **Owner enforcement:** danh tính lấy từ request (JWT/`x-session-id`), **không tin `args`**; tool cần login → `{ needs_login }`. Tra đơn dùng `findMyOrders`/`findMyOrderById` (không dùng API admin)
+- **Chống double side-effect:** de-dup các `tool_calls` trùng (name+args) trong 1 request
+- **Actions:** assistant turn trả `actions[]` (`cart_updated` / `checkout_proposal` / `order_cancelled` / `needs_login`), snapshot vào `ai_messages.actions` để FE re-render khi resume + Admin xem lại
+- **Model:** `OPENROUTER_AGENT_MODEL` (có function-calling); nếu không set → fallback `OPENROUTER_CHAT_MODEL` và agent **tự thoái lui RAG** (model không gọi tool → trả lời thường)
+- **Fallback:** lỗi/timeout/429 giữa vòng → break loop, trả reply lịch sự HTTP 200 (vẫn persist, giữ action đã làm)
+- Rate limiting: **10 request/phút/user** (`@nestjs/throttler` in-memory — repo chưa có Redis, xem TECH_DEBT TD-001)
+
+### Phase sau (chưa làm ở bản này)
+
+- **Seller Agent:** tạo/sửa sản phẩm, duyệt/quản đơn, xem doanh thu qua chat — bộ tool + quyền riêng (`products:*`, `orders:update`…), UX trong seller portal. `ToolDispatcher` thiết kế để dễ thêm namespace tool seller sau
 
 ---
 
@@ -928,11 +963,13 @@ Hệ thống gợi ý sản phẩm cá nhân hóa dựa trên hành vi người 
   - Khoảng giá thường mua (price range)
   - Thuộc tính sản phẩm hay chọn (color, size, brand...)
 - Tính **điểm tương đồng** giữa sản phẩm và user profile:
-  - Cùng category → +3 điểm
-  - Giá nằm trong khoảng thường mua → +2 điểm
+  - Cùng category → tối đa **+3 điểm, tỉ lệ theo độ ưa thích** (`3 × categoryWeight/maxWeight` —
+    category mạnh nhất được full 3, category yếu hơn ít điểm hơn; không còn +3 nhị phân)
+  - Giá nằm trong khoảng thường mua → +2 điểm (khoảng giá lấy **percentile 10–90**, chống outlier)
   - Thuộc cùng shop đã mua → +1 điểm
-  - Đã mua rồi → loại bỏ (không gợi ý lại)
-- Sắp xếp sản phẩm theo điểm → trả về top N gợi ý
+  - Đã mua rồi / đã tương tác → loại bỏ (không gợi ý lại)
+  - Tín hiệu hành vi được **giảm trọng số theo thời gian** (recency decay, half-life 30 ngày)
+- Sắp xếp sản phẩm theo điểm (đồng điểm → tie-break theo best-seller) → trả về top N gợi ý
 
 ### Chức năng — Hiển thị gợi ý
 
@@ -952,9 +989,137 @@ Hệ thống gợi ý sản phẩm cá nhân hóa dựa trên hành vi người 
   - `GET /api/v1/recommendations` — lấy danh sách gợi ý cá nhân hóa
   - `GET /api/v1/products/:id/similar` — sản phẩm tương tự
 - Scoring service chạy **on-demand** khi gọi API (không cần pre-compute cho quy mô đồ án)
-- **Redis cache**: cache scoring result per user (TTL ~30 phút) → tránh tính lại mỗi lần load trang chủ
+- **Cache**: scoring chạy on-demand; cache scoring result per user (TTL ~30 phút) để tránh tính lại mỗi lần load trang chủ bằng Redis là hướng mở rộng (xem `TECH_DEBT.md` TD-001)
 - Kết hợp Module 18 (Recently Viewed) — không gợi ý lại SP đã xem gần đây
 - Seed data: tạo ~50-100 activity records mẫu cho 3-5 user để demo có ý nghĩa
+
+---
+
+## Module 23 — Hoàn Xu (Cashback Coins)
+
+> **Phase 6** · Phụ thuộc: Module 7 (Order) · *Triển khai độc lập*
+
+### Mô tả
+
+Hệ thống **hoàn Xu** (cashback) kiểu Shopee Xu / Lazada: khách hàng **tích Xu** khi đơn hoàn thành, **dùng Xu** khi thanh toán để giảm giá, và Xu **hết hạn** theo lô sau N ngày. **1 Xu = 1 ₫**, Xu là số nguyên. Tăng retention, khuyến khích mua lại.
+
+### Chức năng
+
+- **Tích Xu (earn):** khi đơn chuyển `completed` (khách xác nhận nhận hàng, admin/seller cập nhật, hoặc cron auto-complete) → cộng Xu = `floor(base × earn_rate%)`, với `base = tổng tiền hàng sau giảm giá, KHÔNG tính phí ship & phần đã trả bằng Xu` (chống farm Xu). Idempotent theo đơn.
+- **Dùng Xu (redeem):** khi checkout, khách chọn số Xu dùng — giới hạn **tối đa 50%** tổng tiền hàng (sau coupon) mỗi đơn và không vượt số dư. Xu được tiêu **FIFO** (lô sắp hết hạn trước), phân bổ xuống các sub-order đa-shop theo headroom.
+- **Hết hạn (expiry):** mỗi lô Xu có `expires_at = now + expiry_days` (mặc định 90 ngày); cron hằng ngày đánh dấu lô quá hạn thành `expired`, loại khỏi số dư.
+- **Hoàn Xu khi hủy đơn:** hủy đơn đã dùng Xu → tạo lô Xu mới hoàn lại (reset hạn); hủy đơn đã tích Xu → thu hồi phần Xu **chưa tiêu** của lô đó (không ép số dư âm). Idempotent.
+- **Ví Xu (customer):** trang xem số dư, "Xu sắp hết hạn", và lịch sử giao dịch (sổ cái phân trang).
+- **Cấu hình động (admin):** bật/tắt tính năng, `earn_rate_percent`, `redeem_max_percent`, `expiry_days` chỉnh runtime qua Admin UI (lưu ở bảng `app_settings` key/value — pattern mới, không cần deploy lại).
+
+### Trạng thái lô Xu & giao dịch
+
+```
+Lô (coin_batches):        active → depleted | expired | reversed
+Giao dịch (ledger types): earn / redeem / expire / reverse_earn / refund
+```
+
+### Ghi chú kỹ thuật
+
+- **3 bảng mới:** `app_settings` (config key/value), `coin_batches` (lô Xu — nguồn chân lý số dư + FIFO + hết hạn), `coin_transactions` (sổ cái bất biến). Thêm cột `orders.coin_discount` (snapshot Xu đã dùng mỗi sub-order).
+- **⚠️ Cascade path (SQL Server 1785):** `coin_transactions.batch_id` FK là **NO ACTION** (không CASCADE/SET NULL) — nếu không sẽ có 2 đường cascade từ `users` (trực tiếp + qua `coin_batches`). Cùng cách `messages.sender_id` (Module 20) đã né.
+- **Không dùng listener** cho earn/reverse: `CoinService` được `OrderService`/`OrderScheduler` gọi **đồng bộ** (mirror `handleCouponReversalOnCancel` của coupon) — tránh circular dep vì `CoinModule` không thể import `OrderModule`.
+- **Phân bổ Xu đa-shop:** tái dùng `allocateWithCaps` (từ coupon-distribution.util) — weights/caps = headroom mỗi shop (`itemsTotal − couponDiscount`), đảm bảo `total_amount ≥ 0`; số Xu thực dùng = Σ allocation (có thể < yêu cầu khi coupon lớn).
+- **Earn base = `total_amount − shipping_fee`** (total đã trừ coupon & Xu) → tự động loại ship và phần trả bằng Xu.
+- **Permission:** `settings:read` / `settings:update` (admin-only) cho cấu hình; endpoint Xu của customer chỉ JWT.
+- **Cron:** `@Cron(EVERY_DAY_AT_1AM)` quét lô hết hạn. **Cache**: cache số dư bằng Redis là hướng mở rộng nếu cần (xem `TECH_DEBT.md` TD-001).
+
+---
+
+## Module 24 — Seller Onboarding (Đăng ký bán hàng)
+
+> **Phase 6** · Phụ thuộc: Module 1 (Auth), Module 4 (Shop) · *Triển khai độc lập*
+
+### Mô tả
+
+Cho phép **khách hàng tự đăng ký trở thành người bán** thay vì admin đổi role thủ công. Có entity đơn đăng ký riêng + hàng đợi duyệt, thu thập thông tin người bán.
+
+### Chức năng
+
+- Khách nộp **đơn đăng ký** (tên cửa hàng, SĐT, tên hộ KD, MST/CCCD, mô tả, logo/banner tùy chọn)
+- Mỗi user chỉ **1 đơn `pending`** tại một thời điểm; đơn `rejected` giữ lại (audit) và cho nộp lại
+- Admin xem **hàng đợi duyệt**, **duyệt** (→ cấp role `seller` + tạo shop **active**, bỏ qua `pending_verification`) hoặc **từ chối** (kèm lý do)
+- Sau khi duyệt, FE **làm mới token + profile** để nhận role mới rồi vào Seller Center (không cần đăng nhập lại)
+
+### Trạng thái đơn
+
+```
+pending → approved | rejected   (rejected → nộp lại)
+```
+
+### Ghi chú kỹ thuật
+
+- Bảng `seller_applications` + **filtered UNIQUE** `(user_id) WHERE status='pending'` (mirror `flash_sale_items`)
+- Cross-feature qua DI: `AuthService.resolveRoleIdByName`/`changeUserRole` (AuthModule global) + `ShopService.createShopFromApplication`
+- Duyệt tuần tự, an toàn khi retry (shop đã có thì tái dùng — SHOP_002 guard); không dùng cross-service DB transaction (repo chưa có pattern này)
+- Errors: `SELLER_APP_001..004`. Permission admin: `seller_applications:read/update`
+
+---
+
+## Module 25 — Commission & Wallet (Chiết khấu & Ví người bán)
+
+> **Phase 6** · Phụ thuộc: Module 7 (Order) · *Triển khai độc lập*
+
+### Mô tả
+
+**Chiết khấu sàn** (platform commission) + **ví người bán** + **rút tiền** (payout). Khi đơn hoàn thành, sàn thu hoa hồng, seller được cộng **doanh thu ròng** vào ví, và có thể yêu cầu rút tiền (admin duyệt).
+
+### Chức năng
+
+- **Chiết khấu (charge):** khi đơn `completed` → `commission = flat` (`floor(base × rate%)`) hoặc `theo danh mục` (phân bổ `base` theo `line_total`, mỗi phần áp rate danh mục, fallback rate chung). `base = total_amount − shipping_fee`. Idempotent theo đơn.
+- **Ví seller:** cộng `net = base − commission` vào `seller_wallets` + ghi `wallet_transactions(sale_earning)`.
+- **Rút tiền (payout):** seller gửi yêu cầu (giữ tiền ngay bằng atomic debit) → admin **duyệt** (đã chi ngoài hệ thống) hoặc **từ chối** (hoàn tiền về ví).
+- **Cấu hình động (admin):** bật/tắt, chọn chế độ `flat`/`category`, rate chung, bảng rate theo danh mục.
+- **Dashboard:** seller thấy gross / chiết khấu / doanh thu ròng; admin thấy tổng hoa hồng toàn sàn.
+
+### Trạng thái
+
+```
+Commission ledger: charge / reverse (reverse phòng vệ — đơn completed không hủy được)
+Wallet ledger:     sale_earning / withdrawal / reversal / withdrawal_refund
+Withdrawal:        pending → approved | rejected
+```
+
+### Ghi chú kỹ thuật
+
+- Gộp 1 feature `seller-finance` (commission + wallet + withdrawal dính chặt). Cấu hình ở `features/settings`.
+- `CommissionService` gọi **đồng bộ** từ `OrderService`/`OrderScheduler` (mirror Coin — không listener → tránh circular dep); order layer build sẵn `OrderCommissionContext` nên module **không** import Order/Product.
+- Snapshot `order_items.category_id` lúc checkout → engine không join product runtime.
+- **Cascade 1785:** `wallet_transactions.withdrawal_id`/`order_id` để NO ACTION/SET NULL.
+- Bảng mới: `commission_transactions`, `seller_wallets`, `wallet_transactions`, `withdrawal_requests`, `commission_category_rates`; keys `commission.*` trong `app_settings`.
+- Errors: `WALLET_001..003`. Permission: seller `wallet:read`/`withdrawals:create`, admin `withdrawals:read/update` + `settings:read/update`.
+
+---
+
+## Module 26 — Shop Decoration (Trang trí Shop)
+
+> **Phase 6** · Phụ thuộc: Module 4 (Shop), Module 5 (Product Catalog) · *Triển khai độc lập*
+
+### Mô tả
+
+Cho phép **Seller tùy biến giao diện storefront** của shop mình bằng một **trình dựng trang theo khối (block-based page builder)** kiểu Shopee Shop Decoration — kéo/sắp xếp các khối nội dung hiển thị phía trên danh mục sản phẩm ở trang shop công khai (`/shops/:slug`).
+
+### Chức năng
+
+- Seller thêm / sắp xếp / xóa các **khối** trong Seller Center (`/seller/shop/decoration`), có **live preview** dùng đúng component storefront.
+- Loại khối phase này: **`hero`** (slideshow 1–5 ảnh + heading/tagline/CTA), **`rich_text`** (văn bản thuần, plain-text — chống XSS), **`image`** (banner ảnh đơn), **`product_grid`** (ghim ≤12 sản phẩm của shop, hydrate qua `GET /products?ids=`).
+- **Theme accent** (màu nhấn) áp cho nút trong các khối (CSS var scoped `--shop-accent`).
+- **Bổ sung, không thay thế:** khối trang trí render **phía trên**, danh mục "All Products" **luôn** hiển thị bên dưới → shop chỉ thêm 1 hero vẫn còn đủ sản phẩm.
+- **Tương thích ngược:** `decoration_config = NULL` → layout mặc định như cũ. Reset về mặc định = gửi `null`.
+
+### Ghi chú kỹ thuật
+
+- **Không thêm bảng / endpoint:** 1 cột JSON `shops.decoration_config` (NVARCHAR(MAX), nullable) + tái dùng `PATCH /seller/shop` (ghi), `GET /shops/:slug` & `GET /seller/shop` (đọc), `GET /products?ids=` (hydrate sản phẩm ghim).
+- **Schema:** envelope có version `{ version: 1, theme?, blocks: [{ id, type, data }] }` — mở rộng được (thêm khối `video`… sau chỉ cần 1 union entry + 1 registry + 1 editor + 1 DTO branch, không đổi cột/endpoint).
+- **Validate ghi:** nested class-validator DTO + custom `@ValidatorConstraint` (validate `data` theo `type`, mẫu `common/validators/is-image-path`) → `422 VALIDATION_001`; cap 16 KB serialized → `SHOP_006 (400)`.
+- **Resilience khi đọc/render:** service parse JSON bọc try/catch (malformed → `null`); FE renderer switch theo `version`, registry-driven, bỏ qua khối lạ, mỗi khối bọc error boundary.
+- **Permission:** dùng sẵn `shops:update` (seller đã có) — không cần seed mới.
+- **2 design language:** builder = portal (slate/amber + dark); block components (kể cả trong preview) = storefront semantic tokens.
 
 ---
 
@@ -967,5 +1132,5 @@ Hệ thống gợi ý sản phẩm cá nhân hóa dựa trên hành vi người 
 | **Bảo mật** | JWT + Refresh Token, Dynamic RBAC, input validation (Zod), SQL injection prevention (TypeORM) |
 | **SEO** | Auto-generate slug cho product và category |
 | **Data Integrity** | Immutable snapshot cho order, coupon reversal giữ audit trail |
-| **Caching** | Redis cache cho permission, Flash Sale, notification count, recommendation scoring — giảm tải DB |
+| **Caching** | Hiện dùng in-memory (permission cache per-role, `@nestjs/throttler`). Redis (permission, Flash Sale, notification count, recommendation scoring) là hướng mở rộng scale-out — xem `TECH_DEBT.md` TD-001 |
 | **Realtime** | Socket.IO cho chat và notifications (dùng chung gateway) |

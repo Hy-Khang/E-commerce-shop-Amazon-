@@ -22,7 +22,11 @@ export class SellerReviewController {
   @Get()
   @Permissions(PERMISSIONS.REVIEWS_READ)
   @ApiOperation({ summary: "List reviews for the seller's shop (paginated)" })
-  @ApiResponse({ status: 200, description: 'Returns paginated review list', type: [AdminReviewResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated review list',
+    type: [AdminReviewResponseDto],
+  })
   @ApiResponse({ status: 400, description: 'SHOP_004: Shop not set up' })
   async findAll(
     @CurrentUser() user: ICurrentUser,

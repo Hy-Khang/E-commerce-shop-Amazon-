@@ -17,6 +17,7 @@ export interface DashboardStats {
   lowStockAlerts: LowStockAlert[];
   attentionSignals: AttentionSignals | null;
   topShops: TopShop[];
+  commissionRevenue: number;
 }
 
 export interface SummaryStats {
@@ -110,6 +111,8 @@ export interface SellerDashboardStats {
   topProducts: TopProduct[];
   recentOrders: SellerRecentOrder[];
   lowStockAlerts: LowStockAlert[];
+  commissionTotal: number;
+  netRevenue: number;
 }
 
 export interface ShipperSummaryStats {

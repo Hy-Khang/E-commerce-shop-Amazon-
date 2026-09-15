@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DashboardRepository } from './repositories/dashboard.repository';
+import { CommissionService } from '../seller-finance/commission.service';
 import type { IDashboardStats } from './types/dashboard.types';
 import { resolvePeriod, type DashboardPeriod } from './utils/period.util';
 
@@ -7,10 +8,15 @@ import { resolvePeriod, type DashboardPeriod } from './utils/period.util';
 export class DashboardService {
   private readonly logger = new Logger(DashboardService.name);
 
-  constructor(private readonly dashboardRepository: DashboardRepository) {}
+  constructor(
+    private readonly dashboardRepository: DashboardRepository,
+    private readonly commissionService: CommissionService,
+  ) {}
 
   async getDashboard(period?: DashboardPeriod): Promise<IDashboardStats> {
     const { days, granularity } = resolvePeriod(period);
+    const to = new Date();
+    const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
 
     const results = await Promise.allSettled([
       this.dashboardRepository.getSummaryStats(days),
@@ -22,6 +28,7 @@ export class DashboardService {
       this.dashboardRepository.getLowStockAlerts(10),
       this.dashboardRepository.getAttentionSignals(),
       this.dashboardRepository.getTopShops(5),
+      this.commissionService.getPlatformCommissionNet(from, to),
     ]);
 
     for (const [i, result] of results.entries()) {
@@ -31,24 +38,19 @@ export class DashboardService {
     }
 
     return {
-      summary:
-        results[0].status === 'fulfilled' ? results[0].value : null,
+      summary: results[0].status === 'fulfilled' ? results[0].value : null,
       revenueOverTime:
         results[1].status === 'fulfilled' ? results[1].value : [],
-      ordersByStatus:
-        results[2].status === 'fulfilled' ? results[2].value : [],
-      recentOrders:
-        results[3].status === 'fulfilled' ? results[3].value : [],
-      usersByRole:
-        results[4].status === 'fulfilled' ? results[4].value : [],
-      topProducts:
-        results[5].status === 'fulfilled' ? results[5].value : [],
-      lowStockAlerts:
-        results[6].status === 'fulfilled' ? results[6].value : [],
+      ordersByStatus: results[2].status === 'fulfilled' ? results[2].value : [],
+      recentOrders: results[3].status === 'fulfilled' ? results[3].value : [],
+      usersByRole: results[4].status === 'fulfilled' ? results[4].value : [],
+      topProducts: results[5].status === 'fulfilled' ? results[5].value : [],
+      lowStockAlerts: results[6].status === 'fulfilled' ? results[6].value : [],
       attentionSignals:
         results[7].status === 'fulfilled' ? results[7].value : null,
-      topShops:
-        results[8].status === 'fulfilled' ? results[8].value : [],
+      topShops: results[8].status === 'fulfilled' ? results[8].value : [],
+      commissionRevenue:
+        results[9].status === 'fulfilled' ? results[9].value : 0,
     };
   }
 }

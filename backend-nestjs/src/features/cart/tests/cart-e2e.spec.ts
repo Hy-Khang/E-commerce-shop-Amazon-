@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CanActivate, ExecutionContext, INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import request from 'supertest';
 import { CartController } from '../cart.controller';
 import { CartService } from '../cart.service';
@@ -40,7 +45,11 @@ describe('Cart (e2e)', () => {
 
     app = module.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -88,7 +97,10 @@ describe('Cart (e2e)', () => {
         .expect(201);
 
       expect(mergeRes.body.id).toBe(1);
-      expect(cartService.mergeCart).toHaveBeenCalledWith(1, expect.objectContaining({ session_id: guestSessionId }));
+      expect(cartService.mergeCart).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ session_id: guestSessionId }),
+      );
     });
   });
 
@@ -155,10 +167,7 @@ describe('Cart (e2e)', () => {
         .set('x-session-id', sessionId)
         .expect(204);
 
-      expect(cartService.removeItem).toHaveBeenCalledWith(
-        { sessionId },
-        10,
-      );
+      expect(cartService.removeItem).toHaveBeenCalledWith({ sessionId }, 10);
     });
   });
 
@@ -198,9 +207,7 @@ describe('Cart (e2e)', () => {
     });
 
     it('should return 400 with no auth and no session header', async () => {
-      await request(app.getHttpServer())
-        .get('/cart')
-        .expect(400);
+      await request(app.getHttpServer()).get('/cart').expect(400);
     });
   });
 });

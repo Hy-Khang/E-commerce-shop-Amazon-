@@ -1,4 +1,5 @@
-import { Outlet, NavLink, Link } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Truck, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PERMISSIONS } from '@/common/constants/permissions';
@@ -13,14 +14,24 @@ const shipperLinks: Array<{ to: string; label: string; icon: LucideIcon; permiss
 
 export function ShipperLayout() {
   const { hasPermission } = usePermissions();
+  const { pathname } = useLocation();
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+
+  // The layout is pinned to the viewport (h-screen) so the sidebar and the main
+  // content each scroll inside their OWN overflow container — the window never
+  // scrolls. Reset the content container on route change so a new page doesn't
+  // inherit the previous page's scroll position.
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0 });
+  }, [pathname]);
 
   const visibleLinks = shipperLinks.filter((link) => hasPermission(link.permission));
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       <aside className="flex w-64 flex-col border-r bg-emerald-900 text-white">
         <div className="p-6 text-lg font-bold">Shipper Portal</div>
-        <nav className="flex flex-1 flex-col gap-1 px-3">
+        <nav className="scrollbar-dark flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3">
           {visibleLinks.map((link) => {
             const Icon = link.icon;
             return (
@@ -49,12 +60,12 @@ export function ShipperLayout() {
           </Link>
         </div>
       </aside>
-      <main className="flex flex-1 flex-col bg-slate-50/50 dark:bg-slate-950">
+      <main className="flex min-w-0 flex-1 flex-col bg-slate-50/50 dark:bg-slate-950">
         <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-slate-200 bg-white px-4 py-3 md:px-6 dark:border-slate-800 dark:bg-slate-900">
           <NotificationBell />
           <PortalAccountDropdown />
         </header>
-        <div className="flex-1 overflow-auto p-6">
+        <div ref={mainScrollRef} className="min-h-0 flex-1 overflow-auto p-6">
           <Outlet />
         </div>
       </main>

@@ -1,10 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac } from 'crypto';
-import {
-  IMomoCreateResponse,
-  IMomoIpnPayload,
-} from './types/payment.types';
+import { IMomoCreateResponse, IMomoIpnPayload } from './types/payment.types';
 
 @Injectable()
 export class MomoService {

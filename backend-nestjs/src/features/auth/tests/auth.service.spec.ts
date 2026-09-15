@@ -190,8 +190,14 @@ describe('AuthService', () => {
       // Arrange
       userRepository.existsByEmail.mockResolvedValue(false);
       roleRepository.findByName.mockResolvedValue(mockRole());
-      (mockedBcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hashedpassword');
-      const createdUser = mockUser({ id: 1, email: dto.email, full_name: dto.full_name });
+      (mockedBcrypt.hash as jest.Mock).mockResolvedValue(
+        '$2b$10$hashedpassword',
+      );
+      const createdUser = mockUser({
+        id: 1,
+        email: dto.email,
+        full_name: dto.full_name,
+      });
       userRepository.create.mockResolvedValue(createdUser);
       userRepository.save.mockResolvedValue(createdUser);
 
@@ -231,7 +237,8 @@ describe('AuthService', () => {
       const createdUser = mockUser({ id: 42, email: dto.email });
       userRepository.create.mockResolvedValue(createdUser);
       userRepository.save.mockResolvedValue(createdUser);
-      const mailService = (service as any).mailService as jest.Mocked<MailService>;
+      const mailService = (service as any)
+        .mailService as jest.Mocked<MailService>;
 
       // Act
       await service.register(dto);
@@ -325,7 +332,11 @@ describe('AuthService', () => {
 
     it('should login successfully and return tokens + user info', async () => {
       // Arrange
-      const user = mockUser({ id: 1, email: dto.email, full_name: 'Nguyen Van A' });
+      const user = mockUser({
+        id: 1,
+        email: dto.email,
+        full_name: 'Nguyen Van A',
+      });
       userRepository.findByEmail.mockResolvedValue(user);
       (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
       refreshTokenRepository.create.mockResolvedValue({} as any);
@@ -373,7 +384,12 @@ describe('AuthService', () => {
 
     it('should generate JWT with user id and roleId', async () => {
       // Arrange
-      const user = mockUser({ id: 3, email: dto.email, role_id: 2, role: mockAdminRole() });
+      const user = mockUser({
+        id: 3,
+        email: dto.email,
+        role_id: 2,
+        role: mockAdminRole(),
+      });
       userRepository.findByEmail.mockResolvedValue(user);
       (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
       refreshTokenRepository.create.mockResolvedValue({} as any);
@@ -413,7 +429,9 @@ describe('AuthService', () => {
 
     it('should throw ForbiddenException (AUTH_005) for deactivated user', async () => {
       // Arrange
-      userRepository.findByEmail.mockResolvedValue(mockUser({ is_active: false }));
+      userRepository.findByEmail.mockResolvedValue(
+        mockUser({ is_active: false }),
+      );
 
       // Act & Assert
       await expect(service.login(dto)).rejects.toThrow(ForbiddenException);
@@ -422,7 +440,9 @@ describe('AuthService', () => {
 
     it('should include AUTH_005 error code for deactivated account', async () => {
       // Arrange
-      userRepository.findByEmail.mockResolvedValue(mockUser({ is_active: false }));
+      userRepository.findByEmail.mockResolvedValue(
+        mockUser({ is_active: false }),
+      );
 
       // Act & Assert
       try {
@@ -437,7 +457,9 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException (AUTH_001) for wrong password', async () => {
       // Arrange
-      userRepository.findByEmail.mockResolvedValue(mockUser({ email: dto.email }));
+      userRepository.findByEmail.mockResolvedValue(
+        mockUser({ email: dto.email }),
+      );
       (mockedBcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       // Act & Assert
@@ -447,7 +469,9 @@ describe('AuthService', () => {
 
     it('should return same AUTH_001 code for wrong password as for missing user', async () => {
       // Arrange
-      userRepository.findByEmail.mockResolvedValue(mockUser({ email: dto.email }));
+      userRepository.findByEmail.mockResolvedValue(
+        mockUser({ email: dto.email }),
+      );
       (mockedBcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       // Act & Assert
@@ -463,7 +487,9 @@ describe('AuthService', () => {
 
     it('should check is_active before comparing password', async () => {
       // Arrange
-      userRepository.findByEmail.mockResolvedValue(mockUser({ is_active: false }));
+      userRepository.findByEmail.mockResolvedValue(
+        mockUser({ is_active: false }),
+      );
 
       // Act
       try {
@@ -553,7 +579,9 @@ describe('AuthService', () => {
       refreshTokenRepository.findByTokenHash.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.refresh(rawToken)).rejects.toThrow(UnauthorizedException);
+      await expect(service.refresh(rawToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should include AUTH_003 error code when token not found', async () => {
@@ -579,7 +607,9 @@ describe('AuthService', () => {
       refreshTokenRepository.findByTokenHash.mockResolvedValue(expiredToken);
 
       // Act & Assert
-      await expect(service.refresh(rawToken)).rejects.toThrow(UnauthorizedException);
+      await expect(service.refresh(rawToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw ForbiddenException (AUTH_005) if user not found', async () => {
@@ -592,7 +622,9 @@ describe('AuthService', () => {
       userRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.refresh(rawToken)).rejects.toThrow(ForbiddenException);
+      await expect(service.refresh(rawToken)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw ForbiddenException (AUTH_005) if user is deactivated', async () => {
@@ -602,10 +634,14 @@ describe('AuthService', () => {
         expires_at: new Date(Date.now() + 86400000),
       });
       refreshTokenRepository.findByTokenHash.mockResolvedValue(storedToken);
-      userRepository.findById.mockResolvedValue(mockUser({ id: 1, is_active: false }));
+      userRepository.findById.mockResolvedValue(
+        mockUser({ id: 1, is_active: false }),
+      );
 
       // Act & Assert
-      await expect(service.refresh(rawToken)).rejects.toThrow(ForbiddenException);
+      await expect(service.refresh(rawToken)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should generate new JWT with correct user data', async () => {
@@ -614,7 +650,12 @@ describe('AuthService', () => {
         user_id: 3,
         expires_at: new Date(Date.now() + 86400000),
       });
-      const user = mockUser({ id: 3, email: 'refresh@example.com', role_id: 2, role: mockAdminRole() });
+      const user = mockUser({
+        id: 3,
+        email: 'refresh@example.com',
+        role_id: 2,
+        role: mockAdminRole(),
+      });
       refreshTokenRepository.findByTokenHash.mockResolvedValue(storedToken);
       userRepository.findById.mockResolvedValue(user);
       refreshTokenRepository.revokeByTokenHash.mockResolvedValue(undefined);
@@ -656,10 +697,12 @@ describe('AuthService', () => {
 
       // Act
       await service.logout('token-a');
-      const firstCallHash = refreshTokenRepository.revokeByTokenHash.mock.calls[0][0];
+      const firstCallHash =
+        refreshTokenRepository.revokeByTokenHash.mock.calls[0][0];
 
       await service.logout('token-b');
-      const secondCallHash = refreshTokenRepository.revokeByTokenHash.mock.calls[1][0];
+      const secondCallHash =
+        refreshTokenRepository.revokeByTokenHash.mock.calls[1][0];
 
       // Assert — different tokens produce different hashes
       expect(firstCallHash).not.toBe(secondCallHash);
@@ -714,7 +757,11 @@ describe('AuthService', () => {
   describe('findRoleById', () => {
     it('should return role with user count', async () => {
       // Arrange
-      const role = mockRoleWithUserCount({ id: 1, name: 'customer', userCount: 10 });
+      const role = mockRoleWithUserCount({
+        id: 1,
+        name: 'customer',
+        userCount: 10,
+      });
       roleRepository.findByIdWithUserCount.mockResolvedValue(role);
 
       // Act
@@ -731,7 +778,9 @@ describe('AuthService', () => {
       roleRepository.findByIdWithUserCount.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.findRoleById(999)).rejects.toThrow(NotFoundException);
+      await expect(service.findRoleById(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -760,7 +809,9 @@ describe('AuthService', () => {
       roleRepository.existsByName.mockResolvedValue(true);
 
       // Act & Assert
-      await expect(service.createRole({ name: 'customer' })).rejects.toThrow(ConflictException);
+      await expect(service.createRole({ name: 'customer' })).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should include ROLE_001 error code for duplicate role name', async () => {
@@ -783,7 +834,9 @@ describe('AuthService', () => {
       roleRepository.existsByName.mockResolvedValue(true);
 
       // Act
-      try { await service.createRole({ name: 'customer' }); } catch {}
+      try {
+        await service.createRole({ name: 'customer' });
+      } catch {}
 
       // Assert
       expect(roleRepository.create).not.toHaveBeenCalled();
@@ -807,7 +860,9 @@ describe('AuthService', () => {
       const result = await service.updateRole(3, { name: 'moderator' });
 
       // Assert
-      expect(roleRepository.update).toHaveBeenCalledWith(3, { name: 'moderator' });
+      expect(roleRepository.update).toHaveBeenCalledWith(3, {
+        name: 'moderator',
+      });
       expect(result.name).toBe('moderator');
     });
 
@@ -816,16 +871,22 @@ describe('AuthService', () => {
       roleRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.updateRole(999, { name: 'test' })).rejects.toThrow(NotFoundException);
+      await expect(service.updateRole(999, { name: 'test' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException if new name already taken', async () => {
       // Arrange
-      roleRepository.findById.mockResolvedValue(mockRole({ id: 3, name: 'seller' }));
+      roleRepository.findById.mockResolvedValue(
+        mockRole({ id: 3, name: 'seller' }),
+      );
       roleRepository.existsByName.mockResolvedValue(true);
 
       // Act & Assert
-      await expect(service.updateRole(3, { name: 'customer' })).rejects.toThrow(ConflictException);
+      await expect(service.updateRole(3, { name: 'customer' })).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should skip name uniqueness check if name unchanged', async () => {
@@ -862,7 +923,9 @@ describe('AuthService', () => {
   describe('deleteRole', () => {
     it('should delete role without users', async () => {
       // Arrange
-      roleRepository.findById.mockResolvedValue(mockRole({ id: 3, name: 'seller' }));
+      roleRepository.findById.mockResolvedValue(
+        mockRole({ id: 3, name: 'seller' }),
+      );
       roleRepository.hasUsers.mockResolvedValue(false);
       roleRepository.delete.mockResolvedValue(undefined);
 
@@ -912,7 +975,9 @@ describe('AuthService', () => {
       roleRepository.hasUsers.mockResolvedValue(true);
 
       // Act
-      try { await service.deleteRole(1); } catch {}
+      try {
+        await service.deleteRole(1);
+      } catch {}
 
       // Assert
       expect(roleRepository.delete).not.toHaveBeenCalled();
@@ -944,7 +1009,15 @@ describe('AuthService', () => {
 
     it('should pass filter params to repository', async () => {
       // Arrange
-      const query = { page: 1, limit: 10, search: 'test', role: 'customer', is_active: 'true', sort: 'email', order: 'asc' as const };
+      const query = {
+        page: 1,
+        limit: 10,
+        search: 'test',
+        role: 'customer',
+        is_active: 'true',
+        sort: 'email',
+        order: 'asc' as const,
+      };
       const paginatedResult = {
         data: [],
         meta: { page: 1, limit: 10, total: 0, totalPages: 0 },
@@ -966,7 +1039,11 @@ describe('AuthService', () => {
   describe('findUserById', () => {
     it('should return user with order and review counts', async () => {
       // Arrange
-      const userWithStats = mockUserWithStats({ id: 1, orderCount: 5, reviewCount: 3 });
+      const userWithStats = mockUserWithStats({
+        id: 1,
+        orderCount: 5,
+        reviewCount: 3,
+      });
       userRepository.findByIdWithStats.mockResolvedValue(userWithStats);
 
       // Act
@@ -983,7 +1060,9 @@ describe('AuthService', () => {
       userRepository.findByIdWithStats.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.findUserById(999)).rejects.toThrow(NotFoundException);
+      await expect(service.findUserById(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -1025,7 +1104,9 @@ describe('AuthService', () => {
       userRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.toggleActivate(999)).rejects.toThrow(NotFoundException);
+      await expect(service.toggleActivate(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -1056,7 +1137,9 @@ describe('AuthService', () => {
       userRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.changeUserRole(999, { role_id: 2 })).rejects.toThrow(NotFoundException);
+      await expect(service.changeUserRole(999, { role_id: 2 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException if role not found', async () => {
@@ -1065,7 +1148,9 @@ describe('AuthService', () => {
       roleRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.changeUserRole(1, { role_id: 999 })).rejects.toThrow(NotFoundException);
+      await expect(service.changeUserRole(1, { role_id: 999 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -1077,15 +1162,25 @@ describe('AuthService', () => {
     it('should update user full_name and phone', async () => {
       // Arrange
       const user = mockUser({ id: 1 });
-      const updated = mockUser({ id: 1, full_name: 'New Name', phone: '0909999999' });
+      const updated = mockUser({
+        id: 1,
+        full_name: 'New Name',
+        phone: '0909999999',
+      });
       userRepository.findById.mockResolvedValue(user);
       userRepository.updateProfile.mockResolvedValue(updated);
 
       // Act
-      const result = await service.updateProfile(1, { full_name: 'New Name', phone: '0909999999' });
+      const result = await service.updateProfile(1, {
+        full_name: 'New Name',
+        phone: '0909999999',
+      });
 
       // Assert
-      expect(userRepository.updateProfile).toHaveBeenCalledWith(1, { full_name: 'New Name', phone: '0909999999' });
+      expect(userRepository.updateProfile).toHaveBeenCalledWith(1, {
+        full_name: 'New Name',
+        phone: '0909999999',
+      });
       expect(result.full_name).toBe('New Name');
       expect(result.phone).toBe('0909999999');
     });
@@ -1095,7 +1190,9 @@ describe('AuthService', () => {
       userRepository.findById.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.updateProfile(999, { full_name: 'Test' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.updateProfile(999, { full_name: 'Test' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should update only full_name when phone is not provided', async () => {
@@ -1106,10 +1203,14 @@ describe('AuthService', () => {
       userRepository.updateProfile.mockResolvedValue(updated);
 
       // Act
-      const result = await service.updateProfile(1, { full_name: 'Updated Name' });
+      const result = await service.updateProfile(1, {
+        full_name: 'Updated Name',
+      });
 
       // Assert
-      expect(userRepository.updateProfile).toHaveBeenCalledWith(1, { full_name: 'Updated Name' });
+      expect(userRepository.updateProfile).toHaveBeenCalledWith(1, {
+        full_name: 'Updated Name',
+      });
       expect(result.full_name).toBe('Updated Name');
     });
 
@@ -1124,7 +1225,9 @@ describe('AuthService', () => {
       const result = await service.updateProfile(1, { phone: '0908888888' });
 
       // Assert
-      expect(userRepository.updateProfile).toHaveBeenCalledWith(1, { phone: '0908888888' });
+      expect(userRepository.updateProfile).toHaveBeenCalledWith(1, {
+        phone: '0908888888',
+      });
       expect(result.phone).toBe('0908888888');
     });
 

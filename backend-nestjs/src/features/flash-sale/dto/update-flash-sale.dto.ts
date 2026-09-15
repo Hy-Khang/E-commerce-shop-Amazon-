@@ -39,7 +39,10 @@ export class UpdateFlashSaleDto {
   @IsDateString()
   ends_at?: string;
 
-  @ApiPropertyOptional({ example: 10, description: 'Minimum discount percent (0-100)' })
+  @ApiPropertyOptional({
+    example: 10,
+    description: 'Minimum discount percent (0-100)',
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)

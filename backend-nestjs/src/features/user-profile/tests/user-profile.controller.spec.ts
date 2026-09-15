@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserProfileController } from '../user-profile.controller';
 import { UserProfileService } from '../user-profile.service';
 import { ICurrentUser } from '../../../common/interfaces/current-user.interface';
-import { mockAddress, mockDefaultAddress, mockUserProfile } from './mocks/user-profile.mock';
+import {
+  mockAddress,
+  mockDefaultAddress,
+  mockUserProfile,
+} from './mocks/user-profile.mock';
 
 describe('UserProfileController', () => {
   let controller: UserProfileController;
@@ -94,7 +98,12 @@ describe('UserProfileController', () => {
   describe('create', () => {
     it('should call service.createAddress with user id and dto', async () => {
       // Arrange
-      const dto = { full_name: 'Test', phone: '0901234567', address_line: '123 St', city: 'HCM' };
+      const dto = {
+        full_name: 'Test',
+        phone: '0901234567',
+        address_line: '123 St',
+        city: 'HCM',
+      };
       const address = mockAddress({ ...dto });
       service.createAddress.mockResolvedValue(address);
 
@@ -111,7 +120,11 @@ describe('UserProfileController', () => {
     it('should call service.updateAddress with user id, address id, and dto', async () => {
       // Arrange
       const dto = { full_name: 'Updated Name', city: 'Ha Noi' };
-      const updated = mockAddress({ id: 5, full_name: 'Updated Name', city: 'Ha Noi' });
+      const updated = mockAddress({
+        id: 5,
+        full_name: 'Updated Name',
+        city: 'Ha Noi',
+      });
       service.updateAddress.mockResolvedValue(updated);
 
       // Act

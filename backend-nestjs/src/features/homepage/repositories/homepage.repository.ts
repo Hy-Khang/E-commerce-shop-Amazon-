@@ -38,11 +38,11 @@ export class HomepageRepository {
       `${alias}.id AS id`,
       `${alias}.name AS name`,
       `${alias}.slug AS slug`,
-      `${alias}.thumbnail_url AS thumbnailUrl`,
+      `${alias}.thumbnail_url AS "thumbnailUrl"`,
       `MIN(COALESCE(pv.sale_price, pv.price)) AS price`,
-      `MIN(CASE WHEN pv.sale_price IS NOT NULL THEN pv.price ELSE NULL END) AS originalPrice`,
-      `MAX(CASE WHEN pv.sale_price IS NOT NULL THEN ROUND((1.0 - pv.sale_price / pv.price) * 100, 0) ELSE NULL END) AS maxDiscountPercent`,
-      `CASE WHEN SUM(pv.stock_quantity) > 0 THEN 1 ELSE 0 END AS inStock`,
+      `MIN(CASE WHEN pv.sale_price IS NOT NULL THEN pv.price ELSE NULL END) AS "originalPrice"`,
+      `MAX(CASE WHEN pv.sale_price IS NOT NULL THEN ROUND((1.0 - pv.sale_price / pv.price) * 100, 0) ELSE NULL END) AS "maxDiscountPercent"`,
+      `CASE WHEN SUM(pv.stock_quantity) > 0 THEN 1 ELSE 0 END AS "inStock"`,
     ];
   }
 
@@ -53,7 +53,7 @@ export class HomepageRepository {
       .from('products', 'p')
       .innerJoin('product_variants', 'pv', 'pv.product_id = p.id')
       .innerJoin('shops', 's', 's.id = p.shop_id')
-      .where('p.is_active = 1')
+      .where('p.is_active = true')
       .andWhere("s.status = 'active'")
       .andWhere(
         'p.id IN (SELECT DISTINCT pv2.product_id FROM product_variants pv2 WHERE pv2.sale_price IS NOT NULL)',
@@ -62,7 +62,7 @@ export class HomepageRepository {
       .addGroupBy('p.name')
       .addGroupBy('p.slug')
       .addGroupBy('p.thumbnail_url')
-      .orderBy('maxDiscountPercent', 'DESC')
+      .orderBy('"maxDiscountPercent"', 'DESC')
       .limit(limit)
       .getRawMany();
 
@@ -79,7 +79,7 @@ export class HomepageRepository {
       .innerJoin('orders', 'o', 'o.id = oi.order_id')
       .where("o.status IN ('delivered', 'completed')")
       .groupBy('pv.product_id')
-      .orderBy('totalSold', 'DESC')
+      .orderBy('"totalSold"', 'DESC')
       .limit(limit * 2)
       .getRawMany();
 
@@ -92,7 +92,7 @@ export class HomepageRepository {
       .from('products', 'p')
       .innerJoin('product_variants', 'pv', 'pv.product_id = p.id')
       .innerJoin('shops', 's', 's.id = p.shop_id')
-      .where('p.is_active = 1')
+      .where('p.is_active = true')
       .andWhere("s.status = 'active'")
       .andWhere('p.id IN (:...productIds)', { productIds })
       .groupBy('p.id')
@@ -115,9 +115,9 @@ export class HomepageRepository {
       .select('wi.product_id', 'productId')
       .addSelect('COUNT(*)', 'wishlistCount')
       .from('wishlist_items', 'wi')
-      .where('wi.created_at >= DATEADD(DAY, -30, GETUTCDATE())')
+      .where("wi.created_at >= now() - interval '30 days'")
       .groupBy('wi.product_id')
-      .orderBy('wishlistCount', 'DESC')
+      .orderBy('"wishlistCount"', 'DESC')
       .limit(limit * 2)
       .getRawMany();
 
@@ -134,7 +134,7 @@ export class HomepageRepository {
       .from('products', 'p')
       .innerJoin('product_variants', 'pv', 'pv.product_id = p.id')
       .innerJoin('shops', 's', 's.id = p.shop_id')
-      .where('p.is_active = 1')
+      .where('p.is_active = true')
       .andWhere("s.status = 'active'")
       .andWhere('p.id IN (:...productIds)', { productIds })
       .groupBy('p.id')
@@ -162,12 +162,9 @@ export class HomepageRepository {
       .select('p.id', 'id')
       .from('products', 'p')
       .innerJoin('shops', 's', 's.id = p.shop_id')
-      .where('p.is_active = 1')
+      .where('p.is_active = true')
       .andWhere("s.status = 'active'")
-      .orderBy(
-        `CHECKSUM(CONCAT(CAST(p.id AS NVARCHAR), :dateString))`,
-        'ASC',
-      )
+      .orderBy(`md5(p.id::text || :dateString)`, 'ASC')
       .setParameter('dateString', today)
       .limit(limit)
       .getRawMany();

@@ -20,9 +20,7 @@ import {
 export class NotificationListener {
   private readonly logger = new Logger(NotificationListener.name);
 
-  constructor(
-    private readonly notificationService: NotificationService,
-  ) {}
+  constructor(private readonly notificationService: NotificationService) {}
 
   @OnEvent('order.placed')
   async handleOrderPlaced(payload: OrderPlacedEvent): Promise<void> {

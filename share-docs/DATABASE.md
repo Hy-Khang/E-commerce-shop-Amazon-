@@ -2,15 +2,20 @@
 
 ## 1. Overview
 
-- **Database:** SQL Server
-- **ORM:** TypeORM (NestJS integration)
+- **Database:** Supabase (managed **PostgreSQL**) — migrated from SQL Server 2022. Connect via the **Session pooler** (IPv4, port 5432, user `postgres.<project-ref>`); the direct host is IPv6-only. SSL required (`DB_SSL=true`). Run the app/ETL with `TZ=UTC`.
+- **ORM:** TypeORM (NestJS integration), driver `pg`
 - **Naming conventions:**
   - Tables & columns: `snake_case`
   - Indexes: `idx_{table}_{column}`
-- **Unicode:** All string columns use `NVARCHAR` (Vietnamese product names, addresses)
-- **Timestamps:** `DATETIME2` with `SYSUTCDATETIME()` default — store UTC, convert in app layer
-- **Money:** `DECIMAL(10,2)` — never use `FLOAT`
-- **Booleans:** `BIT` (`1`/`0`)
+- **Unicode:** All string columns use `varchar` / `text` (PostgreSQL text is Unicode by default — Vietnamese product names, addresses)
+- **Timestamps:** `timestamptz` with `now()` default — store UTC, convert in app layer
+- **Money:** `numeric(10,2)` (`DECIMAL`) — never use `FLOAT`. A global pg type parser (`src/core/database/pg-type-parsers.ts`) coerces `numeric`→JS `number` (and `bigint`→`number`) so money arithmetic and aggregate `SUM`/`AVG` return numbers, not strings.
+- **Booleans:** `boolean` (`true`/`false`)
+- **Search:** case-insensitive matching uses `ILIKE` (Postgres `LIKE` is case-sensitive, unlike SQL Server). `ILIKE` is accent-sensitive; enable the `unaccent` extension if accent-insensitive search is required.
+- **JSON:** JSON payload columns stay `text` with manual `JSON.stringify`/`parse` (unchanged). Raw queries that read JSON cast in-place, e.g. `metadata::jsonb->>'keyword'`.
+- **Type mapping (SQL Server → Postgres):** `nvarchar`→`varchar`, `nvarchar(MAX)`→`text`, `datetime2`→`timestamptz`, `bit`→`boolean`, `SYSUTCDATETIME()`→`now()`. Legacy T-SQL migrations are archived under `src/core/database/migrations/_archive_mssql/`; the Postgres schema is a single generated baseline (`npm run migration:generate`) or `DB_SYNCHRONIZE=true` in dev.
+
+> **One-time data migration (SQL Server → Supabase):** `scripts/migrate-mssql-to-pg.ts` (`npm run migrate:etl -- --with-files`) copies every row preserving primary keys, re-syncs id sequences, and uploads local `uploads/**` images to Supabase Storage while rewriting the URL columns. Prereq: the target schema already exists. Keeps the `mssql` driver installed until the migration is done.
 
 ---
 
@@ -138,7 +143,11 @@
 | phone | NVARCHAR(20) | NOT NULL |
 | address_line | NVARCHAR(255) | NOT NULL — street number, street name |
 | city | NVARCHAR(100) | NOT NULL |
+| latitude | DECIMAL(10,7) | NULL — geo coordinate picked on the Leaflet map (Order Tracking) |
+| longitude | DECIMAL(10,7) | NULL — geo coordinate picked on the Leaflet map (Order Tracking) |
 | is_default | BIT | NOT NULL, DEFAULT `0` — marks default address for checkout |
+
+> **`latitude` / `longitude`** are captured by the frontend `AddressMapPicker` (Leaflet + OpenStreetMap) so the delivery address can be shown as a marker on the Order Tracking map. Both nullable — legacy/manual addresses may have none. Added by migration `1751400000000-AddLatLngToAddresses`. Index `idx_addresses_user_id`.
 
 ---
 
@@ -155,6 +164,7 @@
 | description | NVARCHAR(MAX) | NULL |
 | logo_url | NVARCHAR(500) | NULL |
 | banner_url | NVARCHAR(500) | NULL |
+| decoration_config | NVARCHAR(MAX) | NULL — **JSON** storefront decoration (Shop Decoration block builder); NULL = default layout |
 | status | NVARCHAR(30) | NOT NULL, DEFAULT `'pending_verification'`, CHECK IN (`pending_verification`, `active`, `suspended`, `banned`) |
 | verified_at | DATETIME2 | NULL — set when admin approves (preserved permanently) |
 | verified_by | INT | FK → `users.id` ON DELETE SET NULL, NULL — admin who approved |
@@ -166,6 +176,7 @@
 > **1:1 with users:** Each seller has exactly one shop. UNIQUE constraint on `user_id` enforces this. Race condition on concurrent POST handled by catching SQL Server error 2627/2601 → mapped to SHOP_002.
 > **Status lifecycle:** `pending_verification` → `active` → `suspended`/`banned`. `verified_at`/`verified_by` are set once on first approval and preserved permanently. `suspended_at`/`banned_at` are overwritten on each state change.
 > **Public visibility:** Products from shops with `status != 'active'` are hidden from the public storefront. All public product queries join shops and filter `shops.status = 'active'`.
+> **Shop Decoration (`decoration_config`):** A versioned JSON envelope `{ version: 1, theme?: { accent? }, blocks: [{ id, type, data }] }` describing the seller's customized storefront (block-based page builder). Stored as a raw `NVARCHAR(MAX)` string (repo JSON convention — manual `JSON.stringify`/`JSON.parse` in the service, like `orders.shipping_address` / `ai_messages.actions`), not a TypeORM transformer. Block types: `hero` / `rich_text` / `image` / `product_grid` (extensible — a `video` block can be added later without a schema/column change). Validated at write via nested class-validator DTOs (≤20 blocks, hero 1–5 images, grid 1–12 product ids, serialized ≤16 KB → `SHOP_006`); parsed defensively on read (malformed → `null`). NULL = default layout, so existing shops are unaffected. Added by migration `1756900000000-AddDecorationConfigToShops` (dev auto-adds via `synchronize`).
 
 ---
 
@@ -224,6 +235,9 @@
 | product_id | INT | FK → `products.id`, NOT NULL |
 | image_url | NVARCHAR(500) | NOT NULL |
 | sort_order | INT | NOT NULL, DEFAULT `0` — display order |
+| variant_option1 | NVARCHAR(50) | NULL — optional value of variant axis 1 (e.g. "Đen") this image belongs to, so a colour switch swaps its gallery |
+
+> **`variant_option1`** links an image to a specific option1 value (e.g. show the black-colour photos when the customer picks "Đen"). `NULL` = a general product image shown for every variant. Added by migration `1749300004000-AddVariantOption1ToProductImages`.
 
 ---
 
@@ -270,6 +284,7 @@
 | shipping_address | NVARCHAR(MAX) | NOT NULL — **JSON snapshot**, NOT FK to addresses |
 | coupon_code | NVARCHAR(50) | NULL — **snapshot** of applied coupon code |
 | discount_amount | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
+| coin_discount | DECIMAL(10,2) | NOT NULL, DEFAULT `0` — **snapshot** of Xu (Hoàn Xu) redeemed against this sub-order (Module 23) |
 | shipper_id | INT | FK → `users.id` ON DELETE SET NULL, NULL — assigned shipper for delivery |
 | delivered_at | DATETIME2 | NULL — set when order transitions to `delivered`, used by auto-complete cron |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
@@ -280,7 +295,7 @@
 > - `shipping_address` is a JSON snapshot — preserves the address at order time even if the user edits/deletes their address later.
 > - `payment_status` is independent from `status` — a paid order can still be cancelled (triggers refund flow).
 > - `coupon_code` and `discount_amount` are snapshots — immune to coupon edits/deletions after checkout. Discount is proportionally distributed across sub-orders: `shopDiscount = (shopItemsTotal / totalItemsAmount) × discountAmount`.
-> - **Formula:** `total_amount = shopItemsTotal - discount_amount + shipping_fee` (per sub-order)
+> - **Formula:** `total_amount = shopItemsTotal - discount_amount - coin_discount + shipping_fee` (per sub-order). `coin_discount` (Module 23) is the Xu redeemed on this sub-order, distributed by headroom; reversed as a fresh Xu batch on cancel.
 > - Enums stored as string columns for readability and easy migration.
 > - **Order completion flow:** `delivered` is no longer terminal. Customer can confirm receipt (`completed`) or request return (`return_requested`). Orders auto-complete 7 days after `delivered_at` via hourly cron. Revenue (dashboard) and review eligibility require `completed` status.
 > - **`delivered_at`** is set when order transitions to `delivered` (admin, seller, or shipper). Used by auto-complete cron to find orders past the 7-day window.
@@ -305,8 +320,11 @@
 | variant_option1_value | NVARCHAR(50) | NULL — **snapshot** of `product_variants.option1` (e.g. "Đen") |
 | variant_option2_label | NVARCHAR(50) | NULL — **snapshot** of `products.option2_label` (e.g. "Kích thước") |
 | variant_option2_value | NVARCHAR(50) | NULL — **snapshot** of `product_variants.option2` (e.g. "L") |
+| category_id | INT | NULL — **snapshot** of the product's category at checkout (Module 25 commission engine; NULL → platform rate) |
+| flash_sale_item_id | INT | FK → `flash_sale_items.id` ON DELETE SET NULL, NULL — which flash registration this line consumed (Module 17), so `sold_quantity` can be reversed on cancel |
 
 > All snapshot fields are copied at purchase time — immune to future product edits/deletions. The `variant_option*` fields preserve the variant attributes (label from product, value from variant) so order history displays correctly even if the product is later modified. `shop_id` and `shop_name` are nullable — historical order_items from before the shop feature may have NULL values.
+> **`category_id`** (Module 25) snapshots the category so the category-mode commission engine never joins products at runtime and survives variant/product deletion (see §2.18). **`flash_sale_item_id`** (Module 17) records the consumed flash registration so cancelling an order can atomically restore that item's `sold_quantity` (see §2.12).
 
 ---
 
@@ -430,6 +448,7 @@
 | title | NVARCHAR(255) | NOT NULL |
 | message | NVARCHAR(500) | NOT NULL |
 | data | NVARCHAR(MAX) | NULL — JSON payload (e.g. `{ orderId, oldStatus, newStatus }`) |
+| context | NVARCHAR(20) | NOT NULL, DEFAULT `'customer'` — which portal the notification is for (`customer` / `seller` / `shipper` / `admin`), so one user acting in multiple roles sees the right feed |
 | is_read | BIT | NOT NULL, DEFAULT `0` |
 | created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
 
@@ -439,6 +458,7 @@
 > - **JSON data field** — stored as `NVARCHAR(MAX)`, parsed safely on read. Contains `orderId`, `oldStatus`, `newStatus` for order status notifications. Extensible for future notification types.
 > - **No `updated_at`** — notifications are write-once + read-mark. Only `is_read` changes after creation.
 > - **CASCADE delete** — when a user is deleted, their notifications are automatically removed.
+> - **`context` (portal scoping)** — added by migration `1749300007000-AddContextToNotifications`. A single user can be e.g. both a customer and a seller; `context` keeps each portal's notification feed and unread badge separate. Listing/unread queries filter by `(user_id, context)` — see index `idx_notifications_user_context_read` in §5.
 > - **Future consideration** — cleanup cron for notifications older than 90 days.
 
 ---
@@ -468,6 +488,43 @@
 > - **Idempotency** — IPN callbacks check `status !== 'pending'` before updating. Duplicate callbacks are no-ops.
 > - **Event-driven** — on successful payment, `payment.completed` event is emitted → `OrderPaymentListener` sets `orders.payment_status = 'paid'`.
 > - **Signature verification** — HMAC-SHA512 for VNPay, HMAC-SHA256 for MoMo. Invalid signatures are rejected before any state change.
+
+---
+
+### 2.11.1 Order Tracking Feature (Module 16)
+
+> Timeline of status changes + manual shipper location for the delivery map. Created by migration `1751400001000-CreateOrderTrackingTables`.
+
+#### `order_status_history` — status timeline
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| order_id | INT | FK → `orders.id`, NOT NULL |
+| from_status | NVARCHAR(20) | NULL — previous status (NULL for the very first entry) |
+| to_status | NVARCHAR(20) | NOT NULL — new status |
+| actor_id | INT | FK → `users.id` ON DELETE SET NULL, NULL — who triggered it (NULL for system/cron) |
+| actor_type | NVARCHAR(20) | NOT NULL — `customer` / `seller` / `shipper` / `admin` / `system` |
+| note | NVARCHAR(255) | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Index:** `idx_order_status_history_order_id (order_id)`.
+
+> One row per status transition, appended whenever an order changes status (customer/seller/shipper/admin action or the auto-complete cron). Powers the customer-facing timeline (`GET /orders/:id/tracking`). `actor_id` is `SET NULL` so history survives account removal.
+
+#### `order_tracking_locations` — shipper location points
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| order_id | INT | FK → `orders.id`, NOT NULL |
+| latitude | DECIMAL(10,7) | NOT NULL |
+| longitude | DECIMAL(10,7) | NOT NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Index:** `idx_order_tracking_locations_order_created (order_id, created_at)`.
+
+> The shipper updates their position **manually** (`PATCH /shipper/orders/:id/location`) — each update appends a row; the latest row is the marker shown on the customer's Leaflet + OpenStreetMap map alongside the delivery address (only while the order is `shipping`). No realtime GPS — a new point per manual update, fit for the demo scale.
 
 ---
 
@@ -568,6 +625,226 @@
 
 ---
 
+### 2.15 Coin Feature (Hoàn Xu — Module 23)
+
+#### `app_settings` — runtime key/value config
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| key | NVARCHAR(100) | NOT NULL, UNIQUE — e.g. `coin.enabled`, `coin.earn_rate_percent` |
+| value | NVARCHAR(500) | NOT NULL — stored as string; the service casts to type |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| updated_by | INT | FK → `users.id` ON DELETE SET NULL, NULL — admin who last changed it |
+
+**Constraints:** UNIQUE `(key)` — `uq_app_settings_key`
+
+> **Runtime config (new pattern).** Admin-editable settings without a redeploy (unlike ENV). Coin keys: `coin.enabled` (`'true'`/`'false'`), `coin.earn_rate_percent`, `coin.redeem_max_percent`, `coin.expiry_days`. `SettingsService.getCoinConfig()` resolves them, falling back to defaults for missing keys. Managed via `GET/PATCH /admin/settings/coins` (`settings:read`/`settings:update`). Reusable for other runtime toggles later.
+
+#### `coin_batches` — earned Xu lots (balance source of truth, FIFO, expiry)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| source_order_id | INT | FK → `orders.id` ON DELETE SET NULL, NULL — the order that earned it (NULL for refund batches) |
+| amount_earned | INT | NOT NULL — original Xu of the lot |
+| amount_remaining | INT | NOT NULL — unspent Xu (atomic guard on redeem) |
+| earned_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| expires_at | DATETIME2 | NOT NULL |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'active'` — `active` / `depleted` / `expired` / `reversed` |
+
+**Indexes:** `idx_coin_batches_user_status (user_id, status)`, `idx_coin_batches_user_expiry (user_id, expires_at)`.
+
+> **Balance** = `SUM(amount_remaining) WHERE user_id=? AND status='active' AND expires_at > now`. Consumed **FIFO** (soonest-to-expire first) via an atomic decrement guard (`amount_remaining >= n`) → flips to `depleted` at zero. Earn creates a lot (`expires_at = now + expiry_days`); cancel of an earning order sets it `reversed` and claws back only the unspent remainder. A **refund** batch (`source_order_id = NULL`) is minted when a Xu-paying order is cancelled, so it is never mistaken for an earn batch on reversal.
+
+#### `coin_transactions` — immutable Xu ledger (audit)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| type | NVARCHAR(20) | NOT NULL — `earn` / `redeem` / `expire` / `reverse_earn` / `refund` |
+| amount | INT | NOT NULL — positive magnitude; sign implied by `type` |
+| order_id | INT | FK → `orders.id` ON DELETE SET NULL, NULL |
+| batch_id | INT | FK → `coin_batches.id` **ON DELETE NO ACTION**, NULL |
+| note | NVARCHAR(255) | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:** `idx_coin_transactions_user_created (user_id, created_at)`, `idx_coin_transactions_order (order_id)`.
+
+> **⚠️ `batch_id` FK is NO ACTION** (not CASCADE/SET NULL): SQL Server forbids multiple cascade paths to `coin_transactions` (`users → coin_transactions` already cascades, and `users → coin_batches → coin_transactions` would be a second) — error 1785, same fix as `messages.sender_id`. Users are soft-banned (`is_active`), never hard-deleted, so this is safe. **Idempotency:** earn/reverse_earn/refund check for an existing `(order_id, type)` row before writing, so replays (multiple completion paths, retries) never double-count.
+
+---
+
+### 2.16 AI Chatbox Feature (Module 21)
+
+#### `ai_conversations` — one chatbox thread
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE SET NULL, NULL — customer owner |
+| session_id | NVARCHAR(100) | NULL — guest owner (mirrors `carts.session_id`) |
+| title | NVARCHAR(255) | NULL — snapshot of the first user message |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` — bumped on each new turn |
+
+**Indexes:** `idx_ai_conversations_user_id`, `idx_ai_conversations_session_id`.
+
+> **Owner = customer (`user_id`) or guest (`session_id`).** `user_id` FK is **SET NULL** so a thread survives account removal (users are soft-banned, not hard-deleted). Access is by ownership match (`CHATBOT_003` otherwise). Admin (Module 13) lists all threads newest-activity first.
+
+#### `ai_messages` — turns in a thread
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| conversation_id | INT | FK → `ai_conversations.id` ON DELETE CASCADE, NOT NULL |
+| role | NVARCHAR(20) | NOT NULL — `user` / `assistant` |
+| content | NVARCHAR(MAX) | NOT NULL |
+| product_ids | NVARCHAR(MAX) | NULL — JSON array of suggested product ids (assistant turns) |
+| actions | NVARCHAR(MAX) | NULL — JSON array of agent action cards (assistant turns; Module 21 agent upgrade) |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:** `idx_ai_messages_conversation_created (conversation_id, created_at)`.
+
+> **`product_ids`** snapshots which products the assistant suggested for that turn; on read they are hydrated via `ProductService.findActiveByIds` (active product + active shop) so cards re-render on resume / in the admin view, dropping any product deactivated since.
+> **`actions`** (AI Shopping Agent) snapshots the agent action cards for the turn as JSON `[{ type, data }]` — `type ∈ { cart_updated, checkout_proposal, order_cancelled, needs_login, quick_replies }` — so the storefront re-renders them on resume and Admin sees what the agent did. Added by migration `1756800000000-AddActionsToAiMessages` (dev auto-adds via `synchronize`).
+
+#### `ai_settings` — single-row admin config
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| chatbox_enabled | BIT | NOT NULL, DEFAULT `1` — gates the storefront widget |
+| system_prompt | NVARCHAR(MAX) | NULL — optional override of the built-in default prompt |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> **One row (id = 1), seeded.** Read on `GET /ai/config` (widget gate) and every `POST /ai/chat` (disabled → `CHATBOT_005`). Managed via `GET/PATCH /admin/ai/settings` (`ai_chatbox:read`/`ai_chatbox:update`). Reads self-heal (create defaults if empty).
+
+---
+
+### 2.17 Seller Application Feature (Module 24 — Onboarding)
+
+#### `seller_applications`
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `pending` / `approved` / `rejected` |
+| shop_name | NVARCHAR(100) | NOT NULL |
+| phone | NVARCHAR(20) | NOT NULL |
+| business_name | NVARCHAR(150) | NULL |
+| tax_id | NVARCHAR(50) | NULL — MST / CCCD |
+| description | NVARCHAR(MAX) | NULL |
+| logo_url / banner_url | NVARCHAR(500) | NULL — reused when materializing the shop |
+| reject_reason | NVARCHAR(255) | NULL |
+| reviewed_by | INT | NULL — admin |
+| reviewed_at | DATETIME2 | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> **Filtered UNIQUE** `uq_seller_applications_user_pending (user_id) WHERE status = 'pending'` — at most one pending application per user; approved/rejected rows are kept (audit) and let the user re-apply. Indexes: `idx_seller_applications_user_id`, `idx_seller_applications_status`. Approving grants the `seller` role (via `AuthService`) and materializes an **active** shop (via `ShopService.createShopFromApplication`, skipping `pending_verification`).
+
+---
+
+### 2.18 Seller Finance Feature (Module 25 — Commission + Wallet + Payout)
+
+#### `commission_category_rates` — per-category commission override (owned by `settings`)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| category_id | INT | FK → `categories.id` ON DELETE CASCADE, UNIQUE |
+| rate_percent | DECIMAL(5,2) | NOT NULL |
+| updated_by | INT | NULL |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> Used only when `commission.mode = 'category'`. A rate override **cascades down the category tree**: an order line's category inherits the rate of its nearest ancestor override if it has none of its own (a child's own override wins), and a category with no ancestor override falls back to the platform `commission.rate_percent`. `SettingsService.getCommissionCategoryRateMap()` resolves this by walking the tree (`ProductService.getCategoryTree`) into a flat `{ category_id → effective rate }` map — the engine still matches the snapshot `order_items.category_id` exactly, but the map now covers descendants. The raw (un-cascaded) overrides stay editable via `GET /admin/settings/commission/category-rates`. Mirrors how coupon `scope='categories'` covers sub-categories. Commission config keys (`commission.enabled/mode/rate_percent`) live in `app_settings` (2.15 pattern).
+
+#### `commission_transactions` — immutable platform-commission ledger
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| shop_id | INT | NOT NULL |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL — seller (denormalized) |
+| order_id | INT | FK → `orders.id` ON DELETE SET NULL, NULL |
+| base_amount | DECIMAL(10,2) | NOT NULL — `total_amount − shipping_fee` |
+| rate_percent | DECIMAL(5,2) | NOT NULL — effective (blended) rate |
+| commission_amount | DECIMAL(10,2) | NOT NULL |
+| type | NVARCHAR(20) | NOT NULL — `charge` / `reverse` |
+| note | NVARCHAR(255) | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> One `charge` per completed order (idempotent `(order_id, type)`), defensive `reverse` on cancel. Indexes: `idx_commission_transactions_order`, `idx_commission_transactions_shop_created`.
+
+#### `seller_wallets` — withdrawable balance (source of truth)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, UNIQUE |
+| balance | DECIMAL(10,2) | NOT NULL, DEFAULT `0` |
+| updated_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> Credited with the **net** (`base − commission`) when an order completes; debited on withdrawal via an atomic guard (`balance >= amount`). Self-heals an empty wallet on first read.
+
+#### `wallet_transactions` — immutable wallet ledger
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| type | NVARCHAR(20) | NOT NULL — `sale_earning` / `withdrawal` / `reversal` / `withdrawal_refund` |
+| amount | DECIMAL(10,2) | NOT NULL — positive magnitude; sign implied by `type` |
+| order_id | INT | FK → `orders.id` ON DELETE SET NULL, NULL |
+| withdrawal_id | INT | FK → `withdrawal_requests.id` **ON DELETE NO ACTION**, NULL |
+| note | NVARCHAR(255) | NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> **⚠️ `withdrawal_id` FK is NO ACTION** — `users` already cascades here directly, so a second path via `withdrawal_requests` would trip SQL Server error 1785 (same fix as `coin_transactions.batch_id`, `messages.sender_id`). Indexes: `idx_wallet_transactions_user_created`, `idx_wallet_transactions_order`.
+
+#### `withdrawal_requests` — payout queue
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NOT NULL |
+| amount | DECIMAL(10,2) | NOT NULL |
+| status | NVARCHAR(20) | NOT NULL, DEFAULT `'pending'` — `pending` / `approved` / `rejected` |
+| bank_name / bank_account_number / bank_account_holder | NVARCHAR | NOT NULL |
+| reject_reason | NVARCHAR(255) | NULL |
+| reviewed_by | INT | NULL · reviewed_at DATETIME2 NULL |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+> On create the amount is **held** (atomic debit). Approve finalizes (paid out-of-band); reject refunds the held amount as a `withdrawal_refund`. Indexes: `idx_withdrawal_requests_user_created`, `idx_withdrawal_requests_status`.
+
+> **`order_items.category_id`** (INT NULL) added (2.6) — snapshot of the product's category at checkout, so the category-mode commission engine never joins products at runtime and survives variant/product deletion (null → platform rate).
+
+---
+
+### 2.19 Recommendations Feature (Module 22 — Smart Recommendations)
+
+#### `user_activity_log` — behavioral signals (content-based recommendations)
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | INT | PK, auto-increment |
+| user_id | INT | FK → `users.id` ON DELETE CASCADE, NULL — customer owner |
+| session_id | NVARCHAR(100) | NULL — guest owner (mirrors `carts.session_id`) |
+| action | NVARCHAR(30) | NOT NULL — `VIEW_PRODUCT` / `VIEW_CATEGORY` / `SEARCH` / `ADD_TO_CART` / `ADD_TO_WISHLIST` / `PURCHASE` |
+| target_type | NVARCHAR(20) | NOT NULL — `product` / `category` / `search` |
+| target_id | INT | NULL — product/category id (NULL for `SEARCH`); **deliberately NOT a FK** |
+| metadata | NVARCHAR(MAX) | NULL — JSON (e.g. `{ keyword }` for `SEARCH`) |
+| created_at | DATETIME2 | NOT NULL, DEFAULT `SYSUTCDATETIME()` |
+
+**Indexes:** `idx_user_activity_log_user (user_id, created_at)`, `idx_user_activity_log_session (session_id, created_at)`, `idx_user_activity_log_target (target_type, target_id, action)` (co-view / co-purchase joins), `idx_user_activity_log_created (created_at)` (cleanup cron).
+
+> **Owner = customer (`user_id`) or guest (`session_id`)**, exactly like the AI chatbox / cart. `user_id` FK is **ON DELETE CASCADE** (a single cascade path from `users` — safe). `target_id` is **not a FK**: logging stays lenient (a later product/category delete must not cascade-wipe history or break a write); scoring joins to `products`/`categories` best-effort and drops misses. Rows are captured hybrid — frontend `POST /activity` for VIEW/SEARCH/CART/WISHLIST, and a server-side `@OnEvent('order.created')` listener for PURCHASE (the `order.created` payload was enriched with an optional `userId`). Scoring is **on-demand** over the last 90 days (no Redis); a daily cron deletes rows older than 90 days. Added by migration `1757000000000-CreateUserActivityLogTable` (dev auto-adds via `synchronize`).
+
+---
+
 ## 3. Entity Relationship Diagram
 
 ```mermaid
@@ -589,6 +866,15 @@ erDiagram
     users ||--o{ recently_viewed : "viewed products"
     users ||--o{ conversations : "chats as customer"
     users ||--o{ messages : "sends"
+    users ||--o{ coin_batches : "earns Xu"
+    users ||--o{ coin_transactions : "Xu ledger"
+    users ||--o{ app_settings : "updates config"
+    users ||--o{ ai_conversations : "AI chat threads"
+    users ||--o{ user_activity_log : "behavioral signals"
+    ai_conversations ||--o{ ai_messages : "contains"
+
+    orders ||--o{ coin_batches : "source of earned Xu"
+    coin_batches ||--o{ coin_transactions : "ledger entries"
 
     shops ||--o{ products : "sells"
     shops ||--o{ orders : "has orders"
@@ -616,6 +902,8 @@ erDiagram
     orders ||--o{ payment_transactions : "has payments"
     orders ||--o{ reviews : "verified by"
     orders ||--o{ coupon_usages : "applied coupon"
+    orders ||--o{ order_status_history : "status timeline"
+    orders ||--o{ order_tracking_locations : "shipper locations"
 
     coupons ||--o{ coupon_categories : "targets categories"
     coupons ||--o{ coupon_products : "targets products"
@@ -654,6 +942,7 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | refresh_tokens | `idx_refresh_tokens_user_id` | user_id | Logout all devices |
 | refresh_tokens | `idx_refresh_tokens_expires_at` | expires_at | Scheduled cleanup job |
 | oauth_codes | `idx_oauth_codes_code_hash` | code_hash | OAuth code exchange lookup |
+| addresses | `idx_addresses_user_id` | user_id | List a user's addresses |
 | shops | `idx_shops_user_id` | user_id | Lookup shop by user |
 | shops | `idx_shops_status` | status | Filter shops by status |
 | products | `idx_products_category_id` | category_id | Filter products by category |
@@ -663,6 +952,8 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | product_variants | `uq_pv_option1_only` | product_id, option1 | UNIQUE (filtered: option1 NOT NULL, option2 NULL) |
 | product_variants | `uq_pv_no_options` | product_id | UNIQUE (filtered: both NULL) — single-variant product |
 | product_variants | `idx_product_variants_sku` | sku | Already covered by UNIQUE |
+| product_images | `idx_product_images_product_id` | product_id | Load a product's images |
+| product_images | `idx_product_images_variant_option1` | product_id, variant_option1, sort_order | Per-variant image gallery, ordered |
 | order_items | `idx_order_items_order_id` | order_id | Load items for an order |
 | order_items | `idx_order_items_shop_id` | shop_id | Filter order items by shop |
 | orders | `idx_orders_user_id` | user_id | User's order history |
@@ -670,7 +961,11 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | orders | `idx_orders_order_group_id` | order_group_id | Lookup all orders in a checkout group |
 | orders | `idx_orders_shipper_id` | shipper_id | Filter orders by shipper |
 | orders | `idx_orders_delivered_at` | delivered_at | Auto-complete cron: find delivered orders past 7-day window |
+| order_status_history | `idx_order_status_history_order_id` | order_id | Load an order's status timeline |
+| order_tracking_locations | `idx_order_tracking_locations_order_created` | order_id, created_at | Latest shipper location for the tracking map |
 | reviews | `idx_reviews_product_id` | product_id | Product review listing |
+| carts | `idx_carts_user_id` | user_id | Lookup a user's cart |
+| carts | `idx_carts_session_id` | session_id | Lookup a guest cart by session |
 | cart_items | `idx_cart_items_cart_id` | cart_id | Load cart contents |
 | wishlist_items | `uq_wishlist_items_user_product` | user_id, product_id | Unique constraint + "is wishlisted?" check |
 | wishlist_items | `idx_wishlist_items_user_id` | user_id | User's wishlist listing |
@@ -684,7 +979,7 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | coupon_usages | `idx_coupon_usages_coupon_id` | coupon_id | List usages per coupon |
 | coupon_usages | `idx_coupon_usages_user_id_coupon_id` | user_id, coupon_id | Per-user usage count check |
 | coupon_usages | `idx_coupon_usages_order_id` | order_id | Find usage by order (reversal) |
-| notifications | `idx_notifications_user_id_is_read` | user_id, is_read | Paginated listing + unread count |
+| notifications | `idx_notifications_user_context_read` | user_id, context, is_read | Per-portal paginated listing + unread count |
 | notifications | `idx_notifications_created_at` | created_at | Sort by newest first |
 | payment_transactions | `idx_payment_transactions_order_id` | order_id | List transactions for an order |
 | payment_transactions | `idx_payment_transactions_order_group_id` | order_group_id | Lookup transactions by order group |
@@ -695,3 +990,15 @@ High-read tables get explicit indexes beyond PKs and unique constraints:
 | conversations | `idx_conversations_shop_id` | shop_id | Seller's conversation list |
 | messages | `idx_messages_conversation_id` | conversation_id | Load a conversation's messages |
 | messages | `idx_messages_conversation_created` | conversation_id, created_at | Paginated newest-first history |
+| app_settings | `uq_app_settings_key` | key | UNIQUE — config lookup by key |
+| coin_batches | `idx_coin_batches_user_status` | user_id, status | Balance sum (active batches) |
+| coin_batches | `idx_coin_batches_user_expiry` | user_id, expires_at | FIFO consumption + expiring-soon |
+| coin_transactions | `idx_coin_transactions_user_created` | user_id, created_at | Paginated ledger (newest first) |
+| coin_transactions | `idx_coin_transactions_order` | order_id | Idempotency check by (order, type) |
+| ai_conversations | `idx_ai_conversations_user_id` | user_id | Customer's AI threads |
+| ai_conversations | `idx_ai_conversations_session_id` | session_id | Guest's AI threads |
+| ai_messages | `idx_ai_messages_conversation_created` | conversation_id, created_at | Ordered thread history |
+| user_activity_log | `idx_user_activity_log_user` | user_id, created_at | Customer profile window |
+| user_activity_log | `idx_user_activity_log_session` | session_id, created_at | Guest profile window |
+| user_activity_log | `idx_user_activity_log_target` | target_type, target_id, action | Co-view / co-purchase joins |
+| user_activity_log | `idx_user_activity_log_created` | created_at | Cleanup cron (>90 days) |

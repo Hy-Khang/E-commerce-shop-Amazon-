@@ -13,10 +13,10 @@ export class Category {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 100 })
+  @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ type: 'nvarchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100, unique: true })
   slug: string;
 
   @Column({ nullable: true })

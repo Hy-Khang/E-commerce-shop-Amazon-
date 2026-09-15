@@ -55,7 +55,10 @@ export class NotificationController {
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark notification as read' })
   @ApiResponse({ status: 200, type: NotificationResponseDto })
-  @ApiResponse({ status: 404, description: 'NOTIFICATION_001: Notification not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'NOTIFICATION_001: Notification not found',
+  })
   async markAsRead(
     @CurrentUser() user: ICurrentUser,
     @Param('id', ParseIntPipe) id: number,

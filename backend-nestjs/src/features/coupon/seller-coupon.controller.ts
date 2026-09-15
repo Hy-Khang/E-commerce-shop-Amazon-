@@ -36,7 +36,9 @@ export class SellerCouponController {
 
   @Get()
   @Permissions(PERMISSIONS.COUPONS_READ)
-  @ApiOperation({ summary: "List the current seller's shop coupons (paginated)" })
+  @ApiOperation({
+    summary: "List the current seller's shop coupons (paginated)",
+  })
   async findAll(
     @CurrentUser() user: ICurrentUser,
     @Query() query: CouponQueryDto,
@@ -48,7 +50,10 @@ export class SellerCouponController {
   @Permissions(PERMISSIONS.COUPONS_READ)
   @ApiOperation({ summary: 'Get shop coupon detail (own shop only)' })
   @ApiResponse({ status: 200, type: CouponResponseDto })
-  @ApiResponse({ status: 403, description: 'COUPON_010: Coupon not owned by your shop' })
+  @ApiResponse({
+    status: 403,
+    description: 'COUPON_010: Coupon not owned by your shop',
+  })
   async findOne(
     @CurrentUser() user: ICurrentUser,
     @Param('id', ParseIntPipe) id: number,
@@ -58,10 +63,18 @@ export class SellerCouponController {
 
   @Post()
   @Permissions(PERMISSIONS.COUPONS_CREATE)
-  @ApiOperation({ summary: 'Create shop coupon (code auto-prefixed with shop slug)' })
+  @ApiOperation({
+    summary: 'Create shop coupon (code auto-prefixed with shop slug)',
+  })
   @ApiResponse({ status: 201, type: CouponResponseDto })
-  @ApiResponse({ status: 400, description: 'COUPON_009: Product not in your shop' })
-  @ApiResponse({ status: 409, description: 'COUPON_007: Coupon code already exists' })
+  @ApiResponse({
+    status: 400,
+    description: 'COUPON_009: Product not in your shop',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'COUPON_007: Coupon code already exists',
+  })
   async create(
     @CurrentUser() user: ICurrentUser,
     @Body() dto: CreateSellerCouponDto,
@@ -71,9 +84,14 @@ export class SellerCouponController {
 
   @Patch(':id')
   @Permissions(PERMISSIONS.COUPONS_UPDATE)
-  @ApiOperation({ summary: 'Update shop coupon (code immutable, own shop only)' })
+  @ApiOperation({
+    summary: 'Update shop coupon (code immutable, own shop only)',
+  })
   @ApiResponse({ status: 200, type: CouponResponseDto })
-  @ApiResponse({ status: 403, description: 'COUPON_010: Coupon not owned by your shop' })
+  @ApiResponse({
+    status: 403,
+    description: 'COUPON_010: Coupon not owned by your shop',
+  })
   async update(
     @CurrentUser() user: ICurrentUser,
     @Param('id', ParseIntPipe) id: number,
@@ -85,7 +103,9 @@ export class SellerCouponController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Permissions(PERMISSIONS.COUPONS_DELETE)
-  @ApiOperation({ summary: 'Deactivate shop coupon (soft delete, own shop only)' })
+  @ApiOperation({
+    summary: 'Deactivate shop coupon (soft delete, own shop only)',
+  })
   async remove(
     @CurrentUser() user: ICurrentUser,
     @Param('id', ParseIntPipe) id: number,

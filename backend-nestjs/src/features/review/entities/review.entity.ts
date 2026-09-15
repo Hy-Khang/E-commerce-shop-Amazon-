@@ -28,10 +28,10 @@ export class Review {
   @Column({ type: 'int' })
   rating: number;
 
-  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
+  @Column({ type: 'text', nullable: true })
   comment: string | null;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => User)

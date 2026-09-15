@@ -73,10 +73,7 @@ export class WishlistService {
     return toWishlistItemResponse(item, priceMap.get(dto.product_id));
   }
 
-  async removeFromWishlist(
-    userId: number,
-    productId: number,
-  ): Promise<void> {
+  async removeFromWishlist(userId: number, productId: number): Promise<void> {
     const deleted = await this.wishlistItemRepository.deleteByUserAndProduct(
       userId,
       productId,

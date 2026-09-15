@@ -6,6 +6,7 @@ import { ProductCardSkeleton } from '@/features/product/components/ProductCardSk
 import { useShop } from '../hooks/useShop';
 import { useShopProducts } from '../hooks/useShopProducts';
 import { ShopHeader } from '../components/ShopHeader';
+import { ShopDecorationRenderer } from '../components/decoration/ShopDecorationRenderer';
 
 export default function ShopProfilePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -21,9 +22,15 @@ export default function ShopProfilePage() {
     return <div className="py-12 text-center text-text-secondary">Shop not found.</div>;
   }
 
+  const decoration = shop.decoration_config;
+
   return (
     <div className="space-y-8">
       <ShopHeader shop={shop} />
+
+      {decoration && decoration.blocks.length > 0 && (
+        <ShopDecorationRenderer config={decoration} />
+      )}
 
       <div>
         <h2 className="mb-6 text-xl font-bold tracking-tight text-text-primary">All Products</h2>

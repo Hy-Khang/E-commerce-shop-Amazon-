@@ -16,28 +16,28 @@ export class RefreshToken {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   token_hash: string;
 
-  @Column({ type: 'datetime2' })
+  @Column({ type: 'timestamptz' })
   expires_at: Date;
 
   @Column({
-    type: 'datetime2',
-    default: () => 'SYSUTCDATETIME()',
+    type: 'timestamptz',
+    default: () => 'now()',
   })
   created_at: Date;
 
-  @Column({ type: 'bit', default: false })
+  @Column({ type: 'boolean', default: false })
   is_revoked: boolean;
 
-  @Column({ type: 'nvarchar', length: 45, nullable: true })
+  @Column({ type: 'varchar', length: 45, nullable: true })
   ip_address: string;
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   user_agent: string;
 
-  @Column({ type: 'nvarchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   device_name: string;
 
   @Column()

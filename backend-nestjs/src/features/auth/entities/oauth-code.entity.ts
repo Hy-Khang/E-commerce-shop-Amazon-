@@ -5,18 +5,18 @@ export class OAuthCode {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   code_hash: string;
 
   @Column()
   user_id: number;
 
-  @Column({ type: 'datetime2' })
+  @Column({ type: 'timestamptz' })
   expires_at: Date;
 
   @Column({
-    type: 'datetime2',
-    default: () => 'SYSUTCDATETIME()',
+    type: 'timestamptz',
+    default: () => 'now()',
   })
   created_at: Date;
 }

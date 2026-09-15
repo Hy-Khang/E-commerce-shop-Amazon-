@@ -61,7 +61,9 @@ export const mockRoleWithUserCount = (
   ...overrides,
 });
 
-export const mockRefreshToken = (overrides: Partial<RefreshToken> = {}): RefreshToken => ({
+export const mockRefreshToken = (
+  overrides: Partial<RefreshToken> = {},
+): RefreshToken => ({
   id: 1,
   token_hash: 'hashed_token_value',
   expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),

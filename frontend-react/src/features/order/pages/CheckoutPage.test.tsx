@@ -41,6 +41,26 @@ vi.mock('../components/OrderItemRow', () => ({ OrderItemRow: () => <div /> }));
 vi.mock('../components/CheckoutShopGroup', () => ({
   CheckoutShopGroup: () => <div />,
 }));
+// Coin (Hoàn Xu): stub the card + balance, back the redemption pick with a real
+// tiny zustand store so the page behaves as in production (default: no Xu).
+vi.mock('@/features/coin', async () => {
+  const { create } = await import('zustand');
+  interface CoinStore {
+    coins: number;
+    setCoins: (n: number) => void;
+    clear: () => void;
+  }
+  const useCoinRedemptionStore = create<CoinStore>((set) => ({
+    coins: 0,
+    setCoins: (n) => set({ coins: Math.max(0, Math.trunc(n || 0)) }),
+    clear: () => set({ coins: 0 }),
+  }));
+  return {
+    CoinRedeemCard: () => <div />,
+    useCoinBalance: () => ({ data: { balance: 0, expiring_soon: [] } }),
+    useCoinRedemptionStore,
+  };
+});
 // Stub the voucher modal so a test can drive apply/remove without the real modal,
 // but back the applied-coupons state with a real (tiny) zustand store so the
 // page re-renders on apply/remove exactly as in production.
@@ -172,11 +192,13 @@ const ADDRESS = {
 const twoShopPreview: CheckoutPreview = {
   subtotal: 500000,
   discount_total: 0,
+  coin_discount: 0,
+  coins_applied: 0,
   shipping_total: 60000,
   grand_total: 560000,
   shops: [
-    { shop_id: 1, shop_name: 'Shop One', items_total: 200000, discount_amount: 0, shipping_fee: 30000, total: 230000, coupons: [] },
-    { shop_id: 2, shop_name: 'Shop Two', items_total: 300000, discount_amount: 0, shipping_fee: 30000, total: 330000, coupons: [] },
+    { shop_id: 1, shop_name: 'Shop One', items_total: 200000, discount_amount: 0, coin_discount: 0, shipping_fee: 30000, total: 230000, coupons: [] },
+    { shop_id: 2, shop_name: 'Shop Two', items_total: 300000, discount_amount: 0, coin_discount: 0, shipping_fee: 30000, total: 330000, coupons: [] },
   ],
   applied_coupons: [],
 };
@@ -184,10 +206,12 @@ const twoShopPreview: CheckoutPreview = {
 const singleShopPreview: CheckoutPreview = {
   subtotal: 200000,
   discount_total: 0,
+  coin_discount: 0,
+  coins_applied: 0,
   shipping_total: 30000,
   grand_total: 230000,
   shops: [
-    { shop_id: 1, shop_name: 'Shop One', items_total: 200000, discount_amount: 0, shipping_fee: 30000, total: 230000, coupons: [] },
+    { shop_id: 1, shop_name: 'Shop One', items_total: 200000, discount_amount: 0, coin_discount: 0, shipping_fee: 30000, total: 230000, coupons: [] },
   ],
   applied_coupons: [],
 };
@@ -236,7 +260,7 @@ describe('CheckoutPage summary', () => {
     // Server skipped every item (no shop_id) → all zeros. Must NOT show 0 total.
     h.usePreviewCheckout.mockReturnValue(
       previewResult({
-        data: { subtotal: 0, discount_total: 0, shipping_total: 0, grand_total: 0, shops: [], applied_coupons: [] },
+        data: { subtotal: 0, discount_total: 0, coin_discount: 0, coins_applied: 0, shipping_total: 0, grand_total: 0, shops: [], applied_coupons: [] },
       }),
     );
     render(<CheckoutPage />);

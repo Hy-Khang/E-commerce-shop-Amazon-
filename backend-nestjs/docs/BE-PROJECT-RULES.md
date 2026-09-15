@@ -4,8 +4,8 @@
 
 - **Language:** TypeScript (strict mode)
 - **Framework:** NestJS v11
-- **ORM:** TypeORM (migrations only — never `synchronize: true` in production)
-- **Database:** SQL Server
+- **ORM:** TypeORM (migrations only — never `synchronize: true` in production), driver `pg`
+- **Database:** Supabase (PostgreSQL) — migrated from SQL Server. Session pooler + SSL, `TZ=UTC`. See `share-docs/DATABASE.md` for the type mapping and the SQL Server→Postgres migration notes.
 - **Auth:** JWT (access token 15min + refresh token 7d, stored hashed)
 
 ---

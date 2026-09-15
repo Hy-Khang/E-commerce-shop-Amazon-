@@ -4,7 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import request from 'supertest';
 import { AuthService } from '../auth.service';
 import { AuthController } from '../auth.controller';
-import { ILoginResponse, IRegisterResponse, ITokenPair } from '../types/auth.types';
+import {
+  ILoginResponse,
+  IRegisterResponse,
+  ITokenPair,
+} from '../types/auth.types';
 
 describe('Auth — Refresh Token Rotation (e2e)', () => {
   let app: INestApplication;
@@ -13,7 +17,17 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
   const mockLoginResponse: ILoginResponse = {
     accessToken: 'access-token-1',
     refreshToken: 'refresh-token-1',
-    user: { id: 1, email: 'user@example.com', full_name: 'Nguyen Van A', role: 'customer', role_id: 1, permissions: [], email_verified: true, has_password: true, providers: [] },
+    user: {
+      id: 1,
+      email: 'user@example.com',
+      full_name: 'Nguyen Van A',
+      role: 'customer',
+      role_id: 1,
+      permissions: [],
+      email_verified: true,
+      has_password: true,
+      providers: [],
+    },
   };
 
   const mockNewTokenPair: ITokenPair = {
@@ -44,7 +58,13 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
     }).compile();
 
     app = module.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     await app.init();
 
     authService = module.get(AuthService);
@@ -93,7 +113,10 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
       // Arrange
       const { UnauthorizedException } = require('@nestjs/common');
       authService.refresh.mockRejectedValue(
-        new UnauthorizedException({ code: 'AUTH_003', message: 'Refresh token expired or revoked' }),
+        new UnauthorizedException({
+          code: 'AUTH_003',
+          message: 'Refresh token expired or revoked',
+        }),
       );
 
       // Act & Assert
@@ -121,7 +144,10 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
       authService.logout.mockResolvedValue(undefined);
       const { UnauthorizedException } = require('@nestjs/common');
       authService.refresh.mockRejectedValue(
-        new UnauthorizedException({ code: 'AUTH_003', message: 'Refresh token expired or revoked' }),
+        new UnauthorizedException({
+          code: 'AUTH_003',
+          message: 'Refresh token expired or revoked',
+        }),
       );
 
       // Act — logout with the refresh token
@@ -155,7 +181,11 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
       // Act
       const res = await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ email: 'new@example.com', password: 'securePassword123', full_name: 'New User' })
+        .send({
+          email: 'new@example.com',
+          password: 'securePassword123',
+          full_name: 'New User',
+        })
         .expect(201);
 
       // Assert
@@ -192,14 +222,22 @@ describe('Auth — Refresh Token Rotation (e2e)', () => {
     it('should return 400 when email is invalid format', async () => {
       await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ email: 'not-an-email', password: 'securePassword123', full_name: 'Test User' })
+        .send({
+          email: 'not-an-email',
+          password: 'securePassword123',
+          full_name: 'Test User',
+        })
         .expect(400);
     });
 
     it('should return 400 when password is too short', async () => {
       await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ email: 'valid@example.com', password: 'short', full_name: 'Test User' })
+        .send({
+          email: 'valid@example.com',
+          password: 'short',
+          full_name: 'Test User',
+        })
         .expect(400);
     });
 

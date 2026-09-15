@@ -14,7 +14,10 @@ export class AddFlashSaleItemDto {
   @IsPositive()
   flash_price: number;
 
-  @ApiProperty({ example: 50, description: 'Units available at the flash price' })
+  @ApiProperty({
+    example: 50,
+    description: 'Units available at the flash price',
+  })
   @Type(() => Number)
   @IsInt()
   @IsPositive()

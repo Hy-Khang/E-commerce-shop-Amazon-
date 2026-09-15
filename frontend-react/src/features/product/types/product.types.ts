@@ -72,6 +72,11 @@ export interface ProductListItem {
   category_id: number;
   variants: ProductVariant[];
   shop?: ShopSummary | null;
+  // Present on the bulk `?ids=` path (comparison, recently-viewed hydration): the
+  // joined category object and review stats. Optional elsewhere (plain listings omit them).
+  category?: Category | null;
+  avgRating?: number;
+  reviewCount?: number;
 }
 
 export interface AdminProductDetail extends Product {

@@ -10,18 +10,22 @@ import { Product } from './product.entity';
 
 @Entity('product_images')
 @Index('idx_product_images_product_id', ['product_id'])
-@Index('idx_product_images_variant_option1', ['product_id', 'variant_option1', 'sort_order'])
+@Index('idx_product_images_variant_option1', [
+  'product_id',
+  'variant_option1',
+  'sort_order',
+])
 export class ProductImage {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'nvarchar', length: 500 })
+  @Column({ type: 'varchar', length: 500 })
   image_url: string;
 
   @Column({ type: 'int', default: 0 })
   sort_order: number;
 
-  @Column({ type: 'nvarchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   variant_option1: string | null;
 
   @Column()

@@ -17,10 +17,14 @@ import { Shop } from '../../shop/entities/shop.entity';
 @Index('idx_flash_sale_items_sale_status', ['flash_sale_id', 'status'])
 // Filtered UNIQUE: one non-rejected registration per (campaign, variant). A
 // rejected row is kept for audit and lets the seller register the variant again.
-@Index('uq_flash_sale_items_sale_variant', ['flash_sale_id', 'product_variant_id'], {
-  unique: true,
-  where: "status <> 'rejected'",
-})
+@Index(
+  'uq_flash_sale_items_sale_variant',
+  ['flash_sale_id', 'product_variant_id'],
+  {
+    unique: true,
+    where: "status <> 'rejected'",
+  },
+)
 export class FlashSaleItem {
   @PrimaryGeneratedColumn()
   id: number;
@@ -45,7 +49,7 @@ export class FlashSaleItem {
   sold_quantity: number;
 
   // pending | approved | rejected — seller registers as pending, admin moderates.
-  @Column({ type: 'nvarchar', length: 20, default: 'pending' })
+  @Column({ type: 'varchar', length: 20, default: 'pending' })
   status: string;
 
   // Seller user who registered (audit). SET NULL if the user is deleted.
@@ -56,10 +60,10 @@ export class FlashSaleItem {
   @Column({ type: 'int', nullable: true })
   reviewed_by: number | null;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   reviewed_at: Date | null;
 
-  @Column({ type: 'nvarchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   reject_reason: string | null;
 
   @ManyToOne(() => FlashSale, (sale) => sale.items, { onDelete: 'CASCADE' })

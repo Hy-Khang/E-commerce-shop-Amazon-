@@ -92,7 +92,7 @@ describe('ReviewService', () => {
       orderService.findOrderByIdForReview.mockResolvedValue(order as any);
       productService.findVariantById.mockResolvedValue(variant);
       reviewRepository.findByUserAndOrderAndProduct.mockResolvedValue(null);
-      reviewRepository.create.mockResolvedValue(created as any);
+      reviewRepository.create.mockResolvedValue(created);
 
       // Act
       const result = await service.createReview(userId, dto);
@@ -119,7 +119,7 @@ describe('ReviewService', () => {
       orderService.findOrderByIdForReview.mockResolvedValue(order as any);
       productService.findVariantById.mockResolvedValue(variant);
       reviewRepository.findByUserAndOrderAndProduct.mockResolvedValue(null);
-      reviewRepository.create.mockResolvedValue(created as any);
+      reviewRepository.create.mockResolvedValue(created);
 
       // Act
       await service.createReview(userId, dtoNoComment);
@@ -214,7 +214,7 @@ describe('ReviewService', () => {
       orderService.findOrderByIdForReview.mockResolvedValue(order as any);
       productService.findVariantById.mockResolvedValue(variant);
       reviewRepository.findByUserAndOrderAndProduct.mockResolvedValue(null);
-      reviewRepository.create.mockResolvedValue(created as any);
+      reviewRepository.create.mockResolvedValue(created);
 
       // Act
       await service.createReview(userId, dto);
@@ -232,7 +232,7 @@ describe('ReviewService', () => {
       orderService.findOrderByIdForReview.mockResolvedValue(order as any);
       productService.findVariantById.mockResolvedValue(variant);
       reviewRepository.findByUserAndOrderAndProduct.mockResolvedValue(
-        mockReview() as any,
+        mockReview(),
       );
 
       // Act & Assert
@@ -259,11 +259,9 @@ describe('ReviewService', () => {
       const stats = mockReviewStats();
 
       reviewRepository.findByProductIdPaginated.mockResolvedValue(
-        paginatedResult as any,
+        paginatedResult,
       );
-      reviewRepository.findVariantInfoForReviews.mockResolvedValue(
-        variantMap as any,
-      );
+      reviewRepository.findVariantInfoForReviews.mockResolvedValue(variantMap);
       reviewRepository.getReviewStats.mockResolvedValue(stats);
 
       // Act
@@ -285,7 +283,7 @@ describe('ReviewService', () => {
       // Arrange
       const paginatedResult = mockPaginatedReviews([]);
       reviewRepository.findByProductIdPaginated.mockResolvedValue(
-        paginatedResult as any,
+        paginatedResult,
       );
       reviewRepository.findVariantInfoForReviews.mockResolvedValue(new Map());
       reviewRepository.getReviewStats.mockResolvedValue(mockReviewStats());
@@ -313,13 +311,16 @@ describe('ReviewService', () => {
       const paginatedResult = mockPaginatedReviews([review]);
 
       reviewRepository.findByProductIdPaginated.mockResolvedValue(
-        paginatedResult as any,
+        paginatedResult,
       );
       reviewRepository.findVariantInfoForReviews.mockResolvedValue(new Map());
       reviewRepository.getReviewStats.mockResolvedValue(mockReviewStats());
 
       // Act
-      const result = await service.findProductReviews(10, { page: 1, limit: 20 });
+      const result = await service.findProductReviews(10, {
+        page: 1,
+        limit: 20,
+      });
 
       // Assert
       expect(result.data[0].variant_option1).toBeNull();
@@ -344,16 +345,10 @@ describe('ReviewService', () => {
         thumbnail_url: 'https://cdn.example.com/img/headphones.jpg',
       } as any;
       const paginatedResult = mockPaginatedReviews([review]);
-      const variantMap = new Map([
-        ['42-10', { option1: 'Red', option2: 'L' }],
-      ]);
+      const variantMap = new Map([['42-10', { option1: 'Red', option2: 'L' }]]);
 
-      reviewRepository.findByUserIdPaginated.mockResolvedValue(
-        paginatedResult as any,
-      );
-      reviewRepository.findVariantInfoForReviews.mockResolvedValue(
-        variantMap as any,
-      );
+      reviewRepository.findByUserIdPaginated.mockResolvedValue(paginatedResult);
+      reviewRepository.findVariantInfoForReviews.mockResolvedValue(variantMap);
 
       // Act
       const result = await service.findMyReviews(1, { page: 1, limit: 20 });
@@ -368,7 +363,7 @@ describe('ReviewService', () => {
     it('should use default pagination when not provided', async () => {
       // Arrange
       reviewRepository.findByUserIdPaginated.mockResolvedValue(
-        mockPaginatedReviews([]) as any,
+        mockPaginatedReviews([]),
       );
       reviewRepository.findVariantInfoForReviews.mockResolvedValue(new Map());
 
@@ -392,7 +387,7 @@ describe('ReviewService', () => {
     it('should delete own review', async () => {
       // Arrange
       reviewRepository.findById.mockResolvedValue(
-        mockReview({ id: 1, user_id: 1 }) as any,
+        mockReview({ id: 1, user_id: 1 }),
       );
 
       // Act
@@ -415,7 +410,7 @@ describe('ReviewService', () => {
     it('should throw ForbiddenException when review belongs to another user', async () => {
       // Arrange
       reviewRepository.findById.mockResolvedValue(
-        mockReview({ id: 1, user_id: 999 }) as any,
+        mockReview({ id: 1, user_id: 999 }),
       );
 
       // Act & Assert
@@ -451,12 +446,8 @@ describe('ReviewService', () => {
         ['42-10', { option1: 'Black', option2: 'M' }],
       ]);
 
-      reviewRepository.findAllPaginated.mockResolvedValue(
-        paginatedResult as any,
-      );
-      reviewRepository.findVariantInfoForReviews.mockResolvedValue(
-        variantMap as any,
-      );
+      reviewRepository.findAllPaginated.mockResolvedValue(paginatedResult);
+      reviewRepository.findVariantInfoForReviews.mockResolvedValue(variantMap);
 
       // Act
       const result = await service.findAllReviews({ page: 1, limit: 20 });
@@ -473,7 +464,7 @@ describe('ReviewService', () => {
       // Arrange
       const query = { page: 2, limit: 10, product_id: 5, rating: 3 };
       reviewRepository.findAllPaginated.mockResolvedValue(
-        mockPaginatedReviews([]) as any,
+        mockPaginatedReviews([]),
       );
       reviewRepository.findVariantInfoForReviews.mockResolvedValue(new Map());
 
@@ -493,7 +484,7 @@ describe('ReviewService', () => {
   describe('deleteReview', () => {
     it('should delete any review', async () => {
       // Arrange
-      reviewRepository.findById.mockResolvedValue(mockReview() as any);
+      reviewRepository.findById.mockResolvedValue(mockReview());
 
       // Act
       await service.deleteReview(1);

@@ -6,6 +6,7 @@ import { Button } from '@/common/components/ui/Button';
 import { Drawer } from '@/common/components/ui/Drawer';
 import { useProducts } from '../hooks/useProducts';
 import { useCategoryBySlug } from '../hooks/useCategories';
+import { useTrackActivity } from '@/features/recommendations';
 import { CategorySidebar } from '../components/CategorySidebar';
 import { FilterSidebar } from '../components/FilterSidebar';
 import { SortDropdown } from '../components/SortDropdown';
@@ -20,6 +21,12 @@ export default function CategoryPage() {
   const { params, setPage } = usePagination({ limit: 20, sort: 'created_at', order: 'desc' });
 
   const { data: category, isLoading: isCategoryLoading, error } = useCategoryBySlug(slug!);
+
+  useTrackActivity(
+    category?.category.id
+      ? { action: 'VIEW_CATEGORY', target_type: 'category', target_id: category.category.id }
+      : undefined,
+  );
 
   const filters: ProductListParams = {
     ...params,

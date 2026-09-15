@@ -122,7 +122,7 @@ export function FlashSaleItemsDrawer({ campaignId, campaignName, onClose }: Prop
 
                 {item.status === 'rejected' && item.reject_reason && (
                   <p className="mt-1 pl-14 text-xs text-rose-600 dark:text-rose-400">
-                    Lý do: {item.reject_reason}
+                    Reason: {item.reject_reason}
                   </p>
                 )}
 
@@ -131,7 +131,7 @@ export function FlashSaleItemsDrawer({ campaignId, campaignName, onClose }: Prop
                     <input
                       type="text"
                       autoFocus
-                      placeholder="Lý do từ chối (tuỳ chọn)"
+                      placeholder="Rejection reason (optional)"
                       className="admin-input flex-1"
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
@@ -143,14 +143,14 @@ export function FlashSaleItemsDrawer({ campaignId, campaignName, onClose }: Prop
                       className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-700 disabled:opacity-50"
                     >
                       {reject.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                      Từ chối
+                      Reject
                     </button>
                     <button
                       type="button"
                       onClick={() => setRejectingId(null)}
                       className="rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
-                      Huỷ
+                      Cancel
                     </button>
                   </div>
                 )}

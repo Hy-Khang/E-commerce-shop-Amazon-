@@ -60,7 +60,15 @@ export class AuthModule {
       global: true,
       imports: [
         ConfigModule,
-        TypeOrmModule.forFeature([Role, User, RefreshToken, Permission, RolePermission, UserAuthProvider, OAuthCode]),
+        TypeOrmModule.forFeature([
+          Role,
+          User,
+          RefreshToken,
+          Permission,
+          RolePermission,
+          UserAuthProvider,
+          OAuthCode,
+        ]),
         PassportModule.register({ defaultStrategy: 'jwt' }),
         MailModule,
         JwtModule.registerAsync({
@@ -84,7 +92,12 @@ export class AuthModule {
           },
         }),
       ],
-      controllers: [AuthController, AdminRoleController, AdminUserController, AdminPermissionController],
+      controllers: [
+        AuthController,
+        AdminRoleController,
+        AdminUserController,
+        AdminPermissionController,
+      ],
       providers: [
         AuthService,
         JwtStrategy,
@@ -96,11 +109,18 @@ export class AuthModule {
         RolePermissionRepository,
         UserAuthProviderRepository,
         OAuthCodeRepository,
-        { provide: PERMISSION_CACHE_PROVIDER, useClass: InMemoryPermissionCache },
+        {
+          provide: PERMISSION_CACHE_PROVIDER,
+          useClass: InMemoryPermissionCache,
+        },
         { provide: APP_GUARD, useClass: JwtAuthGuard },
         { provide: APP_GUARD, useClass: PermissionsGuard },
       ],
-      exports: [AuthService, RolePermissionRepository, PERMISSION_CACHE_PROVIDER],
+      exports: [
+        AuthService,
+        RolePermissionRepository,
+        PERMISSION_CACHE_PROVIDER,
+      ],
     };
   }
 }

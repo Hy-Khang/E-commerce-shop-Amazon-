@@ -20,7 +20,11 @@ export class AdminWishlistController {
   @Get('popular')
   @Permissions(PERMISSIONS.WISHLIST_READ)
   @ApiOperation({ summary: 'Most wishlisted products (paginated)' })
-  @ApiResponse({ status: 200, description: 'Returns paginated popular wishlist items', type: [PopularWishlistItemDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated popular wishlist items',
+    type: [PopularWishlistItemDto],
+  })
   async getMostWishlisted(@Query() query: PaginationDto) {
     return this.wishlistService.getMostWishlisted(
       query.page || 1,

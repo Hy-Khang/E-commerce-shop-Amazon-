@@ -11,9 +11,9 @@ interface Props {
 }
 
 const TABS = [
-  { key: 'province' as const, label: 'Tỉnh/Thành Phố' },
-  { key: 'district' as const, label: 'Quận/Huyện' },
-  { key: 'ward' as const, label: 'Phường/Xã' },
+  { key: 'province' as const, label: 'Province/City' },
+  { key: 'district' as const, label: 'District' },
+  { key: 'ward' as const, label: 'Ward' },
 ];
 
 type TabKey = 'province' | 'district' | 'ward';

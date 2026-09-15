@@ -7,9 +7,7 @@ import { resolvePeriod, type DashboardPeriod } from './utils/period.util';
 export class ShipperDashboardService {
   private readonly logger = new Logger(ShipperDashboardService.name);
 
-  constructor(
-    private readonly dashboardRepository: DashboardRepository,
-  ) {}
+  constructor(private readonly dashboardRepository: DashboardRepository) {}
 
   async getShipperDashboard(
     userId: number,

@@ -32,7 +32,7 @@ export function FlashSaleCard({ item }: Props) {
           </div>
         )}
         {discountPercent > 0 && (
-          <span className="absolute left-2 top-2 rounded-full bg-amber-600 px-2 py-0.5 text-xs font-bold text-white">
+          <span className="absolute left-2 top-2 rounded-full bg-orange-600 px-2 py-0.5 text-xs font-bold text-white">
             -{discountPercent}%
           </span>
         )}
@@ -51,7 +51,7 @@ export function FlashSaleCard({ item }: Props) {
         </h3>
 
         <div className="flex items-baseline gap-2">
-          <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+          <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
             {formatPrice(item.flash_price)}
           </span>
           {original && original > item.flash_price && (
@@ -62,14 +62,14 @@ export function FlashSaleCard({ item }: Props) {
         </div>
 
         <div className="mt-auto pt-1">
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-amber-100 dark:bg-amber-500/20">
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-orange-100 dark:bg-orange-500/20">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all"
+              className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all"
               style={{ width: `${Math.max(item.sold_percent, 4)}%` }}
             />
           </div>
           <p className="mt-1 text-[11px] font-medium text-text-secondary">
-            Đã bán {item.sold_quantity}/{item.flash_quantity}
+            Sold {item.sold_quantity}/{item.flash_quantity}
           </p>
         </div>
       </div>

@@ -57,7 +57,7 @@ describe('ReviewController', () => {
       };
       service.findProductReviews.mockResolvedValue(mockResult as any);
 
-      const result = await controller.findProductReviews(10, query as any);
+      const result = await controller.findProductReviews(10, query);
 
       expect(service.findProductReviews).toHaveBeenCalledWith(10, query);
       expect(result).toEqual(mockResult);
@@ -71,9 +71,9 @@ describe('ReviewController', () => {
         data: [],
         meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
       };
-      service.findMyReviews.mockResolvedValue(mockResult as any);
+      service.findMyReviews.mockResolvedValue(mockResult);
 
-      const result = await controller.findMyReviews(mockUser, query as any);
+      const result = await controller.findMyReviews(mockUser, query);
 
       expect(service.findMyReviews).toHaveBeenCalledWith(mockUser.id, query);
       expect(result).toEqual(mockResult);

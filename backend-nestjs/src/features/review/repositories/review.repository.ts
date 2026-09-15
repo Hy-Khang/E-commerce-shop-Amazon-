@@ -139,16 +139,14 @@ export class ReviewRepository {
     };
   }
 
-  async getReviewStats(
-    productId: number,
-  ): Promise<{
+  async getReviewStats(productId: number): Promise<{
     average_rating: number;
     total_reviews: number;
     rating_distribution: Record<number, number>;
   }> {
     const stats = await this.repo
       .createQueryBuilder('review')
-      .select('AVG(CAST(review.rating AS FLOAT))', 'average_rating')
+      .select('AVG(review.rating::float8)', 'average_rating')
       .addSelect('COUNT(*)', 'total_reviews')
       .where('review.product_id = :productId', { productId })
       .getRawOne();

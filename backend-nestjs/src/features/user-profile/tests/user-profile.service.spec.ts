@@ -172,7 +172,9 @@ describe('UserProfileService', () => {
       const result = await service.updateProfile(1, dto);
 
       // Assert
-      expect(authService.updateProfile).toHaveBeenCalledWith(1, { full_name: 'New Name' });
+      expect(authService.updateProfile).toHaveBeenCalledWith(1, {
+        full_name: 'New Name',
+      });
       expect(result.full_name).toBe('New Name');
     });
 
@@ -193,7 +195,9 @@ describe('UserProfileService', () => {
       const result = await service.updateProfile(1, dto);
 
       // Assert
-      expect(authService.updateProfile).toHaveBeenCalledWith(1, { phone: '0908888888' });
+      expect(authService.updateProfile).toHaveBeenCalledWith(1, {
+        phone: '0908888888',
+      });
       expect(result.phone).toBe('0908888888');
     });
 
@@ -317,16 +321,24 @@ describe('UserProfileService', () => {
     it('should update address when found', async () => {
       // Arrange
       const existing = mockAddress({ id: 3, user_id: 1 });
-      const updated = mockAddress({ id: 3, user_id: 1, full_name: 'Updated Name' });
+      const updated = mockAddress({
+        id: 3,
+        user_id: 1,
+        full_name: 'Updated Name',
+      });
       addressRepository.findByIdAndUserId.mockResolvedValue(existing);
       addressRepository.update.mockResolvedValue(updated);
 
       // Act
-      const result = await service.updateAddress(1, 3, { full_name: 'Updated Name' });
+      const result = await service.updateAddress(1, 3, {
+        full_name: 'Updated Name',
+      });
 
       // Assert
       expect(addressRepository.findByIdAndUserId).toHaveBeenCalledWith(3, 1);
-      expect(addressRepository.update).toHaveBeenCalledWith(3, { full_name: 'Updated Name' });
+      expect(addressRepository.update).toHaveBeenCalledWith(3, {
+        full_name: 'Updated Name',
+      });
       expect(result.full_name).toBe('Updated Name');
     });
 
@@ -335,8 +347,9 @@ describe('UserProfileService', () => {
       addressRepository.findByIdAndUserId.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.updateAddress(1, 99, { full_name: 'Test' }))
-        .rejects.toThrow(NotFoundException);
+      await expect(
+        service.updateAddress(1, 99, { full_name: 'Test' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should include COMMON_001 error code when address not found', async () => {
@@ -359,7 +372,9 @@ describe('UserProfileService', () => {
       addressRepository.findByIdAndUserId.mockResolvedValue(null);
 
       // Act
-      try { await service.updateAddress(1, 99, { full_name: 'Test' }); } catch {}
+      try {
+        await service.updateAddress(1, 99, { full_name: 'Test' });
+      } catch {}
 
       // Assert
       expect(addressRepository.update).not.toHaveBeenCalled();
@@ -369,7 +384,9 @@ describe('UserProfileService', () => {
       // Arrange
       const existing = mockAddress({ id: 3, user_id: 1 });
       addressRepository.findByIdAndUserId.mockResolvedValue(existing);
-      addressRepository.update.mockResolvedValue(mockAddress({ id: 3, is_default: true }));
+      addressRepository.update.mockResolvedValue(
+        mockAddress({ id: 3, is_default: true }),
+      );
 
       // Act
       await service.updateAddress(1, 3, { is_default: true });
@@ -382,7 +399,9 @@ describe('UserProfileService', () => {
       // Arrange
       const existing = mockAddress({ id: 3, user_id: 1 });
       addressRepository.findByIdAndUserId.mockResolvedValue(existing);
-      addressRepository.update.mockResolvedValue(mockAddress({ id: 3, city: 'Ha Noi' }));
+      addressRepository.update.mockResolvedValue(
+        mockAddress({ id: 3, city: 'Ha Noi' }),
+      );
 
       // Act
       await service.updateAddress(1, 3, { city: 'Ha Noi' });
@@ -415,7 +434,9 @@ describe('UserProfileService', () => {
       addressRepository.findByIdAndUserId.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.deleteAddress(1, 99)).rejects.toThrow(NotFoundException);
+      await expect(service.deleteAddress(1, 99)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should include COMMON_001 error code when address not found', async () => {
@@ -438,7 +459,9 @@ describe('UserProfileService', () => {
       addressRepository.findByIdAndUserId.mockResolvedValue(null);
 
       // Act
-      try { await service.deleteAddress(1, 99); } catch {}
+      try {
+        await service.deleteAddress(1, 99);
+      } catch {}
 
       // Assert
       expect(addressRepository.delete).not.toHaveBeenCalled();
@@ -449,7 +472,9 @@ describe('UserProfileService', () => {
       addressRepository.findByIdAndUserId.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.deleteAddress(2, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.deleteAddress(2, 1)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(addressRepository.findByIdAndUserId).toHaveBeenCalledWith(1, 2);
     });
   });
@@ -539,7 +564,9 @@ describe('UserProfileService', () => {
       addressRepository.findByIdAndUserId.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.setDefaultAddress(1, 99)).rejects.toThrow(NotFoundException);
+      await expect(service.setDefaultAddress(1, 99)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should include COMMON_001 error code when address not found', async () => {
@@ -562,7 +589,9 @@ describe('UserProfileService', () => {
       addressRepository.findByIdAndUserId.mockResolvedValue(null);
 
       // Act
-      try { await service.setDefaultAddress(1, 99); } catch {}
+      try {
+        await service.setDefaultAddress(1, 99);
+      } catch {}
 
       // Assert
       expect(addressRepository.clearDefaultByUserId).not.toHaveBeenCalled();

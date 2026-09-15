@@ -3,14 +3,17 @@ import { MetricChangeDto } from './dashboard-stats-response.dto';
 
 export class ShipperSummaryDto {
   @ApiProperty({
-    description: 'Orders delivered/completed by this shipper in the selected period',
+    description:
+      'Orders delivered/completed by this shipper in the selected period',
   })
   totalDelivered: number;
 
   @ApiProperty({ type: MetricChangeDto })
   totalDeliveredChange: MetricChangeDto;
 
-  @ApiProperty({ description: 'Orders currently in shipping status assigned to this shipper' })
+  @ApiProperty({
+    description: 'Orders currently in shipping status assigned to this shipper',
+  })
   activeDeliveries: number;
 
   @ApiProperty({ description: 'Confirmed orders with no shipper assigned' })

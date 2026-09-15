@@ -29,9 +29,7 @@ export class OrderPaymentListener {
         );
       }
     } catch (error) {
-      this.logger.error(
-        `Failed to mark payment as paid: ${error.message}`,
-      );
+      this.logger.error(`Failed to mark payment as paid: ${error.message}`);
     }
   }
 }

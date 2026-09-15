@@ -21,6 +21,7 @@ const ProductListPage = lazy(() => import('@/features/product/pages/ProductListP
 const ProductDetailPage = lazy(() => import('@/features/product/pages/ProductDetailPage'));
 const CategoryPage = lazy(() => import('@/features/product/pages/CategoryPage'));
 const FlashSalePage = lazy(() => import('@/features/flash-sale/pages/FlashSalePage'));
+const ComparePage = lazy(() => import('@/features/compare/pages/ComparePage'));
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
@@ -50,6 +51,7 @@ const AdminOrderDetailPage = lazy(() => import('@/features/order/pages/AdminOrde
 
 const MyReviewsPage = lazy(() => import('@/features/review/pages/MyReviewsPage'));
 const WishlistPage = lazy(() => import('@/features/wishlist/pages/WishlistPage'));
+const CoinWalletPage = lazy(() => import('@/features/coin/pages/CoinWalletPage'));
 const NotificationPage = lazy(() => import('@/features/notification/pages/NotificationPage'));
 const ChatPage = lazy(() => import('@/features/chat/pages/ChatPage'));
 const SellerChatPage = lazy(() => import('@/features/chat/pages/SellerChatPage'));
@@ -63,6 +65,10 @@ const AdminReviewListPage = lazy(() => import('@/features/review/pages/AdminRevi
 const AdminWishlistPopularPage = lazy(() => import('@/features/wishlist/pages/AdminWishlistPopularPage'));
 
 const AdminCouponListPage = lazy(() => import('@/features/coupon/pages/AdminCouponListPage'));
+const AdminCoinSettingsPage = lazy(() => import('@/features/coin/pages/AdminCoinSettingsPage'));
+const AdminAiConversationListPage = lazy(() => import('@/features/ai-chat/pages/AdminAiConversationListPage'));
+const AdminAiConversationDetailPage = lazy(() => import('@/features/ai-chat/pages/AdminAiConversationDetailPage'));
+const AdminAiSettingsPage = lazy(() => import('@/features/ai-chat/pages/AdminAiSettingsPage'));
 const AdminFlashSaleListPage = lazy(() => import('@/features/flash-sale/pages/AdminFlashSaleListPage'));
 
 const SellerDashboardPage = lazy(() => import('@/features/dashboard/pages/SellerDashboardPage'));
@@ -74,6 +80,7 @@ const SellerOrderDetailPage = lazy(() => import('@/features/order/pages/SellerOr
 
 const ShopProfilePage = lazy(() => import('@/features/shop/pages/ShopProfilePage'));
 const SellerShopSettingsPage = lazy(() => import('@/features/shop/pages/SellerShopSettingsPage'));
+const SellerShopDecorationPage = lazy(() => import('@/features/shop/pages/SellerShopDecorationPage'));
 const SellerCouponListPage = lazy(() => import('@/features/coupon/pages/SellerCouponListPage'));
 const SellerFlashSaleListPage = lazy(() => import('@/features/flash-sale/pages/SellerFlashSaleListPage'));
 const SellerReviewListPage = lazy(() => import('@/features/review/pages/SellerReviewListPage'));
@@ -84,6 +91,13 @@ const AdminShopDetailPage = lazy(() => import('@/features/shop/pages/AdminShopDe
 const ShipperDashboardPage = lazy(() => import('@/features/dashboard/pages/ShipperDashboardPage'));
 const ShipperDeliveryListPage = lazy(() => import('@/features/order/pages/ShipperDeliveryListPage'));
 const ShipperDeliveryDetailPage = lazy(() => import('@/features/order/pages/ShipperDeliveryDetailPage'));
+
+const SellerApplicationPage = lazy(() => import('@/features/seller-application/pages/SellerApplicationPage'));
+const AdminSellerApplicationListPage = lazy(() => import('@/features/seller-application/pages/AdminSellerApplicationListPage'));
+const AdminSellerApplicationDetailPage = lazy(() => import('@/features/seller-application/pages/AdminSellerApplicationDetailPage'));
+const SellerWalletPage = lazy(() => import('@/features/seller-finance/pages/SellerWalletPage'));
+const AdminWithdrawalListPage = lazy(() => import('@/features/seller-finance/pages/AdminWithdrawalListPage'));
+const AdminCommissionSettingsPage = lazy(() => import('@/features/seller-finance/pages/AdminCommissionSettingsPage'));
 
 const NotFoundPage = lazy(() => import('@/common/components/feedback/NotFoundPage'));
 const ForbiddenPage = lazy(() => import('@/common/components/feedback/ForbiddenPage'));
@@ -106,6 +120,7 @@ export const router = createBrowserRouter([
       { path: 'categories/:slug', element: <SuspenseWrapper><CategoryPage /></SuspenseWrapper> },
       { path: 'shops/:slug', element: <SuspenseWrapper><ShopProfilePage /></SuspenseWrapper> },
       { path: 'flash-sale', element: <SuspenseWrapper><FlashSalePage /></SuspenseWrapper> },
+      { path: 'compare', element: <SuspenseWrapper><ComparePage /></SuspenseWrapper> },
       { path: 'cart', element: <SuspenseWrapper><CartPage /></SuspenseWrapper> },
 
       {
@@ -115,6 +130,7 @@ export const router = createBrowserRouter([
           { path: 'checkout/success', element: <SuspenseWrapper><CheckoutSuccessPage /></SuspenseWrapper> },
           { path: 'checkout/payment-result', element: <SuspenseWrapper><PaymentResultPage /></SuspenseWrapper> },
           { path: 'orders/:id', element: <SuspenseWrapper><OrderDetailPage /></SuspenseWrapper> },
+          { path: 'become-seller', element: <SuspenseWrapper><SellerApplicationPage /></SuspenseWrapper> },
           { path: 'chat', element: <SuspenseWrapper><ChatPage /></SuspenseWrapper> },
           { path: 'chat/:conversationId', element: <SuspenseWrapper><ChatPage /></SuspenseWrapper> },
           {
@@ -126,6 +142,7 @@ export const router = createBrowserRouter([
               { path: 'notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
               { path: 'profile/reviews', element: <SuspenseWrapper><MyReviewsPage /></SuspenseWrapper> },
               { path: 'wishlist', element: <SuspenseWrapper><WishlistPage /></SuspenseWrapper> },
+              { path: 'wallet', element: <SuspenseWrapper><CoinWalletPage /></SuspenseWrapper> },
             ],
           },
         ],
@@ -174,6 +191,14 @@ export const router = createBrowserRouter([
               { path: 'admin/wishlist', element: <SuspenseWrapper><AdminWishlistPopularPage /></SuspenseWrapper> },
               { path: 'admin/coupons', element: <SuspenseWrapper><AdminCouponListPage /></SuspenseWrapper> },
               { path: 'admin/flash-sales', element: <SuspenseWrapper><AdminFlashSaleListPage /></SuspenseWrapper> },
+              { path: 'admin/settings/coins', element: <SuspenseWrapper><AdminCoinSettingsPage /></SuspenseWrapper> },
+              { path: 'admin/settings/commission', element: <SuspenseWrapper><AdminCommissionSettingsPage /></SuspenseWrapper> },
+              { path: 'admin/seller-applications', element: <SuspenseWrapper><AdminSellerApplicationListPage /></SuspenseWrapper> },
+              { path: 'admin/seller-applications/:id', element: <SuspenseWrapper><AdminSellerApplicationDetailPage /></SuspenseWrapper> },
+              { path: 'admin/withdrawals', element: <SuspenseWrapper><AdminWithdrawalListPage /></SuspenseWrapper> },
+              { path: 'admin/ai-conversations', element: <SuspenseWrapper><AdminAiConversationListPage /></SuspenseWrapper> },
+              { path: 'admin/ai-conversations/:id', element: <SuspenseWrapper><AdminAiConversationDetailPage /></SuspenseWrapper> },
+              { path: 'admin/ai-settings', element: <SuspenseWrapper><AdminAiSettingsPage /></SuspenseWrapper> },
               { path: 'admin/notifications', element: <SuspenseWrapper><NotificationPage /></SuspenseWrapper> },
             ],
           },
@@ -197,6 +222,8 @@ export const router = createBrowserRouter([
               { path: 'seller/orders', element: <SuspenseWrapper><SellerOrderListPage /></SuspenseWrapper> },
               { path: 'seller/orders/:id', element: <SuspenseWrapper><SellerOrderDetailPage /></SuspenseWrapper> },
               { path: 'seller/shop', element: <SuspenseWrapper><SellerShopSettingsPage /></SuspenseWrapper> },
+              { path: 'seller/shop/decoration', element: <SuspenseWrapper><SellerShopDecorationPage /></SuspenseWrapper> },
+              { path: 'seller/wallet', element: <SuspenseWrapper><SellerWalletPage /></SuspenseWrapper> },
               { path: 'seller/chat', element: <SuspenseWrapper><SellerChatPage /></SuspenseWrapper> },
               { path: 'seller/coupons', element: <SuspenseWrapper><SellerCouponListPage /></SuspenseWrapper> },
               { path: 'seller/flash-sales', element: <SuspenseWrapper><SellerFlashSaleListPage /></SuspenseWrapper> },

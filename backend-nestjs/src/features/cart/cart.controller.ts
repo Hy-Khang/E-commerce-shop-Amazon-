@@ -37,8 +37,16 @@ export class CartController {
   @Public()
   @Get('cart')
   @ApiOperation({ summary: 'Get current cart with items + variant details' })
-  @ApiHeader({ name: 'x-session-id', required: false, description: 'Guest session ID' })
-  @ApiResponse({ status: 200, description: 'Returns cart with items', type: CartResponseDto })
+  @ApiHeader({
+    name: 'x-session-id',
+    required: false,
+    description: 'Guest session ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns cart with items',
+    type: CartResponseDto,
+  })
   async getCart(
     @CurrentUser() user: ICurrentUser | undefined,
     @Headers('x-session-id') sessionId: string | undefined,
@@ -50,10 +58,21 @@ export class CartController {
   @Public()
   @Post('cart/items')
   @ApiOperation({ summary: 'Add item to cart' })
-  @ApiHeader({ name: 'x-session-id', required: false, description: 'Guest session ID' })
-  @ApiResponse({ status: 201, description: 'Item added, returns updated cart', type: CartResponseDto })
+  @ApiHeader({
+    name: 'x-session-id',
+    required: false,
+    description: 'Guest session ID',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Item added, returns updated cart',
+    type: CartResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'PRODUCT_002: Variant not found' })
-  @ApiResponse({ status: 400, description: 'CART_003: Out of stock / CART_004: Exceeds stock' })
+  @ApiResponse({
+    status: 400,
+    description: 'CART_003: Out of stock / CART_004: Exceeds stock',
+  })
   async addItem(
     @CurrentUser() user: ICurrentUser | undefined,
     @Headers('x-session-id') sessionId: string | undefined,
@@ -66,8 +85,16 @@ export class CartController {
   @Public()
   @Patch('cart/items/:id')
   @ApiOperation({ summary: 'Update item quantity' })
-  @ApiHeader({ name: 'x-session-id', required: false, description: 'Guest session ID' })
-  @ApiResponse({ status: 200, description: 'Quantity updated, returns updated cart', type: CartResponseDto })
+  @ApiHeader({
+    name: 'x-session-id',
+    required: false,
+    description: 'Guest session ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Quantity updated, returns updated cart',
+    type: CartResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'CART_001: Cart item not found' })
   @ApiResponse({ status: 400, description: 'CART_004: Exceeds stock' })
   async updateItem(
@@ -84,7 +111,11 @@ export class CartController {
   @Delete('cart/items/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove item from cart' })
-  @ApiHeader({ name: 'x-session-id', required: false, description: 'Guest session ID' })
+  @ApiHeader({
+    name: 'x-session-id',
+    required: false,
+    description: 'Guest session ID',
+  })
   @ApiResponse({ status: 204, description: 'Item removed' })
   @ApiResponse({ status: 404, description: 'CART_001: Cart item not found' })
   async removeItem(
@@ -99,7 +130,11 @@ export class CartController {
   @Post('cart/merge')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Merge guest cart into user cart on login' })
-  @ApiResponse({ status: 200, description: 'Carts merged, returns merged cart', type: CartResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Carts merged, returns merged cart',
+    type: CartResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'CART_001: Guest cart not found' })
   async mergeCart(
     @CurrentUser() user: ICurrentUser,

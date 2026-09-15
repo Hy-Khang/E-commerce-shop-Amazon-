@@ -19,12 +19,10 @@ export const FlashSaleSeed: ISeed = {
     // Campaign 1 is live (active) with approved deals; campaign 2 is upcoming
     // (scheduled) and currently OPEN for seller registration.
     await qr.query(`
-      SET IDENTITY_INSERT flash_sales ON;
       INSERT INTO flash_sales
         (id, name, registration_starts_at, registration_ends_at, starts_at, ends_at, min_discount_percent, status, is_active) VALUES
-        (1, N'Flash Sale Cuối Tuần',  '2026-08-01T00:00:00', '2026-08-10T00:00:00', '2026-08-15T00:00:00', '2026-12-31T23:59:59', 10, N'active',    1),
-        (2, N'Flash Sale Giáng Sinh', '2026-08-25T00:00:00', '2026-09-30T00:00:00', '2026-10-01T00:00:00', '2026-10-07T23:59:59', 15, N'scheduled', 1);
-      SET IDENTITY_INSERT flash_sales OFF;
+        (1, 'Flash Sale Cuối Tuần',  '2026-08-01T00:00:00', '2026-08-10T00:00:00', '2026-08-15T00:00:00', '2026-12-31T23:59:59', 10, 'active',    1),
+        (2, 'Flash Sale Giáng Sinh', '2026-08-25T00:00:00', '2026-09-30T00:00:00', '2026-10-01T00:00:00', '2026-10-07T23:59:59', 15, 'scheduled', 1);
     `);
     console.log('  + flash_sales: 2 rows');
 
@@ -40,7 +38,9 @@ export const FlashSaleSeed: ISeed = {
     );
 
     if (variants.length === 0) {
-      console.log('  ! flash_sale_items: skipped (no shop-owned variants found)');
+      console.log(
+        '  ! flash_sale_items: skipped (no shop-owned variants found)',
+      );
       await qr.release();
       return;
     }
@@ -60,8 +60,8 @@ export const FlashSaleSeed: ISeed = {
         const soldQuantity = campaignId === 1 ? i * 2 : 0;
         const status = campaignId === 1 ? 'approved' : 'pending';
         const reviewedBy = campaignId === 1 ? '1' : 'NULL';
-        const reviewedAt = campaignId === 1 ? 'SYSUTCDATETIME()' : 'NULL';
-        return `(${campaignId}, ${v.id}, ${v.shop_id}, ${flashPrice}, ${flashQuantity}, ${soldQuantity}, N'${status}', ${v.user_id}, ${reviewedBy}, ${reviewedAt})`;
+        const reviewedAt = campaignId === 1 ? 'now()' : 'NULL';
+        return `(${campaignId}, ${v.id}, ${v.shop_id}, ${flashPrice}, ${flashQuantity}, ${soldQuantity}, '${status}', ${v.user_id}, ${reviewedBy}, ${reviewedAt})`;
       })
       .join(',\n        ');
 

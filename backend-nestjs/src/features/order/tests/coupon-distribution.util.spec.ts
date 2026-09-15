@@ -93,11 +93,7 @@ describe('allocateWithCaps', () => {
   });
 
   it('returns zeros for non-positive target', () => {
-    const out = allocateWithCaps(
-      0,
-      new Map([[1, 1]]),
-      new Map([[1, 100]]),
-    );
+    const out = allocateWithCaps(0, new Map([[1, 1]]), new Map([[1, 100]]));
     expect(out.get(1)).toBe(0);
   });
 });

@@ -18,25 +18,25 @@ export class Notification {
   @Column()
   user_id: number;
 
-  @Column({ type: 'nvarchar', length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   type: string;
 
-  @Column({ type: 'nvarchar', length: 20, default: 'customer' })
+  @Column({ type: 'varchar', length: 20, default: 'customer' })
   context: string;
 
-  @Column({ type: 'nvarchar', length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   title: string;
 
-  @Column({ type: 'nvarchar', length: 500 })
+  @Column({ type: 'varchar', length: 500 })
   message: string;
 
-  @Column({ type: 'nvarchar', length: 'max', nullable: true })
+  @Column({ type: 'text', nullable: true })
   data: string | null;
 
-  @Column({ type: 'bit', default: false })
+  @Column({ type: 'boolean', default: false })
   is_read: boolean;
 
-  @Column({ type: 'datetime2', default: () => 'SYSUTCDATETIME()' })
+  @Column({ type: 'timestamptz', default: () => 'now()' })
   created_at: Date;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })

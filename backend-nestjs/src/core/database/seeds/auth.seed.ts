@@ -5,21 +5,36 @@ import { ISeed } from './seed.interface';
 const SALT_ROUNDS = 10;
 
 const SELLER_PERMISSIONS = [
-  'products:create', 'products:read', 'products:update', 'products:delete',
+  'products:create',
+  'products:read',
+  'products:update',
+  'products:delete',
   'categories:read',
-  'orders:read', 'orders:update',
-  'coupons:create', 'coupons:read', 'coupons:update', 'coupons:delete',
+  'orders:read',
+  'orders:update',
+  'coupons:create',
+  'coupons:read',
+  'coupons:update',
+  'coupons:delete',
   'reviews:read',
   'wishlist:read',
   'uploads:create',
   'dashboard:read',
-  'shops:create', 'shops:read', 'shops:update',
-  'flash_registrations:create', 'flash_registrations:read', 'flash_registrations:update', 'flash_registrations:delete',
+  'shops:create',
+  'shops:read',
+  'shops:update',
+  'flash_registrations:create',
+  'flash_registrations:read',
+  'flash_registrations:update',
+  'flash_registrations:delete',
+  'wallet:read',
+  'withdrawals:create',
   'portal:seller',
 ];
 
 const SHIPPER_PERMISSIONS = [
-  'orders:read', 'orders:update',
+  'orders:read',
+  'orders:update',
   'dashboard:read',
   'portal:shipper',
 ];
@@ -59,10 +74,44 @@ const SEED_PERMISSIONS = [
   { resource: 'flash_sales', action: 'read', name: 'Read Flash Sales' },
   { resource: 'flash_sales', action: 'update', name: 'Update Flash Sale' },
   { resource: 'flash_sales', action: 'delete', name: 'Delete Flash Sale' },
-  { resource: 'flash_registrations', action: 'create', name: 'Register Flash Sale Product' },
-  { resource: 'flash_registrations', action: 'read', name: 'Read Flash Sale Registrations' },
-  { resource: 'flash_registrations', action: 'update', name: 'Update Flash Sale Registration' },
-  { resource: 'flash_registrations', action: 'delete', name: 'Withdraw Flash Sale Registration' },
+  {
+    resource: 'flash_registrations',
+    action: 'create',
+    name: 'Register Flash Sale Product',
+  },
+  {
+    resource: 'flash_registrations',
+    action: 'read',
+    name: 'Read Flash Sale Registrations',
+  },
+  {
+    resource: 'flash_registrations',
+    action: 'update',
+    name: 'Update Flash Sale Registration',
+  },
+  {
+    resource: 'flash_registrations',
+    action: 'delete',
+    name: 'Withdraw Flash Sale Registration',
+  },
+  { resource: 'settings', action: 'read', name: 'Read Settings' },
+  { resource: 'settings', action: 'update', name: 'Update Settings' },
+  {
+    resource: 'seller_applications',
+    action: 'read',
+    name: 'Read Seller Applications',
+  },
+  {
+    resource: 'seller_applications',
+    action: 'update',
+    name: 'Review Seller Applications',
+  },
+  { resource: 'wallet', action: 'read', name: 'Read Seller Wallet' },
+  { resource: 'withdrawals', action: 'create', name: 'Create Withdrawal' },
+  { resource: 'withdrawals', action: 'read', name: 'Read Withdrawals' },
+  { resource: 'withdrawals', action: 'update', name: 'Review Withdrawals' },
+  { resource: 'ai_chatbox', action: 'read', name: 'Read AI Chatbox' },
+  { resource: 'ai_chatbox', action: 'update', name: 'Update AI Chatbox' },
   { resource: 'dashboard', action: 'read', name: 'Read Dashboard' },
   { resource: 'shops', action: 'create', name: 'Create Shop' },
   { resource: 'shops', action: 'read', name: 'Read Shops' },
@@ -81,47 +130,43 @@ export const AuthSeed: ISeed = {
     const qr = ds.createQueryRunner();
 
     await qr.query(`
-      SET IDENTITY_INSERT roles ON;
       INSERT INTO roles (id, name, is_system) VALUES
-        (1, N'customer', 1),
-        (2, N'admin', 1),
-        (3, N'seller', 1),
-        (4, N'shipper', 1);
-      SET IDENTITY_INSERT roles OFF;
+        (1, 'customer', true),
+        (2, 'admin', true),
+        (3, 'seller', true),
+        (4, 'shipper', true);
     `);
     console.log('  + roles: 4 rows');
 
     const hash = bcrypt.hashSync('123456789', SALT_ROUNDS);
 
     await qr.query(`
-      SET IDENTITY_INSERT users ON;
       INSERT INTO users (id, role_id, email, password_hash, full_name, phone, is_active, email_verified) VALUES
         -- Admin
-        (1,  2, N'admin@example.com',      N'${hash}', N'Admin',              N'0901000000', 1, 1),
+        (1,  2, 'admin@example.com',      '${hash}', 'Admin',              '0901000000', true, true),
         -- Customers (2-8)
-        (2,  1, N'customer1@example.com',   N'${hash}', N'Nguyễn Văn An',      N'0901000001', 1, 1),
-        (3,  1, N'customer2@example.com',   N'${hash}', N'Trần Thị Bình',      N'0901000002', 1, 1),
-        (4,  1, N'customer3@example.com',   N'${hash}', N'Lê Hoàng Cường',     N'0901000003', 1, 1),
-        (5,  1, N'customer4@example.com',   N'${hash}', N'Phạm Minh Đức',      N'0901000004', 1, 1),
-        (6,  1, N'customer5@example.com',   N'${hash}', N'Hoàng Thị Nga',      N'0901000005', 1, 1),
-        (7,  1, N'customer6@example.com',   N'${hash}', N'Đỗ Văn Khoa',        N'0901000006', 1, 1),
-        (8,  1, N'customer7@example.com',   N'${hash}', N'Bùi Minh Tâm',       N'0901000007', 1, 1),
+        (2,  1, 'customer1@example.com',   '${hash}', 'Nguyễn Văn An',      '0901000001', true, true),
+        (3,  1, 'customer2@example.com',   '${hash}', 'Trần Thị Bình',      '0901000002', true, true),
+        (4,  1, 'customer3@example.com',   '${hash}', 'Lê Hoàng Cường',     '0901000003', true, true),
+        (5,  1, 'customer4@example.com',   '${hash}', 'Phạm Minh Đức',      '0901000004', true, true),
+        (6,  1, 'customer5@example.com',   '${hash}', 'Hoàng Thị Nga',      '0901000005', true, true),
+        (7,  1, 'customer6@example.com',   '${hash}', 'Đỗ Văn Khoa',        '0901000006', true, true),
+        (8,  1, 'customer7@example.com',   '${hash}', 'Bùi Minh Tâm',       '0901000007', true, true),
         -- Sellers (9-15)
-        (9,  3, N'seller1@example.com',     N'${hash}', N'Nguyễn Thị Hằng',    N'0901000008', 1, 1),
-        (10, 3, N'seller2@example.com',     N'${hash}', N'Trần Minh Tuấn',     N'0901000009', 1, 1),
-        (11, 3, N'seller3@example.com',     N'${hash}', N'Lê Thị Mai',         N'0901000010', 1, 1),
-        (12, 3, N'seller4@example.com',     N'${hash}', N'Phạm Quốc Bảo',     N'0901000011', 1, 1),
-        (13, 3, N'seller5@example.com',     N'${hash}', N'Võ Thanh Hùng',      N'0901000012', 1, 1),
-        (14, 3, N'seller6@example.com',     N'${hash}', N'Đặng Thị Lan',       N'0901000013', 1, 1),
-        (15, 3, N'seller7@example.com',     N'${hash}', N'Ngô Thanh Sơn',      N'0901000014', 1, 1),
+        (9,  3, 'seller1@example.com',     '${hash}', 'Nguyễn Thị Hằng',    '0901000008', true, true),
+        (10, 3, 'seller2@example.com',     '${hash}', 'Trần Minh Tuấn',     '0901000009', true, true),
+        (11, 3, 'seller3@example.com',     '${hash}', 'Lê Thị Mai',         '0901000010', true, true),
+        (12, 3, 'seller4@example.com',     '${hash}', 'Phạm Quốc Bảo',     '0901000011', true, true),
+        (13, 3, 'seller5@example.com',     '${hash}', 'Võ Thanh Hùng',      '0901000012', true, true),
+        (14, 3, 'seller6@example.com',     '${hash}', 'Đặng Thị Lan',       '0901000013', true, true),
+        (15, 3, 'seller7@example.com',     '${hash}', 'Ngô Thanh Sơn',      '0901000014', true, true),
         -- Shipper (16)
-        (16, 4, N'shipper@example.com',     N'${hash}', N'Trần Văn Giang',     N'0901000015', 1, 1);
-      SET IDENTITY_INSERT users OFF;
+        (16, 4, 'shipper@example.com',     '${hash}', 'Trần Văn Giang',     '0901000015', true, true);
     `);
     console.log('  + users: 16 rows');
 
     const permissionValues = SEED_PERMISSIONS.map(
-      (p) => `(N'${p.name}', N'${p.resource}', N'${p.action}')`,
+      (p) => `('${p.name}', '${p.resource}', '${p.action}')`,
     ).join(',\n        ');
 
     await qr.query(`
@@ -134,31 +179,33 @@ export const AuthSeed: ISeed = {
       INSERT INTO role_permissions (role_id, permission_id)
       SELECT 2, id FROM permissions;
     `);
-    console.log(`  + role_permissions: ${SEED_PERMISSIONS.length} rows (admin gets all)`);
+    console.log(
+      `  + role_permissions: ${SEED_PERMISSIONS.length} rows (admin gets all)`,
+    );
 
-    const sellerWhere = SELLER_PERMISSIONS.map(
-      (p) => {
-        const [resource, action] = p.split(':');
-        return `(resource = N'${resource}' AND action = N'${action}')`;
-      },
-    ).join(' OR ');
+    const sellerWhere = SELLER_PERMISSIONS.map((p) => {
+      const [resource, action] = p.split(':');
+      return `(resource = '${resource}' AND action = '${action}')`;
+    }).join(' OR ');
     await qr.query(`
       INSERT INTO role_permissions (role_id, permission_id)
       SELECT 3, id FROM permissions WHERE ${sellerWhere};
     `);
-    console.log(`  + role_permissions: ${SELLER_PERMISSIONS.length} rows (seller)`);
+    console.log(
+      `  + role_permissions: ${SELLER_PERMISSIONS.length} rows (seller)`,
+    );
 
-    const shipperWhere = SHIPPER_PERMISSIONS.map(
-      (p) => {
-        const [resource, action] = p.split(':');
-        return `(resource = N'${resource}' AND action = N'${action}')`;
-      },
-    ).join(' OR ');
+    const shipperWhere = SHIPPER_PERMISSIONS.map((p) => {
+      const [resource, action] = p.split(':');
+      return `(resource = '${resource}' AND action = '${action}')`;
+    }).join(' OR ');
     await qr.query(`
       INSERT INTO role_permissions (role_id, permission_id)
       SELECT 4, id FROM permissions WHERE ${shipperWhere};
     `);
-    console.log(`  + role_permissions: ${SHIPPER_PERMISSIONS.length} rows (shipper)`);
+    console.log(
+      `  + role_permissions: ${SHIPPER_PERMISSIONS.length} rows (shipper)`,
+    );
 
     await qr.release();
   },

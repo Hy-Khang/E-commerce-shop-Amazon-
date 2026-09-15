@@ -20,20 +20,36 @@ import { CartModule } from '../cart/cart.module';
 import { ProductModule } from '../product/product.module';
 import { UserProfileModule } from '../user-profile/user-profile.module';
 import { CouponModule } from '../coupon/coupon.module';
+import { CoinModule } from '../coin/coin.module';
+import { SettingsModule } from '../settings/settings.module';
+import { SellerFinanceModule } from '../seller-finance/seller-finance.module';
 import { ShopModule } from '../shop/shop.module';
 import { FlashSaleModule } from '../flash-sale/flash-sale.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem, OrderStatusHistory, OrderTrackingLocation]),
+    TypeOrmModule.forFeature([
+      Order,
+      OrderItem,
+      OrderStatusHistory,
+      OrderTrackingLocation,
+    ]),
     CartModule,
     ProductModule,
     UserProfileModule,
     CouponModule,
+    CoinModule,
+    SettingsModule,
+    SellerFinanceModule,
     ShopModule,
     FlashSaleModule,
   ],
-  controllers: [OrderController, AdminOrderController, SellerOrderController, ShipperOrderController],
+  controllers: [
+    OrderController,
+    AdminOrderController,
+    SellerOrderController,
+    ShipperOrderController,
+  ],
   providers: [
     OrderService,
     OrderScheduler,

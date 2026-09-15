@@ -31,8 +31,7 @@ export class HomepageService {
     }
 
     return {
-      specialOffers:
-        results[0].status === 'fulfilled' ? results[0].value : [],
+      specialOffers: results[0].status === 'fulfilled' ? results[0].value : [],
       bestSellers: results[1].status === 'fulfilled' ? results[1].value : [],
       trending: results[2].status === 'fulfilled' ? results[2].value : [],
       discoverMore: results[3].status === 'fulfilled' ? results[3].value : [],

@@ -44,7 +44,9 @@ export class AdminFlashSaleController {
 
   @Post()
   @Permissions(PERMISSIONS.FLASH_SALES_CREATE)
-  @ApiOperation({ summary: 'Create flash sale campaign (empty — sellers register products)' })
+  @ApiOperation({
+    summary: 'Create flash sale campaign (empty — sellers register products)',
+  })
   @ApiResponse({ status: 201, type: FlashSaleResponseDto })
   async create(@Body() dto: CreateFlashSaleDto) {
     return this.flashSaleService.createCampaign(dto);
@@ -54,7 +56,9 @@ export class AdminFlashSaleController {
 
   @Get('registrations')
   @Permissions(PERMISSIONS.FLASH_SALES_READ)
-  @ApiOperation({ summary: 'Global registration moderation queue (filter by status)' })
+  @ApiOperation({
+    summary: 'Global registration moderation queue (filter by status)',
+  })
   async listRegistrations(@Query() query: FlashRegistrationQueryDto) {
     return this.flashSaleService.listRegistrations(query);
   }
@@ -62,7 +66,10 @@ export class AdminFlashSaleController {
   @Patch('items/:itemId/approve')
   @Permissions(PERMISSIONS.FLASH_SALES_UPDATE)
   @ApiOperation({ summary: 'Approve a seller registration' })
-  @ApiResponse({ status: 400, description: 'FLASH_SALE_012: overlapping approved campaign' })
+  @ApiResponse({
+    status: 400,
+    description: 'FLASH_SALE_012: overlapping approved campaign',
+  })
   async approveItem(
     @CurrentUser() user: ICurrentUser,
     @Param('itemId', ParseIntPipe) itemId: number,
@@ -84,14 +91,18 @@ export class AdminFlashSaleController {
   @Delete('items/:itemId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Permissions(PERMISSIONS.FLASH_SALES_UPDATE)
-  @ApiOperation({ summary: 'Remove a registration from a campaign (hard delete)' })
+  @ApiOperation({
+    summary: 'Remove a registration from a campaign (hard delete)',
+  })
   async removeItem(@Param('itemId', ParseIntPipe) itemId: number) {
     return this.flashSaleService.removeItem(itemId);
   }
 
   @Get(':id')
   @Permissions(PERMISSIONS.FLASH_SALES_READ)
-  @ApiOperation({ summary: 'Get flash sale campaign detail (all registrations)' })
+  @ApiOperation({
+    summary: 'Get flash sale campaign detail (all registrations)',
+  })
   @ApiResponse({ status: 200, type: FlashSaleResponseDto })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.flashSaleService.findCampaignById(id);
@@ -118,7 +129,9 @@ export class AdminFlashSaleController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Permissions(PERMISSIONS.FLASH_SALES_DELETE)
-  @ApiOperation({ summary: 'Delete flash sale campaign (cascades registrations)' })
+  @ApiOperation({
+    summary: 'Delete flash sale campaign (cascades registrations)',
+  })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.flashSaleService.deleteCampaign(id);
   }

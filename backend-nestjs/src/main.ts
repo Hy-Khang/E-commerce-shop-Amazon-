@@ -8,8 +8,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { mkdir } from 'fs/promises';
-import { join } from 'path';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -20,16 +18,15 @@ async function bootstrap() {
   const config = app.get(ConfigService);
   const port = config.get<number>('app.port', 3000);
   const prefix = config.get<string>('app.prefix', 'api/v1');
-  const corsOrigin = config.get<string>('app.corsOrigin', 'http://localhost:5173');
+  const corsOrigin = config.get<string>(
+    'app.corsOrigin',
+    'http://localhost:5173',
+  );
   const nodeEnv = config.get<string>('app.nodeEnv', 'development');
 
   app.setGlobalPrefix(prefix);
   const origins = corsOrigin.split(',').map((o) => o.trim());
   app.enableCors({ origin: origins, credentials: true });
-
-  const uploadDir = config.get<string>('app.uploadDir')!;
-  await mkdir(join(uploadDir, 'products'), { recursive: true });
-  app.useStaticAssets(uploadDir, { prefix: '/uploads/' });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -68,7 +65,6 @@ async function bootstrap() {
   }
 
   await app.listen(port);
-
 
   console.log('CORS_ORIGIN =', corsOrigin);
   const logger = new Logger('Bootstrap');

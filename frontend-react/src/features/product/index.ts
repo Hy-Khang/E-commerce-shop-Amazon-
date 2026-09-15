@@ -26,6 +26,7 @@ export {
 
 // Components
 export { CategoryForm } from './components/CategoryForm';
+export { CategoryCascader } from './components/CategoryCascader';
 export { ProductFilters } from './components/ProductFilters';
 export { ProductCard } from './components/ProductCard';
 export { HomepageProductCard } from './components/HomepageProductCard';
@@ -41,7 +42,6 @@ export { VisualSearchModal } from './components/VisualSearchModal';
 export { ProductCardSkeleton } from './components/ProductCardSkeleton';
 export { ProductDetailSkeleton } from './components/ProductDetailSkeleton';
 export { ShopProductsCarousel } from './components/ShopProductsCarousel';
-export { RelatedProducts } from './components/RelatedProducts';
 export { SpecialOffersSection } from './components/SpecialOffersSection';
 export { FeaturedCategoriesSection } from './components/FeaturedCategoriesSection';
 export { PromotionalBanner } from './components/PromotionalBanner';

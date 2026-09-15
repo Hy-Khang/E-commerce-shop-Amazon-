@@ -19,14 +19,20 @@ export class CreateVariantDto {
   @MaxLength(50)
   sku: string;
 
-  @ApiPropertyOptional({ example: 'Black', description: 'Value for option 1 (e.g. color, RAM)' })
+  @ApiPropertyOptional({
+    example: 'Black',
+    description: 'Value for option 1 (e.g. color, RAM)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(50)
   @Transform(normalizeOptionalString)
   option1?: string;
 
-  @ApiPropertyOptional({ example: 'L', description: 'Value for option 2 (e.g. size, storage)' })
+  @ApiPropertyOptional({
+    example: 'L',
+    description: 'Value for option 2 (e.g. size, storage)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(50)

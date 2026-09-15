@@ -11,9 +11,7 @@ export class PaymentTransactionRepository {
     private readonly repo: Repository<PaymentTransaction>,
   ) {}
 
-  async create(
-    data: Partial<PaymentTransaction>,
-  ): Promise<PaymentTransaction> {
+  async create(data: Partial<PaymentTransaction>): Promise<PaymentTransaction> {
     const transaction = this.repo.create(data);
     return this.repo.save(transaction);
   }

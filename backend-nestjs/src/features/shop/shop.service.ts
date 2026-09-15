@@ -1,3 +1,4 @@
+import { isUniqueViolation } from '../../common/utils/db-error.util';
 import {
   BadRequestException,
   ConflictException,
@@ -13,12 +14,38 @@ import { Shop } from './entities/shop.entity';
 import { ShopStatus } from '../../common/constants';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { generateSlug } from '../../common/utils/slug.util';
+import { DECORATION_LIMITS } from './dto/decoration-config.dto';
+
+/** A shop with its `decoration_config` column parsed from JSON into an object. */
+type ShopWithDecoration = Omit<Shop, 'decoration_config'> & {
+  decoration_config: unknown;
+};
 
 @Injectable()
 export class ShopService {
   private readonly logger = new Logger(ShopService.name);
 
   constructor(private readonly shopRepository: ShopRepository) {}
+
+  /**
+   * Parse the raw `decoration_config` JSON string into an object for responses.
+   * Defensive (like `notifications.data`): a malformed value degrades to null
+   * rather than throwing, so a bad row never breaks the shop page.
+   */
+  private withParsedDecoration<T extends Shop>(shop: T): ShopWithDecoration {
+    let parsed: unknown = null;
+    if (shop.decoration_config) {
+      try {
+        parsed = JSON.parse(shop.decoration_config);
+      } catch {
+        this.logger.warn(
+          `Malformed decoration_config for shop ${shop.id} — serving default`,
+        );
+        parsed = null;
+      }
+    }
+    return { ...shop, decoration_config: parsed };
+  }
 
   // ─── Helpers (consumed by other features via DI) ───
 
@@ -54,7 +81,10 @@ export class ShopService {
     return this.shopRepository.findActivePaginated(query);
   }
 
-  async suggestShops(query: string, limit: number): Promise<{ name: string; slug: string; logo_url: string | null }[]> {
+  async suggestShops(
+    query: string,
+    limit: number,
+  ): Promise<{ name: string; slug: string; logo_url: string | null }[]> {
     return this.shopRepository.suggestShops(query, limit);
   }
 
@@ -68,7 +98,7 @@ export class ShopService {
     }
     const { shop, productCount, avgRating, totalSales } = result;
     return {
-      ...shop,
+      ...this.withParsedDecoration(shop),
       product_count: productCount,
       average_rating: avgRating,
       total_sales: totalSales,
@@ -88,8 +118,9 @@ export class ShopService {
 
   // ─── Seller ───
 
-  async getMyShop(userId: number): Promise<Shop> {
-    return this.resolveShopByUserId(userId);
+  async getMyShop(userId: number): Promise<ShopWithDecoration> {
+    const shop = await this.resolveShopByUserId(userId);
+    return this.withParsedDecoration(shop);
   }
 
   async createShop(userId: number, dto: CreateShopDto): Promise<Shop> {
@@ -113,10 +144,12 @@ export class ShopService {
         banner_url: dto.banner_url ?? null,
         status: ShopStatus.PendingVerification,
       });
-      this.logger.log(`Shop created: ${shop.name} (${shop.slug}) by user ${userId}`);
+      this.logger.log(
+        `Shop created: ${shop.name} (${shop.slug}) by user ${userId}`,
+      );
       return shop;
     } catch (error: any) {
-      if (error?.number === 2627 || error?.number === 2601) {
+      if (isUniqueViolation(error)) {
         throw new ConflictException({
           code: 'SHOP_002',
           message: 'Shop already exists for this user',
@@ -126,11 +159,89 @@ export class ShopService {
     }
   }
 
-  async updateMyShop(userId: number, dto: UpdateShopDto): Promise<Shop> {
+  /**
+   * Materialize a shop from an approved seller application. Unlike `createShop`
+   * (which starts `pending_verification`), the shop goes straight to `active`
+   * with `verified_at/verified_by` set — the application review IS the vetting
+   * step. Still guards the 1:1 constraint via SHOP_002.
+   */
+  async createShopFromApplication(
+    userId: number,
+    data: {
+      name: string;
+      description?: string | null;
+      logo_url?: string | null;
+      banner_url?: string | null;
+    },
+    verifiedBy: number,
+  ): Promise<Shop> {
+    let slug = generateSlug(data.name);
+    const slugExists = await this.shopRepository.existsBySlug(slug);
+    if (slugExists) {
+      let suffix = 1;
+      while (await this.shopRepository.existsBySlug(`${slug}-${suffix}`)) {
+        suffix++;
+      }
+      slug = `${slug}-${suffix}`;
+    }
+
+    try {
+      const shop = await this.shopRepository.create({
+        user_id: userId,
+        name: data.name,
+        slug,
+        description: data.description ?? null,
+        logo_url: data.logo_url ?? null,
+        banner_url: data.banner_url ?? null,
+        status: ShopStatus.Active,
+        verified_at: new Date(),
+        verified_by: verifiedBy,
+      });
+      this.logger.log(
+        `Shop created (from application, active): ${shop.name} (${shop.slug}) for user ${userId}`,
+      );
+      return shop;
+    } catch (error: any) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException({
+          code: 'SHOP_002',
+          message: 'Shop already exists for this user',
+        });
+      }
+      throw error;
+    }
+  }
+
+  async updateMyShop(
+    userId: number,
+    dto: UpdateShopDto,
+  ): Promise<ShopWithDecoration> {
     const shop = await this.resolveShopByUserId(userId);
-    const updated = await this.shopRepository.update(shop.id, dto);
+
+    // Map the validated decoration_config object → JSON string for storage.
+    // `null` resets to the default layout; an absent key leaves it unchanged.
+    const { decoration_config, ...rest } = dto;
+    const patch: Partial<Shop> = { ...rest };
+    if (decoration_config !== undefined) {
+      if (decoration_config === null) {
+        patch.decoration_config = null;
+      } else {
+        const serialized = JSON.stringify(decoration_config);
+        if (
+          Buffer.byteLength(serialized, 'utf8') > DECORATION_LIMITS.MAX_BYTES
+        ) {
+          throw new BadRequestException({
+            code: 'SHOP_006',
+            message: 'Decoration config exceeds size limit',
+          });
+        }
+        patch.decoration_config = serialized;
+      }
+    }
+
+    const updated = await this.shopRepository.update(shop.id, patch);
     this.logger.log(`Shop updated: ${shop.id} by user ${userId}`);
-    return updated!;
+    return this.withParsedDecoration(updated!);
   }
 
   // ─── Admin ───
@@ -150,7 +261,11 @@ export class ShopService {
     return shop;
   }
 
-  async updateShopStatus(id: number, newStatus: ShopStatus, adminUserId: number): Promise<Shop> {
+  async updateShopStatus(
+    id: number,
+    newStatus: ShopStatus,
+    adminUserId: number,
+  ): Promise<Shop> {
     const shop = await this.findShopById(id);
 
     const updateData: Partial<Shop> = { status: newStatus };
@@ -167,7 +282,9 @@ export class ShopService {
     }
 
     const updated = await this.shopRepository.update(id, updateData);
-    this.logger.log(`Shop ${id} status changed to ${newStatus} by admin ${adminUserId}`);
+    this.logger.log(
+      `Shop ${id} status changed to ${newStatus} by admin ${adminUserId}`,
+    );
     return updated!;
   }
 }

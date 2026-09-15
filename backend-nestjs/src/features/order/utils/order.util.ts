@@ -8,9 +8,34 @@ import {
   OrderItemResponseDto,
 } from '../dto/order-response.dto';
 import type { IShippingAddressSnapshot } from '../types/order.types';
+import type { OrderCommissionContext } from '../../seller-finance/types/seller-finance.types';
 
 function parseShippingAddress(raw: string): IShippingAddressSnapshot {
   return JSON.parse(raw);
+}
+
+/**
+ * Map a loaded order (with `order_items`) + its resolved seller into the context
+ * the commission engine consumes. Shared by `OrderService` (completion/cancel
+ * sites) and `OrderScheduler` (auto-complete) so the shape stays in one place.
+ * `line_total` is the pre-discount line amount; `category_id` is the checkout
+ * snapshot (null → platform rate).
+ */
+export function toCommissionContext(
+  order: Order,
+  sellerUserId: number,
+): OrderCommissionContext {
+  return {
+    order_id: order.id,
+    shop_id: order.shop_id,
+    seller_user_id: sellerUserId,
+    total_amount: Number(order.total_amount),
+    shipping_fee: Number(order.shipping_fee),
+    items: (order.order_items ?? []).map((it) => ({
+      line_total: Number(it.price) * it.quantity,
+      category_id: it.category_id ?? null,
+    })),
+  };
 }
 
 function toOrderItemResponse(item: {
@@ -64,6 +89,7 @@ export function toOrderResponse(order: Order): OrderResponseDto {
     shipping_fee: Number(order.shipping_fee),
     coupon_code: order.coupon_code ?? null,
     discount_amount: Number(order.discount_amount ?? 0),
+    coin_discount: Number(order.coin_discount ?? 0),
     total_amount: Number(order.total_amount),
     shipping_address: parseShippingAddress(order.shipping_address),
     order_items: (order.order_items || []).map(toOrderItemResponse),
@@ -72,7 +98,9 @@ export function toOrderResponse(order: Order): OrderResponseDto {
   };
 }
 
-export function toOrderListItemResponse(order: Order): OrderListItemResponseDto {
+export function toOrderListItemResponse(
+  order: Order,
+): OrderListItemResponseDto {
   return {
     id: order.id,
     shop_id: order.shop_id,
@@ -84,6 +112,7 @@ export function toOrderListItemResponse(order: Order): OrderListItemResponseDto 
     shipping_fee: Number(order.shipping_fee),
     coupon_code: order.coupon_code ?? null,
     discount_amount: Number(order.discount_amount ?? 0),
+    coin_discount: Number(order.coin_discount ?? 0),
     total_amount: Number(order.total_amount),
     created_at: order.created_at,
     delivered_at: order.delivered_at ?? null,
@@ -108,9 +137,7 @@ export function toAdminOrderResponse(order: Order): AdminOrderResponseDto {
   };
 }
 
-export function toSellerOrderResponse(
-  order: Order,
-): SellerOrderResponseDto {
+export function toSellerOrderResponse(order: Order): SellerOrderResponseDto {
   const items = order.order_items || [];
   const sellerItemsTotal = items.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,

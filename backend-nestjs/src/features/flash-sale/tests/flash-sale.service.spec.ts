@@ -85,15 +85,41 @@ describe('FlashSaleService', () => {
   describe('getActiveFlashPriceMap', () => {
     it('maps variant → flash price + remaining, earliest-start wins on dupes', async () => {
       itemRepo.findActiveByVariantIds.mockResolvedValue([
-        { item_id: 10, product_variant_id: 1, flash_price: 149000, flash_quantity: 30, sold_quantity: 8 },
-        { item_id: 99, product_variant_id: 1, flash_price: 100000, flash_quantity: 5, sold_quantity: 0 },
-        { item_id: 11, product_variant_id: 2, flash_price: 199000, flash_quantity: 10, sold_quantity: 10 },
+        {
+          item_id: 10,
+          product_variant_id: 1,
+          flash_price: 149000,
+          flash_quantity: 30,
+          sold_quantity: 8,
+        },
+        {
+          item_id: 99,
+          product_variant_id: 1,
+          flash_price: 100000,
+          flash_quantity: 5,
+          sold_quantity: 0,
+        },
+        {
+          item_id: 11,
+          product_variant_id: 2,
+          flash_price: 199000,
+          flash_quantity: 10,
+          sold_quantity: 10,
+        },
       ]);
 
       const map = await service.getActiveFlashPriceMap([1, 2, 3]);
 
-      expect(map.get(1)).toEqual({ flashItemId: 10, flashPrice: 149000, remaining: 22 });
-      expect(map.get(2)).toEqual({ flashItemId: 11, flashPrice: 199000, remaining: 0 });
+      expect(map.get(1)).toEqual({
+        flashItemId: 10,
+        flashPrice: 149000,
+        remaining: 22,
+      });
+      expect(map.get(2)).toEqual({
+        flashItemId: 11,
+        flashPrice: 199000,
+        remaining: 0,
+      });
       expect(map.has(3)).toBe(false);
     });
 
@@ -148,7 +174,11 @@ describe('FlashSaleService', () => {
     it('rejects when the campaign is not open for registration (FLASH_SALE_009)', async () => {
       saleRepo.findById.mockResolvedValue(openCampaign({ status: 'active' }));
       await expect(
-        service.registerItem(9, 1, { product_variant_id: 7, flash_price: 80000, flash_quantity: 5 }),
+        service.registerItem(9, 1, {
+          product_variant_id: 7,
+          flash_price: 80000,
+          flash_quantity: 5,
+        }),
       ).rejects.toMatchObject({ response: { code: 'FLASH_SALE_009' } });
     });
 
@@ -159,20 +189,32 @@ describe('FlashSaleService', () => {
         product: { shop_id: 2, name: 'P' },
       });
       await expect(
-        service.registerItem(9, 1, { product_variant_id: 7, flash_price: 80000, flash_quantity: 5 }),
+        service.registerItem(9, 1, {
+          product_variant_id: 7,
+          flash_price: 80000,
+          flash_quantity: 5,
+        }),
       ).rejects.toMatchObject({ response: { code: 'FLASH_SALE_010' } });
     });
 
     it('rejects a flash price below the discount floor (FLASH_SALE_011)', async () => {
       await expect(
-        service.registerItem(9, 1, { product_variant_id: 7, flash_price: 95000, flash_quantity: 5 }),
+        service.registerItem(9, 1, {
+          product_variant_id: 7,
+          flash_price: 95000,
+          flash_quantity: 5,
+        }),
       ).rejects.toMatchObject({ response: { code: 'FLASH_SALE_011' } });
     });
 
     it('rejects a duplicate non-rejected registration (FLASH_SALE_004)', async () => {
       itemRepo.existsInSale.mockResolvedValue(true);
       await expect(
-        service.registerItem(9, 1, { product_variant_id: 7, flash_price: 80000, flash_quantity: 5 }),
+        service.registerItem(9, 1, {
+          product_variant_id: 7,
+          flash_price: 80000,
+          flash_quantity: 5,
+        }),
       ).rejects.toBeInstanceOf(ConflictException);
       expect(itemRepo.create).not.toHaveBeenCalled();
     });
@@ -189,10 +231,18 @@ describe('FlashSaleService', () => {
         product_variant: { price: 100000, product: { id: 3, name: 'P' } },
       });
 
-      await service.registerItem(9, 1, { product_variant_id: 7, flash_price: 80000, flash_quantity: 5 });
+      await service.registerItem(9, 1, {
+        product_variant_id: 7,
+        flash_price: 80000,
+        flash_quantity: 5,
+      });
 
       expect(itemRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ shop_id: 1, status: 'pending', created_by: 9 }),
+        expect.objectContaining({
+          shop_id: 1,
+          status: 'pending',
+          created_by: 9,
+        }),
       );
     });
   });
@@ -233,7 +283,10 @@ describe('FlashSaleService', () => {
     });
 
     it('rejects approving a non-pending item (FLASH_SALE_013)', async () => {
-      itemRepo.findByIdWithRelations.mockResolvedValue({ ...item, status: 'approved' });
+      itemRepo.findByIdWithRelations.mockResolvedValue({
+        ...item,
+        status: 'approved',
+      });
       await expect(service.approveItem(42, 1)).rejects.toMatchObject({
         response: { code: 'FLASH_SALE_013' },
       });
@@ -255,7 +308,11 @@ describe('FlashSaleService', () => {
     });
 
     it('rejects a registration owned by another shop (FLASH_SALE_008)', async () => {
-      itemRepo.findByIdWithRelations.mockResolvedValue({ id: 42, shop_id: 2, status: 'pending' });
+      itemRepo.findByIdWithRelations.mockResolvedValue({
+        id: 42,
+        shop_id: 2,
+        status: 'pending',
+      });
       await expect(
         service.updateSellerItem(9, 42, { flash_price: 80000 }),
       ).rejects.toMatchObject({ response: { code: 'FLASH_SALE_008' } });

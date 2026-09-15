@@ -84,7 +84,9 @@ export class FlashSaleResponseDto {
   @ApiProperty()
   ends_at: Date;
 
-  @ApiProperty({ description: 'Mandatory minimum discount percent for registrations' })
+  @ApiProperty({
+    description: 'Mandatory minimum discount percent for registrations',
+  })
   min_discount_percent: number;
 
   @ApiProperty({ enum: ['scheduled', 'active', 'ended'] })
@@ -96,7 +98,9 @@ export class FlashSaleResponseDto {
   @ApiProperty()
   item_count: number;
 
-  @ApiProperty({ description: 'Number of pending registrations (moderation badge)' })
+  @ApiProperty({
+    description: 'Number of pending registrations (moderation badge)',
+  })
   pending_count: number;
 
   @ApiProperty({ type: [FlashSaleItemResponseDto] })

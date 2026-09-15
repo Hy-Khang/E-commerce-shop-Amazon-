@@ -48,7 +48,11 @@ function cartItem(
   shopId: number,
   price: number,
   quantity = 1,
-  opts: { productId?: number; categoryId?: number; salePrice?: number | null } = {},
+  opts: {
+    productId?: number;
+    categoryId?: number;
+    salePrice?: number | null;
+  } = {},
 ): any {
   return {
     quantity,
@@ -133,14 +137,20 @@ describe('CouponService', () => {
   describe('validateCoupon', () => {
     it('rejects a missing coupon with COUPON_001', async () => {
       couponRepo.findByCode.mockResolvedValue(null);
-      await expect(service.validateCouponForUser(1, 'NOPE')).rejects.toMatchObject({
+      await expect(
+        service.validateCouponForUser(1, 'NOPE'),
+      ).rejects.toMatchObject({
         response: { code: 'COUPON_001' },
       });
     });
 
     it('rejects an inactive coupon with COUPON_006', async () => {
-      couponRepo.findByCode.mockResolvedValue(buildCoupon({ is_active: false }));
-      await expect(service.validateCouponForUser(1, 'SALE')).rejects.toMatchObject({
+      couponRepo.findByCode.mockResolvedValue(
+        buildCoupon({ is_active: false }),
+      );
+      await expect(
+        service.validateCouponForUser(1, 'SALE'),
+      ).rejects.toMatchObject({
         response: { code: 'COUPON_006' },
       });
     });
@@ -149,7 +159,9 @@ describe('CouponService', () => {
       couponRepo.findByCode.mockResolvedValue(
         buildCoupon({ shop_id: 5, admin_disabled: true }),
       );
-      await expect(service.validateCouponForUser(1, 'SALE')).rejects.toMatchObject({
+      await expect(
+        service.validateCouponForUser(1, 'SALE'),
+      ).rejects.toMatchObject({
         response: { code: 'COUPON_006' },
       });
     });
@@ -160,7 +172,9 @@ describe('CouponService', () => {
         id: 5,
         status: ShopStatus.Suspended,
       });
-      await expect(service.validateCouponForUser(1, 'SALE')).rejects.toMatchObject({
+      await expect(
+        service.validateCouponForUser(1, 'SALE'),
+      ).rejects.toMatchObject({
         response: { code: 'COUPON_006' },
       });
     });
@@ -169,7 +183,9 @@ describe('CouponService', () => {
       couponRepo.findByCode.mockResolvedValue(
         buildCoupon({ expires_at: new Date(Date.now() - 1000) }),
       );
-      await expect(service.validateCouponForUser(1, 'SALE')).rejects.toMatchObject({
+      await expect(
+        service.validateCouponForUser(1, 'SALE'),
+      ).rejects.toMatchObject({
         response: { code: 'COUPON_002' },
       });
     });
@@ -178,22 +194,31 @@ describe('CouponService', () => {
       couponRepo.findByCode.mockResolvedValue(
         buildCoupon({ max_uses: 5, current_uses: 5 }),
       );
-      await expect(service.validateCouponForUser(1, 'SALE')).rejects.toMatchObject({
+      await expect(
+        service.validateCouponForUser(1, 'SALE'),
+      ).rejects.toMatchObject({
         response: { code: 'COUPON_003' },
       });
     });
 
     it('rejects when per-user limit reached with COUPON_004', async () => {
-      couponRepo.findByCode.mockResolvedValue(buildCoupon({ max_uses_per_user: 1 }));
+      couponRepo.findByCode.mockResolvedValue(
+        buildCoupon({ max_uses_per_user: 1 }),
+      );
       usageRepo.countActiveByUserAndCoupon.mockResolvedValue(1);
-      await expect(service.validateCouponForUser(1, 'SALE')).rejects.toMatchObject({
+      await expect(
+        service.validateCouponForUser(1, 'SALE'),
+      ).rejects.toMatchObject({
         response: { code: 'COUPON_004' },
       });
     });
 
     it('accepts an active shop coupon while its shop is active', async () => {
       couponRepo.findByCode.mockResolvedValue(buildCoupon({ shop_id: 5 }));
-      shopService.findShopById.mockResolvedValue({ id: 5, status: ShopStatus.Active });
+      shopService.findShopById.mockResolvedValue({
+        id: 5,
+        status: ShopStatus.Active,
+      });
       const res = await service.validateCouponForUser(1, 'SALE');
       expect(res.valid).toBe(true);
       expect(res.shop_id).toBe(5);
@@ -211,11 +236,19 @@ describe('CouponService', () => {
 
     it('calculates a platform coupon across shops (applicable_by_shop)', async () => {
       couponRepo.findByCode.mockResolvedValue(
-        buildCoupon({ code: 'PLAT', discount_type: DiscountType.Fixed, discount_value: 40000 }),
+        buildCoupon({
+          code: 'PLAT',
+          discount_type: DiscountType.Fixed,
+          discount_value: 40000,
+        }),
       );
       const cart = [cartItem(1, 100000), cartItem(2, 300000)];
 
-      const res = await service.validateAndCalculateDiscounts(1, ['PLAT'], cart);
+      const res = await service.validateAndCalculateDiscounts(
+        1,
+        ['PLAT'],
+        cart,
+      );
 
       expect(res).toHaveLength(1);
       expect(res[0].coupon_shop_id).toBeNull();
@@ -227,10 +260,17 @@ describe('CouponService', () => {
       couponRepo.findByCode.mockResolvedValue(
         buildCoupon({ code: 'SHOP1', shop_id: 1, discount_value: 20000 }),
       );
-      shopService.findShopById.mockResolvedValue({ id: 1, status: ShopStatus.Active });
+      shopService.findShopById.mockResolvedValue({
+        id: 1,
+        status: ShopStatus.Active,
+      });
       const cart = [cartItem(1, 100000), cartItem(2, 300000)];
 
-      const res = await service.validateAndCalculateDiscounts(1, ['SHOP1'], cart);
+      const res = await service.validateAndCalculateDiscounts(
+        1,
+        ['SHOP1'],
+        cart,
+      );
 
       expect(res[0].coupon_shop_id).toBe(1);
       expect(res[0].applicable_by_shop).toEqual({ 1: 100000 });
@@ -251,7 +291,10 @@ describe('CouponService', () => {
       couponRepo.findByCode.mockImplementation((code: string) =>
         Promise.resolve(buildCoupon({ code, shop_id: 1 })),
       );
-      shopService.findShopById.mockResolvedValue({ id: 1, status: ShopStatus.Active });
+      shopService.findShopById.mockResolvedValue({
+        id: 1,
+        status: ShopStatus.Active,
+      });
       const cart = [cartItem(1, 100000)];
       await expect(
         service.validateAndCalculateDiscounts(1, ['S1', 'S2'], cart),
@@ -266,10 +309,17 @@ describe('CouponService', () => {
             : buildCoupon({ code, shop_id: 1, discount_value: 5000 }),
         ),
       );
-      shopService.findShopById.mockResolvedValue({ id: 1, status: ShopStatus.Active });
+      shopService.findShopById.mockResolvedValue({
+        id: 1,
+        status: ShopStatus.Active,
+      });
       const cart = [cartItem(1, 100000), cartItem(2, 200000)];
 
-      const res = await service.validateAndCalculateDiscounts(1, ['PLAT', 'SHOP1'], cart);
+      const res = await service.validateAndCalculateDiscounts(
+        1,
+        ['PLAT', 'SHOP1'],
+        cart,
+      );
 
       expect(res).toHaveLength(2);
       expect(res.find((c) => c.coupon_shop_id === null)).toBeDefined();
@@ -279,14 +329,21 @@ describe('CouponService', () => {
     it('dedupes repeated codes', async () => {
       couponRepo.findByCode.mockResolvedValue(buildCoupon({ code: 'PLAT' }));
       const cart = [cartItem(1, 100000)];
-      const res = await service.validateAndCalculateDiscounts(1, ['plat', 'PLAT'], cart);
+      const res = await service.validateAndCalculateDiscounts(
+        1,
+        ['plat', 'PLAT'],
+        cart,
+      );
       expect(res).toHaveLength(1);
       expect(couponRepo.findByCode).toHaveBeenCalledTimes(1);
     });
 
     it('rejects when nothing is applicable with COUPON_008', async () => {
       couponRepo.findByCode.mockResolvedValue(
-        buildCoupon({ scope: CouponScope.Products, coupon_products: [{ product_id: 999 }] }),
+        buildCoupon({
+          scope: CouponScope.Products,
+          coupon_products: [{ product_id: 999 }],
+        }),
       );
       const cart = [cartItem(1, 100000)]; // product_id 10, not 999
       await expect(
@@ -332,10 +389,15 @@ describe('CouponService', () => {
     } as any;
 
     it('prefixes the code with the shop slug (uppercased) and persists shop_id', async () => {
-      shopService.resolveShopByUserId.mockResolvedValue({ id: 7, slug: 'my-shop' });
+      shopService.resolveShopByUserId.mockResolvedValue({
+        id: 7,
+        slug: 'my-shop',
+      });
       couponRepo.existsByCode.mockResolvedValue(false);
       couponRepo.create.mockResolvedValue(buildCoupon({ id: 50 }));
-      couponRepo.findById.mockResolvedValue(buildCoupon({ id: 50, shop_id: 7, code: 'MY-SHOP-SALE10' }));
+      couponRepo.findById.mockResolvedValue(
+        buildCoupon({ id: 50, shop_id: 7, code: 'MY-SHOP-SALE10' }),
+      );
 
       await service.createSellerCoupon(9, dtoBase);
 
@@ -355,15 +417,21 @@ describe('CouponService', () => {
     });
 
     it('rejects a duplicate code with COUPON_007', async () => {
-      shopService.resolveShopByUserId.mockResolvedValue({ id: 7, slug: 'my-shop' });
+      shopService.resolveShopByUserId.mockResolvedValue({
+        id: 7,
+        slug: 'my-shop',
+      });
       couponRepo.existsByCode.mockResolvedValue(true);
-      await expect(service.createSellerCoupon(9, dtoBase)).rejects.toBeInstanceOf(
-        ConflictException,
-      );
+      await expect(
+        service.createSellerCoupon(9, dtoBase),
+      ).rejects.toBeInstanceOf(ConflictException);
     });
 
     it('rejects products not belonging to the shop with COUPON_009', async () => {
-      shopService.resolveShopByUserId.mockResolvedValue({ id: 7, slug: 'my-shop' });
+      shopService.resolveShopByUserId.mockResolvedValue({
+        id: 7,
+        slug: 'my-shop',
+      });
       couponRepo.existsByCode.mockResolvedValue(false);
       productRepo.count.mockResolvedValue(1); // only 1 of 2 products belong
       await expect(
@@ -378,15 +446,23 @@ describe('CouponService', () => {
 
   describe('seller ownership (assertSellerOwnsCoupon)', () => {
     it('rejects a platform coupon with COUPON_010', async () => {
-      shopService.resolveShopByUserId.mockResolvedValue({ id: 7, slug: 'my-shop' });
-      couponRepo.findById.mockResolvedValue(buildCoupon({ id: 3, shop_id: null }));
+      shopService.resolveShopByUserId.mockResolvedValue({
+        id: 7,
+        slug: 'my-shop',
+      });
+      couponRepo.findById.mockResolvedValue(
+        buildCoupon({ id: 3, shop_id: null }),
+      );
       await expect(service.findSellerCouponById(9, 3)).rejects.toMatchObject({
         response: { code: 'COUPON_010' },
       });
     });
 
     it("rejects another shop's coupon with COUPON_010", async () => {
-      shopService.resolveShopByUserId.mockResolvedValue({ id: 7, slug: 'my-shop' });
+      shopService.resolveShopByUserId.mockResolvedValue({
+        id: 7,
+        slug: 'my-shop',
+      });
       couponRepo.findById.mockResolvedValue(buildCoupon({ id: 3, shop_id: 8 }));
       await expect(service.findSellerCouponById(9, 3)).rejects.toMatchObject({
         response: { code: 'COUPON_010' },
@@ -394,7 +470,10 @@ describe('CouponService', () => {
     });
 
     it('returns the coupon when owned by the caller shop', async () => {
-      shopService.resolveShopByUserId.mockResolvedValue({ id: 7, slug: 'my-shop' });
+      shopService.resolveShopByUserId.mockResolvedValue({
+        id: 7,
+        slug: 'my-shop',
+      });
       couponRepo.findById.mockResolvedValue(buildCoupon({ id: 3, shop_id: 7 }));
       const res = await service.findSellerCouponById(9, 3);
       expect(res.id).toBe(3);
@@ -403,7 +482,10 @@ describe('CouponService', () => {
 
   describe('updateSellerCoupon', () => {
     it('rejects updates on an admin-locked coupon with COUPON_013', async () => {
-      shopService.resolveShopByUserId.mockResolvedValue({ id: 7, slug: 'my-shop' });
+      shopService.resolveShopByUserId.mockResolvedValue({
+        id: 7,
+        slug: 'my-shop',
+      });
       couponRepo.findById.mockResolvedValue(
         buildCoupon({ id: 3, shop_id: 7, admin_disabled: true }),
       );
@@ -413,7 +495,10 @@ describe('CouponService', () => {
     });
 
     it('rejects clearing all products on a products-scoped coupon (dead coupon)', async () => {
-      shopService.resolveShopByUserId.mockResolvedValue({ id: 7, slug: 'my-shop' });
+      shopService.resolveShopByUserId.mockResolvedValue({
+        id: 7,
+        slug: 'my-shop',
+      });
       couponRepo.findById.mockResolvedValue(
         buildCoupon({
           id: 3,
@@ -442,7 +527,9 @@ describe('CouponService', () => {
     });
 
     it('does not set the lock for a platform coupon', async () => {
-      couponRepo.findById.mockResolvedValue(buildCoupon({ id: 3, shop_id: null }));
+      couponRepo.findById.mockResolvedValue(
+        buildCoupon({ id: 3, shop_id: null }),
+      );
       await service.deactivateCoupon(3);
       const patch = couponRepo.update.mock.calls[0][1];
       expect(patch.is_active).toBe(false);
@@ -454,10 +541,20 @@ describe('CouponService', () => {
     it('clears only the lock, leaving is_active untouched (unlock ≠ activate)', async () => {
       couponRepo.findById
         .mockResolvedValueOnce(
-          buildCoupon({ id: 3, shop_id: 7, admin_disabled: true, is_active: false }),
+          buildCoupon({
+            id: 3,
+            shop_id: 7,
+            admin_disabled: true,
+            is_active: false,
+          }),
         )
         .mockResolvedValueOnce(
-          buildCoupon({ id: 3, shop_id: 7, admin_disabled: false, is_active: false }),
+          buildCoupon({
+            id: 3,
+            shop_id: 7,
+            admin_disabled: false,
+            is_active: false,
+          }),
         );
       await service.unlockCoupon(3);
       const patch = couponRepo.update.mock.calls[0][1];
@@ -692,7 +789,12 @@ describe('CouponService', () => {
         items: [namedCartItem(1, 'Shop One', 300_000, 1)],
       });
       couponRepo.findAvailableForCart.mockResolvedValue([
-        buildCoupon({ id: 100, code: 'PLAT', shop_id: null, max_uses_per_user: 1 }),
+        buildCoupon({
+          id: 100,
+          code: 'PLAT',
+          shop_id: null,
+          max_uses_per_user: 1,
+        }),
       ]);
       usageRepo.countActiveByUserAndCoupon.mockResolvedValue(1);
 

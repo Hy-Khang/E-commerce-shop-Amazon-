@@ -9,4 +9,7 @@ export interface PermissionsMetadata {
 }
 
 export const Permissions = (...permissions: PermissionString[]) =>
-  SetMetadata(PERMISSIONS_KEY, { mode: 'all', permissions } as PermissionsMetadata);
+  SetMetadata(PERMISSIONS_KEY, {
+    mode: 'all',
+    permissions,
+  });

@@ -12,7 +12,8 @@ export class ShipperOrderQueryDto extends PaginationDto {
   @ApiPropertyOptional({
     enum: ['available', 'my_deliveries'],
     default: 'available',
-    description: 'Filter mode: available (confirmed, unassigned) or my_deliveries (assigned to this shipper)',
+    description:
+      'Filter mode: available (confirmed, unassigned) or my_deliveries (assigned to this shipper)',
   })
   @IsOptional()
   @IsIn(['available', 'my_deliveries'])
@@ -26,7 +27,10 @@ export class ShipperOrderQueryDto extends PaginationDto {
   @IsEnum(OrderStatus)
   status?: OrderStatus;
 
-  @ApiPropertyOptional({ enum: ShipperOrderSortBy, default: ShipperOrderSortBy.CreatedAt })
+  @ApiPropertyOptional({
+    enum: ShipperOrderSortBy,
+    default: ShipperOrderSortBy.CreatedAt,
+  })
   @IsOptional()
   @IsEnum(ShipperOrderSortBy)
   sort?: string;

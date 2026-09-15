@@ -239,6 +239,28 @@
   background-color: var(--color-neutral-400);
 }
 
+/* Thin, subtle scrollbar for the portal sidebars (admin navy / seller amber /
+   shipper emerald). Those surfaces are dark in BOTH themes, so a translucent
+   white thumb over a transparent track fits all three without a light/dark
+   swap — and avoids the glaring OS-default track the plain overflow shows. */
+@utility scrollbar-dark {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgb(255 255 255 / 0.18);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(255 255 255 / 0.32);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-in,
   .animate-slide-up {

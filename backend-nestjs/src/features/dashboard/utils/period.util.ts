@@ -39,7 +39,10 @@ export function resolvePeriod(
  * totals. `changePercent` is null when the previous window was zero (no valid
  * baseline → the frontend renders "New" instead of a percentage).
  */
-export function computeChange(current: number, previous: number): IMetricChange {
+export function computeChange(
+  current: number,
+  previous: number,
+): IMetricChange {
   if (previous <= 0) {
     return {
       changePercent: null,

@@ -1,6 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsPositive, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 export class CategoryQueryDto extends PaginationDto {

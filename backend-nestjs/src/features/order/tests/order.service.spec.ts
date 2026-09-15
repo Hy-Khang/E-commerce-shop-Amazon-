@@ -15,9 +15,16 @@ import { CartService } from '../../cart/cart.service';
 import { ProductService } from '../../product/product.service';
 import { UserProfileService } from '../../user-profile/user-profile.service';
 import { CouponService } from '../../coupon/coupon.service';
+import { CoinService } from '../../coin/coin.service';
+import { SettingsService } from '../../settings/settings.service';
+import { CommissionService } from '../../seller-finance/commission.service';
 import { ShopService } from '../../shop/shop.service';
 import { FlashSaleService } from '../../flash-sale/flash-sale.service';
-import { PaymentMethod, OrderStatus, PaymentStatus } from '../../../common/constants';
+import {
+  PaymentMethod,
+  OrderStatus,
+  PaymentStatus,
+} from '../../../common/constants';
 import { InsufficientStockException } from '../../../common/exceptions/insufficient-stock.exception';
 import {
   mockOrder,
@@ -86,7 +93,11 @@ describe('OrderService', () => {
         },
         {
           provide: OrderTrackingLocationRepository,
-          useValue: { insertLocation: jest.fn(), findLatestByOrderId: jest.fn(), findAllByOrderId: jest.fn() },
+          useValue: {
+            insertLocation: jest.fn(),
+            findLatestByOrderId: jest.fn(),
+            findAllByOrderId: jest.fn(),
+          },
         },
         {
           provide: CartService,
@@ -112,6 +123,42 @@ describe('OrderService', () => {
             recordUsage: jest.fn(),
             reverseOrderShopCoupons: jest.fn(),
             reverseGroupPlatformCoupon: jest.fn(),
+          },
+        },
+        {
+          provide: CoinService,
+          useValue: {
+            validateRedemption: jest.fn().mockResolvedValue(0),
+            redeemForCheckout: jest.fn().mockResolvedValue(0),
+            awardForOrder: jest.fn(),
+            reverseEarnForOrder: jest.fn(),
+            refundRedemptionForOrder: jest.fn(),
+          },
+        },
+        {
+          provide: SettingsService,
+          useValue: {
+            getCoinConfig: jest.fn().mockResolvedValue({
+              enabled: true,
+              earn_rate_percent: 1,
+              redeem_max_percent: 50,
+              expiry_days: 90,
+            }),
+            getCommissionConfig: jest.fn().mockResolvedValue({
+              enabled: false,
+              mode: 'flat',
+              rate_percent: 10,
+            }),
+            getCommissionCategoryRateMap: jest
+              .fn()
+              .mockResolvedValue(new Map()),
+          },
+        },
+        {
+          provide: CommissionService,
+          useValue: {
+            chargeForOrder: jest.fn(),
+            reverseForOrder: jest.fn(),
           },
         },
         {
@@ -159,12 +206,12 @@ describe('OrderService', () => {
 
       cartService.getCartWithItems.mockResolvedValue(cart as any);
       productService.findVariantById.mockResolvedValue(
-        cart.items[0].product_variant as any,
+        cart.items[0].product_variant,
       );
       userProfileService.findAddressById.mockResolvedValue(address as any);
 
       // Act
-      const result = await service.checkout(userId, dto as any);
+      const result = await service.checkout(userId, dto);
 
       // Assert — transaction lifecycle
       expect(mockQueryRunner.connect).toHaveBeenCalled();
@@ -182,7 +229,10 @@ describe('OrderService', () => {
       // Assert — event emitted after commit
       expect(eventEmitter.emit).toHaveBeenCalledWith('order.created', {
         orderId: 42,
-        items: [{ productVariantId: cart.items[0].product_variant_id, quantity: 1 }],
+        userId,
+        items: [
+          { productVariantId: cart.items[0].product_variant_id, quantity: 1 },
+        ],
       });
 
       expect(result.order_group_id).toBeDefined();
@@ -199,13 +249,13 @@ describe('OrderService', () => {
       cartService.getCartWithItems.mockResolvedValue(cart as any);
       for (const item of cart.items) {
         productService.findVariantById.mockResolvedValueOnce(
-          item.product_variant as any,
+          item.product_variant,
         );
       }
       userProfileService.findAddressById.mockResolvedValue(address as any);
 
       // Act
-      const result = await service.checkout(userId, dto as any);
+      const result = await service.checkout(userId, dto);
 
       // Assert — 3 items: price=250000 * qty(1) + price*qty(2) + price*qty(3) + shipping(30000)
       const expectedItemsTotal = 250000 * 1 + 250000 * 2 + 250000 * 3;
@@ -215,18 +265,18 @@ describe('OrderService', () => {
     it('should use sale_price when available', async () => {
       // Arrange
       const cart = mockCartForCheckout(1);
-      cart.items[0].product_variant.sale_price = 200000 as any;
+      cart.items[0].product_variant.sale_price = 200000;
       cart.items[0].quantity = 1;
       const address = mockAddress();
 
       cartService.getCartWithItems.mockResolvedValue(cart as any);
       productService.findVariantById.mockResolvedValue(
-        cart.items[0].product_variant as any,
+        cart.items[0].product_variant,
       );
       userProfileService.findAddressById.mockResolvedValue(address as any);
 
       // Act
-      const result = await service.checkout(userId, dto as any);
+      const result = await service.checkout(userId, dto);
 
       // Assert — total = sale_price (200000) * 1 + shipping (30000) = 230000
       expect(result.total_amount).toBe(230000);
@@ -239,7 +289,7 @@ describe('OrderService', () => {
 
       cartService.getCartWithItems.mockResolvedValue(cart as any);
       productService.findVariantById.mockResolvedValue(
-        cart.items[0].product_variant as any,
+        cart.items[0].product_variant,
       );
       userProfileService.findAddressById.mockResolvedValue(address as any);
       mockQueryRunner.manager.save.mockRejectedValueOnce(new Error('DB error'));
@@ -261,7 +311,7 @@ describe('OrderService', () => {
       productService.findVariantById.mockResolvedValue({
         ...cart.items[0].product_variant,
         stock_quantity: 5,
-      } as any);
+      });
 
       // Act & Assert
       await expect(service.checkout(userId, dto as any)).rejects.toThrow(
@@ -286,7 +336,7 @@ describe('OrderService', () => {
       const cart = mockCartForCheckout(1);
       cartService.getCartWithItems.mockResolvedValue(cart as any);
       productService.findVariantById.mockResolvedValue(
-        cart.items[0].product_variant as any,
+        cart.items[0].product_variant,
       );
       userProfileService.findAddressById.mockResolvedValue(null);
 
@@ -349,7 +399,9 @@ describe('OrderService', () => {
             .product_variant as any,
         ),
       );
-      userProfileService.findAddressById.mockResolvedValue(mockAddress() as any);
+      userProfileService.findAddressById.mockResolvedValue(
+        mockAddress() as any,
+      );
     }
 
     function orderFor(result: any, shopId: number) {
@@ -366,13 +418,13 @@ describe('OrderService', () => {
           discount_amount: 20000,
           applicable_by_shop: { 1: 100000 },
         },
-      ] as any);
+      ]);
 
       const result = await service.checkout(userId, {
         payment_method: PaymentMethod.Cod,
         address_id: 5,
         coupon_codes: ['SHOP1'],
-      } as any);
+      });
 
       expect(orderFor(result, 1).discount_amount).toBe(20000);
       expect(orderFor(result, 1).coupon_code).toBe('SHOP1');
@@ -390,19 +442,20 @@ describe('OrderService', () => {
           discount_amount: 40000,
           applicable_by_shop: { 1: 100000, 2: 300000 },
         },
-      ] as any);
+      ]);
 
       const result = await service.checkout(userId, {
         payment_method: PaymentMethod.Cod,
         address_id: 5,
         coupon_codes: ['PLAT'],
-      } as any);
+      });
 
       // 40000 split 100k:300k → 10000 / 30000
       expect(orderFor(result, 1).discount_amount).toBe(10000);
       expect(orderFor(result, 2).discount_amount).toBe(30000);
       const sum =
-        orderFor(result, 1).discount_amount + orderFor(result, 2).discount_amount;
+        orderFor(result, 1).discount_amount +
+        orderFor(result, 2).discount_amount;
       expect(sum).toBe(40000);
     });
 
@@ -423,13 +476,13 @@ describe('OrderService', () => {
           discount_amount: 90000,
           applicable_by_shop: { 1: 100000 },
         },
-      ] as any);
+      ]);
 
       const result = await service.checkout(userId, {
         payment_method: PaymentMethod.Cod,
         address_id: 5,
         coupon_codes: ['PLAT', 'SHOP1'],
-      } as any);
+      });
 
       // shop1: 90000 shop coupon + min(platformShare 10000, headroom 10000) = 100000 (capped at items total)
       expect(orderFor(result, 1).discount_amount).toBe(100000);
@@ -437,7 +490,9 @@ describe('OrderService', () => {
       expect(orderFor(result, 2).discount_amount).toBe(30000);
 
       // both coupons recorded as usages
-      const recordedCoupons = couponService.recordUsage.mock.calls.map((c) => c[0]);
+      const recordedCoupons = couponService.recordUsage.mock.calls.map(
+        (c) => c[0],
+      );
       expect(recordedCoupons).toContain(5);
       expect(recordedCoupons).toContain(6);
     });
@@ -459,13 +514,13 @@ describe('OrderService', () => {
           discount_amount: 98000, // leaves only 2k headroom on shop 1
           applicable_by_shop: { 1: 100000 },
         },
-      ] as any);
+      ]);
 
       const result = await service.checkout(userId, {
         payment_method: PaymentMethod.Cod,
         address_id: 5,
         coupon_codes: ['PLAT', 'SHOP1'],
-      } as any);
+      });
 
       // shop1 fully discounted (98k shop + 2k platform); shop2 absorbs the
       // 13k leftover the naive clamp would have lost (45k + 13k = 58k).
@@ -488,7 +543,7 @@ describe('OrderService', () => {
           discount_amount: 20000,
           applicable_by_shop: { 1: 100000 },
         },
-      ] as any);
+      ]);
       couponService.recordUsage.mockRejectedValueOnce(
         new BadRequestException({
           code: 'COUPON_003',
@@ -553,7 +608,10 @@ describe('OrderService', () => {
     }
 
     it('returns zeros for an empty cart and never records usage', async () => {
-      cartService.getCartWithItems.mockResolvedValue({ id: 1, items: [] } as any);
+      cartService.getCartWithItems.mockResolvedValue({
+        id: 1,
+        items: [],
+      } as any);
 
       const result = await service.previewCheckout(userId, {});
 
@@ -573,7 +631,7 @@ describe('OrderService', () => {
           discount_amount: 40000,
           applicable_by_shop: { 1: 100000, 2: 300000 },
         },
-      ] as any);
+      ]);
 
       const result = await service.previewCheckout(userId, {
         coupon_codes: ['PLAT'],
@@ -598,7 +656,9 @@ describe('OrderService', () => {
 
       const result = await service.previewCheckout(userId, {});
 
-      expect(couponService.validateAndCalculateDiscounts).not.toHaveBeenCalled();
+      expect(
+        couponService.validateAndCalculateDiscounts,
+      ).not.toHaveBeenCalled();
       expect(result.discount_total).toBe(0);
       expect(result.subtotal).toBe(400000);
     });
@@ -610,14 +670,22 @@ describe('OrderService', () => {
     it('should return paginated orders for user', async () => {
       // Arrange
       const orders = mockPaginatedOrders();
-      orderRepository.findByUserIdPaginated.mockResolvedValue(orders as any);
+      orderRepository.findByUserIdPaginated.mockResolvedValue(orders);
 
       // Act
-      const result = await service.findMyOrders(1, { page: 1, limit: 20 } as any);
+      const result = await service.findMyOrders(1, {
+        page: 1,
+        limit: 20,
+      });
 
       // Assert
       expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
-        1, 1, 20, undefined, undefined, undefined,
+        1,
+        1,
+        20,
+        undefined,
+        undefined,
+        undefined,
       );
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
@@ -626,7 +694,7 @@ describe('OrderService', () => {
     it('should use default page and limit when not provided', async () => {
       // Arrange
       orderRepository.findByUserIdPaginated.mockResolvedValue(
-        mockPaginatedOrders() as any,
+        mockPaginatedOrders(),
       );
 
       // Act
@@ -634,23 +702,38 @@ describe('OrderService', () => {
 
       // Assert
       expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
-        1, 1, 20, undefined, undefined, undefined,
+        1,
+        1,
+        20,
+        undefined,
+        undefined,
+        undefined,
       );
     });
 
     it('should pass sort and order params to repository', async () => {
       // Arrange
       orderRepository.findByUserIdPaginated.mockResolvedValue(
-        mockPaginatedOrders() as any,
+        mockPaginatedOrders(),
       );
-      const query = { page: 2, limit: 10, sort: 'created_at', order: 'desc' as const };
+      const query = {
+        page: 2,
+        limit: 10,
+        sort: 'created_at',
+        order: 'desc' as const,
+      };
 
       // Act
-      await service.findMyOrders(1, query as any);
+      await service.findMyOrders(1, query);
 
       // Assert
       expect(orderRepository.findByUserIdPaginated).toHaveBeenCalledWith(
-        1, 2, 10, 'created_at', 'desc', undefined,
+        1,
+        2,
+        10,
+        'created_at',
+        'desc',
+        undefined,
       );
     });
   });
@@ -661,7 +744,7 @@ describe('OrderService', () => {
     it('should return order when it belongs to user', async () => {
       // Arrange
       const order = mockOrder({ user_id: 1 });
-      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItems.mockResolvedValue(order);
 
       // Act
       const result = await service.findMyOrderById(1, 1);
@@ -684,7 +767,7 @@ describe('OrderService', () => {
     it('should throw ForbiddenException when order belongs to another user', async () => {
       // Arrange
       const order = mockOrder({ user_id: 999 });
-      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItems.mockResolvedValue(order);
 
       // Act & Assert
       await expect(service.findMyOrderById(1, 1)).rejects.toThrow(
@@ -699,7 +782,7 @@ describe('OrderService', () => {
     it('should cancel a pending order and emit order.cancelled', async () => {
       // Arrange
       const order = mockOrder({ user_id: 1, status: OrderStatus.Pending });
-      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItems.mockResolvedValue(order);
 
       // Act
       const result = await service.cancelOrder(1, 1);
@@ -720,12 +803,14 @@ describe('OrderService', () => {
       // A 1-shop checkout still has an order_group_id, and its lone order is the
       // whole group — cancelling it must reverse the platform coupon too.
       const order = mockOrder({ user_id: 1, status: OrderStatus.Pending });
-      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItems.mockResolvedValue(order);
       orderRepository.areAllGroupOrdersCancelled.mockResolvedValue(true);
 
       await service.cancelOrder(1, 1);
 
-      expect(couponService.reverseOrderShopCoupons).toHaveBeenCalledWith(order.id);
+      expect(couponService.reverseOrderShopCoupons).toHaveBeenCalledWith(
+        order.id,
+      );
       expect(couponService.reverseGroupPlatformCoupon).toHaveBeenCalledWith(
         order.order_group_id,
       );
@@ -733,12 +818,14 @@ describe('OrderService', () => {
 
     it('does not reverse the platform coupon while other group orders remain', async () => {
       const order = mockOrder({ user_id: 1, status: OrderStatus.Pending });
-      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItems.mockResolvedValue(order);
       orderRepository.areAllGroupOrdersCancelled.mockResolvedValue(false);
 
       await service.cancelOrder(1, 1);
 
-      expect(couponService.reverseOrderShopCoupons).toHaveBeenCalledWith(order.id);
+      expect(couponService.reverseOrderShopCoupons).toHaveBeenCalledWith(
+        order.id,
+      );
       expect(couponService.reverseGroupPlatformCoupon).not.toHaveBeenCalled();
     });
 
@@ -755,7 +842,7 @@ describe('OrderService', () => {
     it('should throw ForbiddenException when order belongs to another user', async () => {
       // Arrange
       orderRepository.findByIdWithItems.mockResolvedValue(
-        mockOrder({ user_id: 999 }) as any,
+        mockOrder({ user_id: 999 }),
       );
 
       // Act & Assert
@@ -767,7 +854,7 @@ describe('OrderService', () => {
     it('should throw BadRequestException when order is not pending', async () => {
       // Arrange
       orderRepository.findByIdWithItems.mockResolvedValue(
-        mockOrder({ user_id: 1, status: OrderStatus.Delivered }) as any,
+        mockOrder({ user_id: 1, status: OrderStatus.Delivered }),
       );
 
       // Act & Assert
@@ -783,11 +870,11 @@ describe('OrderService', () => {
     it('should return paginated orders with filters', async () => {
       // Arrange
       const orders = mockPaginatedOrders();
-      orderRepository.findAllPaginated.mockResolvedValue(orders as any);
+      orderRepository.findAllPaginated.mockResolvedValue(orders);
       const query = { page: 1, limit: 20, status: OrderStatus.Pending };
 
       // Act
-      const result = await service.findAllOrders(query as any);
+      const result = await service.findAllOrders(query);
 
       // Assert
       expect(orderRepository.findAllPaginated).toHaveBeenCalledWith(query);
@@ -801,7 +888,7 @@ describe('OrderService', () => {
     it('should return order with user info', async () => {
       // Arrange
       const order = mockOrderWithUser();
-      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order);
 
       // Act
       const result = await service.findOrderById(1);
@@ -814,7 +901,7 @@ describe('OrderService', () => {
 
     it('attaches the applied_coupons breakdown', async () => {
       orderRepository.findByIdWithItemsAndUser.mockResolvedValue(
-        mockOrderWithUser() as any,
+        mockOrderWithUser(),
       );
       couponService.getUsagesForOrder.mockResolvedValue([
         { code: 'PLAT', discount_amount: 10000 },
@@ -849,7 +936,7 @@ describe('OrderService', () => {
         id: 7,
       });
       orderRepository.findByIdWithItemsForShop.mockResolvedValue(
-        mockOrderWithUser() as any,
+        mockOrderWithUser(),
       );
       couponService.getUsagesForOrder.mockResolvedValue([
         { code: 'SHOP1', discount_amount: 5000 },
@@ -870,7 +957,7 @@ describe('OrderService', () => {
     it('should allow valid status transition (pending → confirmed)', async () => {
       // Arrange
       const order = mockOrderWithUser({ status: OrderStatus.Pending });
-      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order);
 
       // Act
       const result = await service.updateOrderStatus(1, {
@@ -888,7 +975,7 @@ describe('OrderService', () => {
     it('should allow valid transition (confirmed → cancelled)', async () => {
       // Arrange
       const order = mockOrderWithUser({ status: OrderStatus.Confirmed });
-      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order);
 
       // Act
       const result = await service.updateOrderStatus(1, {
@@ -906,7 +993,7 @@ describe('OrderService', () => {
     it('should emit order.cancelled when transitioning to cancelled', async () => {
       // Arrange
       const order = mockOrderWithUser({ status: OrderStatus.Pending });
-      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order);
 
       // Act
       await service.updateOrderStatus(1, { status: OrderStatus.Cancelled });
@@ -921,7 +1008,7 @@ describe('OrderService', () => {
     it('should emit status_updated but not order.cancelled for non-cancel transitions', async () => {
       // Arrange
       const order = mockOrderWithUser({ status: OrderStatus.Pending });
-      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order);
 
       // Act
       await service.updateOrderStatus(1, { status: OrderStatus.Confirmed });
@@ -930,7 +1017,10 @@ describe('OrderService', () => {
       // triggers the stock-restoring order.cancelled event.
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'order.status_updated',
-        expect.objectContaining({ orderId: 1, newStatus: OrderStatus.Confirmed }),
+        expect.objectContaining({
+          orderId: 1,
+          newStatus: OrderStatus.Confirmed,
+        }),
       );
       expect(eventEmitter.emit).not.toHaveBeenCalledWith(
         'order.cancelled',
@@ -941,7 +1031,7 @@ describe('OrderService', () => {
     it('should reject invalid status transition (delivered → pending)', async () => {
       // Arrange
       orderRepository.findByIdWithItemsAndUser.mockResolvedValue(
-        mockOrderWithUser({ status: OrderStatus.Delivered }) as any,
+        mockOrderWithUser({ status: OrderStatus.Delivered }),
       );
 
       // Act & Assert
@@ -970,7 +1060,7 @@ describe('OrderService', () => {
         payment_status: PaymentStatus.Unpaid,
         status: OrderStatus.Delivered,
       });
-      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItemsAndUser.mockResolvedValue(order);
 
       // Act
       const result = await service.updatePaymentStatus(1, {
@@ -1004,7 +1094,7 @@ describe('OrderService', () => {
     it('should return order with items', async () => {
       // Arrange
       const order = mockOrder();
-      orderRepository.findByIdWithItems.mockResolvedValue(order as any);
+      orderRepository.findByIdWithItems.mockResolvedValue(order);
 
       // Act
       const result = await service.findOrderByIdForReview(1);

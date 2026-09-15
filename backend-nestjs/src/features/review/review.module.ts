@@ -17,11 +17,12 @@ import { ShopModule } from '../shop/shop.module';
     ProductModule,
     ShopModule,
   ],
-  controllers: [ReviewController, AdminReviewController, SellerReviewController],
-  providers: [
-    ReviewService,
-    ReviewRepository,
+  controllers: [
+    ReviewController,
+    AdminReviewController,
+    SellerReviewController,
   ],
+  providers: [ReviewService, ReviewRepository],
   exports: [ReviewService],
 })
 export class ReviewModule {}

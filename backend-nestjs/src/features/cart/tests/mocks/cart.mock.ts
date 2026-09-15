@@ -1,7 +1,10 @@
 import { Cart } from '../../entities/cart.entity';
 import { CartItem } from '../../entities/cart-item.entity';
 import { CartResponseDto } from '../../dto/cart-response.dto';
-import { mockProductVariant, mockProduct } from '../../../product/tests/mocks/product.mock';
+import {
+  mockProductVariant,
+  mockProduct,
+} from '../../../product/tests/mocks/product.mock';
 
 export const mockCart = (overrides: Partial<Cart> = {}): Cart => ({
   id: 1,

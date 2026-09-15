@@ -6,9 +6,7 @@ import {
 } from 'class-validator';
 
 @ValidatorConstraint({ async: false })
-export class IsVietnamesePhoneConstraint
-  implements ValidatorConstraintInterface
-{
+export class IsVietnamesePhoneConstraint implements ValidatorConstraintInterface {
   validate(value: any): boolean {
     if (typeof value !== 'string') return false;
     return /^(0|\+84)(3|5|7|8|9)\d{8}$/.test(value);

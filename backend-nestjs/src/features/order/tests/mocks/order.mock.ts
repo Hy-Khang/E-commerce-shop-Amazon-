@@ -1,13 +1,22 @@
 import { Order } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/order-item.entity';
-import { OrderStatus, PaymentMethod, PaymentStatus } from '../../../../common/constants';
+import {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from '../../../../common/constants';
 import {
   mockProduct,
   mockProductVariant,
 } from '../../../product/tests/mocks/product.mock';
 
 export const mockShippingAddress = (
-  overrides: Partial<{ full_name: string; phone: string; address_line: string; city: string }> = {},
+  overrides: Partial<{
+    full_name: string;
+    phone: string;
+    address_line: string;
+    city: string;
+  }> = {},
 ) => ({
   full_name: 'Nguyen Van A',
   phone: '0901234567',
@@ -16,7 +25,9 @@ export const mockShippingAddress = (
   ...overrides,
 });
 
-export const mockOrderItem = (overrides: Partial<OrderItem> = {}): OrderItem => ({
+export const mockOrderItem = (
+  overrides: Partial<OrderItem> = {},
+): OrderItem => ({
   id: 1,
   order_id: 1,
   product_variant_id: 1,
@@ -31,6 +42,7 @@ export const mockOrderItem = (overrides: Partial<OrderItem> = {}): OrderItem => 
   variant_option2_value: null,
   shop_id: null,
   shop_name: null,
+  category_id: null,
   flash_sale_item_id: null,
   order: null as any,
   product_variant: mockProductVariant(),
@@ -51,6 +63,7 @@ export const mockOrder = (overrides: Partial<Order> = {}): Order => ({
   shipping_address: JSON.stringify(mockShippingAddress()),
   coupon_code: null,
   discount_amount: 0,
+  coin_discount: 0,
   created_at: new Date('2026-01-15T10:00:00Z'),
   delivered_at: null,
   shipper_id: null,
@@ -103,13 +116,15 @@ export const mockCartForCheckout = (itemCount = 1) => {
   return { id: 1, items };
 };
 
-export const mockAddress = (overrides: Partial<{
-  id: number;
-  full_name: string;
-  phone: string;
-  address_line: string;
-  city: string;
-}> = {}) => ({
+export const mockAddress = (
+  overrides: Partial<{
+    id: number;
+    full_name: string;
+    phone: string;
+    address_line: string;
+    city: string;
+  }> = {},
+) => ({
   id: 5,
   full_name: 'Nguyen Van A',
   phone: '0901234567',

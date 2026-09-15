@@ -226,6 +226,7 @@ export default function SellerProductEditPage() {
             value={categoryId}
             onChange={(id) => setValue('category_id', id as number, { shouldValidate: true })}
             error={errors.category_id?.message}
+            leafOnly
           />
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>

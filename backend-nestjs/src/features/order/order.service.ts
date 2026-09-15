@@ -16,7 +16,15 @@ import { CartService } from '../cart/cart.service';
 import { ProductService } from '../product/product.service';
 import { UserProfileService } from '../user-profile/user-profile.service';
 import { CouponService } from '../coupon/coupon.service';
-import { distributeCheckoutDiscounts } from './utils/coupon-distribution.util';
+import { CoinService } from '../coin/coin.service';
+import { SettingsService } from '../settings/settings.service';
+import { CommissionService } from '../seller-finance/commission.service';
+import type { OrderCommissionContext } from '../seller-finance/types/seller-finance.types';
+import type { CoinConfig } from '../settings/types/settings.types';
+import {
+  distributeCheckoutDiscounts,
+  allocateWithCaps,
+} from './utils/coupon-distribution.util';
 import { pickVariantThumbnail } from '../cart/utils/cart.util';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -57,8 +65,13 @@ import {
   toOrderListItemWithItemsResponse,
   toAdminOrderResponse,
   toSellerOrderResponse,
+  toCommissionContext,
 } from './utils/order.util';
-import { OrderStatus, PaymentMethod, PaymentStatus } from '../../common/constants';
+import {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from '../../common/constants';
 import { InsufficientStockException } from '../../common/exceptions/insufficient-stock.exception';
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { ShopService } from '../shop/shop.service';
@@ -78,11 +91,14 @@ export class OrderService {
     private readonly productService: ProductService,
     private readonly userProfileService: UserProfileService,
     private readonly couponService: CouponService,
+    private readonly coinService: CoinService,
+    private readonly settingsService: SettingsService,
+    private readonly commissionService: CommissionService,
     private readonly shopService: ShopService,
     private readonly flashSaleService: FlashSaleService,
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
-  ) { }
+  ) {}
 
   // ─── Customer endpoints ───
 
@@ -170,6 +186,8 @@ export class OrderService {
         variant_option2_value: variant.option2 ?? null,
         shop_id: product?.shop_id ?? null,
         shop_name: product?.shop?.name ?? null,
+        // Snapshot the category for the platform-commission engine (Module 25).
+        category_id: product?.category_id ?? null,
         // Snapshot the flash item so sold_quantity can be reversed on cancel.
         flash_sale_item_id: flash ? flash.flashItemId : null,
       };
@@ -188,11 +206,14 @@ export class OrderService {
 
     // ── Group items by shop ──
 
-    const shopGroups = new Map<number, { shopName: string; items: typeof orderItemsData }>();
+    const shopGroups = new Map<
+      number,
+      { shopName: string; items: typeof orderItemsData }
+    >();
     for (const item of orderItemsData) {
       const shopId = item.shop_id!;
       if (!shopGroups.has(shopId)) {
-        shopGroups.set(shopId, { shopName: item.shop_name!, items: [] });
+        shopGroups.set(shopId, { shopName: item.shop_name, items: [] });
       }
       shopGroups.get(shopId)!.items.push(item);
     }
@@ -230,6 +251,33 @@ export class OrderService {
       0,
     );
 
+    // ── Coin (Hoàn Xu) redemption: validate + distribute across sub-orders ──
+    // Cap is on the items total AFTER coupons; the per-shop share is capped at
+    // each shop's remaining headroom so no sub-order total can go negative. The
+    // actual redeemed amount = Σ allocation (may be < requested when a large
+    // coupon leaves little headroom).
+    const coinConfig = await this.settingsService.getCoinConfig();
+    const itemsTotalAfterCoupon = [...shopItemsTotals.entries()].reduce(
+      (sum, [shopId, total]) =>
+        sum + (total - (discountByShop.get(shopId)?.discount ?? 0)),
+      0,
+    );
+    const validatedCoins = await this.coinService.validateRedemption(
+      userId,
+      dto.coins_to_redeem ?? 0,
+      itemsTotalAfterCoupon,
+      coinConfig,
+    );
+    const coinByShop = this.allocateCoinDiscount(
+      shopItemsTotals,
+      discountByShop,
+      validatedCoins,
+    );
+    const totalCoinDiscount = [...coinByShop.values()].reduce(
+      (sum, c) => sum + c,
+      0,
+    );
+
     // ── Transaction: create N orders (1 per shop) + items, clear cart ──
 
     const orderGroupId = randomUUID();
@@ -247,9 +295,14 @@ export class OrderService {
 
       for (const [shopId, { shopName, items }] of shopGroups) {
         const shopItemsTotal = shopItemsTotals.get(shopId)!;
-        const { discount: shopDiscount, couponCode: snapshotCode, usages } =
-          discountByShop.get(shopId)!;
-        const shopTotal = shopItemsTotal - shopDiscount + shippingFee;
+        const {
+          discount: shopDiscount,
+          couponCode: snapshotCode,
+          usages,
+        } = discountByShop.get(shopId)!;
+        const shopCoinDiscount = coinByShop.get(shopId) ?? 0;
+        const shopTotal =
+          shopItemsTotal - shopDiscount - shopCoinDiscount + shippingFee;
 
         const order = await queryRunner.manager.save(
           queryRunner.manager.create(Order, {
@@ -263,6 +316,7 @@ export class OrderService {
             shipping_fee: shippingFee,
             coupon_code: snapshotCode,
             discount_amount: shopDiscount,
+            coin_discount: shopCoinDiscount,
             total_amount: shopTotal,
             shipping_address: JSON.stringify(shippingSnapshot),
           }),
@@ -305,6 +359,18 @@ export class OrderService {
         }
       }
 
+      // Consume Xu FIFO inside the transaction — atomic with order creation, so
+      // a failure rolls the whole checkout back.
+      if (totalCoinDiscount > 0) {
+        await this.coinService.redeemForCheckout(
+          userId,
+          totalCoinDiscount,
+          createdOrders[0]?.id ?? null,
+          orderGroupId,
+          queryRunner.manager,
+        );
+      }
+
       await this.cartService.clearCart(userId, queryRunner.manager);
 
       await queryRunner.commitTransaction();
@@ -314,6 +380,7 @@ export class OrderService {
       for (const order of createdOrders) {
         this.eventEmitter.emit('order.created', {
           orderId: order.id,
+          userId,
           items: order.order_items.map((item) => ({
             productVariantId: item.product_variant_id,
             quantity: item.quantity,
@@ -374,6 +441,8 @@ export class OrderService {
     const empty: CheckoutPreviewResponseDto = {
       subtotal: 0,
       discount_total: 0,
+      coin_discount: 0,
+      coins_applied: 0,
       shipping_total: 0,
       grand_total: 0,
       shops: [],
@@ -387,7 +456,10 @@ export class OrderService {
     );
 
     // Group by shop (skip items with no shop — they can't form a valid order).
-    const shopGroups = new Map<number, { shopName: string; itemsTotal: number }>();
+    const shopGroups = new Map<
+      number,
+      { shopName: string; itemsTotal: number }
+    >();
     for (const item of cart.items) {
       const variant = item.product_variant;
       const product = variant.product;
@@ -429,23 +501,46 @@ export class OrderService {
       couponItems,
     );
 
+    // Coin redemption (advisory — same rules as checkout, writes nothing).
+    const coinConfig = await this.settingsService.getCoinConfig();
+    const itemsTotalAfterCoupon = [...shopItemsTotals.entries()].reduce(
+      (sum, [shopId, total]) =>
+        sum + (total - (discountByShop.get(shopId)?.discount ?? 0)),
+      0,
+    );
+    const validatedCoins = await this.coinService.validateRedemption(
+      userId,
+      dto.coins_to_redeem ?? 0,
+      itemsTotalAfterCoupon,
+      coinConfig,
+    );
+    const coinByShop = this.allocateCoinDiscount(
+      shopItemsTotals,
+      discountByShop,
+      validatedCoins,
+    );
+
     const shippingFee = DEFAULT_SHIPPING_FEE;
     const shops: CheckoutPreviewShopDto[] = [];
     let subtotal = 0;
     let discountTotal = 0;
+    let coinDiscountTotal = 0;
     let shippingTotal = 0;
 
     for (const [shopId, group] of shopGroups) {
       const d = discountByShop.get(shopId)!;
-      const total = group.itemsTotal - d.discount + shippingFee;
+      const coin = coinByShop.get(shopId) ?? 0;
+      const total = group.itemsTotal - d.discount - coin + shippingFee;
       subtotal += group.itemsTotal;
       discountTotal += d.discount;
+      coinDiscountTotal += coin;
       shippingTotal += shippingFee;
       shops.push({
         shop_id: shopId,
         shop_name: group.shopName,
         items_total: group.itemsTotal,
         discount_amount: d.discount,
+        coin_discount: coin,
         shipping_fee: shippingFee,
         total,
         coupons: d.usages.map((u) => ({
@@ -459,20 +554,27 @@ export class OrderService {
     const perCoupon = new Map<string, number>();
     for (const [, d] of discountByShop) {
       for (const u of d.usages) {
-        perCoupon.set(u.couponCode, (perCoupon.get(u.couponCode) ?? 0) + u.amount);
+        perCoupon.set(
+          u.couponCode,
+          (perCoupon.get(u.couponCode) ?? 0) + u.amount,
+        );
       }
     }
 
     return {
       subtotal,
       discount_total: discountTotal,
+      coin_discount: coinDiscountTotal,
+      coins_applied: coinDiscountTotal,
       shipping_total: shippingTotal,
-      grand_total: subtotal - discountTotal + shippingTotal,
+      grand_total: subtotal - discountTotal - coinDiscountTotal + shippingTotal,
       shops,
-      applied_coupons: [...perCoupon.entries()].map(([code, discount_amount]) => ({
-        code,
-        discount_amount,
-      })),
+      applied_coupons: [...perCoupon.entries()].map(
+        ([code, discount_amount]) => ({
+          code,
+          discount_amount,
+        }),
+      ),
     };
   }
 
@@ -566,7 +668,8 @@ export class OrderService {
     if (order.status !== OrderStatus.Delivered) {
       throw new BadRequestException({
         code: 'ORDER_005',
-        message: 'Order has already been completed or is not in delivered status',
+        message:
+          'Order has already been completed or is not in delivered status',
       });
     }
 
@@ -574,7 +677,13 @@ export class OrderService {
     const oldStatus = order.status;
     order.status = OrderStatus.Completed;
 
-    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
+    // Earn Xu + charge platform commission on completion (best-effort, idempotent).
+    await this.awardCoinsForOrderSafe(order);
+    await this.chargeCommissionForOrderSafe(order);
+
+    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([
+      order.shop_id,
+    ]);
 
     this.eventEmitter.emit('order.status_updated', {
       orderId: order.id,
@@ -613,15 +722,21 @@ export class OrderService {
     if (order.status !== OrderStatus.Delivered) {
       throw new BadRequestException({
         code: 'ORDER_005',
-        message: 'Order has already been completed or is not in delivered status',
+        message:
+          'Order has already been completed or is not in delivered status',
       });
     }
 
-    await this.orderRepository.updateStatus(orderId, OrderStatus.ReturnRequested);
+    await this.orderRepository.updateStatus(
+      orderId,
+      OrderStatus.ReturnRequested,
+    );
     const oldStatus = order.status;
     order.status = OrderStatus.ReturnRequested;
 
-    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
+    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([
+      order.shop_id,
+    ]);
 
     this.eventEmitter.emit('order.status_updated', {
       orderId: order.id,
@@ -670,6 +785,8 @@ export class OrderService {
 
     await this.handleCouponReversalOnCancel(order);
     await this.handleFlashReversalOnCancel(order);
+    await this.reverseCoinsForOrderSafe(order);
+    await this.reverseCommissionForOrderSafe(order);
 
     this.eventEmitter.emit('order.cancelled', {
       orderId: order.id,
@@ -679,7 +796,9 @@ export class OrderService {
       })),
     });
 
-    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([order.shop_id]);
+    const sellerUserIds = await this.resolveSellerUserIdsFromShopIds([
+      order.shop_id,
+    ]);
     if (sellerUserIds.length > 0) {
       this.eventEmitter.emit('order.status_updated', {
         orderId: order.id,
@@ -771,6 +890,8 @@ export class OrderService {
     if (dto.status === OrderStatus.Cancelled) {
       await this.handleCouponReversalOnCancel(order);
       await this.handleFlashReversalOnCancel(order);
+      await this.reverseCoinsForOrderSafe(order);
+      await this.reverseCommissionForOrderSafe(order);
 
       this.eventEmitter.emit('order.cancelled', {
         orderId: order.id,
@@ -779,6 +900,12 @@ export class OrderService {
           quantity: item.quantity,
         })),
       });
+    }
+
+    // Earn Xu + charge commission when an order reaches completed (idempotent).
+    if (dto.status === OrderStatus.Completed) {
+      await this.awardCoinsForOrderSafe(order);
+      await this.chargeCommissionForOrderSafe(order);
     }
 
     this.eventEmitter.emit('order.status_updated', {
@@ -820,11 +947,13 @@ export class OrderService {
 
     if (
       order.payment_method === PaymentMethod.Cod &&
-      (order.status === OrderStatus.Pending || order.status === OrderStatus.Confirmed)
+      (order.status === OrderStatus.Pending ||
+        order.status === OrderStatus.Confirmed)
     ) {
       throw new BadRequestException({
         code: 'ORDER_003',
-        message: 'COD orders can only be marked as paid during shipping or after delivery',
+        message:
+          'COD orders can only be marked as paid during shipping or after delivery',
       });
     }
 
@@ -845,7 +974,10 @@ export class OrderService {
     query: OrderQueryDto,
   ): Promise<IPaginatedResult<OrderListItemResponseDto>> {
     const shop = await this.shopService.resolveShopByUserId(userId);
-    const result = await this.orderRepository.findByShopIdPaginated(shop.id, query);
+    const result = await this.orderRepository.findByShopIdPaginated(
+      shop.id,
+      query,
+    );
 
     return {
       data: result.data.map(toOrderListItemResponse),
@@ -858,7 +990,10 @@ export class OrderService {
     orderId: number,
   ): Promise<SellerOrderResponseDto> {
     const shop = await this.shopService.resolveShopByUserId(userId);
-    const order = await this.orderRepository.findByIdWithItemsForShop(orderId, shop.id);
+    const order = await this.orderRepository.findByIdWithItemsForShop(
+      orderId,
+      shop.id,
+    );
     if (!order) {
       throw new NotFoundException({
         code: 'ORDER_001',
@@ -877,7 +1012,10 @@ export class OrderService {
     dto: UpdateOrderStatusDto,
   ): Promise<SellerOrderResponseDto> {
     const shop = await this.shopService.resolveShopByUserId(userId);
-    const order = await this.orderRepository.findByIdWithItemsForShop(orderId, shop.id);
+    const order = await this.orderRepository.findByIdWithItemsForShop(
+      orderId,
+      shop.id,
+    );
     if (!order) {
       throw new NotFoundException({
         code: 'ORDER_001',
@@ -928,7 +1066,10 @@ export class OrderService {
     dto: UpdatePaymentStatusDto,
   ): Promise<SellerOrderResponseDto> {
     const shop = await this.shopService.resolveShopByUserId(userId);
-    const order = await this.orderRepository.findByIdWithItemsForShop(orderId, shop.id);
+    const order = await this.orderRepository.findByIdWithItemsForShop(
+      orderId,
+      shop.id,
+    );
     if (!order) {
       throw new NotFoundException({
         code: 'ORDER_001',
@@ -948,11 +1089,13 @@ export class OrderService {
 
     if (
       order.payment_method === PaymentMethod.Cod &&
-      (order.status === OrderStatus.Pending || order.status === OrderStatus.Confirmed)
+      (order.status === OrderStatus.Pending ||
+        order.status === OrderStatus.Confirmed)
     ) {
       throw new BadRequestException({
         code: 'ORDER_003',
-        message: 'COD orders can only be marked as paid during shipping or after delivery',
+        message:
+          'COD orders can only be marked as paid during shipping or after delivery',
       });
     }
 
@@ -1038,9 +1181,7 @@ export class OrderService {
       actorId: userId,
     });
 
-    this.logger.log(
-      `Order #${orderId} accepted by shipper ${userId}`,
-    );
+    this.logger.log(`Order #${orderId} accepted by shipper ${userId}`);
 
     return toAdminOrderResponse(order!);
   }
@@ -1177,12 +1318,16 @@ export class OrderService {
       });
     }
 
-    const history =
-      await this.statusHistoryRepository.findByOrderId(orderId);
+    const history = await this.statusHistoryRepository.findByOrderId(orderId);
 
     const timeline = this.mapHistoryToTimeline(history);
-    const shipperLocation = await this.resolveShipperLocation(order.status, orderId);
-    const deliveryLocation = this.resolveDeliveryLocation(order.shipping_address);
+    const shipperLocation = await this.resolveShipperLocation(
+      order.status,
+      orderId,
+    );
+    const deliveryLocation = this.resolveDeliveryLocation(
+      order.shipping_address,
+    );
 
     return { timeline, shipperLocation, deliveryLocation };
   }
@@ -1198,12 +1343,16 @@ export class OrderService {
       });
     }
 
-    const history =
-      await this.statusHistoryRepository.findByOrderId(orderId);
+    const history = await this.statusHistoryRepository.findByOrderId(orderId);
 
     const timeline = this.mapHistoryToTimeline(history);
-    const shipperLocation = await this.resolveShipperLocation(order.status, orderId);
-    const deliveryLocation = this.resolveDeliveryLocation(order.shipping_address);
+    const shipperLocation = await this.resolveShipperLocation(
+      order.status,
+      orderId,
+    );
+    const deliveryLocation = this.resolveDeliveryLocation(
+      order.shipping_address,
+    );
 
     return { timeline, shipperLocation, deliveryLocation };
   }
@@ -1276,6 +1425,126 @@ export class OrderService {
           ? [dto.coupon_code]
           : [];
     return [...new Set(raw.map((c) => c.toUpperCase().trim()).filter(Boolean))];
+  }
+
+  /**
+   * Distribute redeemed Xu across shop sub-orders. Weights and caps are each
+   * shop's post-coupon headroom (`itemsTotal − couponDiscount`), floored to whole
+   * Xu, so no sub-order total goes negative and leftover from a low-headroom shop
+   * waterfalls to shops with room. Reuses the coupon distributor's pure
+   * `allocateWithCaps`. Integer-only (1 Xu = 1 VND).
+   */
+  private allocateCoinDiscount(
+    shopItemsTotals: Map<number, number>,
+    discountByShop: Map<number, { discount: number }>,
+    coins: number,
+  ): Map<number, number> {
+    const result = new Map<number, number>();
+    for (const shopId of shopItemsTotals.keys()) result.set(shopId, 0);
+    if (coins <= 0) return result;
+
+    const weights = new Map<number, number>();
+    const caps = new Map<number, number>();
+    for (const [shopId, itemsTotal] of shopItemsTotals) {
+      const headroom = Math.max(
+        0,
+        Math.floor(itemsTotal - (discountByShop.get(shopId)?.discount ?? 0)),
+      );
+      weights.set(shopId, headroom);
+      caps.set(shopId, headroom);
+    }
+
+    return allocateWithCaps(Math.trunc(coins), weights, caps);
+  }
+
+  /**
+   * Award Xu when an order completes. Best-effort: coin failures are logged and
+   * never break the status transition. Idempotency is enforced in CoinService.
+   */
+  private async awardCoinsForOrderSafe(order: Order): Promise<void> {
+    try {
+      const config = await this.settingsService.getCoinConfig();
+      await this.coinService.awardForOrder(order, config);
+    } catch (error) {
+      this.logger.error(
+        `Coin award failed for order #${order.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  /**
+   * On cancel: reverse any earned Xu (unspent remainder only) and refund Xu the
+   * customer redeemed. Best-effort; idempotent in CoinService.
+   */
+  private async reverseCoinsForOrderSafe(order: Order): Promise<void> {
+    try {
+      const config = await this.settingsService.getCoinConfig();
+      await this.coinService.reverseEarnForOrder(order);
+      await this.coinService.refundRedemptionForOrder(order, config);
+    } catch (error) {
+      this.logger.error(
+        `Coin reversal/refund failed for order #${order.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  /**
+   * Charge the platform commission when an order completes and credit the
+   * seller's net into their wallet. Best-effort: failures are logged and never
+   * break the status transition. Idempotency is enforced in CommissionService.
+   */
+  private async chargeCommissionForOrderSafe(order: Order): Promise<void> {
+    try {
+      const config = await this.settingsService.getCommissionConfig();
+      if (!config.enabled) return;
+      const ctx = await this.buildCommissionContext(order);
+      if (!ctx) return;
+      const categoryRates =
+        await this.settingsService.getCommissionCategoryRateMap();
+      await this.commissionService.chargeForOrder(ctx, config, categoryRates);
+    } catch (error) {
+      this.logger.error(
+        `Commission charge failed for order #${order.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  /**
+   * Reverse a charged order's commission on cancel. Defensive/idempotent — a
+   * `completed` order is not cancellable, so this normally finds nothing to
+   * reverse. Best-effort.
+   */
+  private async reverseCommissionForOrderSafe(order: Order): Promise<void> {
+    try {
+      await this.commissionService.reverseForOrder(order.id);
+    } catch (error) {
+      this.logger.error(
+        `Commission reversal failed for order #${order.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  /**
+   * Build the commission context from a loaded order (with `order_items`).
+   * Resolves the wallet owner from the order's shop. Returns null when the shop
+   * can't be resolved, so commission is skipped rather than throwing.
+   */
+  private async buildCommissionContext(
+    order: Order,
+  ): Promise<OrderCommissionContext | null> {
+    if (!order.shop_id) return null;
+    let sellerUserId: number;
+    try {
+      const shop = await this.shopService.findShopById(order.shop_id);
+      sellerUserId = shop.user_id;
+    } catch {
+      return null;
+    }
+    return toCommissionContext(order, sellerUserId);
   }
 
   private async handleCouponReversalOnCancel(order: Order): Promise<void> {
@@ -1365,7 +1634,9 @@ export class OrderService {
     return null;
   }
 
-  private async resolveSellerUserIdsFromShopIds(shopIds: number[]): Promise<number[]> {
+  private async resolveSellerUserIdsFromShopIds(
+    shopIds: number[],
+  ): Promise<number[]> {
     const userIds: number[] = [];
     for (const shopId of shopIds) {
       try {

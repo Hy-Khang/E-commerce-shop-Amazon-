@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { DecorationConfigDto } from './decoration-config.dto';
 
 export class ShopResponseDto {
   @ApiProperty()
@@ -18,6 +19,13 @@ export class ShopResponseDto {
 
   @ApiPropertyOptional()
   banner_url: string | null;
+
+  @ApiPropertyOptional({
+    type: DecorationConfigDto,
+    nullable: true,
+    description: 'Parsed storefront decoration (null = default layout)',
+  })
+  decoration_config: DecorationConfigDto | null;
 
   @ApiProperty()
   status: string;

@@ -89,12 +89,16 @@ export const mockProductWithReviewStats = (
   ...overrides,
 });
 
-export const mockPaginatedProducts = (products: Product[] = [mockProduct()]) => ({
+export const mockPaginatedProducts = (
+  products: Product[] = [mockProduct()],
+) => ({
   data: products,
   meta: { page: 1, limit: 20, total: products.length, totalPages: 1 },
 });
 
-export const mockPaginatedCategories = (categories: Category[] = [mockCategory()]) => ({
+export const mockPaginatedCategories = (
+  categories: Category[] = [mockCategory()],
+) => ({
   data: categories,
   meta: { page: 1, limit: 20, total: categories.length, totalPages: 1 },
 });

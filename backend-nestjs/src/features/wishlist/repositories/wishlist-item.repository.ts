@@ -61,7 +61,9 @@ export class WishlistItemRepository {
 
   async findPriceRanges(
     productIds: number[],
-  ): Promise<Map<number, { min_price: number | null; min_sale_price: number | null }>> {
+  ): Promise<
+    Map<number, { min_price: number | null; min_sale_price: number | null }>
+  > {
     if (productIds.length === 0) return new Map();
 
     const results = await this.repo.manager
@@ -74,11 +76,15 @@ export class WishlistItemRepository {
       .groupBy('pv.product_id')
       .getRawMany();
 
-    const map = new Map<number, { min_price: number | null; min_sale_price: number | null }>();
+    const map = new Map<
+      number,
+      { min_price: number | null; min_sale_price: number | null }
+    >();
     for (const row of results) {
       map.set(row.product_id, {
         min_price: row.min_price != null ? parseFloat(row.min_price) : null,
-        min_sale_price: row.min_sale_price != null ? parseFloat(row.min_sale_price) : null,
+        min_sale_price:
+          row.min_sale_price != null ? parseFloat(row.min_sale_price) : null,
       });
     }
     return map;

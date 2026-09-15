@@ -1,8 +1,7 @@
 import { useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react';
-import { motion } from 'motion/react';
 import { ROUTES } from '@/common/constants/routes';
+import { SectionPanel } from '@/common/components/ui/SectionPanel';
 import { useActiveFlashSales } from '../hooks/useActiveFlashSales';
 import { FlashSaleCard } from './FlashSaleCard';
 import { CountdownTimer } from './CountdownTimer';
@@ -30,39 +29,25 @@ export function FlashSaleSection() {
     .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())[0];
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-2xl bg-gradient-to-r from-amber-50/70 via-orange-50/50 to-amber-50/70 p-6 dark:from-amber-500/[0.08] dark:via-orange-500/[0.05] dark:to-amber-500/[0.08] dark:ring-1 dark:ring-inset dark:ring-amber-500/10"
+    <SectionPanel
+      title="Flash Sale"
+      accent="flash"
+      viewAllHref={ROUTES.FLASH_SALE}
+      icon={<Zap className="h-5 w-5 fill-orange-500 text-orange-600 dark:text-orange-400" />}
+      headerExtra={
+        soonestEnd ? (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-medium text-text-secondary">Ends in</span>
+            <CountdownTimer endsAt={soonestEnd} />
+          </div>
+        ) : undefined
+      }
     >
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <Zap className="h-5 w-5 fill-amber-500 text-amber-600 dark:text-amber-400" />
-          <h2 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
-            Flash Sale
-          </h2>
-          {soonestEnd && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-text-secondary">Kết thúc trong</span>
-              <CountdownTimer endsAt={soonestEnd} />
-            </div>
-          )}
-        </div>
-        <Link
-          to={ROUTES.FLASH_SALE}
-          className="text-sm font-semibold text-amber-700 transition-colors hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300"
-        >
-          View all
-        </Link>
-      </div>
-
       <div className="group relative">
         <button
           type="button"
           onClick={() => scrollRef.current?.scrollBy({ left: -SCROLL_AMOUNT, behavior: 'smooth' })}
-          className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-amber-100 bg-surface text-amber-600 opacity-0 shadow-md transition-opacity hover:text-amber-700 group-hover:opacity-100 dark:border-amber-400/20 dark:hover:text-amber-400"
+          className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-orange-100 bg-surface text-orange-600 opacity-0 shadow-md transition-opacity hover:text-orange-700 group-hover:opacity-100 dark:border-orange-400/20 dark:hover:text-orange-400"
           aria-label="Scroll left"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -87,12 +72,12 @@ export function FlashSaleSection() {
         <button
           type="button"
           onClick={() => scrollRef.current?.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' })}
-          className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-amber-100 bg-surface text-amber-600 opacity-0 shadow-md transition-opacity hover:text-amber-700 group-hover:opacity-100 dark:border-amber-400/20 dark:hover:text-amber-400"
+          className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-orange-100 bg-surface text-orange-600 opacity-0 shadow-md transition-opacity hover:text-orange-700 group-hover:opacity-100 dark:border-orange-400/20 dark:hover:text-orange-400"
           aria-label="Scroll right"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
-    </motion.section>
+    </SectionPanel>
   );
 }

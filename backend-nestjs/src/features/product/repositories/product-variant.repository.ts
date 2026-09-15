@@ -50,7 +50,10 @@ export class ProductVariantRepository {
     return this.repo.save(variant);
   }
 
-  async update(id: number, data: Partial<ProductVariant>): Promise<ProductVariant | null> {
+  async update(
+    id: number,
+    data: Partial<ProductVariant>,
+  ): Promise<ProductVariant | null> {
     await this.repo.update(id, data);
     return this.findById(id);
   }

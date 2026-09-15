@@ -2,6 +2,7 @@ import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth';
 import { ROUTES } from '@/common/constants/routes';
+import { useTrackActivityCallback } from '@/features/recommendations';
 import { useCheckWishlist } from '../hooks/useCheckWishlist';
 import { useAddToWishlist } from '../hooks/useAddToWishlist';
 import { useRemoveFromWishlist } from '../hooks/useRemoveFromWishlist';
@@ -19,6 +20,7 @@ export function WishlistButton({ productId, isInWishlist, size = 'md', className
   const { data: checked } = useCheckWishlist(productId);
   const addToWishlist = useAddToWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
+  const track = useTrackActivityCallback();
 
   const wishlisted = isInWishlist ?? checked ?? false;
   const isPending = addToWishlist.isPending || removeFromWishlist.isPending;
@@ -40,6 +42,7 @@ export function WishlistButton({ productId, isInWishlist, size = 'md', className
       removeFromWishlist.mutate(productId);
     } else {
       addToWishlist.mutate({ product_id: productId });
+      track({ action: 'ADD_TO_WISHLIST', target_type: 'product', target_id: productId });
     }
   }
 

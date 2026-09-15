@@ -36,7 +36,11 @@ export class AdminOrderController {
   @Get()
   @Permissions(PERMISSIONS.ORDERS_READ)
   @ApiOperation({ summary: 'List all orders (paginated)' })
-  @ApiResponse({ status: 200, description: 'Returns paginated order list', type: [OrderListItemResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns paginated order list',
+    type: [OrderListItemResponseDto],
+  })
   async findAll(@Query() query: OrderQueryDto) {
     return this.orderService.findAllOrders(query);
   }
@@ -44,7 +48,11 @@ export class AdminOrderController {
   @Get(':id/tracking')
   @Permissions(PERMISSIONS.ORDERS_READ)
   @ApiOperation({ summary: 'Get order tracking (timeline + shipper location)' })
-  @ApiResponse({ status: 200, description: 'Returns tracking data', type: OrderTrackingResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns tracking data',
+    type: OrderTrackingResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
   async getTracking(@Param('id', ParseIntPipe) id: number) {
     return this.orderService.getOrderTrackingForRole(id);
@@ -53,7 +61,11 @@ export class AdminOrderController {
   @Get(':id')
   @Permissions(PERMISSIONS.ORDERS_READ)
   @ApiOperation({ summary: 'Get order detail + order_items + user info' })
-  @ApiResponse({ status: 200, description: 'Returns order detail with user info', type: AdminOrderResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns order detail with user info',
+    type: AdminOrderResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.orderService.findOrderById(id);
@@ -62,8 +74,15 @@ export class AdminOrderController {
   @Patch(':id/status')
   @Permissions(PERMISSIONS.ORDERS_UPDATE)
   @ApiOperation({ summary: 'Update order status (valid transitions only)' })
-  @ApiResponse({ status: 200, description: 'Order status updated', type: AdminOrderResponseDto })
-  @ApiResponse({ status: 400, description: 'ORDER_003: Invalid status transition' })
+  @ApiResponse({
+    status: 200,
+    description: 'Order status updated',
+    type: AdminOrderResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'ORDER_003: Invalid status transition',
+  })
   @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
   async updateStatus(
     @CurrentUser() user: ICurrentUser,
@@ -76,7 +95,11 @@ export class AdminOrderController {
   @Patch(':id/payment-status')
   @Permissions(PERMISSIONS.ORDERS_UPDATE)
   @ApiOperation({ summary: 'Update payment status' })
-  @ApiResponse({ status: 200, description: 'Payment status updated', type: AdminOrderResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment status updated',
+    type: AdminOrderResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'ORDER_001: Order not found' })
   async updatePaymentStatus(
     @Param('id', ParseIntPipe) id: number,
