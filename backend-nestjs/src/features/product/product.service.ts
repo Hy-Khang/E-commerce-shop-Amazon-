@@ -310,14 +310,31 @@ export class ProductService {
     return product;
   }
 
-  async createProduct(dto: CreateProductDto): Promise<Product> {
-    const slugExists = await this.productRepository.existsBySlug(dto.slug);
-    if (slugExists) {
-      throw new ConflictException({
-        code: 'PRODUCT_005',
-        message: 'Duplicate slug',
-      });
+  /**
+   * Resolve a globally-unique product slug. If `desired` is already taken it
+   * appends `-2`, `-3`, … until a free one is found (falling back to a
+   * timestamp suffix in the pathological case), so create/update never fail on
+   * a duplicate slug. `excludeId` skips the product being updated.
+   */
+  private async resolveUniqueProductSlug(
+    desired: string,
+    excludeId?: number,
+  ): Promise<string> {
+    const isTaken = (slug: string): Promise<boolean> =>
+      excludeId != null
+        ? this.productRepository.existsBySlugExcludingId(slug, excludeId)
+        : this.productRepository.existsBySlug(slug);
+
+    if (!(await isTaken(desired))) return desired;
+    for (let i = 2; i <= 1000; i++) {
+      const candidate = `${desired}-${i}`;
+      if (!(await isTaken(candidate))) return candidate;
     }
+    return `${desired}-${Date.now()}`;
+  }
+
+  async createProduct(dto: CreateProductDto): Promise<Product> {
+    dto.slug = await this.resolveUniqueProductSlug(dto.slug);
 
     const category = await this.categoryRepository.findById(dto.category_id);
     if (!category) {
@@ -346,16 +363,7 @@ export class ProductService {
     }
 
     if (dto.slug && dto.slug !== product.slug) {
-      const slugExists = await this.productRepository.existsBySlugExcludingId(
-        dto.slug,
-        id,
-      );
-      if (slugExists) {
-        throw new ConflictException({
-          code: 'PRODUCT_005',
-          message: 'Duplicate slug',
-        });
-      }
+      dto.slug = await this.resolveUniqueProductSlug(dto.slug, id);
     }
 
     if (dto.category_id && dto.category_id !== product.category_id) {
@@ -654,13 +662,7 @@ export class ProductService {
     const shop = await this.shopService.resolveShopByUserId(userId);
     this.shopService.assertShopIsActive(shop);
 
-    const slugExists = await this.productRepository.existsBySlug(dto.slug);
-    if (slugExists) {
-      throw new ConflictException({
-        code: 'PRODUCT_005',
-        message: 'Duplicate slug',
-      });
-    }
+    dto.slug = await this.resolveUniqueProductSlug(dto.slug);
 
     const category = await this.categoryRepository.findById(dto.category_id);
     if (!category) {

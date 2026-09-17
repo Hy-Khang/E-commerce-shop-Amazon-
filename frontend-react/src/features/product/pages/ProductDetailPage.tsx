@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Zap } from 'lucide-react';
 import { formatPrice } from '@/common/utils/format.util';
+import { sanitizeHtml, RICH_TEXT_CONTENT_CLASS } from '@/common/utils/sanitize.util';
 import { ROUTES } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
 import { Breadcrumb } from '@/common/components/ui/Breadcrumb';
@@ -222,7 +223,10 @@ export default function ProductDetailPage() {
             {product.description && (
               <div className="border-t border-border-default pt-6">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Description</h2>
-                <p className="mt-2 whitespace-pre-line text-sm text-text-secondary leading-relaxed">{product.description}</p>
+                <div
+                  className={`mt-2 whitespace-pre-line text-sm leading-relaxed text-text-secondary ${RICH_TEXT_CONTENT_CLASS}`}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
+                />
               </div>
             )}
           </div>

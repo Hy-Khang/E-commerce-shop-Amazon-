@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, Pencil, Package, Store, Star, Eye, EyeOff, ZoomIn } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
+import { sanitizeHtml, RICH_TEXT_CONTENT_CLASS } from '@/common/utils/sanitize.util';
 import { ImageLightbox } from '@/common/components/ui/ImageLightbox';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { useAdminProduct } from '../hooks/useAdminProduct';
@@ -146,7 +147,10 @@ export default function AdminProductDetailPage() {
       {product.description && (
         <div className="admin-card p-6">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Description</h2>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">{product.description}</p>
+          <div
+            className={`mt-2 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300 ${RICH_TEXT_CONTENT_CLASS}`}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
+          />
         </div>
       )}
 

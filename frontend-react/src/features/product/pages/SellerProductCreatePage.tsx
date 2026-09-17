@@ -1,13 +1,13 @@
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/common/constants/routes';
+import { Button } from '@/common/components/ui/Button';
+import { useUnsavedChangesPrompt } from '@/common/hooks/useUnsavedChangesPrompt';
 import { useCategories } from '../hooks/useCategories';
 import { useSellerCreateProduct } from '../hooks/useSellerCreateProduct';
-import { generateSlug } from '../utils/product.util';
 import { createProductSchema, type CreateProductFormData } from '../types/product.types';
-import { ImageUpload } from '../components/ImageUpload';
-import { CategoryCascader } from '../components/CategoryCascader';
+import { ProductDetailsForm } from '../components/ProductDetailsForm';
 import { ApiError } from '@/core/api/api.types';
 
 export default function SellerProductCreatePage() {
@@ -20,21 +20,12 @@ export default function SellerProductCreatePage() {
     setValue,
     getValues,
     control,
-    formState: { errors },
+    formState: { errors, isDirty, isSubmitting },
   } = useForm<CreateProductFormData>({
     resolver: zodResolver(createProductSchema),
   });
 
-  const categoryId = useWatch({ control, name: 'category_id' });
-  const thumbnailUrl = useWatch({ control, name: 'thumbnail_url' });
-
-  // Auto-fill slug from name on blur — imperative one-shot read, no subscription.
-  function handleNameBlur() {
-    const name = getValues('name');
-    if (name && !getValues('slug')) {
-      setValue('slug', generateSlug(name));
-    }
-  }
+  useUnsavedChangesPrompt(isDirty && !isSubmitting && !createProduct.isSuccess);
 
   function onSubmit(data: CreateProductFormData) {
     createProduct.mutate({
@@ -60,85 +51,21 @@ export default function SellerProductCreatePage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
-          <input
-            id="name"
-            {...register('name')}
-            onBlur={handleNameBlur}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+      <div className="admin-card p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <ProductDetailsForm
+            register={register}
+            control={control}
+            setValue={setValue}
+            getValues={getValues}
+            errors={errors}
+            categories={categories ?? []}
           />
-          {errors.name && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.name.message}</p>}
-        </div>
-
-        <div>
-          <label htmlFor="slug" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Slug</label>
-          <input
-            id="slug"
-            {...register('slug')}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-          />
-          {errors.slug && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.slug.message}</p>}
-        </div>
-
-        <CategoryCascader
-          categories={categories ?? []}
-          value={categoryId}
-          onChange={(id) => setValue('category_id', id as number, { shouldValidate: true })}
-          error={errors.category_id?.message}
-          leafOnly
-        />
-
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
-          <textarea
-            id="description"
-            rows={4}
-            {...register('description')}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="option1_label" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Variant Option 1</label>
-            <input
-              id="option1_label"
-              {...register('option1_label')}
-              placeholder="e.g. Color, RAM, Connectivity"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            />
-          </div>
-          <div>
-            <label htmlFor="option2_label" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Variant Option 2</label>
-            <input
-              id="option2_label"
-              {...register('option2_label')}
-              placeholder="e.g. Size, Storage, DPI"
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            />
-          </div>
-        </div>
-
-        <div>
-          <ImageUpload
-            label="Thumbnail"
-            value={thumbnailUrl || undefined}
-            onUploaded={(url) => setValue('thumbnail_url', url, { shouldValidate: true })}
-            onClear={() => setValue('thumbnail_url', '', { shouldValidate: true })}
-          />
-          {errors.thumbnail_url && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.thumbnail_url.message}</p>}
-        </div>
-
-        <button
-          type="submit"
-          disabled={createProduct.isPending}
-          className="w-full rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
-        >
-          {createProduct.isPending ? 'Creating...' : 'Create Product'}
-        </button>
-      </form>
+          <Button type="submit" loading={createProduct.isPending} className="w-full">
+            Create Product
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

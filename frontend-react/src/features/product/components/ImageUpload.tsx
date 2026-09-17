@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Upload, X, Link, ZoomIn } from 'lucide-react';
 import { useUploadImage } from '../hooks/useUploadImage';
+import { Button } from '@/common/components/ui/Button';
 import { ImageLightbox } from '@/common/components/ui/ImageLightbox';
 import { showWarningToast } from '@/common/components/feedback/toast';
 import { useTranslation } from '@/common/i18n';
@@ -133,7 +134,7 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:border-blue-500 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+        className="flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500 transition hover:border-teal-400 hover:bg-teal-50 hover:text-teal-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:border-teal-500 dark:hover:bg-teal-500/10 dark:hover:text-teal-400"
       >
         <Upload className="h-6 w-6" />
         <span>Click to upload</span>
@@ -155,28 +156,25 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
             onChange={(e) => setUrlValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleUrlSubmit())}
             placeholder="https://..."
-            className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="admin-input flex-1"
           />
-          <button
-            type="button"
-            onClick={handleUrlSubmit}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-          >
+          <Button type="button" size="sm" onClick={handleUrlSubmit}>
             OK
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => { setShowUrlInput(false); setUrlValue(''); }}
-            className="rounded-md px-2 py-1.5 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       ) : (
         <button
           type="button"
           onClick={() => setShowUrlInput(true)}
-          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400"
         >
           <Link className="h-3 w-3" />
           Or paste URL

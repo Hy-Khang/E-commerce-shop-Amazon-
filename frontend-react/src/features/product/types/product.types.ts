@@ -240,7 +240,7 @@ export const createProductSchema = z.object({
   name: z.string().min(1, 'Product name is required').max(255),
   slug: z.string().min(1, 'Slug is required').max(255),
   category_id: z.number({ error: 'Category is required' }).int().positive(),
-  description: z.string().optional(),
+  description: z.string().max(20000, 'Description is too long').optional(),
   thumbnail_url: z
     .string()
     .refine(
@@ -264,16 +264,37 @@ export const createProductSchema = z.object({
 
 export type CreateProductFormData = z.infer<typeof createProductSchema>;
 
-export const createVariantSchema = z.object({
-  sku: z.string().min(1, 'SKU is required').max(50),
-  option1: z.string().max(50).optional().or(z.literal('')),
-  option2: z.string().max(50).optional().or(z.literal('')),
-  price: z.number({ error: 'Price is required' }).positive('Price must be positive'),
-  sale_price: z.number().positive('Sale price must be positive').optional().nullable(),
-  stock_quantity: z.number({ error: 'Stock is required' }).int().min(0, 'Stock cannot be negative'),
-});
+// Sale price, when set, must be strictly below the regular price.
+const saleBelowPrice = (d: { price: number; sale_price?: number | null }) =>
+  d.sale_price == null || d.sale_price < d.price;
+const saleBelowPriceError = { message: 'Sale price must be below the price', path: ['sale_price'] };
+
+export const createVariantSchema = z
+  .object({
+    sku: z.string().min(1, 'SKU is required').max(50),
+    option1: z.string().max(50).optional().or(z.literal('')),
+    option2: z.string().max(50).optional().or(z.literal('')),
+    price: z.number({ error: 'Price is required' }).positive('Price must be positive'),
+    sale_price: z.number().positive('Sale price must be positive').optional().nullable(),
+    stock_quantity: z.number({ error: 'Stock is required' }).int().min(0, 'Stock cannot be negative'),
+  })
+  .refine(saleBelowPrice, saleBelowPriceError);
 
 export type CreateVariantFormData = z.infer<typeof createVariantSchema>;
+
+// Editing an existing variant — SKU is immutable (not part of the payload), the
+// rest mirror `createVariantSchema`. `sale_price` accepts `null` to clear it.
+export const updateVariantSchema = z
+  .object({
+    option1: z.string().max(50).optional().or(z.literal('')),
+    option2: z.string().max(50).optional().or(z.literal('')),
+    price: z.number({ error: 'Price is required' }).positive('Price must be positive'),
+    sale_price: z.number().positive('Sale price must be positive').optional().nullable(),
+    stock_quantity: z.number({ error: 'Stock is required' }).int().min(0, 'Stock cannot be negative'),
+  })
+  .refine(saleBelowPrice, saleBelowPriceError);
+
+export type UpdateVariantFormData = z.infer<typeof updateVariantSchema>;
 
 export const createCategorySchema = z.object({
   name: z.string().min(1, 'Category name is required').max(100),
