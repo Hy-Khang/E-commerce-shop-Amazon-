@@ -1,0 +1,28 @@
+{
+  "wallet": {
+    "title": "Ví Xu của tôi",
+    "availableBalance": "Số dư khả dụng",
+    "balance": "{{count}} Xu",
+    "valueNote": "1 Xu = 1 ₫ · dùng khi thanh toán",
+    "expiring_other": "{{count}} Xu hết hạn vào {{date}}",
+    "history": "Lịch sử",
+    "empty": "Chưa có giao dịch Xu nào.",
+    "types": {
+      "earn": "Nhận được",
+      "refund": "Được hoàn",
+      "redeem": "Đã dùng",
+      "reverse_earn": "Đã thu hồi",
+      "expire": "Hết hạn"
+    }
+  },
+  "redeem": {
+    "title": "Dùng Xu",
+    "balance": "Số dư: <1>{{count}} Xu</1>",
+    "balanceRaw": "Số dư: {{count}} Xu",
+    "note": "1 Xu = 1 ₫ · tối đa {{max}} Xu cho đơn này",
+    "useMax": "Dùng tối đa",
+    "empty": "Bạn chưa có Xu nào để dùng.",
+    "notEligible": "Đơn hàng này không được áp dụng Xu.",
+    "appliedNote": "Chỉ {{applied}} Xu có thể áp dụng cho đơn này (mã giảm giá chiếm chỗ). Số còn lại vẫn nằm trong ví."
+  }
+}

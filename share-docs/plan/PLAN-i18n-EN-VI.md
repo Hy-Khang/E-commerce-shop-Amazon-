@@ -34,7 +34,7 @@
 |:-----:|----------|:----------:|
 | 0 | Nền tảng (deps, config, typed, switcher, format, toast) | ✅ Xong |
 | 1 | Enum/label maps (`enums.json` + component hiển thị dùng chung) | ✅ Xong (phần page-inline hoãn theo từng page) |
-| 2 | Storefront (khách hàng) | 🔄 Đang làm (10/16 feature xong) |
+| 2 | Storefront (khách hàng) | ✅ Xong (16/16 feature) |
 | 3 | Portal (admin/seller/shipper) | ⬜ Chưa |
 | 4 | Zod validation messages (strip literal trong ~35 `types/*.types.ts`) | ⬜ Chưa (hạ tầng đã có) |
 | 5 | Nối ~35 banner lỗi form/mutation vào `resolveApiErrorMessage` | ⬜ Chưa (hạ tầng đã có, toast đã nối) |
@@ -64,7 +64,7 @@
 
 ---
 
-## Phase 2 — STOREFRONT (khách hàng) — 🔄 10/16 feature
+## Phase 2 — STOREFRONT (khách hàng) — ✅ XONG (16/16 feature)
 
 ### Đã xong ✅
 - [x] **Chrome điều hướng** (`nav`): Header/NavBar/PortalLinks, MobileNav, UserDropdown, Footer, PortalAccountDropdown
@@ -78,13 +78,13 @@
 - [x] **recently-viewed** (`recentlyViewed`): RecentlyViewedCarousel (1 key `title` — carousel dùng lại ProductCard nên chỉ có tiêu đề section)
 - [x] **shop — storefront công khai** (`shop`): ShopProfilePage (loading/notFound/allProducts/noProducts/pagination), ShopHeader (stats products/rating/sold — plural), ShopInfoCard (visitShop), decoration blocks HeroBlock (`hero.goToSlide` aria-label) + ProductGridBlock (empty state). RichTextBlock/ImageBlock/ShopDecorationRenderer/BlockErrorBoundary không có literal. **ShopFilters + ShopStatusBadge + AdminShop* + SellerShopSettings/Decoration + builder → Phase 3 (portal).**
 
-### Chưa làm ⬜ (các feature storefront còn lại)
-- [ ] **coin** (Hoàn Xu) — trang ví Xu, CoinRedeemCard, lịch sử giao dịch
-- [ ] **compare** — CompareBar, trang so sánh sản phẩm
-- [ ] **recommendations** — các carousel "Gợi ý cho bạn" / "Tương tự" / "Mua kèm"
-- [ ] **payment** — trang kết quả thanh toán (PaymentResult), PaymentTransactionList (phần khách)
-- [ ] **seller-application** — form đăng ký bán hàng (phía khách)
-- [ ] **ai-chat** — widget chatbox nổi (storefront): khung chat, mini-checkout, quick replies
+### Đã xong ✅ (các feature storefront còn lại - Antigravity hoàn thành)
+- [x] **coin** (Hoàn Xu) — trang ví Xu, CoinRedeemCard, lịch sử giao dịch
+- [x] **compare** — CompareBar, trang so sánh sản phẩm
+- [x] **recommendations** — các carousel "Gợi ý cho bạn" / "Tương tự" / "Mua kèm"
+- [x] **payment** — trang kết quả thanh toán (PaymentResult), PaymentTransactionList (phần khách)
+- [x] **seller-application** — form đăng ký bán hàng (phía khách)
+- [x] **ai-chat** — widget chatbox nổi (storefront): khung chat, mini-checkout, quick replies
 
 ---
 

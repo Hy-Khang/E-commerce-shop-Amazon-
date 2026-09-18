@@ -17,6 +17,12 @@ import enNotification from './locales/en/notification.json';
 import enUserProfile from './locales/en/userProfile.json';
 import enRecentlyViewed from './locales/en/recentlyViewed.json';
 import enShop from './locales/en/shop.json';
+import enCoin from './locales/en/coin.json';
+import enCompare from './locales/en/compare.json';
+import enRecommendations from './locales/en/recommendations.json';
+import enPayment from './locales/en/payment.json';
+import enSellerApplication from './locales/en/sellerApplication.json';
+import enAiChat from './locales/en/aiChat.json';
 
 import viCommon from './locales/vi/common.json';
 import viNav from './locales/vi/nav.json';
@@ -33,6 +39,12 @@ import viNotification from './locales/vi/notification.json';
 import viUserProfile from './locales/vi/userProfile.json';
 import viRecentlyViewed from './locales/vi/recentlyViewed.json';
 import viShop from './locales/vi/shop.json';
+import viCoin from './locales/vi/coin.json';
+import viCompare from './locales/vi/compare.json';
+import viRecommendations from './locales/vi/recommendations.json';
+import viPayment from './locales/vi/payment.json';
+import viSellerApplication from './locales/vi/sellerApplication.json';
+import viAiChat from './locales/vi/aiChat.json';
 
 export const defaultNS = 'common' as const;
 
@@ -53,6 +65,12 @@ export const resources = {
     userProfile: enUserProfile,
     recentlyViewed: enRecentlyViewed,
     shop: enShop,
+    coin: enCoin,
+    compare: enCompare,
+    recommendations: enRecommendations,
+    payment: enPayment,
+    sellerApplication: enSellerApplication,
+    aiChat: enAiChat,
   },
   vi: {
     common: viCommon,
@@ -70,6 +88,12 @@ export const resources = {
     userProfile: viUserProfile,
     recentlyViewed: viRecentlyViewed,
     shop: viShop,
+    coin: viCoin,
+    compare: viCompare,
+    recommendations: viRecommendations,
+    payment: viPayment,
+    sellerApplication: viSellerApplication,
+    aiChat: viAiChat,
   },
 } as const;
 

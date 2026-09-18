@@ -1,4 +1,5 @@
 import { formatPrice } from '@/common/utils/format.util';
+import type { TFunction } from 'i18next';
 import { getPriceRange, hasAnyStock, getUniqueOptionValues, type ProductListItem } from '@/features/product';
 import { RatingStars } from './RatingStars';
 
@@ -39,36 +40,36 @@ function optionCell(product: ProductListItem, optionKey: 'option1' | 'option2'):
   );
 }
 
-export const COMPARISON_ROWS: CompareRow[] = [
+export const getComparisonRows = (t: TFunction<'compare'>): CompareRow[] => [
   {
-    label: 'Price',
+    label: t('rows.price'),
     render: (p) => <span className="font-bold text-text-price">{priceLabel(p)}</span>,
     signature: priceLabel,
   },
   {
-    label: 'Rating',
+    label: t('rows.rating'),
     render: (p) => <RatingStars rating={p.avgRating ?? 0} count={p.reviewCount ?? 0} />,
     signature: (p) => String(p.avgRating ?? 0),
   },
-  { label: 'Category', render: (p) => p.category?.name ?? '—', signature: (p) => p.category?.name ?? '' },
-  { label: 'Shop', render: (p) => p.shop?.name ?? '—', signature: (p) => p.shop?.name ?? '' },
+  { label: t('rows.category'), render: (p) => p.category?.name ?? '—', signature: (p) => p.category?.name ?? '' },
+  { label: t('rows.shop'), render: (p) => p.shop?.name ?? '—', signature: (p) => p.shop?.name ?? '' },
   {
-    label: 'Option 1',
+    label: t('rows.option1'),
     render: (p) => optionCell(p, 'option1'),
     signature: (p) => getUniqueOptionValues(p.variants, 'option1').join(','),
   },
   {
-    label: 'Option 2',
+    label: t('rows.option2'),
     render: (p) => optionCell(p, 'option2'),
     signature: (p) => getUniqueOptionValues(p.variants, 'option2').join(','),
   },
   {
-    label: 'Availability',
+    label: t('rows.availability'),
     render: (p) =>
       hasAnyStock(p.variants) ? (
-        <span className="text-sm font-medium text-emerald-600">In stock</span>
+        <span className="text-sm font-medium text-emerald-600">{t('rows.inStock')}</span>
       ) : (
-        <span className="text-sm font-medium text-error-600">Out of stock</span>
+        <span className="text-sm font-medium text-error-600">{t('rows.outOfStock')}</span>
       ),
     signature: (p) => (hasAnyStock(p.variants) ? '1' : '0'),
   },

@@ -1,0 +1,47 @@
+{
+  "result": {
+    "loading": "Đang tải kết quả thanh toán...",
+    "notFound": "Không tìm thấy đơn hàng.",
+    "backHome": "Về trang chủ",
+    "steps": {
+      "cart": "Giỏ hàng",
+      "checkout": "Đặt hàng",
+      "payment": "Thanh toán"
+    },
+    "success": {
+      "title": "Thanh toán thành công!",
+      "description": "Giao dịch thanh toán của bạn đã được xử lý thành công."
+    },
+    "failed": {
+      "title": "Thanh toán thất bại",
+      "description": "Giao dịch không thể hoàn tất. Bạn có thể thử lại hoặc chọn phương thức thanh toán khác."
+    },
+    "summary": {
+      "orderNumber": "Đơn hàng #{{id}}",
+      "orderId": "Mã đơn hàng",
+      "paymentMethod": "Phương thức",
+      "paymentStatus": "Trạng thái",
+      "payment": "Thanh toán",
+      "paid": "Đã thanh toán",
+      "unpaid": "Chưa thanh toán",
+      "total": "Tổng cộng",
+      "totalAmount": "Tổng tiền"
+    },
+    "actions": {
+      "continueShopping": "Tiếp tục mua sắm",
+      "viewOrder": "Xem chi tiết đơn",
+      "viewOrders": "Xem đơn hàng của tôi",
+      "retry": "Thử lại"
+    }
+  },
+  "transactions": {
+    "title": "Lịch sử giao dịch",
+    "ref": "Mã GD: {{ref}}",
+    "status": {
+      "pending": "Đang chờ",
+      "completed": "Thành công",
+      "failed": "Thất bại",
+      "refunded": "Đã hoàn tiền"
+    }
+  }
+}

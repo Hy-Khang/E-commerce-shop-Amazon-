@@ -1,0 +1,36 @@
+{
+  "page": {
+    "loading": "Loading products to compare…",
+    "empty": {
+      "title": "No products to compare yet",
+      "description": "Tap the <1>Compare</1> button on a product to add it here.",
+      "explore": "Explore products"
+    },
+    "title": "Compare products",
+    "clearAll": "Clear all",
+    "noImage": "No image",
+    "selectToBuy": "Select to buy"
+  },
+  "bar": {
+    "title": "Compare",
+    "clearAll": "Clear all",
+    "compare": "Compare ({{count}})"
+  },
+  "toggle": {
+    "remove": "Remove from comparison",
+    "add": "Add to comparison",
+    "blocked": "Only products in the same category can be compared (up to 4)",
+    "compare": "Compare"
+  },
+  "rows": {
+    "price": "Price",
+    "rating": "Rating",
+    "category": "Category",
+    "shop": "Shop",
+    "option1": "Option 1",
+    "option2": "Option 2",
+    "availability": "Availability",
+    "inStock": "In stock",
+    "outOfStock": "Out of stock"
+  }
+}

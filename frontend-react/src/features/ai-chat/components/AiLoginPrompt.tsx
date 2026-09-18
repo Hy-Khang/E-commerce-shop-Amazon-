@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { LogIn, Loader2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { loginSchema, useLogin, SocialLoginButtons, type LoginRequest } from '@/features/auth';
 import { ApiError } from '@/core/api/api.types';
 import { ROUTES } from '@/common/constants/routes';
@@ -21,6 +22,7 @@ interface Props {
  * to repeat "I want to check out".
  */
 export function AiLoginPrompt({ onSuccess, onClose }: Props) {
+  const { t } = useTranslation('aiChat');
   const {
     register,
     handleSubmit,
@@ -31,7 +33,7 @@ export function AiLoginPrompt({ onSuccess, onClose }: Props) {
   const { mutate, isPending, error } = useLogin({
     redirect: false,
     onSuccess: () => {
-      toast.success('Signed in successfully');
+      toast.success(t('widget.loginSuccess'));
       onSuccess();
     },
   });
@@ -40,13 +42,13 @@ export function AiLoginPrompt({ onSuccess, onClose }: Props) {
     <div className="absolute inset-0 z-10 flex flex-col bg-surface/95 backdrop-blur-sm">
       <div className="flex items-center justify-between border-b border-border-default px-4 py-3">
         <p className="flex items-center gap-1.5 text-sm font-bold text-text-primary">
-          <LogIn className="h-4 w-4 text-text-brand" /> Sign in to continue
+          <LogIn className="h-4 w-4 text-text-brand" /> {t('loginPrompt.title')}
         </p>
         <button
           type="button"
           onClick={onClose}
           className="rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-surface-hover"
-          aria-label="Close"
+          aria-label={t('loginPrompt.close')}
         >
           <X className="h-4 w-4" />
         </button>
@@ -54,20 +56,19 @@ export function AiLoginPrompt({ onSuccess, onClose }: Props) {
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <p className="mb-3 text-xs text-text-secondary">
-          Sign in and we&apos;ll pick up right where you left off — no need to
-          ask again.
+          {t('loginPrompt.description')}
         </p>
 
         <form onSubmit={handleSubmit((data) => mutate(data))} className="space-y-3">
           {error && (
             <div className="rounded-md bg-rose-50 p-2.5 text-xs text-rose-600">
-              {error instanceof ApiError ? error.message : 'Sign-in failed. Please try again.'}
+              {error instanceof ApiError ? error.message : t('loginPrompt.error')}
             </div>
           )}
 
           <div>
             <label htmlFor="ai-login-email" className="block text-xs font-medium text-text-secondary">
-              Email
+              {t('loginPrompt.email')}
             </label>
             <input
               id="ai-login-email"
@@ -75,7 +76,7 @@ export function AiLoginPrompt({ onSuccess, onClose }: Props) {
               autoComplete="email"
               {...register('email')}
               className="mt-1 block shop-input"
-              placeholder="you@example.com"
+              placeholder={t('loginPrompt.emailPlaceholder')}
             />
             {errors.email && (
               <p className="mt-1 text-xs text-rose-600">{errors.email.message}</p>
@@ -84,7 +85,7 @@ export function AiLoginPrompt({ onSuccess, onClose }: Props) {
 
           <div>
             <label htmlFor="ai-login-password" className="block text-xs font-medium text-text-secondary">
-              Password
+              {t('loginPrompt.password')}
             </label>
             <input
               id="ai-login-password"
@@ -92,7 +93,7 @@ export function AiLoginPrompt({ onSuccess, onClose }: Props) {
               autoComplete="current-password"
               {...register('password')}
               className="mt-1 block shop-input"
-              placeholder="••••••••"
+              placeholder={t('loginPrompt.passwordPlaceholder')}
             />
             {errors.password && (
               <p className="mt-1 text-xs text-rose-600">{errors.password.message}</p>
@@ -105,26 +106,26 @@ export function AiLoginPrompt({ onSuccess, onClose }: Props) {
             className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-50 disabled:pointer-events-none"
           >
             {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isPending ? 'Signing in…' : 'Sign in'}
+            {isPending ? t('loginPrompt.signingIn') : t('loginPrompt.signIn')}
           </button>
         </form>
 
         <div className="my-4 flex items-center gap-3">
           <span className="h-px flex-1 bg-border-default" />
-          <span className="text-xs text-text-muted">or</span>
+          <span className="text-xs text-text-muted">{t('loginPrompt.or')}</span>
           <span className="h-px flex-1 bg-border-default" />
         </div>
 
         <SocialLoginButtons />
 
         <p className="mt-3 text-center text-xs text-text-secondary">
-          Don&apos;t have an account?{' '}
+          {t('loginPrompt.noAccount')}{' '}
           <Link
             to={ROUTES.REGISTER}
             onClick={onClose}
             className="font-medium text-text-brand hover:underline"
           >
-            Register
+            {t('loginPrompt.register')}
           </Link>
         </p>
       </div>

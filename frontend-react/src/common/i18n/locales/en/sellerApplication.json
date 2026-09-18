@@ -1,0 +1,47 @@
+{
+  "page": {
+    "title": "Become a seller",
+    "subtitle": "Sell on Nook — open your shop and start doing business.",
+    "status": {
+      "pending": {
+        "title": "Application under review",
+        "description": "Your application for shop <1>{{shop}}</1> was submitted on {{date}}. We'll review it and get back to you soon."
+      },
+      "approved": {
+        "title": "Application approved",
+        "description": "Congratulations! Shop <1>{{shop}}</1> is now active. Enter the Seller Center to start selling.",
+        "enter": "Enter Seller Center"
+      },
+      "rejected": {
+        "title": "Application rejected",
+        "reason": "Reason: {{reason}}",
+        "description": "Your application was not approved. You can edit it and resubmit."
+      }
+    }
+  },
+  "form": {
+    "title": "Seller information",
+    "fields": {
+      "shopName": {
+        "label": "Shop name *",
+        "placeholder": "e.g. Nook Coffee"
+      },
+      "phone": {
+        "label": "Phone number *",
+        "placeholder": "09xxxxxxxx"
+      },
+      "businessName": {
+        "label": "Business name"
+      },
+      "taxId": {
+        "label": "Tax ID / National ID"
+      },
+      "description": {
+        "label": "Shop description",
+        "placeholder": "What does your shop sell, what's its style..."
+      }
+    },
+    "note": "You can add your shop logo and banner after approval in Shop Settings.",
+    "submit": "Submit application"
+  }
+}

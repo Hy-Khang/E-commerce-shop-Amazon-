@@ -62,6 +62,12 @@
     "added": "Đã thêm vào giỏ hàng",
     "removed": "Đã xóa khỏi giỏ hàng"
   },
+  "compare": {
+    "added": "Đã thêm vào so sánh",
+    "removed": "Đã xóa khỏi so sánh",
+    "full": "Bạn chỉ có thể so sánh tối đa {{max}} sản phẩm",
+    "category": "Bạn chỉ có thể so sánh các sản phẩm trong cùng danh mục"
+  },
   "upload": {
     "success": "Tải ảnh lên thành công",
     "error": "Tải ảnh lên thất bại",

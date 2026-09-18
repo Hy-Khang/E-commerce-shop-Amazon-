@@ -1,4 +1,5 @@
 import { Loader2, CreditCard } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { usePaymentsByOrder } from '../hooks/usePaymentsByOrder';
 import type { TransactionStatus, PaymentGateway } from '../types/payment.types';
@@ -15,12 +16,13 @@ const STATUS_STYLES: Record<TransactionStatus, string> = {
   refunded: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
 };
 
-const STATUS_LABELS: Record<TransactionStatus, string> = {
-  pending: 'Pending',
-  completed: 'Completed',
-  failed: 'Failed',
-  refunded: 'Refunded',
-};
+// Replaced by i18n
+// const STATUS_LABELS: Record<TransactionStatus, string> = {
+//   pending: 'Pending',
+//   completed: 'Completed',
+//   failed: 'Failed',
+//   refunded: 'Refunded',
+// };
 
 const GATEWAY_LABELS: Record<PaymentGateway, string> = {
   vnpay: 'VNPay',
@@ -28,6 +30,7 @@ const GATEWAY_LABELS: Record<PaymentGateway, string> = {
 };
 
 export function PaymentTransactionList({ orderId, variant = 'customer' }: Props) {
+  const { t } = useTranslation('payment');
   const { data: transactions, isLoading } = usePaymentsByOrder(orderId, {
     admin: variant === 'admin',
   });
@@ -53,7 +56,7 @@ export function PaymentTransactionList({ orderId, variant = 'customer' }: Props)
       <div className="mb-4 flex items-center gap-2">
         <CreditCard className={`h-5 w-5 ${labelClass}`} />
         <h2 className={`text-lg font-bold tracking-tight ${titleClass}`}>
-          Payment Transactions
+          {t('transactions.title')}
         </h2>
       </div>
 
@@ -68,7 +71,7 @@ export function PaymentTransactionList({ orderId, variant = 'customer' }: Props)
                 {GATEWAY_LABELS[tx.gateway]}
               </span>
               <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[tx.status]}`}>
-                {STATUS_LABELS[tx.status]}
+                {t(`transactions.status.${tx.status}` as any)}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
@@ -77,7 +80,7 @@ export function PaymentTransactionList({ orderId, variant = 'customer' }: Props)
             </div>
             {isAdmin && tx.transaction_ref && (
               <p className="mt-1 text-xs text-slate-400 font-mono truncate dark:text-slate-500">
-                Ref: {tx.transaction_ref}
+                {t('transactions.ref', { ref: tx.transaction_ref })}
               </p>
             )}
           </div>

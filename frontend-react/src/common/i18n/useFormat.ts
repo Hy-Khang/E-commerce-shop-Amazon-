@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { formatPrice, formatDate } from '@/common/utils/format.util';
+import { formatPrice, formatDate, formatNumber } from '@/common/utils/format.util';
 
 /**
  * Reactive formatting helpers. `useTranslation()` subscribes the component to
@@ -8,5 +8,5 @@ import { formatPrice, formatDate } from '@/common/utils/format.util';
  */
 export function useFormat() {
   useTranslation();
-  return { formatPrice, formatDate };
+  return { formatPrice, formatDate, formatNumber };
 }

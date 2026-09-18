@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, CreditCard, Loader2, LogIn, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
 import { useAuthStore } from '@/features/auth';
@@ -35,11 +36,13 @@ interface Props {
   onPlaced?: (data: AiOrderPlaced) => void;
 }
 
-const PAYMENT_OPTIONS: { value: PaymentMethod; label: string }[] = [
-  { value: 'cod', label: 'COD (on delivery)' },
-  { value: 'vnpay', label: 'VNPay' },
-  { value: 'momo', label: 'MoMo' },
+const PAYMENT_OPTIONS: { value: PaymentMethod; labelKey: string }[] = [
+  { value: 'cod', labelKey: 'checkoutProposal.cod' },
+  { value: 'vnpay', labelKey: 'payment.transactions.gateway.vnpay' }, // Won't map properly, just use hardcode for VNPay/MoMo
 ];
+
+// Let's do it inside the component for translation
+
 
 /**
  * Mini-checkout confirmation card. The agent only *proposes* — this card shows
@@ -47,6 +50,7 @@ const PAYMENT_OPTIONS: { value: PaymentMethod; label: string }[] = [
  * the real `POST /orders` (money moves only on the explicit Confirm click).
  */
 export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props) {
+  const { t } = useTranslation('aiChat');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const openLoginPrompt = useAiChatStore((s) => s.openLoginPrompt);
   const { data: addresses, isLoading } = useAddresses();
@@ -125,13 +129,13 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
   if (!isAuthenticated) {
     return (
       <ProposalShell>
-        <p className="text-xs text-text-secondary">You need to sign in to place an order.</p>
+        <p className="text-xs text-text-secondary">{t('checkoutProposal.needsLogin')}</p>
         <button
           type="button"
           onClick={openLoginPrompt}
           className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-hover"
         >
-          <LogIn className="h-3.5 w-3.5" /> Sign in to order
+          <LogIn className="h-3.5 w-3.5" /> {t('checkoutProposal.signIn')}
         </button>
       </ProposalShell>
     );
@@ -142,17 +146,17 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
       <ProposalShell>
         <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
           <CheckCircle2 className="h-4 w-4" />
-          Order placed successfully!
+          {t('checkoutProposal.success')}
         </div>
         <p className="mt-1 text-xs text-text-secondary">
-          Order code: <span className="font-mono">{placedGroupId.slice(0, 8)}</span>
+          {t('checkoutProposal.orderCode')} <span className="font-mono">{placedGroupId.slice(0, 8)}</span>
         </p>
         <Link
           to={ROUTES.ORDERS}
           onClick={onNavigate}
           className="mt-2 block rounded-lg border border-border-brand px-3 py-1.5 text-center text-xs font-semibold text-text-brand transition-colors hover:bg-brand-light"
         >
-          View my orders
+          {t('checkoutProposal.viewOrders')}
         </Link>
       </ProposalShell>
     );
@@ -198,21 +202,21 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
     <ProposalShell>
       <div className="flex items-center gap-1.5 text-xs font-semibold text-text-primary">
         <CreditCard className="h-4 w-4 text-text-brand" />
-        Confirm order
+        {t('checkoutProposal.title')}
       </div>
 
       {/* Totals */}
       <dl className="mt-2 space-y-1 text-xs">
-        <Row label="Subtotal" value={formatPrice(preview.subtotal)} />
+        <Row label={t('checkoutProposal.subtotal')} value={formatPrice(preview.subtotal)} />
         {preview.discount_total > 0 && (
-          <Row label="Discount" value={`-${formatPrice(preview.discount_total)}`} accent />
+          <Row label={t('checkoutProposal.discount')} value={`-${formatPrice(preview.discount_total)}`} accent />
         )}
         {preview.coin_discount > 0 && (
-          <Row label="Coins" value={`-${formatPrice(preview.coin_discount)}`} accent />
+          <Row label={t('checkoutProposal.coins')} value={`-${formatPrice(preview.coin_discount)}`} accent />
         )}
-        <Row label="Shipping" value={formatPrice(preview.shipping_total)} />
+        <Row label={t('checkoutProposal.shipping')} value={formatPrice(preview.shipping_total)} />
         <div className="flex items-center justify-between border-t border-border-default pt-1.5">
-          <dt className="font-semibold text-text-primary">Total</dt>
+          <dt className="font-semibold text-text-primary">{t('checkoutProposal.total')}</dt>
           <dd className="text-sm font-bold text-text-price">
             {formatPrice(preview.grand_total)}
           </dd>
@@ -233,17 +237,17 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
       {/* Address */}
       <div className="mt-3">
         <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-          <MapPin className="h-3 w-3" /> Shipping address
+          <MapPin className="h-3 w-3" /> {t('checkoutProposal.shippingAddress')}
         </p>
         {isLoading ? (
-          <p className="text-xs text-text-muted">Loading addresses…</p>
+          <p className="text-xs text-text-muted">{t('checkoutProposal.loadingAddresses')}</p>
         ) : !hasAddress ? (
           <Link
             to={ROUTES.ADDRESSES}
             onClick={onNavigate}
             className="block rounded-lg border border-dashed border-border-strong px-3 py-2 text-center text-xs font-medium text-text-brand hover:bg-brand-light"
           >
-            + Add a shipping address
+            {t('checkoutProposal.addAddress')}
           </Link>
         ) : (
           <select
@@ -254,7 +258,7 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
             {addresses!.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.full_name} — {a.address_line}, {a.city}
-                {a.is_default ? ' (default)' : ''}
+                {a.is_default ? t('checkoutProposal.defaultAddress') : ''}
               </option>
             ))}
           </select>
@@ -264,10 +268,14 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
       {/* Payment method */}
       <div className="mt-3">
         <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-          Payment method
+          {t('checkoutProposal.paymentMethod')}
         </p>
         <div className="flex flex-wrap gap-1.5">
-          {PAYMENT_OPTIONS.map((opt) => (
+          {[
+            { value: 'cod' as PaymentMethod, label: t('checkoutProposal.cod') },
+            { value: 'vnpay' as PaymentMethod, label: 'VNPay' },
+            { value: 'momo' as PaymentMethod, label: 'MoMo' },
+          ].map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -291,7 +299,7 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
         className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-50 disabled:pointer-events-none"
       >
         {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-        {method === 'cod' ? 'Confirm order' : 'Place order & pay'}
+        {method === 'cod' ? t('checkoutProposal.confirmCod') : t('checkoutProposal.confirmPay')}
       </button>
     </ProposalShell>
   );

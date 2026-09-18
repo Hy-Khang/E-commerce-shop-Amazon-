@@ -62,6 +62,12 @@
     "added": "Added to cart",
     "removed": "Removed from cart"
   },
+  "compare": {
+    "added": "Added to comparison",
+    "removed": "Removed from comparison",
+    "full": "You can compare up to {{max}} products",
+    "category": "You can only compare products in the same category"
+  },
   "upload": {
     "success": "Image uploaded successfully",
     "error": "Failed to upload image",

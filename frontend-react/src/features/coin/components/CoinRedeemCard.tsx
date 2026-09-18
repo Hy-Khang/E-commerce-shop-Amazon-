@@ -1,5 +1,6 @@
 import { Coins } from 'lucide-react';
-import { formatPrice } from '@/common/utils/format.util';
+import { useTranslation, Trans } from 'react-i18next';
+import { useFormat } from '@/common/i18n/useFormat';
 
 interface CoinRedeemCardProps {
   /** Spendable Xu balance. */
@@ -24,6 +25,9 @@ export function CoinRedeemCard({
   onChange,
   applied,
 }: CoinRedeemCardProps) {
+  const { t } = useTranslation('coin');
+  const { formatPrice, formatNumber } = useFormat();
+
   const enabled = coins > 0;
   const canRedeem = max > 0;
 
@@ -33,19 +37,21 @@ export function CoinRedeemCard({
     <div className="rounded-xl border border-border-default bg-elevated p-6">
       <div className="mb-4 flex items-center gap-2">
         <Coins className="h-5 w-5 text-amber-500" />
-        <h2 className="text-lg font-semibold text-text-primary">Use Coins</h2>
+        <h2 className="text-lg font-semibold text-text-primary">{t('redeem.title')}</h2>
       </div>
 
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-text-secondary">
-            Balance:{' '}
-            <span className="font-semibold text-text-primary">
-              {balance.toLocaleString('vi-VN')} Coins
-            </span>
+            <Trans
+              i18nKey="redeem.balance"
+              t={t}
+              values={{ count: balance }}
+              components={{ 1: <span className="font-semibold text-text-primary" /> }}
+            />
           </p>
           <p className="mt-0.5 text-xs text-text-muted">
-            1 Coin = 1 ₫ · up to {max.toLocaleString('vi-VN')} Coins on this order
+            {t('redeem.note', { max: formatNumber(max) })}
           </p>
         </div>
 
@@ -80,7 +86,7 @@ export function CoinRedeemCard({
             onClick={() => onChange(max)}
             className="ml-auto rounded-lg border border-border-brand px-3 py-1.5 text-xs font-semibold text-text-brand transition-colors hover:bg-brand-light"
           >
-            Use max
+            {t('redeem.useMax')}
           </button>
         </div>
       )}
@@ -88,15 +94,14 @@ export function CoinRedeemCard({
       {!canRedeem && (
         <p className="mt-3 text-xs text-text-muted">
           {balance <= 0
-            ? 'You have no Coins to redeem yet.'
-            : 'This order is not eligible for Coins redemption.'}
+            ? t('redeem.empty')
+            : t('redeem.notEligible')}
         </p>
       )}
 
       {enabled && applied !== undefined && applied < coins && (
         <p className="mt-3 text-xs text-amber-600">
-          Only {applied.toLocaleString('vi-VN')} Coins can be applied to this order
-          (a coupon leaves less room). The rest stays in your balance.
+          {t('redeem.appliedNote', { applied: formatNumber(applied) })}
         </p>
       )}
     </div>

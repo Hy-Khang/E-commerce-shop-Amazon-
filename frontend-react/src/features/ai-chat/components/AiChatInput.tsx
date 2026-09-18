@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   onSend: (content: string) => void;
@@ -8,6 +9,7 @@ interface Props {
 
 /** Textarea + send button (Enter to send, Shift+Enter for newline). */
 export function AiChatInput({ onSend, disabled }: Props) {
+  const { t } = useTranslation('aiChat');
   const [value, setValue] = useState('');
 
   const submit = (e: FormEvent) => {
@@ -36,14 +38,14 @@ export function AiChatInput({ onSend, disabled }: Props) {
         onKeyDown={handleKeyDown}
         rows={1}
         maxLength={2000}
-        placeholder="Ask about products, policies…"
+        placeholder={t('input.placeholder')}
         className="shop-input max-h-28 min-h-[42px] flex-1 resize-none"
       />
       <button
         type="submit"
         disabled={disabled || !value.trim()}
         className="flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg bg-brand text-white transition-colors hover:bg-brand-hover disabled:pointer-events-none disabled:opacity-50"
-        aria-label="Send message"
+        aria-label={t('input.send')}
       >
         <Send className="h-4 w-4" />
       </button>
