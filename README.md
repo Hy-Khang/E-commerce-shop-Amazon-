@@ -55,5 +55,7 @@ npm test
 ```
 # Test credentials:
 
-admin@example.com / Admin@123 (admin)
-customer1@example.com / Customer@123 (customer)
+admin@example.com / 123456789 (admin)
+customer1@example.com / 123456789 (customer)
+seller1@example.com / 123456789 (seller)
+shipper@example.com / 123456789 (shipper)

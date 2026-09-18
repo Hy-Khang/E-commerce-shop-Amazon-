@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { Notification } from '../types/notification.types';
 import { formatRelativeTime } from '../utils/notification.util';
 
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function NotificationPageItem({ notification, onMarkAsRead, orderDetailPath }: Props) {
+  const { t } = useTranslation('notification');
   const orderLink = notification.data?.orderId
     ? orderDetailPath(notification.data.orderId)
     : null;
@@ -44,14 +46,14 @@ export function NotificationPageItem({ notification, onMarkAsRead, orderDetailPa
             <div className="mt-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <span className="text-xs text-text-muted">
-                  {formatRelativeTime(notification.created_at)}
+                  {formatRelativeTime(notification.created_at, t)}
                 </span>
                 {!notification.is_read && (
                   <button
                     onClick={() => onMarkAsRead(notification.id)}
                     className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
                   >
-                    Mark as read
+                    {t('markRead')}
                   </button>
                 )}
               </div>
@@ -60,7 +62,7 @@ export function NotificationPageItem({ notification, onMarkAsRead, orderDetailPa
                   to={orderLink}
                   className="text-xs font-medium text-text-brand hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
                 >
-                  View Order
+                  {t('viewOrder')}
                 </Link>
               )}
             </div>

@@ -1,6 +1,7 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { addressSchema, type AddressFormData, type Address, type LocationValue } from '../types/user-profile.types';
 import { ApiError } from '@/core/api/api.types';
 import { FormInput } from '@/common/components/form/FormInput';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function AddressForm({ address, onSubmit, onClose, isPending, error }: Props) {
+  const { t } = useTranslation('userProfile');
   const {
     register,
     handleSubmit,
@@ -112,25 +114,25 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
       <div className="space-y-4">
         {error && (
           <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-4 text-sm text-rose-800">
-            {error instanceof ApiError ? error.message : 'An unexpected error occurred'}
+            {error instanceof ApiError ? error.message : t('errorFallback')}
           </div>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="address-form">
           <FormInput
-            label="Recipient Name"
+            label={t('addressForm.recipientName')}
             type="text"
             registration={register('full_name')}
             error={errors.full_name?.message}
-            placeholder="e.g. John Doe"
+            placeholder={t('addressForm.recipientPlaceholder')}
           />
 
           <FormInput
-            label="Phone Number"
+            label={t('addressForm.phone')}
             type="tel"
             registration={register('phone')}
             error={errors.phone?.message}
-            placeholder="e.g. 0901234567"
+            placeholder={t('addressForm.phonePlaceholder')}
           />
 
           <LocationPicker
@@ -141,11 +143,11 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
           />
 
           <FormInput
-            label="Address Details"
+            label={t('addressForm.addressDetails')}
             type="text"
             registration={register('address_line')}
             error={errors.address_line?.message}
-            placeholder="House number, street name, building..."
+            placeholder={t('addressForm.addressDetailsPlaceholder')}
           />
 
           <AddressMapPicker
@@ -168,7 +170,7 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
           onClick={onClose}
           disabled={isPending}
         >
-          Cancel
+          {t('addressForm.cancel')}
         </Button>
         <Button
           type="submit"
@@ -178,7 +180,7 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
           loading={isPending}
           className="min-w-24"
         >
-          {address ? 'Update' : 'Add Address'}
+          {address ? t('addressForm.update') : t('addressForm.add')}
         </Button>
       </div>
     </div>

@@ -1,0 +1,40 @@
+{
+  "title_one": "Shopping Cart ({{count}} item)",
+  "title_other": "Shopping Cart ({{count}} items)",
+  "loadError": "Failed to load your cart. Please try again.",
+  "empty": {
+    "title": "Your cart is empty",
+    "description": "Browse products and add items to your cart.",
+    "browse": "Browse Products"
+  },
+  "voucher": {
+    "platform": "Platform voucher",
+    "shop": "Shop voucher",
+    "selectPlatform": "Select platform voucher",
+    "selectShop": "Select shop voucher"
+  },
+  "summary": {
+    "title": "Order Summary",
+    "items": "Items ({{count}})",
+    "discountEst": "Discount (est.)",
+    "shipping": "Shipping",
+    "calculatedAtCheckout": "Calculated at checkout",
+    "subtotal": "Subtotal",
+    "estimateNote": "≈ estimate · confirmed at checkout",
+    "proceedToCheckout": "Proceed to Checkout",
+    "continueShopping": "Continue Shopping"
+  },
+  "item": {
+    "noImage": "No image",
+    "option1": "Option 1",
+    "option2": "Option 2",
+    "flash": "Flash"
+  },
+  "group": {
+    "otherItems": "Other items"
+  },
+  "add": {
+    "adding": "Adding...",
+    "addToCart": "Add to Cart"
+  }
+}

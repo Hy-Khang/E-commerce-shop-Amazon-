@@ -1,0 +1,64 @@
+{
+  "errorFallback": "Đã xảy ra lỗi không mong muốn",
+  "page": {
+    "title": "Hồ sơ của tôi",
+    "subtitle": "Quản lý thông tin và cài đặt tài khoản cá nhân của bạn.",
+    "security": "Bảo mật",
+    "loadError": "Không tải được hồ sơ. Vui lòng thử lại."
+  },
+  "form": {
+    "updateSuccess": "Cập nhật hồ sơ thành công",
+    "email": "Địa chỉ email",
+    "fullName": "Họ và tên",
+    "phone": "Số điện thoại",
+    "phonePlaceholder": "vd: 0901234567",
+    "save": "Lưu thay đổi"
+  },
+  "address": {
+    "title": "Địa chỉ giao hàng",
+    "subtitle": "Quản lý địa chỉ giao hàng để thanh toán nhanh hơn.",
+    "add": "Thêm địa chỉ",
+    "emptyText": "Bạn chưa thêm địa chỉ giao hàng nào.",
+    "addFirst": "Thêm địa chỉ đầu tiên",
+    "loadError": "Không tải được địa chỉ. Vui lòng thử lại.",
+    "drawerAddTitle": "Thêm địa chỉ mới",
+    "drawerEditTitle": "Sửa địa chỉ",
+    "deleteTitle": "Xóa địa chỉ giao hàng",
+    "deleteMessage": "Bạn có chắc muốn xóa địa chỉ giao hàng này? Địa chỉ sẽ bị gỡ khỏi danh sách đã lưu.",
+    "deleteConfirm": "Xóa"
+  },
+  "card": {
+    "default": "Mặc định",
+    "editTitle": "Sửa địa chỉ",
+    "deleteTitle": "Xóa địa chỉ",
+    "settingDefault": "Đang đặt làm mặc định...",
+    "setDefault": "Đặt làm địa chỉ mặc định"
+  },
+  "addressForm": {
+    "recipientName": "Tên người nhận",
+    "recipientPlaceholder": "vd: Nguyễn Văn A",
+    "phone": "Số điện thoại",
+    "phonePlaceholder": "vd: 0901234567",
+    "addressDetails": "Chi tiết địa chỉ",
+    "addressDetailsPlaceholder": "Số nhà, tên đường, tòa nhà...",
+    "cancel": "Hủy",
+    "update": "Cập nhật",
+    "add": "Thêm địa chỉ"
+  },
+  "locationPicker": {
+    "label": "Tỉnh / Quận / Phường",
+    "placeholder": "Chọn tỉnh, quận, phường...",
+    "searchPlaceholder": "Tìm kiếm...",
+    "loading": "Đang tải...",
+    "noResults": "Không tìm thấy kết quả",
+    "tabProvince": "Tỉnh/Thành phố",
+    "tabDistrict": "Quận/Huyện",
+    "tabWard": "Phường/Xã"
+  },
+  "mapPicker": {
+    "label": "Ghim trên bản đồ",
+    "findOnMap": "Tìm trên bản đồ",
+    "selected": "Đã chọn: {{lat}}, {{lng}}",
+    "hint": "Nhấp vào bản đồ hoặc dùng \"Tìm trên bản đồ\" để đặt tọa độ giao hàng"
+  }
+}

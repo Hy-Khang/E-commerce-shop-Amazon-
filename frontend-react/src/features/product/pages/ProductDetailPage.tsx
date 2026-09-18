@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Minus, Plus, Zap } from 'lucide-react';
 import { formatPrice } from '@/common/utils/format.util';
 import { sanitizeHtml, RICH_TEXT_CONTENT_CLASS } from '@/common/utils/sanitize.util';
@@ -27,6 +28,7 @@ import { getEffectivePrice, isInStock } from '../utils/product.util';
 import type { Category, ProductVariant } from '../types/product.types';
 
 export default function ProductDetailPage() {
+  const { t } = useTranslation('product');
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { data: product, isLoading, error } = useProduct(slug!);
@@ -50,7 +52,7 @@ export default function ProductDetailPage() {
   if (error || !product) {
     return (
       <div className="py-12 text-center text-text-secondary">
-        Product not found.
+        {t('detail.notFound')}
       </div>
     );
   }
@@ -73,8 +75,8 @@ export default function ProductDetailPage() {
   const category = categories ? findCategoryById(categories, product.category_id) : null;
 
   const breadcrumbItems = [
-    { label: 'Home', href: ROUTES.HOME },
-    { label: 'Products', href: ROUTES.PRODUCTS },
+    { label: t('detail.breadcrumbHome'), href: ROUTES.HOME },
+    { label: t('detail.breadcrumbProducts'), href: ROUTES.PRODUCTS },
     ...(category ? [{ label: category.name, href: ROUTES.CATEGORY(category.slug) }] : []),
     { label: product.name },
   ];
@@ -115,7 +117,7 @@ export default function ProductDetailPage() {
                   {activeFlash && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-600 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white">
                       <Zap className="h-3 w-3 fill-current" />
-                      Flash Sale
+                      {t('detail.flashSale')}
                     </span>
                   )}
                   <span
@@ -142,9 +144,9 @@ export default function ProductDetailPage() {
               <div className="text-sm text-text-secondary">
                 SKU: <span className="font-mono text-text-primary">{active.sku}</span>
                 {active.stock_quantity > 0 ? (
-                  <span className="ml-3 font-medium text-success-600">In stock ({active.stock_quantity})</span>
+                  <span className="ml-3 font-medium text-success-600">{t('detail.inStock', { count: active.stock_quantity })}</span>
                 ) : (
-                  <span className="ml-3 font-medium text-error-600">Out of stock</span>
+                  <span className="ml-3 font-medium text-error-600">{t('detail.outOfStock')}</span>
                 )}
               </div>
             )}
@@ -163,7 +165,7 @@ export default function ProductDetailPage() {
               <div className="space-y-6 border-t border-border-default pt-6">
                 {/* Quantity Selector */}
                 <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-text-secondary">Quantity:</span>
+                  <span className="text-sm font-medium text-text-secondary">{t('detail.quantity')}</span>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -186,7 +188,7 @@ export default function ProductDetailPage() {
                     </button>
                   </div>
                   <span className="text-xs text-text-muted">
-                    {active.stock_quantity} available
+                    {t('detail.available', { count: active.stock_quantity })}
                   </span>
                 </div>
 
@@ -206,7 +208,7 @@ export default function ProductDetailPage() {
                     onClick={handleBuyNow}
                     className="flex-1 py-3 text-sm font-bold"
                   >
-                    Buy Now
+                    {t('detail.buyNow')}
                   </Button>
                 </div>
               </div>
@@ -216,13 +218,13 @@ export default function ProductDetailPage() {
                 variant="secondary"
                 className="w-full py-3"
               >
-                Out of Stock
+                {t('detail.outOfStockButton')}
               </Button>
             )}
 
             {product.description && (
               <div className="border-t border-border-default pt-6">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Description</h2>
+                <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">{t('detail.description')}</h2>
                 <div
                   className={`mt-2 whitespace-pre-line text-sm leading-relaxed text-text-secondary ${RICH_TEXT_CONTENT_CLASS}`}
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
@@ -239,7 +241,7 @@ export default function ProductDetailPage() {
         <FrequentlyBoughtTogetherCarousel productId={product.id} />
 
         <div className="shop-card p-6">
-          <h2 className="mb-6 text-lg font-bold tracking-tight text-text-primary">Customer Reviews</h2>
+          <h2 className="mb-6 text-lg font-bold tracking-tight text-text-primary">{t('detail.customerReviews')}</h2>
           <ReviewList productId={product.id} />
         </div>
 

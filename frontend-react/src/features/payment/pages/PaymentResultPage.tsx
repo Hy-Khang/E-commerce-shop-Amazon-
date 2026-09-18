@@ -4,10 +4,12 @@ import { formatPrice } from '@/common/utils/format.util';
 import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
 import { Button } from '@/common/components/ui/Button';
 import { showErrorToast } from '@/common/components/feedback/toast';
+import { useTranslation } from 'react-i18next';
 import { useOrderGroup, OrderStatusBadge } from '@/features/order';
 import { useCreatePayment } from '../hooks/useCreatePayment';
 
 export default function PaymentResultPage() {
+  const { t } = useTranslation('payment');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const orderGroupId = searchParams.get('orderGroupId');
@@ -34,7 +36,7 @@ export default function PaymentResultPage() {
     return (
       <div className="flex h-96 flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-text-brand" />
-        <p className="mt-4 text-sm text-text-secondary">Loading payment result...</p>
+        <p className="mt-4 text-sm text-text-secondary">{t('result.loading')}</p>
       </div>
     );
   }
@@ -42,9 +44,9 @@ export default function PaymentResultPage() {
   if (isError || orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-text-secondary">Order not found.</p>
+        <p className="text-text-secondary">{t('result.notFound')}</p>
         <Button onClick={() => navigate(ROUTES.HOME)} className="mt-4">
-          Back to Home
+          {t('result.backHome')}
         </Button>
       </div>
     );
@@ -60,17 +62,17 @@ export default function PaymentResultPage() {
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-2 text-text-brand font-semibold">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-text-brand">1</span>
-            <span className="text-xs">Cart</span>
+            <span className="text-xs">{t('result.steps.cart')}</span>
           </div>
           <div className="mx-4 h-[1px] w-12 bg-border-brand" />
           <div className="flex items-center gap-2 text-text-brand font-semibold">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-text-brand">2</span>
-            <span className="text-xs">Checkout</span>
+            <span className="text-xs">{t('result.steps.checkout')}</span>
           </div>
           <div className="mx-4 h-[1px] w-12 bg-border-brand" />
           <div className="flex items-center gap-2 text-text-brand font-semibold">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">3</span>
-            <span className="text-xs">Payment</span>
+            <span className="text-xs">{t('result.steps.payment')}</span>
           </div>
         </div>
       </div>
@@ -87,12 +89,12 @@ export default function PaymentResultPage() {
 
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-            {isSuccess ? 'Payment Successful!' : 'Payment Failed'}
+            {isSuccess ? t('result.success.title') : t('result.failed.title')}
           </h1>
           <p className="text-sm text-text-secondary">
             {isSuccess
-              ? 'Your payment has been processed successfully.'
-              : 'Your payment could not be completed. You can try again or choose a different payment method.'}
+              ? t('result.success.description')
+              : t('result.failed.description')}
           </p>
         </div>
 
@@ -112,20 +114,20 @@ export default function PaymentResultPage() {
                   <OrderStatusBadge status={order.status} />
                 </div>
                 <div className="mt-2 flex justify-between text-sm">
-                  <span className="text-text-secondary">Order #{order.id}</span>
+                  <span className="text-text-secondary">{t('result.summary.orderNumber', { id: order.id })}</span>
                   <span className="font-semibold text-text-primary">{formatPrice(order.total_amount)}</span>
                 </div>
                 <div className="mt-1 flex justify-between text-sm">
-                  <span className="text-text-secondary">Payment</span>
+                  <span className="text-text-secondary">{t('result.summary.payment')}</span>
                   <span className={`font-semibold ${isSuccess ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {isSuccess ? 'Paid' : 'Unpaid'}
+                    {isSuccess ? t('result.summary.paid') : t('result.summary.unpaid')}
                   </span>
                 </div>
               </div>
             ))}
             <div className="rounded-xl border border-border-default bg-surface-hover/50 p-4">
               <div className="flex justify-between text-base font-bold text-text-primary">
-                <span>Total</span>
+                <span>{t('result.summary.total')}</span>
                 <span className="text-text-price">{formatPrice(totalAmount)}</span>
               </div>
             </div>
@@ -133,23 +135,23 @@ export default function PaymentResultPage() {
         ) : (
           <div className="rounded-xl border border-border-default bg-surface-hover/50 p-6 text-left space-y-4">
             <div className="flex justify-between border-b border-border-default pb-3 text-sm">
-              <span className="text-text-secondary">Order ID</span>
+              <span className="text-text-secondary">{t('result.summary.orderId')}</span>
               <span className="font-semibold text-text-primary">#{firstOrder.id}</span>
             </div>
             <div className="flex justify-between border-b border-border-default pb-3 text-sm">
-              <span className="text-text-secondary">Payment Method</span>
+              <span className="text-text-secondary">{t('result.summary.paymentMethod')}</span>
               <span className="font-semibold text-text-primary">
                 {PAYMENT_METHOD_LABELS[firstOrder.payment_method]}
               </span>
             </div>
             <div className="flex justify-between border-b border-border-default pb-3 text-sm">
-              <span className="text-text-secondary">Payment Status</span>
+              <span className="text-text-secondary">{t('result.summary.paymentStatus')}</span>
               <span className={`font-semibold ${isSuccess ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {isSuccess ? 'Paid' : 'Unpaid'}
+                {isSuccess ? t('result.summary.paid') : t('result.summary.unpaid')}
               </span>
             </div>
             <div className="flex justify-between pt-1 text-base font-bold text-text-primary">
-              <span>Total Amount</span>
+              <span>{t('result.summary.totalAmount')}</span>
               <span className="text-text-price">{formatPrice(firstOrder.total_amount)}</span>
             </div>
           </div>
@@ -166,7 +168,7 @@ export default function PaymentResultPage() {
                 className="flex-1 py-3"
                 icon={ShoppingBag}
               >
-                Continue Shopping
+                {t('result.actions.continueShopping')}
               </Button>
               <Button
                 type="button"
@@ -178,7 +180,7 @@ export default function PaymentResultPage() {
                 className="flex-1 py-3"
                 icon={ArrowRight}
               >
-                {orders.length === 1 ? 'View Order Details' : 'View My Orders'}
+                {orders.length === 1 ? t('result.actions.viewOrder') : t('result.actions.viewOrders')}
               </Button>
             </>
           ) : (
@@ -193,7 +195,7 @@ export default function PaymentResultPage() {
                 className="flex-1 py-3"
                 icon={ArrowRight}
               >
-                {orders.length === 1 ? 'View Order Details' : 'View My Orders'}
+                {orders.length === 1 ? t('result.actions.viewOrder') : t('result.actions.viewOrders')}
               </Button>
               <Button
                 type="button"
@@ -203,7 +205,7 @@ export default function PaymentResultPage() {
                 className="flex-1 py-3"
                 icon={RefreshCw}
               >
-                Retry Payment
+                {t('result.actions.retry')}
               </Button>
             </>
           )}

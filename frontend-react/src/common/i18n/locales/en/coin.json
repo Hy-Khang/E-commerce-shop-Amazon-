@@ -1,0 +1,29 @@
+{
+  "wallet": {
+    "title": "My Coins",
+    "availableBalance": "Available balance",
+    "balance": "{{count}} Coins",
+    "valueNote": "1 Coin = 1 ₫ · redeem at checkout",
+    "expiring_one": "{{count}} Coin expiring on {{date}}",
+    "expiring_other": "{{count}} Coins expiring on {{date}}",
+    "history": "History",
+    "empty": "No coin activity yet.",
+    "types": {
+      "earn": "Earned",
+      "refund": "Refunded",
+      "redeem": "Redeemed",
+      "reverse_earn": "Reversed",
+      "expire": "Expired"
+    }
+  },
+  "redeem": {
+    "title": "Use Coins",
+    "balance": "Balance: <1>{{count}} Coins</1>",
+    "balanceRaw": "Balance: {{count}} Coins",
+    "note": "1 Coin = 1 ₫ · up to {{max}} Coins on this order",
+    "useMax": "Use max",
+    "empty": "You have no Coins to redeem yet.",
+    "notEligible": "This order is not eligible for Coins redemption.",
+    "appliedNote": "Only {{applied}} Coins can be applied to this order (a coupon leaves less room). The rest stays in your balance."
+  }
+}

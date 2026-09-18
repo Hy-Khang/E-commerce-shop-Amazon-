@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { MessageCircle, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth';
 import { useAiConfig, useSendAiMessage } from '../hooks/useAiChat';
 import { useAiChatStore, type AiPanelSize } from '../stores/ai-chat.store';
@@ -21,6 +22,7 @@ const SIZE_CLASS: Record<AiPanelSize, string> = {
 };
 
 export function AiChatWidget() {
+  const { t } = useTranslation('aiChat');
   const { data: config } = useAiConfig();
   const isOpen = useAiChatStore((s) => s.isOpen);
   const size = useAiChatStore((s) => s.size);
@@ -42,7 +44,7 @@ export function AiChatWidget() {
     setPendingIntent(null);
     closeLoginPrompt();
     open();
-    toast.success('Signed in successfully');
+    toast.success(t('widget.loginSuccess'));
     send.mutate(pendingIntent);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -60,7 +62,7 @@ export function AiChatWidget() {
       <button
         onClick={toggle}
         className="fixed bottom-6 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white shadow-lg transition-colors hover:bg-brand-hover sm:right-6"
-        aria-label={isOpen ? 'Close AI assistant' : 'Open AI assistant'}
+        aria-label={isOpen ? t('widget.close') : t('widget.open')}
       >
         {isOpen ? (
           <X className="h-6 w-6" />

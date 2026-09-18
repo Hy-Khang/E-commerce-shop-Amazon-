@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getImageUrl } from '@/common/utils/format.util';
 import type { ProductImage } from '../types/product.types';
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function ImageGallery({ images, productName, selectedOption1, thumbnailUrl }: Props) {
+  const { t } = useTranslation('product');
   const [activeIndex, setActiveIndex] = useState(0);
 
   const displayImages = useMemo(() => {
@@ -49,7 +51,7 @@ export function ImageGallery({ images, productName, selectedOption1, thumbnailUr
 
     return (
       <div className="flex aspect-square items-center justify-center rounded-xl bg-surface-hover text-text-muted">
-        No images
+        {t('gallery.noImages')}
       </div>
     );
   }

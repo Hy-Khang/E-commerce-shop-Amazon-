@@ -1,4 +1,5 @@
 import { Bot } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { AiProductSuggestions } from './AiProductSuggestions';
 import { AiActionCards } from './AiActionCards';
 import type { AiChatMessage } from '../types/ai-chat.types';
@@ -18,6 +19,7 @@ export function AiMessageBubble({
   onPickSuggestion,
   isLatest = false,
 }: Props) {
+  const { t } = useTranslation('aiChat');
   const isUser = message.role === 'user';
 
   if (isUser) {
@@ -38,7 +40,7 @@ export function AiMessageBubble({
       <div className="min-w-0 flex-1">
         <div className="inline-block max-w-full rounded-2xl rounded-tl-sm bg-surface-hover px-3 py-2 text-sm text-text-primary">
           {message.pending ? (
-            <span className="flex items-center gap-1 py-0.5" aria-label="Typing">
+            <span className="flex items-center gap-1 py-0.5" aria-label={t('bubble.typing')}>
               <Dot /> <Dot delay="150ms" /> <Dot delay="300ms" />
             </span>
           ) : (

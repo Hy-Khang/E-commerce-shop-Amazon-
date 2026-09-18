@@ -1,0 +1,57 @@
+{
+  "actions": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "create": "Tạo",
+    "update": "Cập nhật",
+    "confirm": "Xác nhận",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "next": "Tiếp",
+    "previous": "Trước",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "clear": "Xóa lọc",
+    "apply": "Áp dụng",
+    "reset": "Đặt lại",
+    "submit": "Gửi",
+    "retry": "Thử lại",
+    "viewAll": "Xem tất cả",
+    "viewMore": "Xem thêm",
+    "seeDetails": "Xem chi tiết",
+    "loading": "Đang tải...",
+    "add": "Thêm",
+    "remove": "Xóa",
+    "select": "Chọn"
+  },
+  "labels": {
+    "actions": "Thao tác",
+    "status": "Trạng thái",
+    "all": "Tất cả",
+    "yes": "Có",
+    "no": "Không",
+    "optional": "Tùy chọn",
+    "required": "Bắt buộc"
+  },
+  "pagination": {
+    "page": "Trang",
+    "of": "trên",
+    "showing": "Hiển thị {{from}}–{{to}} trong {{total}}",
+    "rowsPerPage": "Số dòng mỗi trang"
+  },
+  "empty": {
+    "title": "Chưa có gì ở đây",
+    "description": "Hiện chưa có dữ liệu để hiển thị."
+  },
+  "confirm": {
+    "title": "Bạn có chắc chắn?",
+    "deleteMessage": "Hành động này không thể hoàn tác.",
+    "confirmButton": "Xác nhận",
+    "cancelButton": "Hủy"
+  },
+  "language": {
+    "label": "Ngôn ngữ"
+  }
+}

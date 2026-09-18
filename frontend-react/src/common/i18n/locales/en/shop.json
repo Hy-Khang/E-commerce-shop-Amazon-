@@ -1,0 +1,25 @@
+{
+  "loading": "Loading shop...",
+  "notFound": "Shop not found.",
+  "allProducts": "All Products",
+  "noProducts": "No products yet.",
+  "visitShop": "Visit Shop",
+  "stats": {
+    "products_one": "{{count}} Product",
+    "products_other": "{{count}} Products",
+    "rating": "{{rating}} Rating",
+    "sold_one": "{{count}} Sold",
+    "sold_other": "{{count}} Sold"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{totalPages}}"
+  },
+  "hero": {
+    "goToSlide": "Go to slide {{number}}"
+  },
+  "productGrid": {
+    "emptyState": "These products will appear once they are available."
+  }
+}

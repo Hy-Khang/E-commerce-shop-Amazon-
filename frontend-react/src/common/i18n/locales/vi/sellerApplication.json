@@ -1,0 +1,47 @@
+{
+  "page": {
+    "title": "Trở thành người bán",
+    "subtitle": "Bán hàng trên Nook — mở cửa hàng và bắt đầu kinh doanh.",
+    "status": {
+      "pending": {
+        "title": "Đơn đang được duyệt",
+        "description": "Đơn đăng ký cho cửa hàng <1>{{shop}}</1> đã được gửi vào ngày {{date}}. Chúng tôi sẽ xem xét và phản hồi sớm."
+      },
+      "approved": {
+        "title": "Đơn đã được duyệt",
+        "description": "Chúc mừng! Cửa hàng <1>{{shop}}</1> hiện đã hoạt động. Vào Seller Center để bắt đầu bán hàng.",
+        "enter": "Vào Seller Center"
+      },
+      "rejected": {
+        "title": "Đơn bị từ chối",
+        "reason": "Lý do: {{reason}}",
+        "description": "Đơn đăng ký của bạn không được chấp thuận. Bạn có thể chỉnh sửa và gửi lại."
+      }
+    }
+  },
+  "form": {
+    "title": "Thông tin người bán",
+    "fields": {
+      "shopName": {
+        "label": "Tên cửa hàng *",
+        "placeholder": "vd. Nook Coffee"
+      },
+      "phone": {
+        "label": "Số điện thoại *",
+        "placeholder": "09xxxxxxxx"
+      },
+      "businessName": {
+        "label": "Tên doanh nghiệp"
+      },
+      "taxId": {
+        "label": "Mã số thuế / CMND/CCCD"
+      },
+      "description": {
+        "label": "Mô tả cửa hàng",
+        "placeholder": "Cửa hàng của bạn bán gì, phong cách ra sao..."
+      }
+    },
+    "note": "Bạn có thể thêm logo và ảnh bìa sau khi được duyệt trong phần Cài đặt Cửa hàng.",
+    "submit": "Gửi đơn đăng ký"
+  }
+}

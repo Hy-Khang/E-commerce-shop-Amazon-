@@ -7,7 +7,7 @@ This document captures the visual design patterns, tokens, and component convent
 ## 1. Brand Identity
 
 - **Name:** Nook
-- **Logo font:** `font-display` (Instrument Serif) — used only for the brand wordmark
+- **Logo font:** `font-display` (Lora) — brand wordmark + storefront display headings. (Was Instrument Serif; switched because Instrument Serif ships no Vietnamese subset — its `latin-ext` skips `U+1EA0–U+1EF1`, the Vietnamese stacked-diacritic vowels — so `ố`/`ấ` rendered as decomposed base + floating acute once the UI became bilingual. Lora is a warm, readable serif with full Vietnamese coverage; any replacement display font must include the `vietnamese` subset.)
 - **Logo pattern:** `Nook` + colored period — storefront uses `text-brand`, auth-left-pane uses `text-primary-300`
 - **Personality:** Warm, curated marketplace — earthy greens, warm neutrals, rounded shapes
 
@@ -91,7 +91,7 @@ This document captures the visual design patterns, tokens, and component convent
 | Token | Font | Usage |
 |-------|------|-------|
 | `font-jakarta` | Plus Jakarta Sans | Body text, UI (default) |
-| `font-display` | Instrument Serif | Brand wordmark only |
+| `font-display` | Lora | Brand wordmark + storefront display headings (full Vietnamese support) |
 
 ### 3.2 Text Scale
 

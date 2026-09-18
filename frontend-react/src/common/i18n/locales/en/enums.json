@@ -1,0 +1,94 @@
+{
+  "orderStatus": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "shipping": "Shipping",
+    "delivered": "Delivered",
+    "completed": "Completed",
+    "return_requested": "Return Requested",
+    "cancelled": "Cancelled"
+  },
+  "paymentStatus": {
+    "unpaid": "Unpaid",
+    "paid": "Paid"
+  },
+  "paymentMethod": {
+    "cod": "Cash on Delivery",
+    "vnpay": "VNPay",
+    "momo": "MoMo"
+  },
+  "transactionStatus": {
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed",
+    "refunded": "Refunded"
+  },
+  "shopStatus": {
+    "pending_verification": "Pending Verification",
+    "active": "Active",
+    "suspended": "Suspended",
+    "banned": "Banned"
+  },
+  "couponScope": {
+    "all": "Entire order",
+    "categories": "Specific categories",
+    "products": "Specific products"
+  },
+  "couponDiscountType": {
+    "fixed": "Fixed amount",
+    "percentage": "Percentage"
+  },
+  "blockType": {
+    "hero": "Hero",
+    "rich_text": "Rich text",
+    "image": "Image",
+    "product_grid": "Product grid"
+  },
+  "actorType": {
+    "customer": "Customer",
+    "seller": "Seller",
+    "shipper": "Shipper",
+    "admin": "Admin",
+    "system": "System",
+    "automatic": "Automatic"
+  },
+  "coinTxType": {
+    "earn": "Earned",
+    "redeem": "Redeemed",
+    "expire": "Expired",
+    "reverse_earn": "Reversed",
+    "refund": "Refunded"
+  },
+  "walletTxType": {
+    "sale_earning": "Sale earning",
+    "withdrawal": "Withdrawal",
+    "reversal": "Reversal",
+    "withdrawal_refund": "Withdrawal refund"
+  },
+  "withdrawalStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "sellerAppStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "flashCampaignStatus": {
+    "scheduled": "Scheduled",
+    "active": "Active",
+    "ended": "Ended"
+  },
+  "flashItemStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "userRole": {
+    "customer": "Customer",
+    "seller": "Seller",
+    "shipper": "Shipper",
+    "admin": "Admin"
+  }
+}

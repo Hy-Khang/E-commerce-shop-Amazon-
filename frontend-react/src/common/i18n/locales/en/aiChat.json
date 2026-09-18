@@ -1,0 +1,86 @@
+{
+  "widget": {
+    "loginSuccess": "Signed in successfully",
+    "close": "Close AI assistant",
+    "open": "Open AI assistant"
+  },
+  "input": {
+    "placeholder": "Ask about products, policies…",
+    "send": "Send message"
+  },
+  "panel": {
+    "title": "AI Shopping Assistant",
+    "subtitle": "Always here to help",
+    "newConversation": "New conversation",
+    "expand": "Expand",
+    "expandMore": "Expand more",
+    "minimize": "Minimize",
+    "close": "Close"
+  },
+  "bubble": {
+    "typing": "Typing"
+  },
+  "loginPrompt": {
+    "title": "Sign in to continue",
+    "close": "Close",
+    "description": "Sign in and we'll pick up right where you left off — no need to ask again.",
+    "error": "Sign-in failed. Please try again.",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "signingIn": "Signing in…",
+    "signIn": "Sign in",
+    "or": "or",
+    "noAccount": "Don't have an account?",
+    "register": "Register"
+  },
+  "needsLoginCard": {
+    "signedIn": "Signed in — you can continue now.",
+    "description": "You need to sign in to use this feature.",
+    "signIn": "Sign in"
+  },
+  "checkoutVoucher": {
+    "title": "Voucher",
+    "offPercent": "{{value}}% off",
+    "offPercentCap": "{{value}}% off (up to {{cap}})",
+    "offFlat": "{{value}} off",
+    "saveAmount": "Save {{amount}} · tap to apply",
+    "spendMore": "Spend <1>{{amount}}</1> more to unlock <2>{{code}}</2> ({{discount}})",
+    "changeVoucher": "Change or add voucher",
+    "selectVoucher": "Select or enter voucher",
+    "updating": "Updating total…",
+    "error": "Couldn't apply a code — it may be expired or not eligible for this cart. Remove it to continue.",
+    "remove": "Remove {{code}}"
+  },
+  "checkoutProposal": {
+    "needsLogin": "You need to sign in to place an order.",
+    "signIn": "Sign in to order",
+    "success": "Order placed successfully!",
+    "orderCode": "Order code:",
+    "viewOrders": "View my orders",
+    "title": "Confirm order",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "coins": "Coins",
+    "shipping": "Shipping",
+    "total": "Total",
+    "shippingAddress": "Shipping address",
+    "loadingAddresses": "Loading addresses…",
+    "addAddress": "+ Add a shipping address",
+    "defaultAddress": " (default)",
+    "paymentMethod": "Payment method",
+    "cod": "COD (on delivery)",
+    "confirmCod": "Confirm order",
+    "confirmPay": "Place order & pay"
+  },
+  "orderPlacedCard": {
+    "success": "Order placed successfully!",
+    "orderCode": "Order code:",
+    "completePayment": "Complete the payment to confirm your order.",
+    "whatNext": "What would you like to do next?",
+    "viewOrders": "View my orders",
+    "keepShopping": "Keep shopping",
+    "suggestQuery": "Suggest some products for me"
+  }
+}

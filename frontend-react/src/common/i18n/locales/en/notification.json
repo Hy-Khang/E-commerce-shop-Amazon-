@@ -1,0 +1,28 @@
+{
+  "ariaLabel": "Notifications",
+  "markAllRead": "Mark all as read",
+  "markRead": "Mark as read",
+  "viewOrder": "View Order",
+  "dropdown": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "viewAll": "View all notifications"
+  },
+  "page": {
+    "titleCustomer": "My Notifications",
+    "titlePortal": "Notifications",
+    "subtitleCustomer": "Stay updated on your order status changes.",
+    "subtitlePortal": "Order updates and status change alerts.",
+    "emptyTitle": "No notifications yet",
+    "emptyDescriptionCustomer": "You'll be notified here when your order status changes.",
+    "emptyDescriptionPortal": "You'll be notified here about order updates.",
+    "count_one": "{{count}} notification",
+    "count_other": "{{count}} notifications"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  }
+}

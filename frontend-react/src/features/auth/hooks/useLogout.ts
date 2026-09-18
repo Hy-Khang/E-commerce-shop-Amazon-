@@ -4,14 +4,14 @@ import { authService } from '../services/auth.service';
 import { useAuthStore } from '../stores/auth.store';
 import { ROUTES } from '@/common/constants/routes';
 import { showSuccessToast } from '@/common/components/feedback/toast';
-import { useTranslation } from '@/common/i18n';
+import { useTranslation } from 'react-i18next';
 
 export function useLogout() {
   const navigate = useNavigate();
   const storeLogout = useAuthStore((s) => s.logout);
   const refreshToken = useAuthStore((s) => s.refreshToken);
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: async () => {
@@ -22,7 +22,7 @@ export function useLogout() {
     onSettled: () => {
       storeLogout();
       queryClient.clear();
-      showSuccessToast(t((m) => m.toast.auth.loggedOut));
+      showSuccessToast(t('auth.loggedOut'));
       navigate(ROUTES.LOGIN, { replace: true });
     },
   });

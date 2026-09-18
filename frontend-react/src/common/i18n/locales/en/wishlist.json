@@ -1,0 +1,21 @@
+{
+  "page": {
+    "title": "My Wishlist",
+    "subtitle": "Keep track of the products you love and want to watch.",
+    "emptyTitle": "Your wishlist is empty",
+    "emptyDescription": "Explore our shop and save products you love to view them later.",
+    "browseProducts": "Browse Products",
+    "savedCount_one": "{{count}} item saved",
+    "savedCount_other": "{{count}} items saved"
+  },
+  "card": {
+    "unavailable": "Unavailable",
+    "priceUnavailable": "Price unavailable",
+    "added": "Added {{date}}",
+    "remove": "Remove from wishlist"
+  },
+  "button": {
+    "add": "Add to wishlist",
+    "remove": "Remove from wishlist"
+  }
+}

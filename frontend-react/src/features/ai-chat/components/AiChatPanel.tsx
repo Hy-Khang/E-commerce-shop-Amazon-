@@ -1,4 +1,5 @@
 import { Bot, Maximize2, Minimize2, RotateCcw, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth';
 import { useAiChatStore } from '../stores/ai-chat.store';
 import { useSendAiMessage } from '../hooks/useAiChat';
@@ -7,6 +8,7 @@ import { AiChatInput } from './AiChatInput';
 import { AiLoginPrompt } from './AiLoginPrompt';
 
 export function AiChatPanel() {
+  const { t } = useTranslation('aiChat');
   const messages = useAiChatStore((s) => s.messages);
   const close = useAiChatStore((s) => s.close);
   const reset = useAiChatStore((s) => s.reset);
@@ -28,7 +30,7 @@ export function AiChatPanel() {
 
   // Cycle is normal → large → full → normal, so at `full` the next step shrinks.
   const atFull = size === 'full';
-  const sizeLabel = atFull ? 'Minimize' : size === 'large' ? 'Expand more' : 'Expand';
+  const sizeLabel = atFull ? t('panel.minimize') : size === 'large' ? t('panel.expandMore') : t('panel.expand');
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-border-default bg-surface shadow-xl">
@@ -37,14 +39,14 @@ export function AiChatPanel() {
           <Bot className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold">AI Shopping Assistant</p>
-          <p className="text-xs text-white/80">Always here to help</p>
+          <p className="truncate text-sm font-bold">{t('panel.title')}</p>
+          <p className="text-xs text-white/80">{t('panel.subtitle')}</p>
         </div>
         <button
           onClick={reset}
           className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15"
-          aria-label="New conversation"
-          title="New conversation"
+          aria-label={t('panel.newConversation')}
+          title={t('panel.newConversation')}
         >
           <RotateCcw className="h-4 w-4" />
         </button>
@@ -63,7 +65,7 @@ export function AiChatPanel() {
         <button
           onClick={close}
           className="rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15"
-          aria-label="Close"
+          aria-label={t('panel.close')}
         >
           <X className="h-5 w-5" />
         </button>

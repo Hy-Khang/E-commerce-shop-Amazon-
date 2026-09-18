@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@/common/constants/routes';
 import { useAuthStore } from '@/features/auth';
 import {
@@ -24,6 +25,7 @@ import {
 type VoucherScope = 'platform' | number;
 
 export default function CartPage() {
+  const { t } = useTranslation('cart');
   const { data: cart, isLoading, isError } = useCart();
   const updateItem = useUpdateCartItem();
   const removeItem = useRemoveCartItem();
@@ -57,7 +59,7 @@ export default function CartPage() {
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-text-muted">
-        <p>Failed to load your cart. Please try again.</p>
+        <p>{t('loadError')}</p>
       </div>
     );
   }
@@ -67,13 +69,13 @@ export default function CartPage() {
       <div className="space-y-10">
         <div className="flex flex-col items-center justify-center py-16">
           <ShoppingCart className="h-16 w-16 text-text-muted/60" />
-          <h2 className="mt-4 text-lg font-semibold text-text-primary">Your cart is empty</h2>
-          <p className="mt-1 text-sm text-text-muted">Browse products and add items to your cart.</p>
+          <h2 className="mt-4 text-lg font-semibold text-text-primary">{t('empty.title')}</h2>
+          <p className="mt-1 text-sm text-text-muted">{t('empty.description')}</p>
           <Link
             to={ROUTES.PRODUCTS}
             className="mt-6 rounded-lg bg-brand px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
           >
-            Browse Products
+            {t('empty.browse')}
           </Link>
         </div>
         <RecommendedForYouCarousel />
@@ -91,12 +93,12 @@ export default function CartPage() {
       : appliedCoupons.find((c) => c.validation.shop_id === shopId);
 
   const modalTitle =
-    voucher.scope === 'platform' ? 'Platform voucher' : 'Shop voucher';
+    voucher.scope === 'platform' ? t('voucher.platform') : t('voucher.shop');
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold tracking-tight text-text-primary">
-        Shopping Cart ({cart.items.length} {cart.items.length === 1 ? 'item' : 'items'})
+        {t('title', { count: cart.items.length })}
       </h1>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

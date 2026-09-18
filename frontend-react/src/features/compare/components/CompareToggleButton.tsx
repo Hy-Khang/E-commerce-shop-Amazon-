@@ -1,5 +1,6 @@
 import { Scale } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { ProductListItem } from '@/features/product';
 import { useCompare } from '../hooks/useCompare';
 import { MAX_COMPARE } from '../stores/compare.store';
@@ -15,6 +16,7 @@ interface Props {
  * so it stops propagation/navigation on click.
  */
 export function CompareToggleButton({ product }: Props) {
+  const { t } = useTranslation('compare');
   const { isInCompare, canAdd, add, remove } = useCompare();
   const active = isInCompare(product.id);
   const blocked = !active && !canAdd(product.category_id);
@@ -25,17 +27,17 @@ export function CompareToggleButton({ product }: Props) {
 
     if (active) {
       remove(product.id);
-      toast.info('Removed from comparison');
+      toast.info(t('toggle.toast.removed', { ns: 'toast' })); // Use compare ns for now, wait we added it to toast
       return;
     }
 
     const result = add(product.id, product.category_id);
     if (result === 'added') {
-      toast.success('Added to comparison');
+      toast.success(t('toggle.toast.added', { ns: 'toast' })); // Use toast NS since we added it to toast.json
     } else if (result === 'full') {
-      toast.error(`You can compare up to ${MAX_COMPARE} products`);
+      toast.error(t('toggle.toast.full', { max: MAX_COMPARE, ns: 'toast' }));
     } else {
-      toast.error('You can only compare products in the same category');
+      toast.error(t('toggle.toast.category', { ns: 'toast' }));
     }
   };
 
@@ -43,14 +45,14 @@ export function CompareToggleButton({ product }: Props) {
     <button
       type="button"
       onClick={handleClick}
-      aria-label={active ? 'Remove from comparison' : 'Compare'}
+      aria-label={active ? t('toggle.remove') : t('toggle.compare')}
       aria-pressed={active}
       title={
         active
-          ? 'Remove from comparison'
+          ? t('toggle.remove')
           : blocked
-            ? 'Only products in the same category can be compared (up to 4)'
-            : 'Add to comparison'
+            ? t('toggle.blocked')
+            : t('toggle.add')
       }
       className={`rounded-full p-1.5 shadow-sm ring-1 transition-colors ${
         active

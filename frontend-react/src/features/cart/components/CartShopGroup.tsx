@@ -1,4 +1,5 @@
 import { Store } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { VoucherRow } from '@/features/coupon';
 import type { AppliedCouponEntry } from '@/features/coupon';
 import type { CartShopGrouping } from '../utils/cart.util';
@@ -32,6 +33,7 @@ export function CartShopGroup({
   onRemove,
   isUpdating,
 }: Props) {
+  const { t } = useTranslation('cart');
   const canPickVoucher = showVoucher && group.shop_id != null;
 
   return (
@@ -39,7 +41,7 @@ export function CartShopGroup({
       <div className="flex items-center gap-2 border-b border-border-default px-4 py-3">
         <Store className="h-4 w-4 text-text-secondary" />
         <span className="text-sm font-semibold text-text-primary">
-          {group.shop_name ?? 'Other items'}
+          {group.shop_name ?? t('group.otherItems')}
         </span>
       </div>
 
@@ -59,7 +61,7 @@ export function CartShopGroup({
         <div className="border-t border-border-default px-4 py-3">
           <VoucherRow
             applied={appliedShopCoupon}
-            selectLabel="Select shop voucher"
+            selectLabel={t('voucher.selectShop')}
             showDiscountLabel
             onOpen={() => onOpenVoucher(group.shop_id as number)}
             onRemove={onRemoveCoupon}

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { MapContainer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import { MapPin, Search, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import '@/common/components/map/leaflet-setup';
 import { addressPinIcon, VIETNAM_BOUNDS, VIETNAM_MIN_ZOOM } from '@/common/components/map/map-icons';
 import { BaseTileLayer } from '@/common/components/map/BaseTileLayer';
@@ -39,6 +40,7 @@ interface Props {
 }
 
 export function AddressMapPicker({ latitude, longitude, addressText, onChange, externalFlyTo }: Props) {
+  const { t } = useTranslation('userProfile');
   const [searching, setSearching] = useState(false);
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
 
@@ -92,7 +94,7 @@ export function AddressMapPicker({ latitude, longitude, addressText, onChange, e
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-text-primary">
           <MapPin className="mr-1 inline-block h-3.5 w-3.5" />
-          Pin on Map
+          {t('mapPicker.label')}
         </label>
         <Button
           type="button"
@@ -106,7 +108,7 @@ export function AddressMapPicker({ latitude, longitude, addressText, onChange, e
           ) : (
             <Search className="mr-1.5 h-3.5 w-3.5" />
           )}
-          Find on map
+          {t('mapPicker.findOnMap')}
         </Button>
       </div>
 
@@ -121,8 +123,11 @@ export function AddressMapPicker({ latitude, longitude, addressText, onChange, e
 
       <p className="text-xs text-text-muted">
         {position
-          ? `Selected: ${position[0].toFixed(6)}, ${position[1].toFixed(6)}`
-          : 'Click the map or use "Find on map" to set delivery coordinates'}
+          ? t('mapPicker.selected', {
+              lat: position[0].toFixed(6),
+              lng: position[1].toFixed(6),
+            })
+          : t('mapPicker.hint')}
       </p>
     </div>
   );

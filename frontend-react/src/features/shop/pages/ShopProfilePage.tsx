@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { usePagination } from '@/common/hooks/usePagination';
 import { Button } from '@/common/components/ui/Button';
 import { ProductCard } from '@/features/product';
@@ -9,17 +10,18 @@ import { ShopHeader } from '../components/ShopHeader';
 import { ShopDecorationRenderer } from '../components/decoration/ShopDecorationRenderer';
 
 export default function ShopProfilePage() {
+  const { t } = useTranslation('shop');
   const { slug } = useParams<{ slug: string }>();
   const { data: shop, isLoading: shopLoading } = useShop(slug!);
   const { params, setPage } = usePagination({ limit: 20, sort: 'created_at', order: 'desc' });
   const { data: products, isLoading: productsLoading } = useShopProducts(slug!, params);
 
   if (shopLoading) {
-    return <div className="py-12 text-center text-text-secondary">Loading shop...</div>;
+    return <div className="py-12 text-center text-text-secondary">{t('loading')}</div>;
   }
 
   if (!shop) {
-    return <div className="py-12 text-center text-text-secondary">Shop not found.</div>;
+    return <div className="py-12 text-center text-text-secondary">{t('notFound')}</div>;
   }
 
   const decoration = shop.decoration_config;
@@ -33,7 +35,7 @@ export default function ShopProfilePage() {
       )}
 
       <div>
-        <h2 className="mb-6 text-xl font-bold tracking-tight text-text-primary">All Products</h2>
+        <h2 className="mb-6 text-xl font-bold tracking-tight text-text-primary">{t('allProducts')}</h2>
 
         {productsLoading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
@@ -57,10 +59,10 @@ export default function ShopProfilePage() {
                   onClick={() => setPage(products.meta.page - 1)}
                   disabled={products.meta.page <= 1}
                 >
-                  Previous
+                  {t('pagination.previous')}
                 </Button>
                 <span className="text-sm text-text-secondary">
-                  Page {products.meta.page} of {products.meta.totalPages}
+                  {t('pagination.pageOf', { page: products.meta.page, totalPages: products.meta.totalPages })}
                 </span>
                 <Button
                   variant="secondary"
@@ -68,13 +70,13 @@ export default function ShopProfilePage() {
                   onClick={() => setPage(products.meta.page + 1)}
                   disabled={products.meta.page >= products.meta.totalPages}
                 >
-                  Next
+                  {t('pagination.next')}
                 </Button>
               </div>
             )}
           </>
         ) : (
-          <div className="py-12 text-center text-text-secondary">No products yet.</div>
+          <div className="py-12 text-center text-text-secondary">{t('noProducts')}</div>
         )}
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { ShoppingCart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useTrackActivityCallback } from '@/features/recommendations';
 import { useAddToCart } from '../hooks/useAddToCart';
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function AddToCartButton({ variantId, quantity = 1, disabled, className, productId }: Props) {
+  const { t } = useTranslation('cart');
   const { mutate: addToCart, isPending } = useAddToCart();
   const track = useTrackActivityCallback();
 
@@ -33,7 +35,7 @@ export function AddToCartButton({ variantId, quantity = 1, disabled, className, 
       className={`flex items-center justify-center gap-2 ${className ?? 'rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300'}`}
     >
       <ShoppingCart className="h-4 w-4" />
-      {isPending ? 'Adding...' : 'Add to Cart'}
+      {isPending ? t('add.adding') : t('add.addToCart')}
     </button>
   );
 }

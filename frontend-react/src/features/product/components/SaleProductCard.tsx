@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { WishlistButton } from '@/features/wishlist';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function SaleProductCard({ product }: Props) {
+  const { t } = useTranslation('product');
   const prefetch = usePrefetchProduct();
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
 
@@ -28,7 +30,7 @@ export function SaleProductCard({ product }: Props) {
           />
         ) : (
           <div className="flex h-full items-center justify-center text-text-muted">
-            No image
+            {t('card.noImage')}
           </div>
         )}
         {product.maxDiscountPercent && (
@@ -44,7 +46,7 @@ export function SaleProductCard({ product }: Props) {
         {!product.inStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface/60">
             <span className="rounded-full bg-neutral-800/80 px-3 py-1 text-xs font-semibold text-white">
-              Out of stock
+              {t('card.outOfStock')}
             </span>
           </div>
         )}

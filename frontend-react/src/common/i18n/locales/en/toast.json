@@ -1,0 +1,80 @@
+{
+  "order": {
+    "placed": "Order placed successfully!",
+    "cancelled": "Order cancelled",
+    "receiptConfirmed": "Receipt confirmed — order completed",
+    "returnRequested": "Return request submitted",
+    "statusUpdated": "Order status updated",
+    "paymentUpdated": "Payment status updated",
+    "accepted": "Order accepted for delivery",
+    "delivered": "Order marked as delivered"
+  },
+  "auth": {
+    "loggedOut": "Logged out",
+    "roleUpdated": "User role updated",
+    "statusUpdated": "User status updated"
+  },
+  "review": {
+    "submitted": "Review submitted",
+    "deleted": "Review deleted"
+  },
+  "wishlist": {
+    "added": "Added to wishlist",
+    "removed": "Removed from wishlist"
+  },
+  "coupon": {
+    "created": "Coupon created",
+    "updated": "Coupon updated",
+    "deactivated": "Coupon deactivated",
+    "reactivated": "Coupon reactivated",
+    "unlocked": "Coupon unlocked — the seller can now re-enable it"
+  },
+  "product": {
+    "created": "Product created",
+    "updated": "Product updated",
+    "statusUpdated": "Product status updated"
+  },
+  "variant": {
+    "added": "Variant added",
+    "updated": "Variant updated",
+    "deleted": "Variant deleted"
+  },
+  "image": {
+    "added": "Image added",
+    "updated": "Image updated",
+    "deleted": "Image deleted"
+  },
+  "category": {
+    "created": "Category created",
+    "updated": "Category updated",
+    "deleted": "Category deleted"
+  },
+  "profile": {
+    "updated": "Profile updated"
+  },
+  "address": {
+    "added": "Address added",
+    "updated": "Address updated",
+    "deleted": "Address deleted",
+    "defaultSet": "Default address updated"
+  },
+  "cart": {
+    "added": "Added to cart",
+    "removed": "Removed from cart"
+  },
+  "compare": {
+    "added": "Added to comparison",
+    "removed": "Removed from comparison",
+    "full": "You can compare up to {{max}} products",
+    "category": "You can only compare products in the same category"
+  },
+  "upload": {
+    "success": "Image uploaded successfully",
+    "error": "Failed to upload image",
+    "tooLarge": "File is too large (max 5MB)",
+    "invalidType": "Only JPEG, PNG, and WebP files are allowed"
+  },
+  "error": {
+    "generic": "An unexpected error occurred"
+  }
+}

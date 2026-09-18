@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   updateProfileSchema,
   type UpdateProfileFormData,
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function ProfileForm({ profile }: Props) {
+  const { t } = useTranslation('userProfile');
   const {
     register,
     handleSubmit,
@@ -49,19 +51,19 @@ export function ProfileForm({ profile }: Props) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-md">
       {error && (
         <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-4 text-sm text-rose-800">
-          {error instanceof ApiError ? error.message : 'An unexpected error occurred'}
+          {error instanceof ApiError ? error.message : t('errorFallback')}
         </div>
       )}
 
       {isSuccess && !isDirty && (
         <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 text-sm text-emerald-800 animate-fade-in">
-          Profile updated successfully
+          {t('form.updateSuccess')}
         </div>
       )}
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1">
-          Email Address
+          {t('form.email')}
         </label>
         <input
           id="email"
@@ -73,18 +75,18 @@ export function ProfileForm({ profile }: Props) {
       </div>
 
       <FormInput
-        label="Full Name"
+        label={t('form.fullName')}
         type="text"
         registration={register('full_name')}
         error={errors.full_name?.message}
       />
 
       <FormInput
-        label="Phone Number"
+        label={t('form.phone')}
         type="tel"
         registration={register('phone')}
         error={errors.phone?.message}
-        placeholder="e.g. 0901234567"
+        placeholder={t('form.phonePlaceholder')}
       />
 
       <div className="pt-2">
@@ -95,7 +97,7 @@ export function ProfileForm({ profile }: Props) {
           loading={isPending}
           className="px-6"
         >
-          Save Changes
+          {t('form.save')}
         </Button>
       </div>
     </form>

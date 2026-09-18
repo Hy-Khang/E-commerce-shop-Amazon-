@@ -1,4 +1,5 @@
 import { MapPin, Star, Pencil, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Address } from '../types/user-profile.types';
 
 interface Props {
@@ -18,6 +19,7 @@ export function AddressCard({
   isDeleting,
   isSettingDefault,
 }: Props) {
+  const { t } = useTranslation('userProfile');
   return (
     <div className={`shop-card p-5 relative overflow-hidden transition-all duration-200 hover:border-border-brand ${address.is_default ? 'ring-2 ring-brand/10 border-border-brand' : 'hover:shadow-sm'}`}>
       <div className="flex items-start justify-between gap-4">
@@ -32,7 +34,7 @@ export function AddressCard({
               {address.is_default && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-brand-light border border-brand/15 px-2 py-0.5 text-[10px] font-bold text-text-brand uppercase tracking-wider">
                   <Star className="h-3 w-3 fill-current" />
-                  Default
+                  {t('card.default')}
                 </span>
               )}
             </div>
@@ -46,7 +48,7 @@ export function AddressCard({
             type="button"
             onClick={() => onEdit(address)}
             className="rounded-lg p-2 text-text-muted hover:bg-surface-hover hover:text-text-primary transition-colors"
-            title="Edit Address"
+            title={t('card.editTitle')}
           >
             <Pencil className="h-4 w-4" />
           </button>
@@ -55,7 +57,7 @@ export function AddressCard({
             onClick={() => onDelete(address.id)}
             disabled={isDeleting}
             className="rounded-lg p-2 text-text-muted hover:bg-rose-50 hover:text-rose-600 transition-colors disabled:opacity-50"
-            title="Delete Address"
+            title={t('card.deleteTitle')}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -70,7 +72,7 @@ export function AddressCard({
             disabled={isSettingDefault}
             className="text-xs font-semibold text-text-brand hover:text-brand-hover hover:underline transition-colors disabled:opacity-50"
           >
-            {isSettingDefault ? 'Setting as default...' : 'Set as default address'}
+            {isSettingDefault ? t('card.settingDefault') : t('card.setDefault')}
           </button>
         </div>
       )}

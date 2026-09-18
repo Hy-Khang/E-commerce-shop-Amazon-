@@ -2,7 +2,7 @@ import {
   Clock, CheckCircle, Truck, Package, CheckCircle2, XCircle, RotateCcw,
 } from 'lucide-react';
 import { formatDate } from '@/common/utils/format.util';
-import { ORDER_STATUS_LABELS } from '@/common/constants/routes';
+import { enumLabel, useEnumLabel } from '@/common/i18n';
 import type { StatusHistoryEntry } from '../types/order-tracking.types';
 
 const STATUS_CONFIG: Record<string, { icon: typeof Clock; color: string; bg: string }> = {
@@ -15,17 +15,9 @@ const STATUS_CONFIG: Record<string, { icon: typeof Clock; color: string; bg: str
   return_requested: { icon: RotateCcw, color: 'text-orange-500', bg: 'bg-orange-50 ring-orange-200 dark:bg-orange-500/15 dark:ring-orange-400/25' },
 };
 
-const ACTOR_LABELS: Record<string, string> = {
-  SYSTEM: 'System',
-  CUSTOMER: 'Customer',
-  SELLER: 'Seller',
-  SHIPPER: 'Shipper',
-  ADMIN: 'Admin',
-};
-
 function getActorDisplay(entry: StatusHistoryEntry): string {
-  if (entry.actorType === 'SYSTEM') return 'Automatic';
-  const role = ACTOR_LABELS[entry.actorType] ?? entry.actorType;
+  if (entry.actorType === 'SYSTEM') return enumLabel('actorType', 'automatic');
+  const role = enumLabel('actorType', entry.actorType.toLowerCase());
   return entry.actorName ? `${entry.actorName} (${role})` : role;
 }
 
@@ -34,6 +26,7 @@ interface Props {
 }
 
 export function OrderTimeline({ timeline }: Props) {
+  useEnumLabel(); // subscribe to language changes
   if (timeline.length === 0) return null;
 
   return (
@@ -55,7 +48,7 @@ export function OrderTimeline({ timeline }: Props) {
             </div>
             <div className="min-w-0 flex-1 pt-0.5">
               <p className="text-sm font-semibold text-text-primary">
-                {ORDER_STATUS_LABELS[entry.toStatus] ?? entry.toStatus}
+                {enumLabel('orderStatus', entry.toStatus)}
               </p>
               <p className="mt-0.5 text-xs text-text-secondary">
                 {getActorDisplay(entry)} &middot; {formatDate(entry.createdAt)}

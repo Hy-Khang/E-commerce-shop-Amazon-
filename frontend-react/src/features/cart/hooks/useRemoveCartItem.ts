@@ -4,12 +4,12 @@ import { cartKeys } from './useCart';
 import type { Cart } from '../types/cart.types';
 import { useCartStore } from '../stores/cart.store';
 import { showErrorToast, showSuccessToast } from '@/common/components/feedback/toast';
-import { useTranslation } from '@/common/i18n';
+import { useTranslation } from 'react-i18next';
 
 export function useRemoveCartItem() {
   const queryClient = useQueryClient();
   const setItemCount = useCartStore((s) => s.setItemCount);
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: (id: number) => cartService.removeItem(id),
@@ -30,7 +30,7 @@ export function useRemoveCartItem() {
     },
 
     onSuccess: () => {
-      showSuccessToast(t((m) => m.toast.cart.removed), 'cart-success');
+      showSuccessToast(t('cart.removed'), 'cart-success');
     },
 
     onError: (err, _variables, context) => {

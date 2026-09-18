@@ -1,20 +1,22 @@
 import { Link } from 'react-router-dom';
 import { Scale, X } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { ROUTES } from '@/common/constants/routes';
 import { getImageUrl } from '@/common/utils/format.util';
 import { hasAnyStock } from '@/features/product';
 import { AddToCartButton } from '@/features/cart';
 import { useCompare } from '../hooks/useCompare';
-import { COMPARISON_ROWS } from '../components/comparisonRows';
+import { getComparisonRows } from '../components/comparisonRows';
 
 export default function ComparePage() {
+  const { t } = useTranslation('compare');
   const { products, count, isLoading, remove, clear } = useCompare();
 
   // Products selected but not yet hydrated — avoid flashing a column-less table.
   if (count > 0 && isLoading && products.length === 0) {
     return (
       <div className="flex items-center justify-center py-16 text-sm text-text-secondary">
-        Loading products to compare…
+        {t('page.loading')}
       </div>
     );
   }
@@ -23,15 +25,19 @@ export default function ComparePage() {
     return (
       <div className="flex flex-col items-center py-16 text-center">
         <Scale className="h-16 w-16 text-text-muted/60" />
-        <h1 className="mt-4 text-lg font-semibold text-text-primary">No products to compare yet</h1>
+        <h1 className="mt-4 text-lg font-semibold text-text-primary">{t('page.empty.title')}</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Tap the <span className="font-medium">Compare</span> button on a product to add it here.
+          <Trans
+            i18nKey="page.empty.description"
+            t={t}
+            components={{ 1: <span className="font-medium" /> }}
+          />
         </p>
         <Link
           to={ROUTES.PRODUCTS}
           className="mt-6 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
         >
-          Explore products
+          {t('page.empty.explore')}
         </Link>
       </div>
     );
@@ -40,13 +46,13 @@ export default function ComparePage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary">Compare products</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary">{t('page.title')}</h1>
         <button
           type="button"
           onClick={clear}
           className="rounded-lg px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover"
         >
-          Clear all
+          {t('page.clearAll')}
         </button>
       </div>
 
@@ -61,7 +67,7 @@ export default function ComparePage() {
                     <button
                       type="button"
                       onClick={() => remove(p.id)}
-                      aria-label="Remove from comparison"
+                      aria-label={t('toggle.remove')}
                       className="absolute right-0 top-0 rounded-full p-1 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
                     >
                       <X className="h-4 w-4" />
@@ -76,7 +82,7 @@ export default function ComparePage() {
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center text-text-muted">
-                            No image
+                            {t('page.noImage')}
                           </div>
                         )}
                       </div>
@@ -90,7 +96,7 @@ export default function ComparePage() {
             </tr>
           </thead>
           <tbody>
-            {COMPARISON_ROWS.map((row) => {
+            {getComparisonRows(t).map((row) => {
               const differs =
                 products.length > 1 && new Set(products.map(row.signature)).size > 1;
               return (
@@ -130,7 +136,7 @@ export default function ComparePage() {
                       to={ROUTES.PRODUCT_DETAIL(p.slug)}
                       className="block rounded-lg border border-border-brand px-3 py-2 text-center text-sm font-semibold text-text-brand transition-colors hover:bg-brand-light"
                     >
-                      Select to buy
+                      {t('page.selectToBuy')}
                     </Link>
                   )}
                 </td>

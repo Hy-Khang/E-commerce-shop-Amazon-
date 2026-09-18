@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Loader2, Star, Store, PackageCheck, RotateCcw, RefreshCw } from 'lucide-react';
 import { formatPrice, formatDate } from '@/common/utils/format.util';
 import { Button } from '@/common/components/ui/Button';
-import { ROUTES, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/common/constants/routes';
+import { ROUTES } from '@/common/constants/routes';
+import { useEnumLabel } from '@/common/i18n';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 import { showErrorToast } from '@/common/components/feedback/toast';
 import { ReviewForm } from '@/features/review';
@@ -20,6 +22,8 @@ import { OrderTrackingMap } from '../components/OrderTrackingMap';
 import { isOrderCancellable, getPaymentStatusColor, groupItemsByShop } from '../utils/order.util';
 
 export default function OrderDetailPage() {
+  const { t } = useTranslation('order');
+  const enumLabel = useEnumLabel();
   const { id } = useParams<{ id: string }>();
   const orderId = Number(id);
   const { data: order, isLoading, isError } = useOrder(orderId);
@@ -44,9 +48,9 @@ export default function OrderDetailPage() {
   if (isError || !order) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-text-secondary">
-        <p>Order not found.</p>
+        <p>{t('detail.notFound')}</p>
         <Link to={ROUTES.ORDERS} className="mt-4 text-sm font-semibold text-text-brand hover:text-primary-700 transition-colors">
-          Back to orders
+          {t('detail.backToOrders')}
         </Link>
       </div>
     );
@@ -80,12 +84,12 @@ export default function OrderDetailPage() {
         className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-text-brand hover:text-primary-700 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to orders
+        {t('detail.backToOrders')}
       </Link>
 
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">Order #{order.id}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-text-primary">{t('detail.orderNumber', { id: order.id })}</h1>
           <p className="mt-1 text-sm text-text-muted">{formatDate(order.created_at)}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -97,7 +101,7 @@ export default function OrderDetailPage() {
               onClick={handleCancel}
               disabled={cancelOrder.isPending}
             >
-              {cancelOrder.isPending ? 'Cancelling...' : 'Cancel Order'}
+              {cancelOrder.isPending ? t('detail.cancelling') : t('detail.cancelOrder')}
             </Button>
           )}
           {canRetryPayment && (
@@ -108,7 +112,7 @@ export default function OrderDetailPage() {
               loading={createPayment.isPending}
             >
               <RefreshCw className="mr-1.5 h-4 w-4" />
-              Pay Now
+              {t('detail.payNow')}
             </Button>
           )}
           {isDelivered && (
@@ -120,7 +124,7 @@ export default function OrderDetailPage() {
                 disabled={confirmReceipt.isPending || requestReturn.isPending}
               >
                 <PackageCheck className="mr-1.5 h-4 w-4" />
-                Confirm Receipt
+                {t('detail.confirmReceipt')}
               </Button>
               <Button
                 variant="secondary"
@@ -129,7 +133,7 @@ export default function OrderDetailPage() {
                 disabled={confirmReceipt.isPending || requestReturn.isPending}
               >
                 <RotateCcw className="mr-1.5 h-4 w-4" />
-                Return / Refund
+                {t('detail.returnRefund')}
               </Button>
             </>
           )}
@@ -141,7 +145,7 @@ export default function OrderDetailPage() {
           {/* Order Items grouped by shop */}
           <div className="shop-card p-6">
             <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">
-              Items ({order.order_items.length})
+              {t('detail.itemsHeading', { count: order.order_items.length })}
             </h2>
             {[...groupItemsByShop(order.order_items)].map(([shopId, group]) => (
               <div key={shopId ?? 'no-shop'}>
@@ -166,12 +170,12 @@ export default function OrderDetailPage() {
                         {reviewingItemId === item.id ? (
                           <div className="rounded-xl border border-border-default bg-surface-hover/50 p-5">
                             <div className="mb-3.5 flex items-center justify-between">
-                              <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">Write a Review</h3>
+                              <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">{t('detail.writeReview')}</h3>
                               <button
                                 onClick={() => setReviewingItemId(null)}
                                 className="text-xs font-semibold text-text-muted hover:text-text-primary transition-colors"
                               >
-                                Cancel
+                                {t('detail.cancel')}
                               </button>
                             </div>
                             <ReviewForm
@@ -186,7 +190,7 @@ export default function OrderDetailPage() {
                             className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-brand hover:text-primary-700 transition-colors"
                           >
                             <Star className="h-3.5 w-3.5 fill-current" />
-                            Write a Review
+                            {t('detail.writeReview')}
                           </button>
                         )}
                       </div>
@@ -199,7 +203,7 @@ export default function OrderDetailPage() {
 
           {tracking && tracking.timeline.length > 0 && (
             <div className="shop-card p-6">
-              <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">Order Timeline</h2>
+              <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">{t('detail.timeline')}</h2>
               <OrderTimeline timeline={tracking.timeline} />
             </div>
           )}
@@ -207,7 +211,7 @@ export default function OrderDetailPage() {
           {tracking?.shipperLocation && (
             <div className="shop-card p-6">
               <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">
-                {order.status === 'shipping' ? 'Live Tracking' : 'Last Known Shipper Location'}
+                {order.status === 'shipping' ? t('detail.liveTracking') : t('detail.lastKnownLocation')}
               </h2>
               <OrderTrackingMap
                 shipperLocation={tracking.shipperLocation}
@@ -220,25 +224,25 @@ export default function OrderDetailPage() {
         <div className="space-y-6">
           {/* Payment & Shipping Info */}
           <div className="shop-card p-6">
-            <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">Order Info</h2>
+            <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">{t('detail.orderInfo')}</h2>
 
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Payment</dt>
+                <dt className="text-text-secondary">{t('detail.payment')}</dt>
                 <dd className="font-semibold text-text-primary">
-                  {PAYMENT_METHOD_LABELS[order.payment_method]}
+                  {enumLabel('paymentMethod', order.payment_method)}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Payment Status</dt>
+                <dt className="text-text-secondary">{t('detail.paymentStatus')}</dt>
                 <dd>
                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getPaymentStatusColor(order.payment_status)}`}>
-                    {PAYMENT_STATUS_LABELS[order.payment_status]}
+                    {enumLabel('paymentStatus', order.payment_status)}
                   </span>
                 </dd>
               </div>
               <div className="border-t border-border-default pt-3">
-                <dt className="mb-1 text-text-secondary">Shipping Address</dt>
+                <dt className="mb-1 text-text-secondary">{t('detail.shippingAddress')}</dt>
                 <dd className="text-text-secondary">
                   <p className="font-semibold text-text-primary">{order.shipping_address.full_name}</p>
                   <p>{order.shipping_address.phone}</p>
@@ -251,10 +255,10 @@ export default function OrderDetailPage() {
 
           {/* Order Summary */}
           <div className="shop-card p-6">
-            <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">Summary</h2>
+            <h2 className="mb-4 text-lg font-bold tracking-tight text-text-primary">{t('detail.summary')}</h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-text-secondary">
-                <span>Subtotal</span>
+                <span>{t('detail.subtotal')}</span>
                 <span>
                   {formatPrice(
                     order.total_amount +
@@ -267,30 +271,30 @@ export default function OrderDetailPage() {
               {order.applied_coupons && order.applied_coupons.length > 0 ? (
                 order.applied_coupons.map((c) => (
                   <div key={c.code} className="flex justify-between font-medium text-success-600">
-                    <span>Coupon ({c.code})</span>
+                    <span>{t('detail.coupon', { code: c.code })}</span>
                     <span>-{formatPrice(c.discount_amount)}</span>
                   </div>
                 ))
               ) : (
                 order.coupon_code && (
                   <div className="flex justify-between font-medium text-success-600">
-                    <span>Coupon ({order.coupon_code})</span>
+                    <span>{t('detail.coupon', { code: order.coupon_code })}</span>
                     <span>-{formatPrice(order.discount_amount)}</span>
                   </div>
                 )
               )}
               {order.coin_discount > 0 && (
                 <div className="flex justify-between font-medium text-amber-600">
-                  <span>Coins</span>
+                  <span>{t('detail.coins')}</span>
                   <span>-{formatPrice(order.coin_discount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-text-secondary">
-                <span>Shipping</span>
+                <span>{t('detail.shipping')}</span>
                 <span>{formatPrice(order.shipping_fee)}</span>
               </div>
               <div className="flex justify-between border-t border-border-default pt-2 text-base font-bold text-text-primary">
-                <span>Total</span>
+                <span>{t('detail.total')}</span>
                 <span>{formatPrice(order.total_amount)}</span>
               </div>
             </div>
@@ -302,10 +306,10 @@ export default function OrderDetailPage() {
 
       <ConfirmModal
         open={showCancelConfirm}
-        title="Cancel Order"
-        message="Are you sure you want to cancel this order? This action cannot be undone."
+        title={t('detail.confirm.cancelTitle')}
+        message={t('detail.confirm.cancelMessage')}
         variant="danger"
-        confirmLabel="Cancel Order"
+        confirmLabel={t('detail.confirm.cancelConfirm')}
         loading={cancelOrder.isPending}
         onConfirm={() => {
           setShowCancelConfirm(false);
@@ -316,10 +320,10 @@ export default function OrderDetailPage() {
 
       <ConfirmModal
         open={showConfirmReceipt}
-        title="Confirm Receipt"
-        message="Confirm that you have received this order? Once confirmed, you can write reviews for the products."
+        title={t('detail.confirm.receiptTitle')}
+        message={t('detail.confirm.receiptMessage')}
         variant="info"
-        confirmLabel="Confirm Receipt"
+        confirmLabel={t('detail.confirm.receiptConfirm')}
         loading={confirmReceipt.isPending}
         onConfirm={() => {
           setShowConfirmReceipt(false);
@@ -330,10 +334,10 @@ export default function OrderDetailPage() {
 
       <ConfirmModal
         open={showReturnRequest}
-        title="Request Return / Refund"
-        message="Are you sure you want to request a return for this order? An admin will review your request."
+        title={t('detail.confirm.returnTitle')}
+        message={t('detail.confirm.returnMessage')}
         variant="warning"
-        confirmLabel="Submit Return Request"
+        confirmLabel={t('detail.confirm.returnConfirm')}
         loading={requestReturn.isPending}
         onConfirm={() => {
           setShowReturnRequest(false);

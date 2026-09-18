@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { useCategories } from '../hooks/useCategories';
@@ -33,6 +34,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
   depth?: number;
   defaultExpanded?: boolean;
 }) {
+  const { t } = useTranslation('product');
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showAll, setShowAll] = useState(false);
 
@@ -90,7 +92,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
                 onClick={() => setShowAll(true)}
                 className="ml-7 py-1 text-xs font-semibold text-text-brand hover:text-primary-700 transition-colors"
               >
-                +{hiddenCount} more
+                {t('categorySidebar.more', { count: hiddenCount })}
               </button>
             </li>
           )}
@@ -101,7 +103,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
                 onClick={() => setShowAll(false)}
                 className="ml-7 py-1 text-xs font-semibold text-text-brand hover:text-primary-700 transition-colors"
               >
-                Show less
+                {t('categorySidebar.showLess')}
               </button>
             </li>
           )}
@@ -112,6 +114,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
 }
 
 export function CategorySidebar() {
+  const { t } = useTranslation('product');
   const { slug } = useParams<{ slug: string }>();
   const { data: categories, isLoading } = useCategories();
 
@@ -135,7 +138,7 @@ export function CategorySidebar() {
 
   return (
     <nav>
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Categories</h3>
+      <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">{t('categorySidebar.title')}</h3>
       <ul className="space-y-0.5">
         {categories.filter((cat) => cat.parent_id === null).map((cat) => (
           <CategoryNode

@@ -1,12 +1,16 @@
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, ArrowRight, ShoppingBag, Loader2, Store } from 'lucide-react';
 import { formatPrice } from '@/common/utils/format.util';
-import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
+import { ROUTES } from '@/common/constants/routes';
+import { useEnumLabel } from '@/common/i18n';
 import { Button } from '@/common/components/ui/Button';
 import { useOrderGroup } from '../hooks/useOrderGroup';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 
 export default function CheckoutSuccessPage() {
+  const { t } = useTranslation('order');
+  const enumLabel = useEnumLabel();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const orderGroupId = searchParams.get('orderGroupId');
@@ -17,7 +21,7 @@ export default function CheckoutSuccessPage() {
     return (
       <div className="flex h-96 flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-text-brand" />
-        <p className="mt-4 text-sm text-text-secondary">Loading order details...</p>
+        <p className="mt-4 text-sm text-text-secondary">{t('success.loading')}</p>
       </div>
     );
   }
@@ -25,9 +29,9 @@ export default function CheckoutSuccessPage() {
   if (isError || orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-text-secondary">Order not found.</p>
+        <p className="text-text-secondary">{t('success.notFound')}</p>
         <Link to={ROUTES.HOME} className="mt-4">
-          <Button>Back to Home</Button>
+          <Button>{t('success.backHome')}</Button>
         </Link>
       </div>
     );
@@ -43,17 +47,17 @@ export default function CheckoutSuccessPage() {
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-2 text-text-brand font-semibold">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-text-brand">1</span>
-            <span className="text-xs">Cart</span>
+            <span className="text-xs">{t('steps.cart')}</span>
           </div>
           <div className="mx-4 h-[1px] w-12 bg-border-brand" />
           <div className="flex items-center gap-2 text-text-brand font-semibold">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-text-brand">2</span>
-            <span className="text-xs">Checkout</span>
+            <span className="text-xs">{t('steps.checkout')}</span>
           </div>
           <div className="mx-4 h-[1px] w-12 bg-border-brand" />
           <div className="flex items-center gap-2 text-text-brand font-semibold">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">3</span>
-            <span className="text-xs">Complete</span>
+            <span className="text-xs">{t('steps.complete')}</span>
           </div>
         </div>
       </div>
@@ -65,11 +69,11 @@ export default function CheckoutSuccessPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">Thank You for Your Purchase!</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-text-primary">{t('success.thankYou')}</h1>
           <p className="text-sm text-text-secondary">
             {orders.length > 1
-              ? `Your checkout created ${orders.length} orders (one per shop) and they are now being processed.`
-              : 'Your order has been placed successfully and is now being processed.'}
+              ? t('success.multiOrder', { count: orders.length })
+              : t('success.singleOrder')}
           </p>
         </div>
 
@@ -89,20 +93,20 @@ export default function CheckoutSuccessPage() {
               </div>
 
               <div className="flex justify-between text-sm">
-                <span className="text-text-secondary">Order #{order.id}</span>
+                <span className="text-text-secondary">{t('success.orderNumber', { id: order.id })}</span>
                 <span className="font-semibold text-text-primary">{formatPrice(order.total_amount)}</span>
               </div>
 
               <div className="flex justify-between text-sm">
-                <span className="text-text-secondary">Items</span>
-                <span className="text-text-primary">{order.order_items.length} item(s)</span>
+                <span className="text-text-secondary">{t('success.items')}</span>
+                <span className="text-text-primary">{t('success.itemCount', { count: order.order_items.length })}</span>
               </div>
 
               <button
                 onClick={() => navigate(ROUTES.ORDER_DETAIL(order.id))}
                 className="text-xs font-semibold text-text-brand hover:text-primary-700 transition-colors"
               >
-                View Details
+                {t('success.viewDetails')}
               </button>
             </div>
           ))}
@@ -111,14 +115,14 @@ export default function CheckoutSuccessPage() {
         {/* Shared Info */}
         <div className="rounded-xl border border-border-default bg-surface-hover/50 p-6 text-left space-y-4">
           <div className="flex justify-between border-b border-border-default pb-3 text-sm">
-            <span className="text-text-secondary">Payment Method</span>
+            <span className="text-text-secondary">{t('success.paymentMethod')}</span>
             <span className="font-semibold text-text-primary">
-              {PAYMENT_METHOD_LABELS[firstOrder.payment_method]}
+              {enumLabel('paymentMethod', firstOrder.payment_method)}
             </span>
           </div>
 
           <div className="border-b border-border-default pb-3 text-sm space-y-1">
-            <span className="text-text-secondary block">Shipping Address</span>
+            <span className="text-text-secondary block">{t('success.shippingAddress')}</span>
             <span className="font-medium text-text-primary block">{firstOrder.shipping_address.full_name}</span>
             <span className="text-text-secondary block text-xs">
               {firstOrder.shipping_address.phone} <br />
@@ -127,7 +131,7 @@ export default function CheckoutSuccessPage() {
           </div>
 
           <div className="flex justify-between pt-1 text-base font-bold text-text-primary">
-            <span>Total Amount</span>
+            <span>{t('success.totalAmount')}</span>
             <span className="text-text-price">{formatPrice(totalAmount)}</span>
           </div>
         </div>
@@ -141,7 +145,7 @@ export default function CheckoutSuccessPage() {
             className="flex-1 py-3"
             icon={ShoppingBag}
           >
-            Continue Shopping
+            {t('success.continueShopping')}
           </Button>
           <Button
             type="button"
@@ -150,7 +154,7 @@ export default function CheckoutSuccessPage() {
             className="flex-1 py-3"
             icon={ArrowRight}
           >
-            View My Orders
+            {t('success.viewMyOrders')}
           </Button>
         </div>
       </div>

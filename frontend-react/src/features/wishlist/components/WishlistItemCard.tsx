@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Heart, Package } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import type { WishlistItem } from '../types/wishlist.types';
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function WishlistItemCard({ item, onRemove, isRemoving }: Props) {
+  const { t } = useTranslation('wishlist');
   return (
     <div className={`shop-card p-5 relative overflow-hidden transition-all duration-200 hover:border-border-strong ${!item.product_is_active ? 'opacity-60' : ''}`}>
       <div className="flex gap-4 items-start">
@@ -43,7 +45,7 @@ export function WishlistItemCard({ item, onRemove, isRemoving }: Props) {
 
               {!item.product_is_active && (
                 <span className="mt-1.5 inline-flex items-center rounded bg-surface-hover px-1.5 py-0.5 text-[10px] font-bold text-text-muted uppercase tracking-wider">
-                  Unavailable
+                  {t('card.unavailable')}
                 </span>
               )}
 
@@ -64,12 +66,12 @@ export function WishlistItemCard({ item, onRemove, isRemoving }: Props) {
                     {formatPrice(item.min_price)}
                   </span>
                 ) : (
-                  <span className="text-xs text-text-muted">Price unavailable</span>
+                  <span className="text-xs text-text-muted">{t('card.priceUnavailable')}</span>
                 )}
               </div>
 
               <p className="mt-2 text-[10px] text-text-muted uppercase tracking-wider font-medium">
-                Added {formatDate(item.added_at)}
+                {t('card.added', { date: formatDate(item.added_at) })}
               </p>
             </div>
 
@@ -77,7 +79,7 @@ export function WishlistItemCard({ item, onRemove, isRemoving }: Props) {
               onClick={() => onRemove(item.product_id)}
               disabled={isRemoving}
               className="rounded-full p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/15 transition-colors disabled:opacity-50 shrink-0"
-              aria-label="Remove from wishlist"
+              aria-label={t('card.remove')}
             >
               <Heart className="h-4.5 w-4.5 fill-current" />
             </button>

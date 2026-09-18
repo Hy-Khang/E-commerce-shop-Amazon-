@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { formatPrice } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function CartSummary({ items, showVoucher, onOpenPlatformVoucher }: Props) {
+  const { t } = useTranslation('cart');
   const navigate = useNavigate();
   const appliedCoupons = useAppliedCouponsStore((s) => s.appliedCoupons);
   const removeCoupon = useAppliedCouponsStore((s) => s.remove);
@@ -48,16 +50,16 @@ export function CartSummary({ items, showVoucher, onOpenPlatformVoucher }: Props
 
   return (
     <div className="rounded-xl border border-border-default bg-surface p-6">
-      <h2 className="text-lg font-bold tracking-tight text-text-primary">Order Summary</h2>
+      <h2 className="text-lg font-bold tracking-tight text-text-primary">{t('summary.title')}</h2>
 
       {showVoucher && (
         <div className="mt-4 border-b border-border-default pb-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-            Platform voucher
+            {t('voucher.platform')}
           </p>
           <VoucherRow
             applied={platformCoupon}
-            selectLabel="Select platform voucher"
+            selectLabel={t('voucher.selectPlatform')}
             onOpen={onOpenPlatformVoucher}
             onRemove={removeCoupon}
           />
@@ -66,29 +68,29 @@ export function CartSummary({ items, showVoucher, onOpenPlatformVoucher }: Props
 
       <div className="mt-4 space-y-2">
         <div className="flex justify-between text-sm text-text-secondary">
-          <span>Items ({itemCount})</span>
+          <span>{t('summary.items', { count: itemCount })}</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
         {estimatedDiscount > 0 && (
           <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-400">
-            <span>Discount (est.)</span>
+            <span>{t('summary.discountEst')}</span>
             <span>-{formatPrice(estimatedDiscount)}</span>
           </div>
         )}
         <div className="flex justify-between text-sm text-text-secondary">
-          <span>Shipping</span>
-          <span className="text-text-muted">Calculated at checkout</span>
+          <span>{t('summary.shipping')}</span>
+          <span className="text-text-muted">{t('summary.calculatedAtCheckout')}</span>
         </div>
       </div>
 
       <div className="mt-4 border-t border-border-default pt-4">
         <div className="flex justify-between text-base font-bold text-text-primary">
-          <span>Subtotal</span>
+          <span>{t('summary.subtotal')}</span>
           <span>{formatPrice(subtotal - estimatedDiscount)}</span>
         </div>
         {estimatedDiscount > 0 && (
           <p className="mt-1 text-xs text-text-muted">
-            ≈ estimate · confirmed at checkout
+            {t('summary.estimateNote')}
           </p>
         )}
       </div>
@@ -98,14 +100,14 @@ export function CartSummary({ items, showVoucher, onOpenPlatformVoucher }: Props
         disabled={items.length === 0}
         className="mt-6 w-full rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-neutral-300 dark:disabled:bg-neutral-700"
       >
-        Proceed to Checkout
+        {t('summary.proceedToCheckout')}
       </button>
 
       <button
         onClick={() => navigate(ROUTES.PRODUCTS)}
         className="mt-2 w-full rounded-lg border border-border-default px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface-hover"
       >
-        Continue Shopping
+        {t('summary.continueShopping')}
       </button>
     </div>
   );

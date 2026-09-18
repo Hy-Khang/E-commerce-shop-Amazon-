@@ -1,0 +1,27 @@
+{
+  "ariaLabel": "Thông báo",
+  "markAllRead": "Đánh dấu tất cả đã đọc",
+  "markRead": "Đánh dấu đã đọc",
+  "viewOrder": "Xem đơn hàng",
+  "dropdown": {
+    "title": "Thông báo",
+    "empty": "Chưa có thông báo nào",
+    "viewAll": "Xem tất cả thông báo"
+  },
+  "page": {
+    "titleCustomer": "Thông báo của tôi",
+    "titlePortal": "Thông báo",
+    "subtitleCustomer": "Cập nhật tình trạng đơn hàng của bạn.",
+    "subtitlePortal": "Thông báo cập nhật và thay đổi trạng thái đơn hàng.",
+    "emptyTitle": "Chưa có thông báo nào",
+    "emptyDescriptionCustomer": "Bạn sẽ nhận được thông báo ở đây khi trạng thái đơn hàng thay đổi.",
+    "emptyDescriptionPortal": "Bạn sẽ nhận được thông báo ở đây về các cập nhật đơn hàng.",
+    "count_other": "{{count}} thông báo"
+  },
+  "time": {
+    "justNow": "Vừa xong",
+    "minutesAgo": "{{count}} phút trước",
+    "hoursAgo": "{{count}} giờ trước",
+    "daysAgo": "{{count}} ngày trước"
+  }
+}

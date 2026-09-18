@@ -1,0 +1,94 @@
+{
+  "orderStatus": {
+    "pending": "Chờ xác nhận",
+    "confirmed": "Đã xác nhận",
+    "shipping": "Đang giao",
+    "delivered": "Đã giao",
+    "completed": "Hoàn thành",
+    "return_requested": "Yêu cầu trả hàng",
+    "cancelled": "Đã hủy"
+  },
+  "paymentStatus": {
+    "unpaid": "Chưa thanh toán",
+    "paid": "Đã thanh toán"
+  },
+  "paymentMethod": {
+    "cod": "Thanh toán khi nhận hàng",
+    "vnpay": "VNPay",
+    "momo": "MoMo"
+  },
+  "transactionStatus": {
+    "pending": "Đang chờ",
+    "completed": "Thành công",
+    "failed": "Thất bại",
+    "refunded": "Đã hoàn tiền"
+  },
+  "shopStatus": {
+    "pending_verification": "Chờ duyệt",
+    "active": "Đang hoạt động",
+    "suspended": "Tạm ngưng",
+    "banned": "Bị cấm"
+  },
+  "couponScope": {
+    "all": "Toàn bộ đơn hàng",
+    "categories": "Danh mục cụ thể",
+    "products": "Sản phẩm cụ thể"
+  },
+  "couponDiscountType": {
+    "fixed": "Số tiền cố định",
+    "percentage": "Phần trăm"
+  },
+  "blockType": {
+    "hero": "Ảnh bìa",
+    "rich_text": "Văn bản",
+    "image": "Hình ảnh",
+    "product_grid": "Lưới sản phẩm"
+  },
+  "actorType": {
+    "customer": "Khách hàng",
+    "seller": "Người bán",
+    "shipper": "Người giao hàng",
+    "admin": "Quản trị viên",
+    "system": "Hệ thống",
+    "automatic": "Tự động"
+  },
+  "coinTxType": {
+    "earn": "Tích Xu",
+    "redeem": "Dùng Xu",
+    "expire": "Hết hạn",
+    "reverse_earn": "Thu hồi",
+    "refund": "Hoàn Xu"
+  },
+  "walletTxType": {
+    "sale_earning": "Doanh thu bán hàng",
+    "withdrawal": "Rút tiền",
+    "reversal": "Hoàn trả",
+    "withdrawal_refund": "Hoàn tiền rút"
+  },
+  "withdrawalStatus": {
+    "pending": "Đang chờ",
+    "approved": "Đã duyệt",
+    "rejected": "Từ chối"
+  },
+  "sellerAppStatus": {
+    "pending": "Đang chờ",
+    "approved": "Đã duyệt",
+    "rejected": "Từ chối"
+  },
+  "flashCampaignStatus": {
+    "scheduled": "Đã lên lịch",
+    "active": "Đang diễn ra",
+    "ended": "Đã kết thúc"
+  },
+  "flashItemStatus": {
+    "pending": "Chờ duyệt",
+    "approved": "Đã duyệt",
+    "rejected": "Từ chối"
+  },
+  "userRole": {
+    "customer": "Khách hàng",
+    "seller": "Người bán",
+    "shipper": "Người giao hàng",
+    "admin": "Quản trị viên"
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "widget": {
+    "loginSuccess": "Đăng nhập thành công",
+    "close": "Đóng trợ lý AI",
+    "open": "Mở trợ lý AI"
+  },
+  "input": {
+    "placeholder": "Hỏi về sản phẩm, chính sách…",
+    "send": "Gửi tin nhắn"
+  },
+  "panel": {
+    "title": "Trợ lý mua sắm AI",
+    "subtitle": "Luôn sẵn sàng hỗ trợ",
+    "newConversation": "Cuộc trò chuyện mới",
+    "expand": "Phóng to",
+    "expandMore": "Phóng to hơn",
+    "minimize": "Thu nhỏ",
+    "close": "Đóng"
+  },
+  "bubble": {
+    "typing": "Đang nhập"
+  },
+  "loginPrompt": {
+    "title": "Đăng nhập để tiếp tục",
+    "close": "Đóng",
+    "description": "Đăng nhập và chúng tôi sẽ tiếp tục đúng nơi bạn dừng lại — không cần phải hỏi lại.",
+    "error": "Đăng nhập thất bại. Vui lòng thử lại.",
+    "email": "Email",
+    "emailPlaceholder": "ban@example.com",
+    "password": "Mật khẩu",
+    "passwordPlaceholder": "••••••••",
+    "signingIn": "Đang đăng nhập…",
+    "signIn": "Đăng nhập",
+    "or": "hoặc",
+    "noAccount": "Chưa có tài khoản?",
+    "register": "Đăng ký"
+  },
+  "needsLoginCard": {
+    "signedIn": "Đã đăng nhập — bạn có thể tiếp tục.",
+    "description": "Bạn cần đăng nhập để sử dụng tính năng này.",
+    "signIn": "Đăng nhập"
+  },
+  "checkoutVoucher": {
+    "title": "Voucher",
+    "offPercent": "Giảm {{value}}%",
+    "offPercentCap": "Giảm {{value}}% (tối đa {{cap}})",
+    "offFlat": "Giảm {{value}}",
+    "saveAmount": "Tiết kiệm {{amount}} · chạm để dùng",
+    "spendMore": "Mua thêm <1>{{amount}}</1> để dùng <2>{{code}}</2> ({{discount}})",
+    "changeVoucher": "Thay đổi hoặc thêm voucher",
+    "selectVoucher": "Chọn hoặc nhập mã voucher",
+    "updating": "Đang cập nhật tổng tiền…",
+    "error": "Không thể áp dụng mã — mã có thể đã hết hạn hoặc không đủ điều kiện cho giỏ hàng này. Hãy xóa mã để tiếp tục.",
+    "remove": "Xóa {{code}}"
+  },
+  "checkoutProposal": {
+    "needsLogin": "Bạn cần đăng nhập để đặt hàng.",
+    "signIn": "Đăng nhập để đặt hàng",
+    "success": "Đặt hàng thành công!",
+    "orderCode": "Mã đơn hàng:",
+    "viewOrders": "Xem đơn hàng của tôi",
+    "title": "Xác nhận đơn hàng",
+    "subtotal": "Tạm tính",
+    "discount": "Giảm giá",
+    "coins": "Xu",
+    "shipping": "Phí vận chuyển",
+    "total": "Tổng cộng",
+    "shippingAddress": "Địa chỉ giao hàng",
+    "loadingAddresses": "Đang tải địa chỉ…",
+    "addAddress": "+ Thêm địa chỉ giao hàng",
+    "defaultAddress": " (mặc định)",
+    "paymentMethod": "Phương thức thanh toán",
+    "cod": "Thanh toán khi nhận hàng (COD)",
+    "confirmCod": "Xác nhận đặt hàng",
+    "confirmPay": "Đặt hàng & thanh toán"
+  },
+  "orderPlacedCard": {
+    "success": "Đặt hàng thành công!",
+    "orderCode": "Mã đơn hàng:",
+    "completePayment": "Hoàn tất thanh toán để xác nhận đơn hàng.",
+    "whatNext": "Bạn muốn làm gì tiếp theo?",
+    "viewOrders": "Xem đơn hàng của tôi",
+    "keepShopping": "Tiếp tục mua sắm",
+    "suggestQuery": "Gợi ý cho tôi vài sản phẩm"
+  }
+}

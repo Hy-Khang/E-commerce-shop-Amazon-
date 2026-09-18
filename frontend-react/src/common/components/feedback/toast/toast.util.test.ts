@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 import { ApiError } from '@/core/api/api.types';
-import { useI18nStore } from '@/common/i18n';
+import { i18n } from '@/common/i18n';
 
 vi.mock('sonner', () => ({
   toast: {
@@ -15,9 +15,13 @@ import { toast } from 'sonner';
 import { showSuccessToast, showErrorToast, showInfoToast, showWarningToast } from './toast.util';
 
 describe('toast utilities', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    useI18nStore.setState({ locale: 'vi' });
+    await i18n.changeLanguage('en');
+  });
+
+  afterAll(async () => {
+    await i18n.changeLanguage('en');
   });
 
   describe('showSuccessToast', () => {
@@ -33,10 +37,16 @@ describe('toast utilities', () => {
   });
 
   describe('showErrorToast', () => {
-    it('should extract message from ApiError', () => {
+    it('should localize a known ApiError code', () => {
       const error = new ApiError('CART_003', 'Variant out of stock', 400);
       showErrorToast(error);
-      expect(toast.error).toHaveBeenCalledWith('Variant out of stock', { id: undefined });
+      expect(toast.error).toHaveBeenCalledWith('This item is out of stock.', { id: undefined });
+    });
+
+    it('should fall back to the raw backend message for an unmapped code', () => {
+      const error = new ApiError('WEIRD_999', 'Totally unexpected backend message', 400);
+      showErrorToast(error);
+      expect(toast.error).toHaveBeenCalledWith('Totally unexpected backend message', { id: undefined });
     });
 
     it('should extract message from standard Error', () => {
@@ -44,26 +54,33 @@ describe('toast utilities', () => {
       expect(toast.error).toHaveBeenCalledWith('Network error', { id: undefined });
     });
 
-    it('should use fallback when error has no message', () => {
+    it('should treat a string error as the message', () => {
+      showErrorToast('A literal message');
+      expect(toast.error).toHaveBeenCalledWith('A literal message', { id: undefined });
+    });
+
+    it('should use fallback when error is unknown', () => {
       showErrorToast({}, 'Custom fallback');
       expect(toast.error).toHaveBeenCalledWith('Custom fallback', { id: undefined });
     });
 
-    it('should use generic i18n message when no error message and no fallback', () => {
+    it('should use generic i18n message when no error message and no fallback (vi)', async () => {
+      await i18n.changeLanguage('vi');
       showErrorToast({});
-      expect(toast.error).toHaveBeenCalledWith('Đã xảy ra lỗi', { id: undefined });
+      expect(toast.error).toHaveBeenCalledWith('Đã có lỗi xảy ra. Vui lòng thử lại.', { id: undefined });
     });
 
     it('should use en generic message when locale is en', () => {
-      useI18nStore.setState({ locale: 'en' });
       showErrorToast({});
-      expect(toast.error).toHaveBeenCalledWith('An unexpected error occurred', { id: undefined });
+      expect(toast.error).toHaveBeenCalledWith('Something went wrong. Please try again.', { id: undefined });
     });
 
-    it('should prioritize API error message over fallback', () => {
+    it('should prioritize localized API error over fallback', () => {
       const error = new ApiError('CART_004', 'Quantity exceeds stock', 400);
       showErrorToast(error, 'This should not appear');
-      expect(toast.error).toHaveBeenCalledWith('Quantity exceeds stock', { id: undefined });
+      expect(toast.error).toHaveBeenCalledWith('The requested quantity exceeds available stock.', {
+        id: undefined,
+      });
     });
 
     it('should pass dedup id', () => {
@@ -73,12 +90,12 @@ describe('toast utilities', () => {
 
     it('should handle null error', () => {
       showErrorToast(null);
-      expect(toast.error).toHaveBeenCalledWith('Đã xảy ra lỗi', { id: undefined });
+      expect(toast.error).toHaveBeenCalledWith('Something went wrong. Please try again.', { id: undefined });
     });
 
     it('should handle undefined error', () => {
       showErrorToast(undefined);
-      expect(toast.error).toHaveBeenCalledWith('Đã xảy ra lỗi', { id: undefined });
+      expect(toast.error).toHaveBeenCalledWith('Something went wrong. Please try again.', { id: undefined });
     });
   });
 

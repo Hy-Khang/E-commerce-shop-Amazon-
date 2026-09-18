@@ -2,11 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { wishlistService } from '../services/wishlist.service';
 import { wishlistKeys } from './useWishlist';
 import { showSuccessToast } from '@/common/components/feedback/toast';
-import { useTranslation } from '@/common/i18n';
+import { useTranslation } from 'react-i18next';
 
 export function useRemoveFromWishlist() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: (productId: number) => wishlistService.remove(productId),
@@ -18,7 +18,7 @@ export function useRemoveFromWishlist() {
       );
 
       queryClient.invalidateQueries({ queryKey: wishlistKeys.all });
-      showSuccessToast(t((m) => m.toast.wishlist.removed), 'wishlist');
+      showSuccessToast(t('wishlist.removed'), 'wishlist');
     },
   });
 }

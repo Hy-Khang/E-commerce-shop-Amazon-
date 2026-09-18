@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useFrequentlyBoughtTogether } from '../hooks/useFrequentlyBoughtTogether';
 import { RecommendationCarousel } from './RecommendationCarousel';
 
@@ -7,11 +8,12 @@ interface Props {
 
 /** "Frequently Bought Together" — co-purchase, falls back to similar. */
 export function FrequentlyBoughtTogetherCarousel({ productId }: Props) {
+  const { t } = useTranslation('recommendations');
   const { products, isLoading } = useFrequentlyBoughtTogether(productId);
 
   return (
     <RecommendationCarousel
-      title="Frequently Bought Together"
+      title={t('frequentlyBoughtTogether')}
       products={products}
       isLoading={isLoading}
     />

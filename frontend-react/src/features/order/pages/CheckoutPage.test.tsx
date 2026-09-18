@@ -146,6 +146,7 @@ vi.mock('@/features/coupon', async () => {
 // Imported after the mocks are registered.
 import CheckoutPage from './CheckoutPage';
 import { useAppliedCouponsStore } from '@/features/coupon';
+import i18n from '@/common/i18n/config';
 
 // ─── Fixtures ───
 const CART = {
@@ -225,6 +226,9 @@ function baseResult() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Lock the UI language so both the copy (English) and the VND number grouping
+  // (en-US, comma-separated) are deterministic regardless of the host locale.
+  i18n.changeLanguage('en');
   useAppliedCouponsStore.setState({ appliedCoupons: [] });
   h.useCart.mockReturnValue({ data: CART, isLoading: false });
   h.useAddresses.mockReturnValue({ data: [ADDRESS], isLoading: false });
@@ -243,8 +247,8 @@ describe('CheckoutPage summary', () => {
     expect(screen.getByText('Shop Two')).toBeInTheDocument();
     // exact shipping from the server, not the "calculated after order" placeholder
     expect(screen.queryByText(/Calculated after order/i)).not.toBeInTheDocument();
-    // grand total 560.000 (regex avoids the narrow-no-break-space in the ₫ format)
-    expect(screen.getByText(/560\.000/)).toBeInTheDocument();
+    // grand total 560,000 (regex tolerates the locale separator + the ₫ format's spacing)
+    expect(screen.getByText(/560[.,]000/)).toBeInTheDocument();
   });
 
   it('single-shop preview: exact numbers but no per-shop breakdown block', () => {
@@ -253,7 +257,7 @@ describe('CheckoutPage summary', () => {
 
     expect(screen.queryByText(/Order breakdown by shop/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Calculated after order/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/230\.000/)).toBeInTheDocument();
+    expect(screen.getByText(/230[.,]000/)).toBeInTheDocument();
   });
 
   it('empty preview shops: falls back to local subtotal instead of a 0 total', () => {
@@ -266,7 +270,7 @@ describe('CheckoutPage summary', () => {
     render(<CheckoutPage />);
 
     // local subtotal 500000 shown (subtotal + estimated total); 0-grand-total not trusted
-    expect(screen.getAllByText(/500\.000/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/500[.,]000/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Calculated after order/i)).toBeInTheDocument();
   });
 });

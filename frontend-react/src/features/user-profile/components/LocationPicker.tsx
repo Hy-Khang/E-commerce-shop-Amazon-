@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Search, X, MapPin, Check, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useProvinces, useDistricts, useWards } from '../hooks/useLocations';
 import type { LocationItem, LocationValue } from '../types/user-profile.types';
 
@@ -11,14 +12,15 @@ interface Props {
 }
 
 const TABS = [
-  { key: 'province' as const, label: 'Province/City' },
-  { key: 'district' as const, label: 'District' },
-  { key: 'ward' as const, label: 'Ward' },
+  { key: 'province' as const, labelKey: 'locationPicker.tabProvince' as const },
+  { key: 'district' as const, labelKey: 'locationPicker.tabDistrict' as const },
+  { key: 'ward' as const, labelKey: 'locationPicker.tabWard' as const },
 ];
 
 type TabKey = 'province' | 'district' | 'ward';
 
 export function LocationPicker({ value, onChange, error, initialDisplayText }: Props) {
+  const { t } = useTranslation('userProfile');
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('province');
   const [search, setSearch] = useState('');
@@ -113,7 +115,7 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
     <div className="relative" ref={containerRef}>
       <label className="mb-1.5 block text-sm font-medium text-text-primary">
         <MapPin className="mr-1 inline-block h-3.5 w-3.5" />
-        Province / District / Ward
+        {t('locationPicker.label')}
       </label>
 
       <button
@@ -131,7 +133,7 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
         }`}
       >
         <span className={displayText ? 'text-text-primary' : 'text-text-muted'}>
-          {displayText || 'Select province, district, ward...'}
+          {displayText || t('locationPicker.placeholder')}
         </span>
         <div className="flex items-center gap-1">
           {displayText && (
@@ -160,7 +162,7 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search..."
+                placeholder={t('locationPicker.searchPlaceholder')}
                 className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-border-default bg-surface-hover focus:bg-surface focus:outline-none focus:border-border-brand focus:ring-1 focus:ring-brand transition-colors"
               />
             </div>
@@ -195,7 +197,7 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
                           : 'border-transparent text-text-secondary hover:text-text-primary'
                   }`}
                 >
-                  {tab.label}
+                  {t(tab.labelKey)}
                   {hasValue && !isActive && (
                     <Check className="ml-1 inline-block h-3 w-3" />
                   )}
@@ -208,11 +210,11 @@ export function LocationPicker({ value, onChange, error, initialDisplayText }: P
             {isLoading ? (
               <div className="flex items-center justify-center gap-2 p-6 text-sm text-text-muted">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Loading...
+                {t('locationPicker.loading')}
               </div>
             ) : filtered.length === 0 ? (
               <div className="p-6 text-center text-sm text-text-muted">
-                No results found
+                {t('locationPicker.noResults')}
               </div>
             ) : (
               filtered.map((item) => {

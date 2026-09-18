@@ -1,0 +1,164 @@
+{
+  "list": {
+    "title": "Products",
+    "visualSearchResults": "Visual Search Results",
+    "results_one": "{{count}} result",
+    "results_other": "{{count}} results",
+    "forPrefix": "for",
+    "filters": "Filters",
+    "all": "All",
+    "noMatchImage": "No products matched the image.",
+    "noResultsFor": "No products found for \"{{query}}\"",
+    "noneAvailable": "No products available."
+  },
+  "visualBanner": {
+    "detected": "AI detected attributes",
+    "clear": "Clear",
+    "category": "Category",
+    "color": "Color",
+    "material": "Material",
+    "style": "Style"
+  },
+  "detail": {
+    "notFound": "Product not found.",
+    "breadcrumbHome": "Home",
+    "breadcrumbProducts": "Products",
+    "flashSale": "Flash Sale",
+    "inStock": "In stock ({{count}})",
+    "outOfStock": "Out of stock",
+    "quantity": "Quantity:",
+    "available": "{{count}} available",
+    "buyNow": "Buy Now",
+    "outOfStockButton": "Out of Stock",
+    "description": "Description",
+    "customerReviews": "Customer Reviews"
+  },
+  "card": {
+    "noImage": "No image",
+    "flash": "Flash",
+    "forYou": "For You",
+    "noVariants": "No variants",
+    "outOfStock": "Out of stock",
+    "new": "New"
+  },
+  "filter": {
+    "title": "Filters",
+    "clearAll": "Clear all",
+    "priceRange": "Price Range",
+    "min": "Min",
+    "max": "Max",
+    "apply": "Apply",
+    "rating": "Rating",
+    "andUp": "& up",
+    "availability": "Availability",
+    "inStockOnly": "In stock only"
+  },
+  "sort": {
+    "label": "Sort:",
+    "newest": "Newest",
+    "priceLowHigh": "Price: Low to High",
+    "priceHighLow": "Price: High to Low",
+    "bestSelling": "Best Selling",
+    "highestRated": "Highest Rated"
+  },
+  "categorySidebar": {
+    "title": "Categories",
+    "more": "+{{count}} more",
+    "showLess": "Show less"
+  },
+  "category": {
+    "notFound": "Category not found.",
+    "noProducts": "No products in this category."
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{total}}"
+  },
+  "gallery": {
+    "noImages": "No images"
+  },
+  "search": {
+    "placeholder": "Search for products...",
+    "search": "Search",
+    "byImage": "Search by image",
+    "products": "Products",
+    "categories": "Categories",
+    "shops": "Shops"
+  },
+  "visual": {
+    "title": "Search by Image",
+    "invalidType": "Please upload a JPEG, PNG, or WebP image.",
+    "tooLarge": "Image must be under 5MB.",
+    "failed": "Visual search failed. Please try again.",
+    "analyzing": "Analyzing image with AI...",
+    "dropHint": "Drop an image here or click to browse",
+    "formatHint": "JPEG, PNG, or WebP — max 5MB",
+    "uploadedAlt": "Uploaded"
+  },
+  "home": {
+    "hero": {
+      "slide1": {
+        "badge": "New Arrival Collection",
+        "title": "Curated Essentials For Modern Living",
+        "description": "Explore our handpicked collection of thoughtfully crafted and beautifully designed everyday objects.",
+        "cta": "Shop New Arrivals"
+      },
+      "slide2": {
+        "badge": "Conscious Crafting",
+        "title": "Simplicity In Natural Materials",
+        "description": "Bring organic textures and premium sustainable materials into your dining and living spaces.",
+        "cta": "Explore Collection"
+      },
+      "slide3": {
+        "badge": "Limited Edition",
+        "title": "Elegance Meets Everyday Utility",
+        "description": "Functional storage solutions and organization accessories crafted for absolute detail.",
+        "cta": "Browse Utility"
+      },
+      "prevSlide": "Previous slide",
+      "nextSlide": "Next slide",
+      "goToSlide": "Go to slide {{number}}"
+    },
+    "valueProps": {
+      "delivery": {
+        "title": "Free Delivery",
+        "desc": "On orders above 500K₫"
+      },
+      "quality": {
+        "title": "Craft Quality",
+        "desc": "Premium natural materials"
+      },
+      "payment": {
+        "title": "Secure Payment",
+        "desc": "100% encrypted checkout"
+      },
+      "assistance": {
+        "title": "Expert Assistance",
+        "desc": "24/7 client care support"
+      }
+    },
+    "newArrivals": "New Arrivals",
+    "noProductsYet": "No products available yet."
+  },
+  "sections": {
+    "bestSellers": "Best Sellers",
+    "trending": "Trending Now",
+    "trendingWishlists": "{{count}} wishlists this month",
+    "discoverMore": "Discover More",
+    "browseAll": "Browse all products",
+    "exploreCollections": "Explore Collections",
+    "explore": "Explore",
+    "featuredMore": "+{{count}} more",
+    "specialOffers": "Special Offers",
+    "viewAll": "View all",
+    "shopOtherProducts": "Other Products from {{shopName}}",
+    "shopViewAll": "View All"
+  },
+  "promo": {
+    "limitedTime": "Limited time offer",
+    "heading": "Save on your first order",
+    "description": "Use code {{code}} at checkout for {{discount}} off",
+    "cta": "Shop Now"
+  }
+}

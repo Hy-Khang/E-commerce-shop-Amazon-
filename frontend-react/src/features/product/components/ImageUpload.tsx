@@ -4,7 +4,7 @@ import { useUploadImage } from '../hooks/useUploadImage';
 import { Button } from '@/common/components/ui/Button';
 import { ImageLightbox } from '@/common/components/ui/ImageLightbox';
 import { showWarningToast } from '@/common/components/feedback/toast';
-import { useTranslation } from '@/common/i18n';
+import { useTranslation } from 'react-i18next';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -17,7 +17,7 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
   const uploadImage = useUploadImage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -37,13 +37,13 @@ export function ImageUpload({ value, onUploaded, onClear, label }: ImageUploadPr
       if (!file) return;
 
       if (!ACCEPTED_TYPES.includes(file.type)) {
-        showWarningToast(t((m) => m.toast.upload.invalidType));
+        showWarningToast(t('upload.invalidType'));
         e.target.value = '';
         return;
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        showWarningToast(t((m) => m.toast.upload.tooLarge));
+        showWarningToast(t('upload.tooLarge'));
         e.target.value = '';
         return;
       }

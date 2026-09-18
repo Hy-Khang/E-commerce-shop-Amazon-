@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <title>Nook — E-commerce</title>
   <script>
     // Apply persisted theme before first paint to avoid a light flash (FOUC).
@@ -24,6 +24,14 @@
           (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         if (dark) document.documentElement.classList.add('dark');
       } catch (e) { /* default: light */ }
+    })();
+    // Set <html lang> before paint from the persisted i18next language (plain string,
+    // key 'i18nextLng'), falling back to the browser language, else 'en'.
+    (function () {
+      try {
+        var lng = localStorage.getItem('i18nextLng') || navigator.language || 'en';
+        document.documentElement.lang = lng.split('-')[0] === 'vi' ? 'vi' : 'en';
+      } catch (e) { /* default: en */ }
     })();
   </script>
 </head>

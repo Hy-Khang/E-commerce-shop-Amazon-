@@ -1,0 +1,47 @@
+{
+  "result": {
+    "loading": "Loading payment result...",
+    "notFound": "Order not found.",
+    "backHome": "Back to Home",
+    "steps": {
+      "cart": "Cart",
+      "checkout": "Checkout",
+      "payment": "Payment"
+    },
+    "success": {
+      "title": "Payment Successful!",
+      "description": "Your payment has been processed successfully."
+    },
+    "failed": {
+      "title": "Payment Failed",
+      "description": "Your payment could not be completed. You can try again or choose a different payment method."
+    },
+    "summary": {
+      "orderNumber": "Order #{{id}}",
+      "orderId": "Order ID",
+      "paymentMethod": "Payment Method",
+      "paymentStatus": "Payment Status",
+      "payment": "Payment",
+      "paid": "Paid",
+      "unpaid": "Unpaid",
+      "total": "Total",
+      "totalAmount": "Total Amount"
+    },
+    "actions": {
+      "continueShopping": "Continue Shopping",
+      "viewOrder": "View Order Details",
+      "viewOrders": "View My Orders",
+      "retry": "Retry Payment"
+    }
+  },
+  "transactions": {
+    "title": "Payment Transactions",
+    "ref": "Ref: {{ref}}",
+    "status": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    }
+  }
+}

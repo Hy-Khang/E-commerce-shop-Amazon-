@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Store } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@/common/constants/routes';
 import { getImageUrl } from '@/common/utils/format.util';
 import { ChatWithShopButton } from '@/features/chat';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function ShopInfoCard({ shop }: Props) {
+  const { t } = useTranslation('shop');
   return (
     <div className="shop-card flex items-center gap-4 p-5">
       <Link
@@ -29,7 +31,7 @@ export function ShopInfoCard({ shop }: Props) {
         )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-text-primary">{shop.name}</p>
-          <p className="mt-0.5 text-xs font-semibold text-text-brand transition-colors">Visit Shop</p>
+          <p className="mt-0.5 text-xs font-semibold text-text-brand transition-colors">{t('visitShop')}</p>
         </div>
       </Link>
       <ChatWithShopButton shopId={shop.id} className="flex-shrink-0" />

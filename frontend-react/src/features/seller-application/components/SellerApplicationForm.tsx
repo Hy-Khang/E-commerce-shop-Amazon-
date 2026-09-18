@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Store } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useApplySeller } from '../hooks/useApplySeller';
 
 const schema = z.object({
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function SellerApplicationForm({ defaultValues }: Props) {
+  const { t } = useTranslation('sellerApplication');
   const apply = useApplySeller();
   const {
     register,
@@ -57,38 +59,38 @@ export function SellerApplicationForm({ defaultValues }: Props) {
       <div className="flex items-center gap-2">
         <Store className="h-5 w-5 text-text-brand" />
         <h2 className="text-lg font-bold tracking-tight text-text-primary">
-          Seller information
+          {t('form.title')}
         </h2>
       </div>
 
-      <Field label="Shop name *" error={errors.shop_name?.message}>
-        <input {...register('shop_name')} className="shop-input" placeholder="e.g. Nook Coffee" />
+      <Field label={t('form.fields.shopName.label')} error={errors.shop_name?.message}>
+        <input {...register('shop_name')} className="shop-input" placeholder={t('form.fields.shopName.placeholder')} />
       </Field>
 
-      <Field label="Phone number *" error={errors.phone?.message}>
-        <input {...register('phone')} className="shop-input" placeholder="09xxxxxxxx" inputMode="tel" />
+      <Field label={t('form.fields.phone.label')} error={errors.phone?.message}>
+        <input {...register('phone')} className="shop-input" placeholder={t('form.fields.phone.placeholder')} inputMode="tel" />
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Business name" error={errors.business_name?.message}>
+        <Field label={t('form.fields.businessName.label')} error={errors.business_name?.message}>
           <input {...register('business_name')} className="shop-input" />
         </Field>
-        <Field label="Tax ID / National ID" error={errors.tax_id?.message}>
+        <Field label={t('form.fields.taxId.label')} error={errors.tax_id?.message}>
           <input {...register('tax_id')} className="shop-input" />
         </Field>
       </div>
 
-      <Field label="Shop description" error={errors.description?.message}>
+      <Field label={t('form.fields.description.label')} error={errors.description?.message}>
         <textarea
           {...register('description')}
           rows={4}
           className="shop-input"
-          placeholder="What does your shop sell, what's its style..."
+          placeholder={t('form.fields.description.placeholder')}
         />
       </Field>
 
       <p className="text-xs text-text-muted">
-        You can add your shop logo and banner after approval in Shop Settings.
+        {t('form.note')}
       </p>
 
       <button
@@ -97,7 +99,7 @@ export function SellerApplicationForm({ defaultValues }: Props) {
         className="flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-brand-hover disabled:opacity-50"
       >
         {apply.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-        Submit application
+        {t('form.submit')}
       </button>
     </form>
   );

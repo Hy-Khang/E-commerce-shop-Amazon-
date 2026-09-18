@@ -1,0 +1,36 @@
+{
+  "page": {
+    "loading": "Đang tải sản phẩm để so sánh…",
+    "empty": {
+      "title": "Chưa có sản phẩm nào để so sánh",
+      "description": "Nhấn nút <1>So sánh</1> trên sản phẩm để thêm vào đây.",
+      "explore": "Khám phá sản phẩm"
+    },
+    "title": "So sánh sản phẩm",
+    "clearAll": "Xóa tất cả",
+    "noImage": "Không có ảnh",
+    "selectToBuy": "Chọn để mua"
+  },
+  "bar": {
+    "title": "So sánh",
+    "clearAll": "Xóa tất cả",
+    "compare": "So sánh ({{count}})"
+  },
+  "toggle": {
+    "remove": "Xóa khỏi so sánh",
+    "add": "Thêm vào so sánh",
+    "blocked": "Chỉ có thể so sánh các sản phẩm cùng danh mục (tối đa 4)",
+    "compare": "So sánh"
+  },
+  "rows": {
+    "price": "Giá",
+    "rating": "Đánh giá",
+    "category": "Danh mục",
+    "shop": "Cửa hàng",
+    "option1": "Tùy chọn 1",
+    "option2": "Tùy chọn 2",
+    "availability": "Tình trạng",
+    "inStock": "Còn hàng",
+    "outOfStock": "Hết hàng"
+  }
+}

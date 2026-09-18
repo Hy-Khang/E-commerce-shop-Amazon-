@@ -6,6 +6,7 @@ import { ROUTES } from '@/common/constants/routes';
 import { PERMISSIONS } from '@/common/constants/permissions';
 import { useNotificationRoutes } from '@/features/notification';
 import { useThemeStore, type ThemeMode } from '@/common/theme';
+import { useTranslation } from 'react-i18next';
 import { getVisiblePortals } from './portal-links.util';
 
 const themeOptions: Array<{ mode: ThemeMode; label: string; icon: LucideIcon }> = [
@@ -13,6 +14,11 @@ const themeOptions: Array<{ mode: ThemeMode; label: string; icon: LucideIcon }> 
   { mode: 'dark', label: 'Dark', icon: Moon },
   { mode: 'system', label: 'System', icon: Monitor },
 ];
+
+const langOptions = [
+  { code: 'en', label: 'English' },
+  { code: 'vi', label: 'Tiếng Việt' },
+] as const;
 
 export function PortalAccountDropdown() {
   const user = useAuthStore((s) => s.user);
@@ -48,6 +54,9 @@ export function PortalAccountDropdown() {
 
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
+
+  const { t, i18n } = useTranslation('nav');
+  const activeLang = (i18n.language || 'en').split('-')[0] === 'vi' ? 'vi' : 'en';
 
   const handleLogout = () => {
     setIsOpen(false);
@@ -108,6 +117,32 @@ export function PortalAccountDropdown() {
             </div>
           </div>
 
+          <div className="border-b border-neutral-100 px-3 py-2.5 dark:border-slate-800">
+            <p className="px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-slate-500">
+              Language
+            </p>
+            <div className="flex items-center gap-1 rounded-lg bg-neutral-100 p-0.5 dark:bg-slate-800">
+              {langOptions.map((option) => {
+                const active = option.code === activeLang;
+                return (
+                  <button
+                    key={option.code}
+                    onClick={() => void i18n.changeLanguage(option.code)}
+                    aria-pressed={active}
+                    title={option.label}
+                    className={`flex flex-1 items-center justify-center rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+                      active
+                        ? 'bg-white text-neutral-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                        : 'text-neutral-500 hover:text-neutral-800 dark:text-slate-400 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {isSeller && pathname.startsWith('/seller') && (
             <div className="border-b border-neutral-100 py-1 dark:border-slate-800">
               <Link
@@ -116,7 +151,7 @@ export function PortalAccountDropdown() {
                 className="flex items-center gap-3 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               >
                 <Store className="h-4 w-4" />
-                Shop Info
+                {t('portals.shopInfo')}
               </Link>
             </div>
           )}
@@ -152,7 +187,7 @@ export function PortalAccountDropdown() {
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    {portal.label}
+                    {t(portal.labelKey, { defaultValue: portal.labelKey })}
                     {isCurrent && <Check className="ml-auto h-3.5 w-3.5 text-neutral-400 dark:text-slate-500" />}
                   </Link>
                 );

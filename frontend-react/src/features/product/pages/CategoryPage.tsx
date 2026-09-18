@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { Button } from '@/common/components/ui/Button';
@@ -15,6 +16,7 @@ import { ProductCardSkeleton } from '../components/ProductCardSkeleton';
 import type { ProductListParams } from '../types/product.types';
 
 export default function CategoryPage() {
+  const { t } = useTranslation('product');
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function CategoryPage() {
         <aside className="hidden w-56 flex-shrink-0 lg:block">
           <CategorySidebar />
         </aside>
-        <div className="flex-1 min-w-0 py-12 text-center text-text-secondary">Category not found.</div>
+        <div className="flex-1 min-w-0 py-12 text-center text-text-secondary">{t('category.notFound')}</div>
       </div>
     );
   }
@@ -72,7 +74,7 @@ export default function CategoryPage() {
             </h1>
             {!isLoading && data && (
               <p className="mt-1 text-sm text-text-secondary">
-                {totalResults} result{totalResults !== 1 ? 's' : ''}
+                {t('list.results', { count: totalResults })}
               </p>
             )}
           </div>
@@ -82,7 +84,7 @@ export default function CategoryPage() {
               className="flex items-center gap-2 rounded-lg border border-border-default bg-surface px-3 py-2 text-sm font-medium text-text-secondary hover:border-border-strong transition-colors lg:hidden"
             >
               <SlidersHorizontal className="h-4 w-4" />
-              Filters
+              {t('list.filters')}
             </button>
             <SortDropdown />
           </div>
@@ -110,10 +112,10 @@ export default function CategoryPage() {
                   onClick={() => setPage(data.meta.page - 1)}
                   disabled={data.meta.page <= 1}
                 >
-                  Previous
+                  {t('pagination.previous')}
                 </Button>
                 <span className="text-sm text-text-secondary">
-                  Page {data.meta.page} of {data.meta.totalPages}
+                  {t('pagination.pageOf', { page: data.meta.page, total: data.meta.totalPages })}
                 </span>
                 <Button
                   variant="secondary"
@@ -121,13 +123,13 @@ export default function CategoryPage() {
                   onClick={() => setPage(data.meta.page + 1)}
                   disabled={data.meta.page >= data.meta.totalPages}
                 >
-                  Next
+                  {t('pagination.next')}
                 </Button>
               </div>
             )}
           </>
         ) : (
-          <div className="py-12 text-center text-text-secondary">No products in this category.</div>
+          <div className="py-12 text-center text-text-secondary">{t('category.noProducts')}</div>
         )}
       </div>
 
@@ -135,7 +137,7 @@ export default function CategoryPage() {
         open={filterDrawerOpen}
         onClose={() => setFilterDrawerOpen(false)}
         side="left"
-        title="Filters"
+        title={t('list.filters')}
       >
         <FilterSidebar />
       </Drawer>

@@ -1,0 +1,32 @@
+{
+  "page": {
+    "title": "Đánh giá của tôi",
+    "subtitle": "Xem và quản lý các đánh giá và xếp hạng sản phẩm của bạn.",
+    "emptyTitle": "Chưa có đánh giá nào",
+    "emptyDescription": "Đánh giá sản phẩm của bạn sẽ xuất hiện ở đây sau khi bạn chia sẻ cảm nhận về sản phẩm đã mua."
+  },
+  "card": {
+    "productFallback": "Sản phẩm #{{id}}",
+    "deleteReview": "Xóa đánh giá"
+  },
+  "confirm": {
+    "deleteTitle": "Xóa đánh giá",
+    "deleteMessage": "Bạn có chắc muốn xóa đánh giá này? Hành động này không thể hoàn tác và xếp hạng của bạn sẽ bị gỡ bỏ.",
+    "deleteConfirm": "Xóa"
+  },
+  "form": {
+    "rating": "Xếp hạng",
+    "comment": "Nhận xét (không bắt buộc)",
+    "commentPlaceholder": "Chia sẻ trải nghiệm của bạn về sản phẩm này...",
+    "submit": "Gửi đánh giá"
+  },
+  "list": {
+    "empty": "Chưa có đánh giá nào.",
+    "reviewsCount_other": "{{count}} đánh giá"
+  },
+  "pagination": {
+    "previous": "Trước",
+    "next": "Sau",
+    "pageOf": "Trang {{page}} / {{pages}}"
+  }
+}
