@@ -1,4 +1,5 @@
 import { Trophy } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { SectionPanel } from '@/common/components/ui/SectionPanel';
 import { HomepageProductCard } from './HomepageProductCard';
 import { ProductCardSkeleton } from './ProductCardSkeleton';
@@ -25,11 +26,12 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 export function BestSellersSection({ products, isLoading }: Props) {
+  const { t } = useTranslation('product');
   if (!isLoading && products.length === 0) return null;
 
   return (
     <SectionPanel
-      title="Best Sellers"
+      title={t('sections.bestSellers')}
       icon={<Trophy className="h-5 w-5 text-amber-500" />}
     >
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

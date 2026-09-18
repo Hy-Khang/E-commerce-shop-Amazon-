@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, Star, X } from 'lucide-react';
 import { Button } from '@/common/components/ui/Button';
 
 const RATING_OPTIONS = [4, 3, 2, 1] as const;
 
 export function FilterSidebar() {
+  const { t } = useTranslation('product');
   const [searchParams, setSearchParams] = useSearchParams();
 
   const currentMinPrice = searchParams.get('min_price') || '';
@@ -54,23 +56,23 @@ export function FilterSidebar() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Filters</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">{t('filter.title')}</h3>
         {hasFilters && (
           <button
             onClick={clearAll}
             className="flex items-center gap-1 text-xs font-medium text-text-brand hover:text-primary-700 transition-colors"
           >
             <X className="h-3 w-3" />
-            Clear all
+            {t('filter.clearAll')}
           </button>
         )}
       </div>
 
-      <FilterSection title="Price Range" defaultOpen>
+      <FilterSection title={t('filter.priceRange')} defaultOpen>
         <div className="flex items-center gap-2">
           <input
             type="number"
-            placeholder="Min"
+            placeholder={t('filter.min')}
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
             className="shop-input w-full text-sm"
@@ -79,7 +81,7 @@ export function FilterSidebar() {
           <span className="text-text-muted">—</span>
           <input
             type="number"
-            placeholder="Max"
+            placeholder={t('filter.max')}
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
             className="shop-input w-full text-sm"
@@ -87,11 +89,11 @@ export function FilterSidebar() {
           />
         </div>
         <Button size="sm" variant="secondary" onClick={applyPriceFilter} className="mt-2 w-full">
-          Apply
+          {t('filter.apply')}
         </Button>
       </FilterSection>
 
-      <FilterSection title="Rating" defaultOpen>
+      <FilterSection title={t('filter.rating')} defaultOpen>
         <div className="space-y-1">
           {RATING_OPTIONS.map((rating) => (
             <button
@@ -111,13 +113,13 @@ export function FilterSidebar() {
                   />
                 ))}
               </span>
-              <span>& up</span>
+              <span>{t('filter.andUp')}</span>
             </button>
           ))}
         </div>
       </FilterSection>
 
-      <FilterSection title="Availability" defaultOpen>
+      <FilterSection title={t('filter.availability')} defaultOpen>
         <label className="flex items-center gap-2 cursor-pointer rounded-md px-2 py-1.5 hover:bg-surface-hover transition-colors">
           <input
             type="checkbox"
@@ -125,7 +127,7 @@ export function FilterSidebar() {
             onChange={(e) => updateParam('in_stock', e.target.checked ? 'true' : null)}
             className="rounded border-neutral-300 dark:border-neutral-600 text-primary-600 focus:ring-primary-500"
           />
-          <span className="text-sm text-text-secondary">In stock only</span>
+          <span className="text-sm text-text-secondary">{t('filter.inStockOnly')}</span>
         </label>
       </FilterSection>
     </div>

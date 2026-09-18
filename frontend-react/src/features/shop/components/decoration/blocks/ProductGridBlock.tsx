@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ProductCard, ProductCardSkeleton } from '@/features/product';
 import type { ProductGridBlockData } from '../../../types/decoration.types';
 import { useProductsByIds } from '../../../hooks/useProductsByIds';
@@ -18,6 +19,7 @@ const COLUMNS_CLASS: Record<NonNullable<ProductGridBlockData['columns']>, string
  * (e.g. the shop is not yet active) it shows a small empty state.
  */
 export function ProductGridBlock({ data }: Props) {
+  const { t } = useTranslation('shop');
   const { data: products, isLoading } = useProductsByIds(data.product_ids);
   const gridClass = COLUMNS_CLASS[data.columns ?? 4];
 
@@ -43,7 +45,7 @@ export function ProductGridBlock({ data }: Props) {
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-border-default py-10 text-center text-sm text-text-secondary">
-          These products will appear once they are available.
+          {t('productGrid.emptyState')}
         </div>
       )}
     </section>

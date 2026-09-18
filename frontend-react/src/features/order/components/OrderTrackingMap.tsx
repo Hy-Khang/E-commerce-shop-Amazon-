@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import '@/common/components/map/leaflet-setup';
 import L from 'leaflet';
@@ -35,6 +36,7 @@ interface Props {
 }
 
 export function OrderTrackingMap({ shipperLocation, deliveryLocation }: Props) {
+  const { t } = useTranslation('order');
   const { isFullscreen, toggle } = useMapFullscreen();
 
   const points: [number, number][] = [];
@@ -50,16 +52,16 @@ export function OrderTrackingMap({ shipperLocation, deliveryLocation }: Props) {
       <div className="flex items-center gap-4 text-xs text-text-secondary">
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full bg-blue-600" />
-          Shipper
+          {t('trackingMap.shipper')}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full bg-red-600" />
-          Delivery Address
+          {t('trackingMap.deliveryAddress')}
         </span>
         {shipperLocation && deliveryLocation && (
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-3 w-0.5 border-t-2 border-dashed border-blue-500 bg-transparent" style={{ width: 12 }} />
-            Route
+            {t('trackingMap.route')}
           </span>
         )}
       </div>
@@ -91,10 +93,10 @@ export function OrderTrackingMap({ shipperLocation, deliveryLocation }: Props) {
               icon={shipperMapIcon}
             >
               <Popup>
-                <strong>Shipper Location</strong>
+                <strong>{t('trackingMap.shipperLocation')}</strong>
                 <br />
                 <span className="text-xs text-neutral-500">
-                  Updated: {new Date(shipperLocation.createdAt).toLocaleTimeString()}
+                  {t('trackingMap.updated', { time: new Date(shipperLocation.createdAt).toLocaleTimeString() })}
                 </span>
               </Popup>
             </Marker>
@@ -106,7 +108,7 @@ export function OrderTrackingMap({ shipperLocation, deliveryLocation }: Props) {
               icon={deliveryMapIcon}
             >
               <Popup>
-                <strong>Delivery Address</strong>
+                <strong>{t('trackingMap.deliveryAddress')}</strong>
                 <br />
                 {deliveryLocation.label}
               </Popup>

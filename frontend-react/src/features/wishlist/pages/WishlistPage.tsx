@@ -1,5 +1,6 @@
 import { Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { usePagination } from '@/common/hooks/usePagination';
 import { ROUTES } from '@/common/constants/routes';
 import { Pagination } from '@/common/components/data/Pagination';
@@ -9,6 +10,7 @@ import { WishlistItemCard } from '../components/WishlistItemCard';
 import { Button } from '@/common/components/ui/Button';
 
 export default function WishlistPage() {
+  const { t } = useTranslation('wishlist');
   const { params, setPage } = usePagination({ limit: 12, sort: 'created_at', order: 'desc' });
   const { data, isLoading } = useWishlist(params);
   const removeFromWishlist = useRemoveFromWishlist();
@@ -32,25 +34,25 @@ export default function WishlistPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-text-primary">My Wishlist</h1>
-        <p className="mt-1 text-sm text-text-secondary">Keep track of the products you love and want to watch.</p>
+        <h1 className="text-xl font-bold tracking-tight text-text-primary">{t('page.title')}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{t('page.subtitle')}</p>
       </div>
 
       {!data || data.data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <Heart className="h-14 w-14 text-text-muted" />
-          <h2 className="mt-4 text-base font-semibold text-text-primary">Your wishlist is empty</h2>
+          <h2 className="mt-4 text-base font-semibold text-text-primary">{t('page.emptyTitle')}</h2>
           <p className="mt-1 text-sm text-text-secondary max-w-xs">
-            Explore our shop and save products you love to view them later.
+            {t('page.emptyDescription')}
           </p>
           <Link to={ROUTES.PRODUCTS} className="mt-5">
-            <Button variant="brand">Browse Products</Button>
+            <Button variant="brand">{t('page.browseProducts')}</Button>
           </Link>
         </div>
       ) : (
         <>
           <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            {data.meta.total} item{data.meta.total !== 1 ? 's' : ''} saved
+            {t('page.savedCount', { count: data.meta.total })}
           </p>
 
           <div className="grid grid-cols-1 gap-4">

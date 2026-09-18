@@ -1,5 +1,6 @@
 import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth';
 import { ROUTES } from '@/common/constants/routes';
 import { useTrackActivityCallback } from '@/features/recommendations';
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function WishlistButton({ productId, isInWishlist, size = 'md', className }: Props) {
+  const { t } = useTranslation('wishlist');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const navigate = useNavigate();
   const { data: checked } = useCheckWishlist(productId);
@@ -58,7 +60,7 @@ export function WishlistButton({ productId, isInWishlist, size = 'md', className
             : 'text-text-muted hover:bg-surface-hover hover:text-rose-500'
         } disabled:opacity-50`
       }
-      aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+      aria-label={wishlisted ? t('button.remove') : t('button.add')}
     >
       <Heart
         className={`${iconSize} ${wishlisted ? 'fill-current' : ''}`}

@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { HOMEPAGE_PROMO } from '../constants/homepage.constants';
 
 export function PromotionalBanner() {
+  const { t } = useTranslation('product');
   return (
     <motion.section
       initial={{ opacity: 0, y: 24 }}
@@ -15,13 +17,13 @@ export function PromotionalBanner() {
       <div className="grid grid-cols-1 md:grid-cols-5">
         <div className="col-span-3 flex flex-col justify-center p-8 sm:p-10">
           <span className="mb-2 inline-block w-fit rounded-full bg-primary-600/40 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-200">
-            Limited time offer
+            {t('promo.limitedTime')}
           </span>
           <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-            {HOMEPAGE_PROMO.heading}
+            {t('promo.heading')}
           </h2>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-primary-200/90">
-            {HOMEPAGE_PROMO.description}
+            {t('promo.description', { code: HOMEPAGE_PROMO.code, discount: HOMEPAGE_PROMO.discount })}
           </p>
 
           <div className="mt-5 flex flex-wrap items-center gap-4">
@@ -34,7 +36,7 @@ export function PromotionalBanner() {
               to={HOMEPAGE_PROMO.ctaLink}
               className="inline-flex items-center gap-1.5 rounded-lg bg-white px-5 py-2.5 text-sm font-bold text-primary-800 shadow-sm transition-colors hover:bg-primary-50"
             >
-              {HOMEPAGE_PROMO.ctaText}
+              {t('promo.cta')}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

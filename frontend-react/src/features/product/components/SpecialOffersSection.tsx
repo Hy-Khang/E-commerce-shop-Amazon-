@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ROUTES } from '@/common/constants/routes';
@@ -15,6 +16,7 @@ interface Props {
 const SCROLL_AMOUNT = 440;
 
 export function SpecialOffersSection({ products, isLoading }: Props) {
+  const { t } = useTranslation('product');
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -52,14 +54,14 @@ export function SpecialOffersSection({ products, isLoading }: Props) {
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           <h2 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
-            Special Offers
+            {t('sections.specialOffers')}
           </h2>
         </div>
         <Link
           to={ROUTES.PRODUCTS}
           className="text-sm font-semibold text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
         >
-          View all
+          {t('sections.viewAll')}
         </Link>
       </div>
 

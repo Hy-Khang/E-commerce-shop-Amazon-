@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { User, MapPin, MessageSquare, Package, Store, LogOut, ChevronDown } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { ROUTES } from '@/common/constants/routes';
@@ -7,6 +8,7 @@ import { PERMISSIONS } from '@/common/constants/permissions';
 import { getVisiblePortals } from './portal-links.util';
 
 export function UserDropdown() {
+  const { t } = useTranslation('nav');
   const user = useAuthStore((s) => s.user);
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const [isOpen, setIsOpen] = useState(false);
@@ -33,7 +35,7 @@ export function UserDropdown() {
         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-xs font-bold text-text-brand">
           {user?.full_name?.charAt(0).toUpperCase() ?? 'U'}
         </div>
-        <span className="hidden max-w-[100px] truncate text-sm font-medium lg:inline">{user?.full_name || 'Profile'}</span>
+        <span className="hidden max-w-[100px] truncate text-sm font-medium lg:inline">{user?.full_name || t('header.profileFallback')}</span>
         <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -46,16 +48,16 @@ export function UserDropdown() {
 
           <div className="py-1">
             <DropdownLink to={ROUTES.PROFILE} icon={<User className="h-4 w-4" />} onClick={() => setIsOpen(false)}>
-              My Profile
+              {t('account.myProfile')}
             </DropdownLink>
             <DropdownLink to={ROUTES.ORDERS} icon={<Package className="h-4 w-4" />} onClick={() => setIsOpen(false)}>
-              Orders
+              {t('account.orders')}
             </DropdownLink>
             <DropdownLink to={ROUTES.ADDRESSES} icon={<MapPin className="h-4 w-4" />} onClick={() => setIsOpen(false)}>
-              Addresses
+              {t('account.addresses')}
             </DropdownLink>
             <DropdownLink to={ROUTES.MY_REVIEWS} icon={<MessageSquare className="h-4 w-4" />} onClick={() => setIsOpen(false)}>
-              My Reviews
+              {t('account.myReviews')}
             </DropdownLink>
           </div>
 
@@ -70,7 +72,7 @@ export function UserDropdown() {
               className="flex w-full items-center gap-3 px-4 py-2 text-sm text-error-500 hover:bg-surface-hover disabled:opacity-50 transition-colors"
             >
               <LogOut className="h-4 w-4" />
-              {isLoggingOut ? 'Logging out...' : 'Logout'}
+              {isLoggingOut ? t('account.loggingOut') : t('account.logout')}
             </button>
           </div>
         </div>
@@ -94,6 +96,7 @@ function DropdownLink({ to, icon, onClick, children }: { to: string; icon: React
 
 /** Shown only to logged-in users who are not yet sellers (no seller portal). */
 function BecomeSellerLink({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation('nav');
   const hasPermission = useAuthStore((s) => s.hasPermission);
   if (hasPermission(PERMISSIONS.PORTAL_SELLER)) return null;
 
@@ -105,13 +108,14 @@ function BecomeSellerLink({ onClose }: { onClose: () => void }) {
         className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-text-brand hover:bg-surface-hover transition-colors"
       >
         <Store className="h-4 w-4" />
-        Become a seller
+        {t('account.becomeSeller')}
       </Link>
     </div>
   );
 }
 
 function PortalSection({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation('nav');
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const visible = getVisiblePortals(hasPermission);
   if (visible.length === 0) return null;
@@ -119,7 +123,7 @@ function PortalSection({ onClose }: { onClose: () => void }) {
   return (
     <div className="border-t border-border-default py-1">
       <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
-        Manage
+        {t('sections.manage')}
       </p>
       {visible.map((portal) => {
         const Icon = portal.icon;
@@ -131,7 +135,7 @@ function PortalSection({ onClose }: { onClose: () => void }) {
             className={`flex items-center gap-3 px-4 py-2 text-sm hover:bg-surface-hover transition-colors ${portal.accent}`}
           >
             <Icon className="h-4 w-4" />
-            {portal.label}
+            {t(portal.labelKey, { defaultValue: portal.labelKey })}
           </Link>
         );
       })}

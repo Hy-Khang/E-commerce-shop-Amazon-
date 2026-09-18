@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Package } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { Button } from '@/common/components/ui/Button';
 import { ROUTES } from '@/common/constants/routes';
+import { useEnumLabel } from '@/common/i18n';
 import type { OrderStatus } from '../types/order.types';
 import { useOrders } from '../hooks/useOrders';
 import { OrderStatusTabs } from '../components/OrderStatusTabs';
@@ -11,6 +13,8 @@ import { OrderCard } from '../components/OrderCard';
 import { OrderListSkeleton } from '../components/OrderListSkeleton';
 
 export default function OrderHistoryPage() {
+  const { t } = useTranslation('order');
+  const enumLabel = useEnumLabel();
   const [status, setStatus] = useState<OrderStatus | undefined>(undefined);
   const { params, setPage } = usePagination({ limit: 10, sort: 'created_at', order: 'desc' });
   const { data, isLoading } = useOrders({ ...params, status });
@@ -22,7 +26,7 @@ export default function OrderHistoryPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-text-primary">My Orders</h1>
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-text-primary">{t('history.title')}</h1>
 
       <OrderStatusTabs activeStatus={status} onChange={handleStatusChange} />
 
@@ -32,15 +36,15 @@ export default function OrderHistoryPage() {
         ) : !data || data.data.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Package className="h-16 w-16 text-text-muted/60" />
-            <h2 className="mt-4 text-lg font-semibold text-text-primary">No orders yet</h2>
+            <h2 className="mt-4 text-lg font-semibold text-text-primary">{t('history.emptyTitle')}</h2>
             <p className="mt-1 text-sm text-text-secondary">
               {status
-                ? `No ${status} orders found.`
-                : 'Start shopping to see your orders here.'}
+                ? t('history.emptyFiltered', { status: enumLabel('orderStatus', status) })
+                : t('history.emptyDefault')}
             </p>
             {!status && (
               <Link to={ROUTES.PRODUCTS} className="mt-6">
-                <Button>Browse Products</Button>
+                <Button>{t('history.browseProducts')}</Button>
               </Link>
             )}
           </div>
@@ -60,10 +64,10 @@ export default function OrderHistoryPage() {
                   onClick={() => setPage(data.meta.page - 1)}
                   disabled={data.meta.page <= 1}
                 >
-                  Previous
+                  {t('pagination.previous')}
                 </Button>
                 <span className="text-sm text-text-secondary">
-                  Page {data.meta.page} of {data.meta.totalPages}
+                  {t('pagination.pageOf', { page: data.meta.page, total: data.meta.totalPages })}
                 </span>
                 <Button
                   variant="secondary"
@@ -71,7 +75,7 @@ export default function OrderHistoryPage() {
                   onClick={() => setPage(data.meta.page + 1)}
                   disabled={data.meta.page >= data.meta.totalPages}
                 >
-                  Next
+                  {t('pagination.next')}
                 </Button>
               </div>
             )}

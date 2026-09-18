@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAddresses } from '../hooks/useAddresses';
 import { useCreateAddress } from '../hooks/useCreateAddress';
 import { useUpdateAddress } from '../hooks/useUpdateAddress';
@@ -13,6 +14,7 @@ import { Drawer } from '@/common/components/ui/Drawer';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
 
 export default function AddressListPage() {
+  const { t } = useTranslation('userProfile');
   const { data: addresses, isLoading, error: fetchError } = useAddresses();
   const createAddress = useCreateAddress();
   const updateAddress = useUpdateAddress();
@@ -79,7 +81,7 @@ export default function AddressListPage() {
   if (fetchError) {
     return (
       <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-4 text-sm text-rose-800">
-        Failed to load addresses. Please try again.
+        {t('address.loadError')}
       </div>
     );
   }
@@ -88,8 +90,8 @@ export default function AddressListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-text-primary">Shipping Addresses</h1>
-          <p className="mt-1 text-sm text-text-secondary">Manage your delivery addresses for a faster checkout.</p>
+          <h1 className="text-xl font-bold tracking-tight text-text-primary">{t('address.title')}</h1>
+          <p className="mt-1 text-sm text-text-secondary">{t('address.subtitle')}</p>
         </div>
         <Button
           type="button"
@@ -98,7 +100,7 @@ export default function AddressListPage() {
           icon={Plus}
           className="shrink-0"
         >
-          Add Address
+          {t('address.add')}
         </Button>
       </div>
 
@@ -120,14 +122,14 @@ export default function AddressListPage() {
         </div>
       ) : (
         <div className="rounded-xl border-2 border-dashed border-border-default p-10 text-center bg-surface-hover/50">
-          <p className="text-sm text-text-secondary">You haven't added any shipping addresses yet.</p>
+          <p className="text-sm text-text-secondary">{t('address.emptyText')}</p>
           <Button
             type="button"
             variant="brand-outline"
             onClick={() => setShowForm(true)}
             className="mt-4"
           >
-            Add your first address
+            {t('address.addFirst')}
           </Button>
         </div>
       )}
@@ -136,7 +138,7 @@ export default function AddressListPage() {
       <Drawer
         open={showForm}
         onClose={() => setShowForm(false)}
-        title="Add New Address"
+        title={t('address.drawerAddTitle')}
         variant="modal"
         size="xl"
       >
@@ -152,7 +154,7 @@ export default function AddressListPage() {
       <Drawer
         open={!!editingAddress}
         onClose={() => setEditingAddress(undefined)}
-        title="Edit Address"
+        title={t('address.drawerEditTitle')}
         variant="modal"
         size="xl"
       >
@@ -170,11 +172,11 @@ export default function AddressListPage() {
       {/* Premium Confirm Modal for Address Deletion */}
       <ConfirmModal
         open={deleteTargetId !== null}
-        title="Delete Shipping Address"
-        message="Are you sure you want to delete this shipping address? This will remove it from your saved addresses."
+        title={t('address.deleteTitle')}
+        message={t('address.deleteMessage')}
         variant="danger"
         confirmVariant="brand"
-        confirmLabel="Delete"
+        confirmLabel={t('address.deleteConfirm')}
         loading={deleteAddress.isPending}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTargetId(null)}

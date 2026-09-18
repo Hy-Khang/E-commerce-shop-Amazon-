@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { useShopProducts } from '@/features/shop';
@@ -15,6 +16,7 @@ interface Props {
 const SCROLL_AMOUNT = 560;
 
 export function ShopProductsCarousel({ shopSlug, shopName, currentProductId }: Props) {
+  const { t } = useTranslation('product');
   const { data, isLoading } = useShopProducts(shopSlug, { page: 1, limit: 12, sort: 'created_at', order: 'desc' });
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -47,13 +49,13 @@ export function ShopProductsCarousel({ shopSlug, shopName, currentProductId }: P
     <section className="shop-card p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-bold tracking-tight text-text-primary">
-          Other Products from {shopName}
+          {t('sections.shopOtherProducts', { shopName })}
         </h2>
         <Link
           to={ROUTES.SHOP_PROFILE(shopSlug)}
           className="flex items-center gap-1 text-sm font-semibold text-text-brand hover:text-primary-700 transition-colors"
         >
-          View All
+          {t('sections.shopViewAll')}
           <ChevronRight className="h-4 w-4" />
         </Link>
       </div>

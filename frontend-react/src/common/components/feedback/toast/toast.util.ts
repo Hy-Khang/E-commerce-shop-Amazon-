@@ -1,21 +1,23 @@
 import { toast } from 'sonner';
 import { ApiError } from '@/core/api/api.types';
-import { translate } from '@/common/i18n';
-
-function extractErrorMessage(error: unknown): string | null {
-  if (error instanceof ApiError && error.message) return error.message;
-  if (error instanceof Error && error.message) return error.message;
-  return null;
-}
+import { resolveApiErrorMessage } from '@/common/i18n';
 
 export function showSuccessToast(message: string, id?: string) {
   toast.success(message, { id });
 }
 
 export function showErrorToast(error: unknown, fallbackMessage?: string, id?: string) {
-  const message = extractErrorMessage(error)
-    ?? fallbackMessage
-    ?? translate((m) => m.toast.error.generic);
+  let message: string;
+  if (typeof error === 'string' && error) {
+    // Caller passed a ready-made message string.
+    message = error;
+  } else if (error instanceof ApiError || (error instanceof Error && error.message)) {
+    // Localize by backend error code (falls back to the raw backend message).
+    message = resolveApiErrorMessage(error);
+  } else {
+    // Unknown throwable → caller fallback, else the generic localized message.
+    message = fallbackMessage ?? resolveApiErrorMessage(error);
+  }
   toast.error(message, { id });
 }
 

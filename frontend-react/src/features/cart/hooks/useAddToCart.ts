@@ -4,12 +4,12 @@ import { cartKeys } from './useCart';
 import type { Cart, AddToCartRequest } from '../types/cart.types';
 import { useCartStore } from '../stores/cart.store';
 import { showErrorToast, showSuccessToast } from '@/common/components/feedback/toast';
-import { useTranslation } from '@/common/i18n';
+import { useTranslation } from 'react-i18next';
 
 export function useAddToCart() {
   const queryClient = useQueryClient();
   const setItemCount = useCartStore((s) => s.setItemCount);
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: (data: AddToCartRequest) =>
@@ -46,7 +46,7 @@ export function useAddToCart() {
     },
 
     onSuccess: () => {
-      showSuccessToast(t((m) => m.toast.cart.added), 'cart-success');
+      showSuccessToast(t('cart.added'), 'cart-success');
     },
 
     onError: (err, _variables, context) => {

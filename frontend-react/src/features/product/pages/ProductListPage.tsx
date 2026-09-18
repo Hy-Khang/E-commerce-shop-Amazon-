@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal, X, Sparkles } from 'lucide-react';
 import { usePagination } from '@/common/hooks/usePagination';
 import { Button } from '@/common/components/ui/Button';
@@ -16,6 +17,7 @@ import { useTrackActivityCallback } from '@/features/recommendations';
 import type { ProductListParams, VisualSearchResult } from '../types/product.types';
 
 export default function ProductListPage() {
+  const { t } = useTranslation('product');
   const [searchParams, setSearchParams] = useSearchParams();
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const location = useLocation();
@@ -80,13 +82,13 @@ export default function ProductListPage() {
         <div className="mb-6 flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-              {vsResult ? 'Visual Search Results' : 'Products'}
+              {vsResult ? t('list.visualSearchResults') : t('list.title')}
             </h1>
             {(vsResult || (!isLoading && data)) && (
               <p className="mt-1 text-sm text-text-secondary">
-                {totalResults} result{totalResults !== 1 ? 's' : ''}
+                {t('list.results', { count: totalResults })}
                 {!vsResult && searchQuery && (
-                  <> for "<span className="font-medium text-text-primary">{searchQuery}</span>"</>
+                  <> {t('list.forPrefix')} "<span className="font-medium text-text-primary">{searchQuery}</span>"</>
                 )}
               </p>
             )}
@@ -98,7 +100,7 @@ export default function ProductListPage() {
                 className="flex items-center gap-2 rounded-lg border border-border-default bg-surface px-3 py-2 text-sm font-medium text-text-secondary hover:border-border-strong transition-colors lg:hidden"
               >
                 <SlidersHorizontal className="h-4 w-4" />
-                Filters
+                {t('list.filters')}
               </button>
               <SortDropdown />
             </div>
@@ -115,7 +117,7 @@ export default function ProductListPage() {
                   : 'bg-surface-hover text-text-secondary hover:bg-border-default hover:text-text-primary'
               }`}
             >
-              All
+              {t('list.all')}
             </button>
             {categories.map((cat) => (
               <button
@@ -155,10 +157,10 @@ export default function ProductListPage() {
                   onClick={() => setPage(data.meta.page - 1)}
                   disabled={data.meta.page <= 1}
                 >
-                  Previous
+                  {t('pagination.previous')}
                 </Button>
                 <span className="text-sm text-text-secondary">
-                  Page {data.meta.page} of {data.meta.totalPages}
+                  {t('pagination.pageOf', { page: data.meta.page, total: data.meta.totalPages })}
                 </span>
                 <Button
                   variant="secondary"
@@ -166,7 +168,7 @@ export default function ProductListPage() {
                   onClick={() => setPage(data.meta.page + 1)}
                   disabled={data.meta.page >= data.meta.totalPages}
                 >
-                  Next
+                  {t('pagination.next')}
                 </Button>
               </div>
             )}
@@ -174,10 +176,10 @@ export default function ProductListPage() {
         ) : (
           <div className="py-12 text-center text-text-secondary">
             {vsResult
-              ? 'No products matched the image.'
+              ? t('list.noMatchImage')
               : searchQuery
-                ? `No products found for "${searchQuery}"`
-                : 'No products available.'}
+                ? t('list.noResultsFor', { query: searchQuery })
+                : t('list.noneAvailable')}
           </div>
         )}
       </div>
@@ -187,7 +189,7 @@ export default function ProductListPage() {
           open={filterDrawerOpen}
           onClose={() => setFilterDrawerOpen(false)}
           side="left"
-          title="Filters"
+          title={t('list.filters')}
         >
           <FilterSidebar />
         </Drawer>
@@ -197,11 +199,12 @@ export default function ProductListPage() {
 }
 
 function VisualSearchBanner({ tags, onClear }: { tags: VisualSearchResult['tags']; onClear: () => void }) {
+  const { t } = useTranslation('product');
   const tagEntries = [
-    tags.category && { label: 'Category', value: tags.category },
-    tags.color && { label: 'Color', value: tags.color },
-    tags.material && { label: 'Material', value: tags.material },
-    tags.style && { label: 'Style', value: tags.style },
+    tags.category && { label: t('visualBanner.category'), value: tags.category },
+    tags.color && { label: t('visualBanner.color'), value: tags.color },
+    tags.material && { label: t('visualBanner.material'), value: tags.material },
+    tags.style && { label: t('visualBanner.style'), value: tags.style },
   ].filter(Boolean) as { label: string; value: string }[];
 
   return (
@@ -209,14 +212,14 @@ function VisualSearchBanner({ tags, onClear }: { tags: VisualSearchResult['tags'
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium text-text-brand">
           <Sparkles className="h-4 w-4" />
-          AI detected attributes
+          {t('visualBanner.detected')}
         </div>
         <button
           onClick={onClear}
           className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-text-secondary hover:bg-primary-100 transition-colors"
         >
           <X className="h-3 w-3" />
-          Clear
+          {t('visualBanner.clear')}
         </button>
       </div>
       <div className="mt-2.5 flex flex-wrap gap-2">

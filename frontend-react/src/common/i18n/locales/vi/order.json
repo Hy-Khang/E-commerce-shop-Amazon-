@@ -1,0 +1,140 @@
+{
+  "pagination": {
+    "previous": "Trước",
+    "next": "Sau",
+    "pageOf": "Trang {{page}} / {{total}}"
+  },
+  "steps": {
+    "cart": "Giỏ hàng",
+    "checkout": "Thanh toán",
+    "complete": "Hoàn tất"
+  },
+  "checkout": {
+    "title": "Thanh toán",
+    "cartEmpty": "Giỏ hàng của bạn đang trống.",
+    "browseProducts": "Xem sản phẩm",
+    "shippingAddress": "Địa chỉ giao hàng",
+    "noAddresses": "Không tìm thấy địa chỉ. Vui lòng thêm địa chỉ trong hồ sơ của bạn trước.",
+    "defaultBadge": "Mặc định",
+    "paymentMethod": "Phương thức thanh toán",
+    "platformVoucher": "Voucher sàn",
+    "selectPlatformVoucher": "Chọn voucher sàn",
+    "stackHint": "Bạn có thể dùng một voucher sàn cùng một voucher cho mỗi shop.",
+    "couponsGenericError": "Không thể áp dụng một hoặc nhiều mã giảm giá",
+    "couponApplyError": "{{message}} — vui lòng gỡ mã giảm giá không hợp lệ.",
+    "voucherModal": {
+      "platform": "Voucher sàn",
+      "shop": "Voucher shop"
+    },
+    "summary": {
+      "title": "Tóm tắt đơn hàng",
+      "subtotal": "Tạm tính",
+      "coupon": "Mã giảm giá ({{code}})",
+      "coins": "Xu ({{amount}})",
+      "shipping": "Phí vận chuyển",
+      "shippingPending": "Tính sau khi đặt hàng",
+      "estimatedTotal": "Tổng tạm tính",
+      "youSave": "Bạn tiết kiệm {{amount}}",
+      "youSaveEstimate": "Bạn tiết kiệm ~{{amount}} — giảm giá cuối cùng xác nhận khi thanh toán"
+    },
+    "submit": {
+      "redirecting": "Đang chuyển đến trang thanh toán...",
+      "placing": "Đang đặt hàng...",
+      "removeCoupon": "Gỡ mã không hợp lệ để tiếp tục",
+      "placeOrder": "Đặt hàng",
+      "failed": "Đặt hàng thất bại"
+    }
+  },
+  "shopGroup": {
+    "otherItems": "Sản phẩm khác",
+    "selectShopVoucher": "Chọn voucher shop"
+  },
+  "breakdown": {
+    "title": "Chi tiết đơn theo shop ({{shopCount}})",
+    "shopFallback": "Shop #{{id}}",
+    "items": "Sản phẩm",
+    "discount": "Giảm giá",
+    "shipping": "Phí vận chuyển",
+    "orderTotal": "Tổng đơn"
+  },
+  "history": {
+    "title": "Đơn hàng của tôi",
+    "emptyTitle": "Chưa có đơn hàng nào",
+    "emptyFiltered": "Không có đơn hàng {{status}}.",
+    "emptyDefault": "Bắt đầu mua sắm để xem đơn hàng của bạn ở đây.",
+    "browseProducts": "Xem sản phẩm"
+  },
+  "statusTabs": {
+    "all": "Tất cả"
+  },
+  "card": {
+    "orderNumber": "Đơn hàng #{{id}}",
+    "noImage": "N/A",
+    "moreItems_other": "+{{count}} sản phẩm khác"
+  },
+  "item": {
+    "noImage": "Không có ảnh",
+    "sku": "SKU: {{sku}}"
+  },
+  "detail": {
+    "notFound": "Không tìm thấy đơn hàng.",
+    "backToOrders": "Quay lại đơn hàng",
+    "orderNumber": "Đơn hàng #{{id}}",
+    "cancelling": "Đang hủy...",
+    "cancelOrder": "Hủy đơn",
+    "payNow": "Thanh toán ngay",
+    "confirmReceipt": "Xác nhận đã nhận",
+    "returnRefund": "Trả hàng / Hoàn tiền",
+    "itemsHeading": "Sản phẩm ({{count}})",
+    "writeReview": "Viết đánh giá",
+    "cancel": "Hủy",
+    "timeline": "Tiến trình đơn hàng",
+    "liveTracking": "Theo dõi trực tiếp",
+    "lastKnownLocation": "Vị trí shipper gần nhất",
+    "orderInfo": "Thông tin đơn hàng",
+    "payment": "Thanh toán",
+    "paymentStatus": "Trạng thái thanh toán",
+    "shippingAddress": "Địa chỉ giao hàng",
+    "summary": "Tóm tắt",
+    "subtotal": "Tạm tính",
+    "coupon": "Mã giảm giá ({{code}})",
+    "coins": "Xu",
+    "shipping": "Phí vận chuyển",
+    "total": "Tổng cộng",
+    "confirm": {
+      "cancelTitle": "Hủy đơn hàng",
+      "cancelMessage": "Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.",
+      "cancelConfirm": "Hủy đơn",
+      "receiptTitle": "Xác nhận đã nhận",
+      "receiptMessage": "Xác nhận bạn đã nhận đơn hàng này? Sau khi xác nhận, bạn có thể viết đánh giá cho sản phẩm.",
+      "receiptConfirm": "Xác nhận đã nhận",
+      "returnTitle": "Yêu cầu trả hàng / hoàn tiền",
+      "returnMessage": "Bạn có chắc muốn yêu cầu trả hàng cho đơn này? Quản trị viên sẽ xem xét yêu cầu của bạn.",
+      "returnConfirm": "Gửi yêu cầu trả hàng"
+    }
+  },
+  "success": {
+    "loading": "Đang tải chi tiết đơn hàng...",
+    "notFound": "Không tìm thấy đơn hàng.",
+    "backHome": "Về trang chủ",
+    "thankYou": "Cảm ơn bạn đã mua hàng!",
+    "multiOrder": "Đơn của bạn đã được tách thành {{count}} đơn (mỗi shop một đơn) và đang được xử lý.",
+    "singleOrder": "Đơn hàng của bạn đã được đặt thành công và đang được xử lý.",
+    "orderNumber": "Đơn hàng #{{id}}",
+    "items": "Sản phẩm",
+    "itemCount_other": "{{count}} sản phẩm",
+    "viewDetails": "Xem chi tiết",
+    "paymentMethod": "Phương thức thanh toán",
+    "shippingAddress": "Địa chỉ giao hàng",
+    "totalAmount": "Tổng tiền",
+    "continueShopping": "Tiếp tục mua sắm",
+    "viewMyOrders": "Xem đơn hàng của tôi"
+  },
+  "trackingMap": {
+    "shipper": "Shipper",
+    "deliveryAddress": "Địa chỉ giao hàng",
+    "route": "Tuyến đường",
+    "shipperLocation": "Vị trí shipper",
+    "updated": "Cập nhật: {{time}}"
+  }
+}

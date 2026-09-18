@@ -1,0 +1,23 @@
+{
+  "loading": "Đang tải cửa hàng...",
+  "notFound": "Không tìm thấy cửa hàng.",
+  "allProducts": "Tất cả sản phẩm",
+  "noProducts": "Chưa có sản phẩm nào.",
+  "visitShop": "Xem cửa hàng",
+  "stats": {
+    "products_other": "{{count}} sản phẩm",
+    "rating": "{{rating}} Đánh giá",
+    "sold_other": "Đã bán {{count}}"
+  },
+  "pagination": {
+    "previous": "Trước",
+    "next": "Sau",
+    "pageOf": "Trang {{page}} / {{totalPages}}"
+  },
+  "hero": {
+    "goToSlide": "Đến slide {{number}}"
+  },
+  "productGrid": {
+    "emptyState": "Các sản phẩm này sẽ xuất hiện khi có sẵn."
+  }
+}

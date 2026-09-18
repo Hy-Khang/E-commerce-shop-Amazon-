@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MapPin, CreditCard, Tag, Loader2 } from 'lucide-react';
-import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
+import { ROUTES } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
+import { useEnumLabel } from '@/common/i18n';
 import { showErrorToast } from '@/common/components/feedback/toast';
 import { ApiError } from '@/core/api/api.types';
 import { useCart, cartSignature, groupItemsByShop } from '@/features/cart';
@@ -33,6 +35,8 @@ type VoucherScope = 'platform' | number;
 const PAYMENT_METHODS: PaymentMethod[] = ['cod', 'vnpay', 'momo'];
 
 export default function CheckoutPage() {
+  const { t } = useTranslation('order');
+  const enumLabel = useEnumLabel();
   const navigate = useNavigate();
   const { data: cart, isLoading: cartLoading } = useCart();
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
@@ -170,12 +174,12 @@ export default function CheckoutPage() {
   if (!cart || cart.items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <p className="text-text-secondary">Your cart is empty.</p>
+        <p className="text-text-secondary">{t('checkout.cartEmpty')}</p>
         <button
           onClick={() => navigate(ROUTES.PRODUCTS)}
           className="mt-4 rounded-lg bg-brand px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
         >
-          Browse Products
+          {t('checkout.browseProducts')}
         </button>
       </div>
     );
@@ -246,22 +250,22 @@ export default function CheckoutPage() {
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-2 text-text-secondary">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-hover text-[10px] font-bold">1</span>
-            <span className="text-xs font-medium">Cart</span>
+            <span className="text-xs font-medium">{t('steps.cart')}</span>
           </div>
           <div className="mx-4 h-[1px] w-12 bg-border-default" />
           <div className="flex items-center gap-2 text-text-brand font-semibold">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">2</span>
-            <span className="text-xs">Checkout</span>
+            <span className="text-xs">{t('steps.checkout')}</span>
           </div>
           <div className="mx-4 h-[1px] w-12 bg-border-default" />
           <div className="flex items-center gap-2 text-text-muted">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-hover text-[10px] font-bold">3</span>
-            <span className="text-xs">Complete</span>
+            <span className="text-xs">{t('steps.complete')}</span>
           </div>
         </div>
       </div>
 
-      <h1 className="text-2xl font-bold tracking-tight text-text-primary">Checkout</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-text-primary">{t('checkout.title')}</h1>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -270,12 +274,12 @@ export default function CheckoutPage() {
             <div className="rounded-xl border border-border-default bg-elevated p-6">
               <div className="mb-4 flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-text-secondary" />
-                <h2 className="text-lg font-semibold text-text-primary">Shipping Address</h2>
+                <h2 className="text-lg font-semibold text-text-primary">{t('checkout.shippingAddress')}</h2>
               </div>
 
               {!addresses || addresses.length === 0 ? (
                 <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                  No addresses found. Please add an address in your profile first.
+                  {t('checkout.noAddresses')}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -300,7 +304,7 @@ export default function CheckoutPage() {
                           {address.full_name}
                           {address.is_default && (
                             <span className="ml-2 rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-bold text-text-brand uppercase tracking-wider">
-                              Default
+                              {t('checkout.defaultBadge')}
                             </span>
                           )}
                         </p>
@@ -322,7 +326,7 @@ export default function CheckoutPage() {
             <div className="rounded-xl border border-border-default bg-elevated p-6">
               <div className="mb-4 flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-text-secondary" />
-                <h2 className="text-lg font-semibold text-text-primary">Payment Method</h2>
+                <h2 className="text-lg font-semibold text-text-primary">{t('checkout.paymentMethod')}</h2>
               </div>
 
               <div className="space-y-3">
@@ -342,7 +346,7 @@ export default function CheckoutPage() {
                       className="accent-brand"
                     />
                     <span className="text-sm font-medium text-text-primary">
-                      {PAYMENT_METHOD_LABELS[method]}
+                      {enumLabel('paymentMethod', method)}
                     </span>
                   </label>
                 ))}
@@ -356,23 +360,24 @@ export default function CheckoutPage() {
             <div className="rounded-xl border border-border-default bg-elevated p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Tag className="h-5 w-5 text-text-secondary" />
-                <h2 className="text-lg font-semibold text-text-primary">Platform Voucher</h2>
+                <h2 className="text-lg font-semibold text-text-primary">{t('checkout.platformVoucher')}</h2>
               </div>
               <VoucherRow
                 applied={platformCoupon}
-                selectLabel="Select platform voucher"
+                selectLabel={t('checkout.selectPlatformVoucher')}
                 onOpen={() => setVoucher({ open: true, scope: 'platform' })}
                 onRemove={removeCoupon}
               />
               <p className="mt-3 text-xs text-text-muted">
-                You can stack one platform coupon with one coupon per shop.
+                {t('checkout.stackHint')}
               </p>
               {couponCodes.length > 0 && preview.isError && (
                 <p className="mt-3 text-sm text-error-600">
-                  {preview.error instanceof Error
-                    ? preview.error.message
-                    : 'One or more coupons could not be applied'}
-                  {' — '}please remove the invalid coupon.
+                  {t('checkout.couponApplyError', {
+                    message: preview.error instanceof Error
+                      ? preview.error.message
+                      : t('checkout.couponsGenericError'),
+                  })}
                 </p>
               )}
             </div>
@@ -404,31 +409,31 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           <div>
             <div className="sticky top-[7.5rem] rounded-xl border border-border-default bg-elevated p-6">
-              <h2 className="text-lg font-semibold text-text-primary">Order Summary</h2>
+              <h2 className="text-lg font-semibold text-text-primary">{t('checkout.summary.title')}</h2>
 
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm text-text-secondary">
-                  <span>Subtotal</span>
+                  <span>{t('checkout.summary.subtotal')}</span>
                   <span>{formatPrice(displaySubtotal)}</span>
                 </div>
                 {couponBreakdown.map((c) => (
                   <div key={c.code} className="flex justify-between text-sm text-emerald-700">
-                    <span>Coupon ({c.code})</span>
+                    <span>{t('checkout.summary.coupon', { code: c.code })}</span>
                     <span>-{formatPrice(c.amount)}</span>
                   </div>
                 ))}
                 {coinDiscountApplied > 0 && (
                   <div className="flex justify-between text-sm text-amber-600">
-                    <span>Coins ({coinsApplied.toLocaleString('vi-VN')})</span>
+                    <span>{t('checkout.summary.coins', { amount: coinsApplied.toLocaleString('vi-VN') })}</span>
                     <span>-{formatPrice(coinDiscountApplied)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm text-text-secondary">
-                  <span>Shipping</span>
+                  <span>{t('checkout.summary.shipping')}</span>
                   {shippingTotal !== null ? (
                     <span>{formatPrice(shippingTotal)}</span>
                   ) : (
-                    <span className="text-text-muted">Calculated after order</span>
+                    <span className="text-text-muted">{t('checkout.summary.shippingPending')}</span>
                   )}
                 </div>
               </div>
@@ -437,14 +442,14 @@ export default function CheckoutPage() {
 
               <div className="mt-4 border-t border-border-default pt-4">
                 <div className="flex justify-between text-base font-bold text-text-primary">
-                  <span>Estimated Total</span>
+                  <span>{t('checkout.summary.estimatedTotal')}</span>
                   <span>{formatPrice(estimatedTotal)}</span>
                 </div>
                 {appliedCoupons.length > 0 && discountAmount > 0 && (
                   <p className="mt-1 text-xs text-emerald-700">
                     {usingPreview
-                      ? `You save ${formatPrice(discountAmount)}`
-                      : `You save ~${formatPrice(discountAmount)} — final discount confirmed at checkout`}
+                      ? t('checkout.summary.youSave', { amount: formatPrice(discountAmount) })
+                      : t('checkout.summary.youSaveEstimate', { amount: formatPrice(discountAmount) })}
                   </p>
                 )}
               </div>
@@ -461,19 +466,19 @@ export default function CheckoutPage() {
               >
                 {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
                 {createPayment.isPending
-                  ? 'Redirecting to payment...'
+                  ? t('checkout.submit.redirecting')
                   : checkout.isPending
-                    ? 'Placing Order...'
+                    ? t('checkout.submit.placing')
                     : couponRejected
-                      ? 'Remove invalid coupon to continue'
-                      : 'Place Order'}
+                      ? t('checkout.submit.removeCoupon')
+                      : t('checkout.submit.placeOrder')}
               </button>
 
               {(checkout.isError || createPayment.isError) && (
                 <p className="mt-2 text-center text-sm text-error-600">
                   {(checkout.error ?? createPayment.error) instanceof Error
                     ? (checkout.error ?? createPayment.error)?.message
-                    : 'Failed to place order'}
+                    : t('checkout.submit.failed')}
                 </p>
               )}
             </div>
@@ -489,7 +494,7 @@ export default function CheckoutPage() {
         onRemove={removeCoupon}
         cartSig={cartSig}
         scope={voucher.scope}
-        title={voucher.scope === 'platform' ? 'Platform voucher' : 'Shop voucher'}
+        title={voucher.scope === 'platform' ? t('checkout.voucherModal.platform') : t('checkout.voucherModal.shop')}
       />
     </div>
   );

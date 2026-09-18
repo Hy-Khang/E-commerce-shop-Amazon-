@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { sellerCouponService } from '../services/seller-coupon.service';
 import { sellerCouponKeys } from './useSellerCoupons';
 import { showSuccessToast } from '@/common/components/feedback/toast';
-import { useTranslation } from '@/common/i18n';
+import { useTranslation } from 'react-i18next';
 import type {
   CreateSellerCouponRequest,
   UpdateSellerCouponRequest,
@@ -10,7 +10,7 @@ import type {
 
 export function useCreateSellerCoupon() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: (data: CreateSellerCouponRequest) =>
@@ -18,14 +18,14 @@ export function useCreateSellerCoupon() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sellerCouponKeys.all });
-      showSuccessToast(t((m) => m.toast.coupon.created));
+      showSuccessToast(t('coupon.created'));
     },
   });
 }
 
 export function useUpdateSellerCoupon(id: number) {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: (data: UpdateSellerCouponRequest) =>
@@ -34,21 +34,21 @@ export function useUpdateSellerCoupon(id: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sellerCouponKeys.all });
       queryClient.invalidateQueries({ queryKey: sellerCouponKeys.detail(id) });
-      showSuccessToast(t((m) => m.toast.coupon.updated));
+      showSuccessToast(t('coupon.updated'));
     },
   });
 }
 
 export function useDeactivateSellerCoupon() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: (id: number) => sellerCouponService.deactivate(id),
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sellerCouponKeys.all });
-      showSuccessToast(t((m) => m.toast.coupon.deactivated));
+      showSuccessToast(t('coupon.deactivated'));
     },
   });
 }
@@ -60,7 +60,7 @@ export function useDeactivateSellerCoupon() {
  */
 export function useReactivateSellerCoupon() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: (id: number) =>
@@ -68,7 +68,7 @@ export function useReactivateSellerCoupon() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sellerCouponKeys.all });
-      showSuccessToast(t((m) => m.toast.coupon.reactivated));
+      showSuccessToast(t('coupon.reactivated'));
     },
   });
 }

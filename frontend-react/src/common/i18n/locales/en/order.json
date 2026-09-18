@@ -1,0 +1,142 @@
+{
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{total}}"
+  },
+  "steps": {
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "complete": "Complete"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "cartEmpty": "Your cart is empty.",
+    "browseProducts": "Browse Products",
+    "shippingAddress": "Shipping Address",
+    "noAddresses": "No addresses found. Please add an address in your profile first.",
+    "defaultBadge": "Default",
+    "paymentMethod": "Payment Method",
+    "platformVoucher": "Platform Voucher",
+    "selectPlatformVoucher": "Select platform voucher",
+    "stackHint": "You can stack one platform coupon with one coupon per shop.",
+    "couponsGenericError": "One or more coupons could not be applied",
+    "couponApplyError": "{{message}} — please remove the invalid coupon.",
+    "voucherModal": {
+      "platform": "Platform voucher",
+      "shop": "Shop voucher"
+    },
+    "summary": {
+      "title": "Order Summary",
+      "subtotal": "Subtotal",
+      "coupon": "Coupon ({{code}})",
+      "coins": "Coins ({{amount}})",
+      "shipping": "Shipping",
+      "shippingPending": "Calculated after order",
+      "estimatedTotal": "Estimated Total",
+      "youSave": "You save {{amount}}",
+      "youSaveEstimate": "You save ~{{amount}} — final discount confirmed at checkout"
+    },
+    "submit": {
+      "redirecting": "Redirecting to payment...",
+      "placing": "Placing Order...",
+      "removeCoupon": "Remove invalid coupon to continue",
+      "placeOrder": "Place Order",
+      "failed": "Failed to place order"
+    }
+  },
+  "shopGroup": {
+    "otherItems": "Other items",
+    "selectShopVoucher": "Select shop voucher"
+  },
+  "breakdown": {
+    "title": "Order breakdown by shop ({{shopCount}})",
+    "shopFallback": "Shop #{{id}}",
+    "items": "Items",
+    "discount": "Discount",
+    "shipping": "Shipping",
+    "orderTotal": "Order total"
+  },
+  "history": {
+    "title": "My Orders",
+    "emptyTitle": "No orders yet",
+    "emptyFiltered": "No {{status}} orders found.",
+    "emptyDefault": "Start shopping to see your orders here.",
+    "browseProducts": "Browse Products"
+  },
+  "statusTabs": {
+    "all": "All"
+  },
+  "card": {
+    "orderNumber": "Order #{{id}}",
+    "noImage": "N/A",
+    "moreItems_one": "+{{count}} more item",
+    "moreItems_other": "+{{count}} more items"
+  },
+  "item": {
+    "noImage": "No image",
+    "sku": "SKU: {{sku}}"
+  },
+  "detail": {
+    "notFound": "Order not found.",
+    "backToOrders": "Back to orders",
+    "orderNumber": "Order #{{id}}",
+    "cancelling": "Cancelling...",
+    "cancelOrder": "Cancel Order",
+    "payNow": "Pay Now",
+    "confirmReceipt": "Confirm Receipt",
+    "returnRefund": "Return / Refund",
+    "itemsHeading": "Items ({{count}})",
+    "writeReview": "Write a Review",
+    "cancel": "Cancel",
+    "timeline": "Order Timeline",
+    "liveTracking": "Live Tracking",
+    "lastKnownLocation": "Last Known Shipper Location",
+    "orderInfo": "Order Info",
+    "payment": "Payment",
+    "paymentStatus": "Payment Status",
+    "shippingAddress": "Shipping Address",
+    "summary": "Summary",
+    "subtotal": "Subtotal",
+    "coupon": "Coupon ({{code}})",
+    "coins": "Coins",
+    "shipping": "Shipping",
+    "total": "Total",
+    "confirm": {
+      "cancelTitle": "Cancel Order",
+      "cancelMessage": "Are you sure you want to cancel this order? This action cannot be undone.",
+      "cancelConfirm": "Cancel Order",
+      "receiptTitle": "Confirm Receipt",
+      "receiptMessage": "Confirm that you have received this order? Once confirmed, you can write reviews for the products.",
+      "receiptConfirm": "Confirm Receipt",
+      "returnTitle": "Request Return / Refund",
+      "returnMessage": "Are you sure you want to request a return for this order? An admin will review your request.",
+      "returnConfirm": "Submit Return Request"
+    }
+  },
+  "success": {
+    "loading": "Loading order details...",
+    "notFound": "Order not found.",
+    "backHome": "Back to Home",
+    "thankYou": "Thank You for Your Purchase!",
+    "multiOrder": "Your checkout created {{count}} orders (one per shop) and they are now being processed.",
+    "singleOrder": "Your order has been placed successfully and is now being processed.",
+    "orderNumber": "Order #{{id}}",
+    "items": "Items",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} item(s)",
+    "viewDetails": "View Details",
+    "paymentMethod": "Payment Method",
+    "shippingAddress": "Shipping Address",
+    "totalAmount": "Total Amount",
+    "continueShopping": "Continue Shopping",
+    "viewMyOrders": "View My Orders"
+  },
+  "trackingMap": {
+    "shipper": "Shipper",
+    "deliveryAddress": "Delivery Address",
+    "route": "Route",
+    "shipperLocation": "Shipper Location",
+    "updated": "Updated: {{time}}"
+  }
+}

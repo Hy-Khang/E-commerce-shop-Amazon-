@@ -1,0 +1,65 @@
+{
+  "header": {
+    "openMenu": "Open menu",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "allProducts": "All Products",
+    "help": "Help",
+    "profileFallback": "Profile"
+  },
+  "search": {
+    "placeholder": "Search products...",
+    "action": "Search"
+  },
+  "menu": {
+    "title": "Menu"
+  },
+  "sections": {
+    "appearance": "Appearance",
+    "language": "Language",
+    "shop": "Shop",
+    "account": "Account",
+    "manage": "Manage"
+  },
+  "account": {
+    "myProfile": "My Profile",
+    "orders": "Orders",
+    "addresses": "Addresses",
+    "myReviews": "My Reviews",
+    "wishlist": "Wishlist",
+    "becomeSeller": "Become a seller",
+    "logout": "Logout",
+    "loggingOut": "Logging out..."
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "register": "Register"
+  },
+  "portals": {
+    "adminShort": "Admin",
+    "sellerShort": "Seller",
+    "shipperShort": "Shipper",
+    "adminPortal": "Admin Portal",
+    "sellerCenter": "Seller Center",
+    "shipperPortal": "Shipper Portal",
+    "shopInfo": "Shop Info"
+  },
+  "footer": {
+    "customerService": "Customer Service",
+    "helpCentre": "Help Centre",
+    "howToBuy": "How To Buy",
+    "shippingDelivery": "Shipping & Delivery",
+    "returnsRefunds": "Returns & Refunds",
+    "contactUs": "Contact Us",
+    "aboutNook": "About Nook",
+    "aboutUs": "About Us",
+    "careers": "Careers",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "browseProducts": "Browse Products",
+    "paymentShipping": "Payment & Shipping",
+    "followUs": "Follow Us",
+    "rights": "© {{year}} Nook. All rights reserved.",
+    "country": "Country: Vietnam"
+  }
+}

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Bell } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useNotificationStore } from '../stores/notification.store';
 import { useUnreadCount } from '../hooks/useUnreadCount';
 import { useNotificationRoutes } from '../hooks/useNotificationRoutes';
 import { NotificationDropdown } from './NotificationDropdown';
 
 export function NotificationBell() {
+  const { t } = useTranslation('notification');
   const { context } = useNotificationRoutes();
   useUnreadCount(context);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
@@ -16,7 +18,7 @@ export function NotificationBell() {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="relative rounded-lg p-2 text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
-        aria-label="Notifications"
+        aria-label={t('ariaLabel')}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (

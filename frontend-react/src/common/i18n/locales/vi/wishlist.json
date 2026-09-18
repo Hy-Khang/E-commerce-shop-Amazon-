@@ -1,0 +1,20 @@
+{
+  "page": {
+    "title": "Danh sách yêu thích",
+    "subtitle": "Theo dõi những sản phẩm bạn yêu thích và muốn quan tâm.",
+    "emptyTitle": "Danh sách yêu thích của bạn đang trống",
+    "emptyDescription": "Khám phá cửa hàng và lưu những sản phẩm bạn yêu thích để xem lại sau.",
+    "browseProducts": "Xem sản phẩm",
+    "savedCount_other": "Đã lưu {{count}} sản phẩm"
+  },
+  "card": {
+    "unavailable": "Không khả dụng",
+    "priceUnavailable": "Chưa có giá",
+    "added": "Đã thêm {{date}}",
+    "remove": "Xóa khỏi yêu thích"
+  },
+  "button": {
+    "add": "Thêm vào yêu thích",
+    "remove": "Xóa khỏi yêu thích"
+  }
+}

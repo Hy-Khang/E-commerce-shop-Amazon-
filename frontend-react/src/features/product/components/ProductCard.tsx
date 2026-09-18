@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Zap, Sparkles } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
@@ -40,6 +41,7 @@ export function ProductCard({
   badge,
   className = '',
 }: Props) {
+  const { t } = useTranslation('product');
   const prefetch = usePrefetchProduct();
   const { byProduct } = useFlashPriceMaps();
   const priceRange = getPriceRange(product.variants);
@@ -67,7 +69,7 @@ export function ProductCard({
           />
         ) : (
           <div className="flex h-full items-center justify-center text-text-muted">
-            No image
+            {t('card.noImage')}
           </div>
         )}
         <div className="absolute right-2 top-2 flex flex-col gap-1.5">
@@ -78,13 +80,13 @@ export function ProductCard({
           {flash && (
             <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
               <Zap className="h-2.5 w-2.5 fill-current" />
-              Flash
+              {t('card.flash')}
             </span>
           )}
           {isRecommended && (
             <span className="inline-flex items-center gap-0.5 rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-text-inverse shadow-sm">
               <Sparkles className="h-2.5 w-2.5" />
-              For You
+              {t('card.forYou')}
             </span>
           )}
           {badge}
@@ -121,11 +123,11 @@ export function ProductCard({
               </span>
             )
           ) : (
-            <span className={`${priceSize} text-text-muted`}>No variants</span>
+            <span className={`${priceSize} text-text-muted`}>{t('card.noVariants')}</span>
           )}
         </div>
         {!inStock && (
-          <span className="mt-1 inline-block text-xs font-medium text-error-600">Out of stock</span>
+          <span className="mt-1 inline-block text-xs font-medium text-error-600">{t('card.outOfStock')}</span>
         )}
       </div>
     </Link>

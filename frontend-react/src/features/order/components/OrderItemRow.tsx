@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import { ROUTES } from '@/common/constants/routes';
 import type { OrderItem } from '../types/order.types';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function OrderItemRow({ item, productLinkOverride }: Props) {
+  const { t } = useTranslation('order');
   const productLink = productLinkOverride !== undefined
     ? productLinkOverride
     : item.product_slug ? ROUTES.PRODUCT_DETAIL(item.product_slug) : null;
@@ -24,7 +26,7 @@ export function OrderItemRow({ item, productLinkOverride }: Props) {
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-xs text-text-muted">
-          No image
+          {t('item.noImage')}
         </div>
       )}
     </div>
@@ -44,7 +46,7 @@ export function OrderItemRow({ item, productLinkOverride }: Props) {
           <div className="flex-1 min-w-0">
             {productName}
             <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-text-muted">
-              <span>SKU: {item.sku}</span>
+              <span>{t('item.sku', { sku: item.sku })}</span>
               {item.variant_option1_label && item.variant_option1_value && (
                 <span>{item.variant_option1_label}: {item.variant_option1_value}</span>
               )}
@@ -60,7 +62,7 @@ export function OrderItemRow({ item, productLinkOverride }: Props) {
           <div className="flex-1 min-w-0">
             {productName}
             <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-text-muted">
-              <span>SKU: {item.sku}</span>
+              <span>{t('item.sku', { sku: item.sku })}</span>
               {item.variant_option1_label && item.variant_option1_value && (
                 <span>{item.variant_option1_label}: {item.variant_option1_value}</span>
               )}

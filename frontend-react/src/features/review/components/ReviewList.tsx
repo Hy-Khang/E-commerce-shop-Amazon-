@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { MessageSquare, Star } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button } from '@/common/components/ui/Button';
 import { useProductReviews } from '../hooks/useProductReviews';
 import { ReviewCard } from './ReviewCard';
@@ -10,6 +12,7 @@ interface Props {
 }
 
 export function ReviewList({ productId }: Props) {
+  const { t } = useTranslation('review');
   const [page, setPage] = useState(1);
   const { data, isLoading } = useProductReviews(productId, { page, limit: 10 });
 
@@ -31,14 +34,14 @@ export function ReviewList({ productId }: Props) {
     return (
       <div className="flex flex-col items-center py-8 text-text-muted">
         <MessageSquare className="h-10 w-10 text-text-muted/60" />
-        <p className="mt-2 text-sm font-medium">No reviews yet.</p>
+        <p className="mt-2 text-sm font-medium">{t('list.empty')}</p>
       </div>
     );
   }
 
   return (
     <div>
-      {data.stats && <ReviewSummary stats={data.stats} />}
+      {data.stats && <ReviewSummary stats={data.stats} t={t} />}
 
       <div className="divide-y divide-border-default">
         {data.data.map((review) => (
@@ -54,10 +57,10 @@ export function ReviewList({ productId }: Props) {
             onClick={() => setPage((p) => p - 1)}
             disabled={data.meta.page <= 1}
           >
-            Previous
+            {t('pagination.previous')}
           </Button>
           <span className="text-sm text-text-secondary">
-            Page {data.meta.page} of {data.meta.totalPages}
+            {t('pagination.pageOf', { page: data.meta.page, pages: data.meta.totalPages })}
           </span>
           <Button
             variant="secondary"
@@ -65,7 +68,7 @@ export function ReviewList({ productId }: Props) {
             onClick={() => setPage((p) => p + 1)}
             disabled={data.meta.page >= data.meta.totalPages}
           >
-            Next
+            {t('pagination.next')}
           </Button>
         </div>
       )}
@@ -73,7 +76,7 @@ export function ReviewList({ productId }: Props) {
   );
 }
 
-function ReviewSummary({ stats }: { stats: ReviewStats }) {
+function ReviewSummary({ stats, t }: { stats: ReviewStats; t: TFunction<'review'> }) {
   return (
     <div className="mb-6 flex gap-8 border-b border-border-default pb-6">
       <div className="flex flex-col items-center">
@@ -93,7 +96,7 @@ function ReviewSummary({ stats }: { stats: ReviewStats }) {
           ))}
         </div>
         <span className="mt-2 text-xs font-semibold text-text-muted">
-          {stats.total_reviews} review{stats.total_reviews !== 1 ? 's' : ''}
+          {t('list.reviewsCount', { count: stats.total_reviews })}
         </span>
       </div>
 

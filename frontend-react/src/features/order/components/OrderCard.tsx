@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Store } from 'lucide-react';
 import { formatPrice, formatDate, getImageUrl } from '@/common/utils/format.util';
-import { ROUTES, PAYMENT_METHOD_LABELS } from '@/common/constants/routes';
+import { ROUTES } from '@/common/constants/routes';
+import { useEnumLabel } from '@/common/i18n';
 import type { OrderListItemWithItems } from '../types/order.types';
 import { OrderStatusBadge } from './OrderStatusBadge';
 
@@ -12,6 +14,8 @@ interface Props {
 }
 
 export function OrderCard({ order }: Props) {
+  const { t } = useTranslation('order');
+  const enumLabel = useEnumLabel();
   const items = order.order_items;
   const visibleItems = items.slice(0, MAX_VISIBLE_ITEMS);
   const hiddenCount = items.length - MAX_VISIBLE_ITEMS;
@@ -24,7 +28,7 @@ export function OrderCard({ order }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div>
-            <p className="text-sm font-semibold text-text-primary">Order #{order.id}</p>
+            <p className="text-sm font-semibold text-text-primary">{t('card.orderNumber', { id: order.id })}</p>
             <p className="mt-0.5 text-xs text-text-muted">{formatDate(order.created_at)}</p>
           </div>
         </div>
@@ -52,7 +56,7 @@ export function OrderCard({ order }: Props) {
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-xs text-text-muted">
-                    N/A
+                    {t('card.noImage')}
                   </div>
                 )}
               </div>
@@ -87,12 +91,12 @@ export function OrderCard({ order }: Props) {
       )}
 
       {hiddenCount > 0 && (
-        <p className="mt-2 text-xs text-text-brand">+{hiddenCount} more items</p>
+        <p className="mt-2 text-xs text-text-brand">{t('card.moreItems', { count: hiddenCount })}</p>
       )}
 
       <div className="mt-3 flex items-center justify-between border-t border-border-default pt-3">
         <span className="text-xs text-text-muted">
-          {PAYMENT_METHOD_LABELS[order.payment_method]}
+          {enumLabel('paymentMethod', order.payment_method)}
         </span>
         <span className="text-sm font-bold text-text-primary">
           {formatPrice(order.total_amount)}

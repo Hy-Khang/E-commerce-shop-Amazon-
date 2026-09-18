@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../hooks/useNotifications';
 import { useMarkAllAsRead } from '../hooks/useMarkAllAsRead';
 import { useNotificationStore } from '../stores/notification.store';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function NotificationDropdown({ onClose }: Props) {
+  const { t } = useTranslation('notification');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { context, notificationsPath } = useNotificationRoutes();
   const { data, isLoading } = useNotifications({ limit: 10, context });
@@ -36,14 +38,14 @@ export function NotificationDropdown({ onClose }: Props) {
       className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-border-default bg-elevated shadow-lg ring-1 ring-black/5 overflow-hidden z-50"
     >
       <div className="flex items-center justify-between border-b border-border-default px-4 py-3">
-        <h3 className="text-sm font-semibold text-text-primary">Notifications</h3>
+        <h3 className="text-sm font-semibold text-text-primary">{t('dropdown.title')}</h3>
         {unreadCount > 0 && (
           <button
             onClick={() => markAllAsRead.mutate()}
             disabled={markAllAsRead.isPending}
             className="text-xs font-medium text-text-brand hover:text-primary-700 dark:hover:text-primary-200 transition-colors disabled:opacity-50"
           >
-            Mark all as read
+            {t('markAllRead')}
           </button>
         )}
       </div>
@@ -57,7 +59,7 @@ export function NotificationDropdown({ onClose }: Props) {
 
         {!isLoading && notifications.length === 0 && (
           <div className="py-8 text-center text-sm text-text-muted">
-            No notifications yet
+            {t('dropdown.empty')}
           </div>
         )}
 
@@ -78,7 +80,7 @@ export function NotificationDropdown({ onClose }: Props) {
             onClick={onClose}
             className="block py-2.5 text-center text-xs font-medium text-text-brand hover:text-primary-700 dark:hover:text-primary-200 hover:bg-surface-hover transition-colors"
           >
-            View all notifications
+            {t('dropdown.viewAll')}
           </Link>
         </div>
       )}

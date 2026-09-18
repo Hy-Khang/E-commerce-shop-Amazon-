@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Compass, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ROUTES } from '@/common/constants/routes';
@@ -15,6 +16,7 @@ interface Props {
 const SCROLL_AMOUNT = 440;
 
 export function DiscoverMoreSection({ products, isLoading }: Props) {
+  const { t } = useTranslation('product');
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -51,7 +53,7 @@ export function DiscoverMoreSection({ products, isLoading }: Props) {
       <div className="flex items-center gap-2">
         <Compass className="h-5 w-5 text-text-secondary" />
         <h2 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
-          Discover More
+          {t('sections.discoverMore')}
         </h2>
       </div>
 
@@ -100,7 +102,7 @@ export function DiscoverMoreSection({ products, isLoading }: Props) {
           to={ROUTES.PRODUCTS}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-brand hover:text-primary-700 transition-colors"
         >
-          Browse all products
+          {t('sections.browseAll')}
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

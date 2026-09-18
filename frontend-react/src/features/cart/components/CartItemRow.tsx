@@ -1,4 +1,5 @@
 import { Minus, Plus, Trash2, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
 import type { CartItem } from '../types/cart.types';
 import { getEffectivePrice, getItemTotal } from '../utils/cart.util';
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Props) {
+  const { t } = useTranslation('cart');
   const effectivePrice = getEffectivePrice(item);
   const isFlash = item.variant.flash_price !== null;
   const hasDiscount = isFlash || item.variant.sale_price !== null;
@@ -27,7 +29,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-xs text-text-muted">
-            No image
+            {t('item.noImage')}
           </div>
         )}
       </div>
@@ -38,10 +40,10 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
         </h3>
         <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-text-muted">
           {item.variant.option1 && (
-            <span>{item.variant.option1_label ?? 'Option 1'}: {item.variant.option1}</span>
+            <span>{item.variant.option1_label ?? t('item.option1')}: {item.variant.option1}</span>
           )}
           {item.variant.option2 && (
-            <span>{item.variant.option2_label ?? 'Option 2'}: {item.variant.option2}</span>
+            <span>{item.variant.option2_label ?? t('item.option2')}: {item.variant.option2}</span>
           )}
           <span>SKU: {item.variant.sku}</span>
         </div>
@@ -49,7 +51,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove, isUpdating }: Pr
           {isFlash && (
             <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
               <Zap className="h-2.5 w-2.5 fill-current" />
-              Flash
+              {t('item.flash')}
             </span>
           )}
           <span

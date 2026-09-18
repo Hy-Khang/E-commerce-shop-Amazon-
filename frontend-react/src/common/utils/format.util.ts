@@ -12,15 +12,23 @@ export function getImageUrl(url: string | null | undefined): string {
   return BACKEND_ORIGIN ? `${BACKEND_ORIGIN}${url}` : url;
 }
 
+import i18n from '@/common/i18n/config';
+
+/** Map the active UI language to an Intl locale tag (grouping/date format). */
+function localeTag(): string {
+  return (i18n.language || 'en').startsWith('vi') ? 'vi-VN' : 'en-US';
+}
+
+/** Prices are always VND; only the number formatting follows the UI language. */
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('vi-VN', {
+  return new Intl.NumberFormat(localeTag(), {
     style: 'currency',
     currency: 'VND',
   }).format(price);
 }
 
 export function formatDate(date: string | Date): string {
-  return new Intl.DateTimeFormat('vi-VN', {
+  return new Intl.DateTimeFormat(localeTag(), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

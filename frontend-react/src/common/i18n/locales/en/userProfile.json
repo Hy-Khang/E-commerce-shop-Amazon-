@@ -1,0 +1,64 @@
+{
+  "errorFallback": "An unexpected error occurred",
+  "page": {
+    "title": "My Profile",
+    "subtitle": "Manage your personal account settings and details.",
+    "security": "Security",
+    "loadError": "Failed to load profile. Please try again."
+  },
+  "form": {
+    "updateSuccess": "Profile updated successfully",
+    "email": "Email Address",
+    "fullName": "Full Name",
+    "phone": "Phone Number",
+    "phonePlaceholder": "e.g. 0901234567",
+    "save": "Save Changes"
+  },
+  "address": {
+    "title": "Shipping Addresses",
+    "subtitle": "Manage your delivery addresses for a faster checkout.",
+    "add": "Add Address",
+    "emptyText": "You haven't added any shipping addresses yet.",
+    "addFirst": "Add your first address",
+    "loadError": "Failed to load addresses. Please try again.",
+    "drawerAddTitle": "Add New Address",
+    "drawerEditTitle": "Edit Address",
+    "deleteTitle": "Delete Shipping Address",
+    "deleteMessage": "Are you sure you want to delete this shipping address? This will remove it from your saved addresses.",
+    "deleteConfirm": "Delete"
+  },
+  "card": {
+    "default": "Default",
+    "editTitle": "Edit Address",
+    "deleteTitle": "Delete Address",
+    "settingDefault": "Setting as default...",
+    "setDefault": "Set as default address"
+  },
+  "addressForm": {
+    "recipientName": "Recipient Name",
+    "recipientPlaceholder": "e.g. John Doe",
+    "phone": "Phone Number",
+    "phonePlaceholder": "e.g. 0901234567",
+    "addressDetails": "Address Details",
+    "addressDetailsPlaceholder": "House number, street name, building...",
+    "cancel": "Cancel",
+    "update": "Update",
+    "add": "Add Address"
+  },
+  "locationPicker": {
+    "label": "Province / District / Ward",
+    "placeholder": "Select province, district, ward...",
+    "searchPlaceholder": "Search...",
+    "loading": "Loading...",
+    "noResults": "No results found",
+    "tabProvince": "Province/City",
+    "tabDistrict": "District",
+    "tabWard": "Ward"
+  },
+  "mapPicker": {
+    "label": "Pin on Map",
+    "findOnMap": "Find on map",
+    "selected": "Selected: {{lat}}, {{lng}}",
+    "hint": "Click the map or use \"Find on map\" to set delivery coordinates"
+  }
+}

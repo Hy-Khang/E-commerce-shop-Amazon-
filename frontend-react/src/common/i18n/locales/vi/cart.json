@@ -1,0 +1,39 @@
+{
+  "title_other": "Giỏ hàng ({{count}} sản phẩm)",
+  "loadError": "Không tải được giỏ hàng. Vui lòng thử lại.",
+  "empty": {
+    "title": "Giỏ hàng của bạn đang trống",
+    "description": "Khám phá sản phẩm và thêm vào giỏ hàng.",
+    "browse": "Xem sản phẩm"
+  },
+  "voucher": {
+    "platform": "Voucher của sàn",
+    "shop": "Voucher của shop",
+    "selectPlatform": "Chọn voucher của sàn",
+    "selectShop": "Chọn voucher của shop"
+  },
+  "summary": {
+    "title": "Tóm tắt đơn hàng",
+    "items": "Sản phẩm ({{count}})",
+    "discountEst": "Giảm giá (ước tính)",
+    "shipping": "Phí vận chuyển",
+    "calculatedAtCheckout": "Tính khi thanh toán",
+    "subtotal": "Tạm tính",
+    "estimateNote": "≈ ước tính · xác nhận khi thanh toán",
+    "proceedToCheckout": "Tiến hành thanh toán",
+    "continueShopping": "Tiếp tục mua sắm"
+  },
+  "item": {
+    "noImage": "Không có ảnh",
+    "option1": "Phân loại 1",
+    "option2": "Phân loại 2",
+    "flash": "Flash"
+  },
+  "group": {
+    "otherItems": "Sản phẩm khác"
+  },
+  "add": {
+    "adding": "Đang thêm...",
+    "addToCart": "Thêm vào giỏ"
+  }
+}

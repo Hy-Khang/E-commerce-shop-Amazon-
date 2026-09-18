@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { MessageSquare, Star, Trash2, Package } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { usePagination } from '@/common/hooks/usePagination';
 import { formatDate, getImageUrl } from '@/common/utils/format.util';
 import { ConfirmModal } from '@/common/components/ui/ConfirmModal';
@@ -9,6 +11,7 @@ import { useDeleteReview } from '../hooks/useDeleteReview';
 import type { Review } from '../types/review.types';
 
 export default function MyReviewsPage() {
+  const { t } = useTranslation('review');
   const { params, setPage } = usePagination({ limit: 10, sort: 'created_at', order: 'desc' });
   const { data, isLoading } = useMyReviews(params);
   const deleteReview = useDeleteReview();
@@ -31,8 +34,8 @@ export default function MyReviewsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-text-primary">My Reviews</h1>
-        <p className="mt-1 text-sm text-text-secondary">View and manage your product reviews and ratings.</p>
+        <h1 className="text-xl font-bold tracking-tight text-text-primary">{t('page.title')}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{t('page.subtitle')}</p>
       </div>
 
       {isLoading ? (
@@ -53,9 +56,9 @@ export default function MyReviewsPage() {
       ) : !data || data.data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <MessageSquare className="h-14 w-14 text-text-muted" />
-          <h2 className="mt-4 text-base font-semibold text-text-primary">No reviews yet</h2>
+          <h2 className="mt-4 text-base font-semibold text-text-primary">{t('page.emptyTitle')}</h2>
           <p className="mt-1 text-sm text-text-secondary max-w-xs">
-            Your product reviews will appear here after you share your feedback on purchased products.
+            {t('page.emptyDescription')}
           </p>
         </div>
       ) : (
@@ -67,6 +70,7 @@ export default function MyReviewsPage() {
                 review={review}
                 onDelete={handleDelete}
                 isDeleting={deleteReview.isPending}
+                t={t}
               />
             ))}
           </div>
@@ -83,11 +87,11 @@ export default function MyReviewsPage() {
 
       <ConfirmModal
         open={deleteTarget !== null}
-        title="Delete Review"
-        message="Are you sure you want to delete this review? This action cannot be undone and your rating will be removed."
+        title={t('confirm.deleteTitle')}
+        message={t('confirm.deleteMessage')}
         variant="danger"
         confirmVariant="brand"
-        confirmLabel="Delete"
+        confirmLabel={t('confirm.deleteConfirm')}
         loading={deleteReview.isPending}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
@@ -100,9 +104,10 @@ interface MyReviewCardProps {
   review: Review;
   onDelete: (id: number) => void;
   isDeleting: boolean;
+  t: TFunction<'review'>;
 }
 
-function MyReviewCard({ review, onDelete, isDeleting }: MyReviewCardProps) {
+function MyReviewCard({ review, onDelete, isDeleting, t }: MyReviewCardProps) {
   return (
     <div className="shop-card p-5 relative overflow-hidden transition-all duration-200 hover:border-border-strong">
       <div className="flex gap-4 items-start">
@@ -124,7 +129,7 @@ function MyReviewCard({ review, onDelete, isDeleting }: MyReviewCardProps) {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-text-primary leading-tight">
-                {review.product_name || `Product #${review.product_id}`}
+                {review.product_name || t('card.productFallback', { id: review.product_id })}
               </p>
               
               <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
@@ -151,7 +156,7 @@ function MyReviewCard({ review, onDelete, isDeleting }: MyReviewCardProps) {
               onClick={() => onDelete(review.id)}
               disabled={isDeleting}
               className="rounded-lg p-2 text-text-muted hover:bg-rose-50 hover:text-rose-600 transition-colors disabled:opacity-50 shrink-0"
-              title="Delete Review"
+              title={t('card.deleteReview')}
             >
               <Trash2 className="h-4 w-4" />
             </button>

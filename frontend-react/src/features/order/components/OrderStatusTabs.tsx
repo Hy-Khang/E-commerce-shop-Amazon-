@@ -1,14 +1,16 @@
+import { useTranslation } from 'react-i18next';
+import { useEnumLabel } from '@/common/i18n';
 import type { OrderStatus } from '../types/order.types';
 
-const ORDER_STATUS_TABS: { label: string; value: OrderStatus | undefined }[] = [
-  { label: 'All', value: undefined },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Confirmed', value: 'confirmed' },
-  { label: 'Shipping', value: 'shipping' },
-  { label: 'Delivered', value: 'delivered' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'Return Requested', value: 'return_requested' },
-  { label: 'Cancelled', value: 'cancelled' },
+const ORDER_STATUS_VALUES: (OrderStatus | undefined)[] = [
+  undefined,
+  'pending',
+  'confirmed',
+  'shipping',
+  'delivered',
+  'completed',
+  'return_requested',
+  'cancelled',
 ];
 
 interface Props {
@@ -17,23 +19,27 @@ interface Props {
 }
 
 export function OrderStatusTabs({ activeStatus, onChange }: Props) {
+  const { t } = useTranslation('order');
+  const enumLabel = useEnumLabel();
+
   return (
     <div className="overflow-x-auto border-b border-border-default">
       <div className="flex">
-        {ORDER_STATUS_TABS.map((tab) => {
-          const isActive = activeStatus === tab.value;
+        {ORDER_STATUS_VALUES.map((value) => {
+          const isActive = activeStatus === value;
+          const label = value ? enumLabel('orderStatus', value) : t('statusTabs.all');
           return (
             <button
-              key={tab.label}
+              key={value ?? 'all'}
               type="button"
-              onClick={() => onChange(tab.value)}
+              onClick={() => onChange(value)}
               className={`shrink-0 px-4 py-2.5 text-sm transition-colors ${
                 isActive
                   ? 'border-b-2 border-border-brand font-semibold text-text-brand'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
-              {tab.label}
+              {label}
             </button>
           );
         })}

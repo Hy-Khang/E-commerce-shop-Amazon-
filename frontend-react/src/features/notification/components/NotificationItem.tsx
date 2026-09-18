@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { Notification } from '../types/notification.types';
 import { formatRelativeTime } from '../utils/notification.util';
 import { useMarkAsRead } from '../hooks/useMarkAsRead';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function NotificationItem({ notification, onClose }: Props) {
+  const { t } = useTranslation('notification');
   const navigate = useNavigate();
   const { context, orderDetailPath } = useNotificationRoutes();
   const markAsRead = useMarkAsRead(context);
@@ -51,7 +53,7 @@ export function NotificationItem({ notification, onClose }: Props) {
           {notification.message}
         </p>
         <p className="mt-1 text-[11px] text-text-muted">
-          {formatRelativeTime(notification.created_at)}
+          {formatRelativeTime(notification.created_at, t)}
         </p>
       </div>
     </button>

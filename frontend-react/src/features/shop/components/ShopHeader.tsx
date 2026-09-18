@@ -1,4 +1,5 @@
 import { Store, Package, Star, ShoppingBag } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth';
 import { getImageUrl } from '@/common/utils/format.util';
 import { ChatWithShopButton } from '@/features/chat';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function ShopHeader({ shop }: Props) {
+  const { t } = useTranslation('shop');
   const currentUserId = useAuthStore((s) => s.user?.id);
   const isOwnShop = currentUserId != null && currentUserId === shop.user_id;
 
@@ -54,15 +56,15 @@ export function ShopHeader({ shop }: Props) {
         <div className="mt-4 flex flex-wrap gap-6 text-sm text-text-secondary">
           <div className="flex items-center gap-1.5">
             <Package className="h-4 w-4 text-text-muted" />
-            <span>{shop.product_count ?? 0} Products</span>
+            <span>{t('stats.products', { count: shop.product_count ?? 0 })}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-            <span>{(shop.average_rating ?? 0).toFixed(1)} Rating</span>
+            <span>{t('stats.rating', { rating: (shop.average_rating ?? 0).toFixed(1) })}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <ShoppingBag className="h-4 w-4 text-text-muted" />
-            <span>{shop.total_sales ?? 0} Sold</span>
+            <span>{t('stats.sold', { count: shop.total_sales ?? 0 })}</span>
           </div>
         </div>
 

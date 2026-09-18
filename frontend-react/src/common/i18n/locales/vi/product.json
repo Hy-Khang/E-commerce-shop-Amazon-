@@ -1,0 +1,163 @@
+{
+  "list": {
+    "title": "Sản phẩm",
+    "visualSearchResults": "Kết quả tìm bằng hình ảnh",
+    "results_other": "{{count}} kết quả",
+    "forPrefix": "cho",
+    "filters": "Bộ lọc",
+    "all": "Tất cả",
+    "noMatchImage": "Không có sản phẩm nào khớp với hình ảnh.",
+    "noResultsFor": "Không tìm thấy sản phẩm cho \"{{query}}\"",
+    "noneAvailable": "Chưa có sản phẩm nào."
+  },
+  "visualBanner": {
+    "detected": "Thuộc tính AI nhận diện",
+    "clear": "Xóa",
+    "category": "Danh mục",
+    "color": "Màu sắc",
+    "material": "Chất liệu",
+    "style": "Phong cách"
+  },
+  "detail": {
+    "notFound": "Không tìm thấy sản phẩm.",
+    "breadcrumbHome": "Trang chủ",
+    "breadcrumbProducts": "Sản phẩm",
+    "flashSale": "Flash Sale",
+    "inStock": "Còn hàng ({{count}})",
+    "outOfStock": "Hết hàng",
+    "quantity": "Số lượng:",
+    "available": "còn {{count}} sản phẩm",
+    "buyNow": "Mua ngay",
+    "outOfStockButton": "Hết hàng",
+    "description": "Mô tả",
+    "customerReviews": "Đánh giá của khách hàng"
+  },
+  "card": {
+    "noImage": "Không có ảnh",
+    "flash": "Flash",
+    "forYou": "Cho bạn",
+    "noVariants": "Chưa có phân loại",
+    "outOfStock": "Hết hàng",
+    "new": "Mới"
+  },
+  "filter": {
+    "title": "Bộ lọc",
+    "clearAll": "Xóa tất cả",
+    "priceRange": "Khoảng giá",
+    "min": "Tối thiểu",
+    "max": "Tối đa",
+    "apply": "Áp dụng",
+    "rating": "Đánh giá",
+    "andUp": "trở lên",
+    "availability": "Tình trạng kho",
+    "inStockOnly": "Chỉ còn hàng"
+  },
+  "sort": {
+    "label": "Sắp xếp:",
+    "newest": "Mới nhất",
+    "priceLowHigh": "Giá: Thấp đến cao",
+    "priceHighLow": "Giá: Cao đến thấp",
+    "bestSelling": "Bán chạy",
+    "highestRated": "Đánh giá cao nhất"
+  },
+  "categorySidebar": {
+    "title": "Danh mục",
+    "more": "+{{count}} mục nữa",
+    "showLess": "Thu gọn"
+  },
+  "category": {
+    "notFound": "Không tìm thấy danh mục.",
+    "noProducts": "Chưa có sản phẩm trong danh mục này."
+  },
+  "pagination": {
+    "previous": "Trước",
+    "next": "Tiếp",
+    "pageOf": "Trang {{page}} / {{total}}"
+  },
+  "gallery": {
+    "noImages": "Không có ảnh"
+  },
+  "search": {
+    "placeholder": "Tìm kiếm sản phẩm...",
+    "search": "Tìm kiếm",
+    "byImage": "Tìm bằng hình ảnh",
+    "products": "Sản phẩm",
+    "categories": "Danh mục",
+    "shops": "Cửa hàng"
+  },
+  "visual": {
+    "title": "Tìm bằng hình ảnh",
+    "invalidType": "Vui lòng tải lên ảnh JPEG, PNG hoặc WebP.",
+    "tooLarge": "Ảnh phải nhỏ hơn 5MB.",
+    "failed": "Tìm bằng hình ảnh thất bại. Vui lòng thử lại.",
+    "analyzing": "Đang phân tích ảnh bằng AI...",
+    "dropHint": "Kéo thả ảnh vào đây hoặc bấm để chọn",
+    "formatHint": "JPEG, PNG hoặc WebP — tối đa 5MB",
+    "uploadedAlt": "Đã tải lên"
+  },
+  "home": {
+    "hero": {
+      "slide1": {
+        "badge": "Bộ sưu tập hàng mới về",
+        "title": "Vật dụng tinh tuyển cho cuộc sống hiện đại",
+        "description": "Khám phá bộ sưu tập được chọn lọc kỹ lưỡng gồm những vật dụng hằng ngày được chế tác chỉn chu và thiết kế đẹp mắt.",
+        "cta": "Mua hàng mới về"
+      },
+      "slide2": {
+        "badge": "Chế tác có tâm",
+        "title": "Sự tối giản từ chất liệu tự nhiên",
+        "description": "Mang kết cấu hữu cơ và chất liệu bền vững cao cấp vào không gian ăn uống và sinh hoạt của bạn.",
+        "cta": "Khám phá bộ sưu tập"
+      },
+      "slide3": {
+        "badge": "Phiên bản giới hạn",
+        "title": "Sang trọng kết hợp tiện ích hằng ngày",
+        "description": "Giải pháp lưu trữ và phụ kiện sắp xếp tiện dụng, chế tác tỉ mỉ đến từng chi tiết.",
+        "cta": "Xem đồ tiện ích"
+      },
+      "prevSlide": "Slide trước",
+      "nextSlide": "Slide sau",
+      "goToSlide": "Đến slide {{number}}"
+    },
+    "valueProps": {
+      "delivery": {
+        "title": "Miễn phí vận chuyển",
+        "desc": "Cho đơn từ 500K₫"
+      },
+      "quality": {
+        "title": "Chất lượng chế tác",
+        "desc": "Chất liệu tự nhiên cao cấp"
+      },
+      "payment": {
+        "title": "Thanh toán an toàn",
+        "desc": "Thanh toán mã hóa 100%"
+      },
+      "assistance": {
+        "title": "Hỗ trợ tận tâm",
+        "desc": "Chăm sóc khách hàng 24/7"
+      }
+    },
+    "newArrivals": "Hàng mới về",
+    "noProductsYet": "Chưa có sản phẩm nào."
+  },
+  "sections": {
+    "bestSellers": "Bán chạy nhất",
+    "trending": "Đang thịnh hành",
+    "trendingWishlists": "{{count}} lượt yêu thích tháng này",
+    "discoverMore": "Khám phá thêm",
+    "browseAll": "Xem tất cả sản phẩm",
+    "exploreCollections": "Khám phá bộ sưu tập",
+    "explore": "Khám phá",
+    "featuredMore": "+{{count}} mục nữa",
+    "specialOffers": "Ưu đãi đặc biệt",
+    "viewAll": "Xem tất cả",
+    "shopOtherProducts": "Sản phẩm khác từ {{shopName}}",
+    "shopViewAll": "Xem tất cả"
+  },
+  "promo": {
+    "limitedTime": "Ưu đãi có hạn",
+    "heading": "Tiết kiệm cho đơn hàng đầu tiên",
+    "description": "Dùng mã {{code}} khi thanh toán để giảm {{discount}}",
+    "cta": "Mua ngay"
+  }
+}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Menu, HelpCircle, Shield, Store, Truck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '@/features/auth';
@@ -10,10 +11,12 @@ import { NotificationBell } from '@/features/notification';
 import { ChatBadge } from '@/features/chat';
 import { ROUTES } from '@/common/constants/routes';
 import { ThemeToggle } from '@/common/components/ui/ThemeToggle';
+import { LanguageSwitcher } from '@/common/i18n';
 import { UserDropdown } from './UserDropdown';
 import { MobileNav } from './MobileNav';
 
 export function Header() {
+  const { t } = useTranslation('nav');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -24,7 +27,7 @@ export function Header() {
         <button
           onClick={() => setMobileNavOpen(true)}
           className="rounded-lg p-2 text-text-secondary hover:bg-surface-hover transition-colors md:hidden"
-          aria-label="Open menu"
+          aria-label={t('header.openMenu')}
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -39,6 +42,7 @@ export function Header() {
 
         <div className="flex items-center gap-0.5 md:gap-1">
           <PortalLinks role={user?.role} />
+          <LanguageSwitcher />
           <ThemeToggle />
           {isAuthenticated && <WishlistBadge />}
           {isAuthenticated && <ChatBadge />}
@@ -53,13 +57,13 @@ export function Header() {
                   to={ROUTES.LOGIN}
                   className="rounded-lg px-4 py-2 text-sm font-semibold text-text-secondary hover:bg-surface-hover transition-colors"
                 >
-                  Sign in
+                  {t('header.signIn')}
                 </Link>
                 <Link
                   to={ROUTES.REGISTER}
                   className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
                 >
-                  Sign up
+                  {t('header.signUp')}
                 </Link>
               </div>
             )}
@@ -74,6 +78,7 @@ export function Header() {
 }
 
 function NavBar() {
+  const { t } = useTranslation('nav');
   const { data: categories } = useCategories();
   const rootCategories = categories?.filter((c) => !c.parent_id)?.slice(0, 8) ?? [];
 
@@ -91,7 +96,7 @@ function NavBar() {
             }`
           }
         >
-          All Products
+          {t('header.allProducts')}
         </NavLink>
         {rootCategories.map((cat) => (
           <NavLink
@@ -114,7 +119,7 @@ function NavBar() {
             className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-text-muted hover:bg-surface-hover hover:text-text-secondary transition-colors"
           >
             <HelpCircle className="h-3.5 w-3.5" />
-            Help
+            {t('header.help')}
           </Link>
         </div>
       </div>
@@ -122,13 +127,14 @@ function NavBar() {
   );
 }
 
-const portalConfig: Array<{ role: string; to: string; label: string; icon: LucideIcon; color: string }> = [
-  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin', icon: Shield, color: 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-surface-hover' },
-  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller', icon: Store, color: 'text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10' },
-  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper', icon: Truck, color: 'text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10' },
+const portalConfig: Array<{ role: string; to: string; labelKey: string; icon: LucideIcon; color: string }> = [
+  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, labelKey: 'portals.adminShort', icon: Shield, color: 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-surface-hover' },
+  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, labelKey: 'portals.sellerShort', icon: Store, color: 'text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10' },
+  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, labelKey: 'portals.shipperShort', icon: Truck, color: 'text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10' },
 ];
 
 function PortalLinks({ role }: { role?: string }) {
+  const { t } = useTranslation('nav');
   if (!role || role === 'customer') return null;
 
   const visiblePortals = role === 'admin'
@@ -148,7 +154,7 @@ function PortalLinks({ role }: { role?: string }) {
             className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition-colors ${portal.color}`}
           >
             <Icon className="h-3.5 w-3.5" />
-            {portal.label}
+            {t(portal.labelKey, { defaultValue: portal.labelKey })}
           </Link>
         );
       })}

@@ -1,0 +1,57 @@
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "apply": "Apply",
+    "reset": "Reset",
+    "submit": "Submit",
+    "retry": "Try again",
+    "viewAll": "View all",
+    "viewMore": "View more",
+    "seeDetails": "See details",
+    "loading": "Loading...",
+    "add": "Add",
+    "remove": "Remove",
+    "select": "Select"
+  },
+  "labels": {
+    "actions": "Actions",
+    "status": "Status",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "optional": "Optional",
+    "required": "Required"
+  },
+  "pagination": {
+    "page": "Page",
+    "of": "of",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
+    "rowsPerPage": "Rows per page"
+  },
+  "empty": {
+    "title": "Nothing here yet",
+    "description": "There's no data to show right now."
+  },
+  "confirm": {
+    "title": "Are you sure?",
+    "deleteMessage": "This action cannot be undone.",
+    "confirmButton": "Confirm",
+    "cancelButton": "Cancel"
+  },
+  "language": {
+    "label": "Language"
+  }
+}

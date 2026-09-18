@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { TrendingUp, Heart } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice, getImageUrl } from '@/common/utils/format.util';
@@ -14,6 +15,7 @@ interface Props {
 }
 
 function TrendingCard({ product }: { product: TrendingProductItem }) {
+  const { t } = useTranslation('product');
   const prefetch = usePrefetchProduct();
 
   return (
@@ -31,7 +33,7 @@ function TrendingCard({ product }: { product: TrendingProductItem }) {
           />
         ) : (
           <div className="flex h-full items-center justify-center text-text-muted">
-            No image
+            {t('card.noImage')}
           </div>
         )}
         <div className="absolute right-2 top-2">
@@ -40,7 +42,7 @@ function TrendingCard({ product }: { product: TrendingProductItem }) {
         {!product.inStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface/60">
             <span className="rounded-full bg-neutral-800/80 px-3 py-1 text-xs font-semibold text-white">
-              Out of stock
+              {t('card.outOfStock')}
             </span>
           </div>
         )}
@@ -56,7 +58,7 @@ function TrendingCard({ product }: { product: TrendingProductItem }) {
         </div>
         <div className="mt-1.5 flex items-center gap-1 text-xs text-text-muted">
           <Heart className="h-3 w-3" />
-          <span>{product.wishlistCount} wishlists this month</span>
+          <span>{t('sections.trendingWishlists', { count: product.wishlistCount })}</span>
         </div>
       </div>
     </Link>
@@ -64,11 +66,12 @@ function TrendingCard({ product }: { product: TrendingProductItem }) {
 }
 
 export function TrendingSection({ products, isLoading }: Props) {
+  const { t } = useTranslation('product');
   if (!isLoading && products.length === 0) return null;
 
   return (
     <SectionPanel
-      title="Trending Now"
+      title={t('sections.trending')}
       icon={<TrendingUp className="h-5 w-5 text-primary-500" />}
     >
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

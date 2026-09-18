@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, History } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { SectionPanel } from '@/common/components/ui/SectionPanel';
 import { ProductCard, ProductCardSkeleton } from '@/features/product';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
@@ -12,6 +13,7 @@ interface Props {
 const SCROLL_AMOUNT = 560;
 
 export function RecentlyViewedCarousel({ excludeProductId }: Props) {
+  const { t } = useTranslation('recentlyViewed');
   const { products, isLoading } = useRecentlyViewed();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -42,7 +44,7 @@ export function RecentlyViewedCarousel({ excludeProductId }: Props) {
 
   return (
     <SectionPanel
-      title="Recently Viewed"
+      title={t('title')}
       icon={<History className="h-5 w-5 text-text-secondary" />}
     >
       <div className="group relative">

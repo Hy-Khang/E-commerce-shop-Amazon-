@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 import type { HeroBlockData } from '../../../types/decoration.types';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
  * disabled), with an optional heading/tagline/CTA overlay. Storefront tokens.
  */
 export function HeroBlock({ data }: Props) {
+  const { t } = useTranslation('shop');
   const images = data.images.filter(Boolean);
   const [index, setIndex] = useState(0);
   const autoplay = data.autoplay !== false && images.length > 1;
@@ -70,7 +72,7 @@ export function HeroBlock({ data }: Props) {
             <button
               key={i}
               type="button"
-              aria-label={`Go to slide ${i + 1}`}
+              aria-label={t('hero.goToSlide', { number: i + 1 })}
               onClick={() => setIndex(i)}
               className={`h-1.5 rounded-full transition-all ${
                 i === index ? 'w-5 bg-white' : 'w-1.5 bg-white/60'

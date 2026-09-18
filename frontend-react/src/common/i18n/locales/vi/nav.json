@@ -1,0 +1,65 @@
+{
+  "header": {
+    "openMenu": "Mở menu",
+    "signIn": "Đăng nhập",
+    "signUp": "Đăng ký",
+    "allProducts": "Tất cả sản phẩm",
+    "help": "Trợ giúp",
+    "profileFallback": "Tài khoản"
+  },
+  "search": {
+    "placeholder": "Tìm sản phẩm...",
+    "action": "Tìm kiếm"
+  },
+  "menu": {
+    "title": "Menu"
+  },
+  "sections": {
+    "appearance": "Giao diện",
+    "language": "Ngôn ngữ",
+    "shop": "Mua sắm",
+    "account": "Tài khoản",
+    "manage": "Quản lý"
+  },
+  "account": {
+    "myProfile": "Hồ sơ của tôi",
+    "orders": "Đơn hàng",
+    "addresses": "Địa chỉ",
+    "myReviews": "Đánh giá của tôi",
+    "wishlist": "Yêu thích",
+    "becomeSeller": "Trở thành người bán",
+    "logout": "Đăng xuất",
+    "loggingOut": "Đang đăng xuất..."
+  },
+  "auth": {
+    "signIn": "Đăng nhập",
+    "register": "Đăng ký"
+  },
+  "portals": {
+    "adminShort": "Quản trị",
+    "sellerShort": "Người bán",
+    "shipperShort": "Giao hàng",
+    "adminPortal": "Trang quản trị",
+    "sellerCenter": "Kênh người bán",
+    "shipperPortal": "Trang giao hàng",
+    "shopInfo": "Thông tin cửa hàng"
+  },
+  "footer": {
+    "customerService": "Chăm sóc khách hàng",
+    "helpCentre": "Trung tâm trợ giúp",
+    "howToBuy": "Hướng dẫn mua hàng",
+    "shippingDelivery": "Vận chuyển & Giao hàng",
+    "returnsRefunds": "Đổi trả & Hoàn tiền",
+    "contactUs": "Liên hệ",
+    "aboutNook": "Về Nook",
+    "aboutUs": "Về chúng tôi",
+    "careers": "Tuyển dụng",
+    "privacyPolicy": "Chính sách bảo mật",
+    "termsOfService": "Điều khoản dịch vụ",
+    "browseProducts": "Xem sản phẩm",
+    "paymentShipping": "Thanh toán & Vận chuyển",
+    "followUs": "Theo dõi chúng tôi",
+    "rights": "© {{year}} Nook. Bảo lưu mọi quyền.",
+    "country": "Quốc gia: Việt Nam"
+  }
+}

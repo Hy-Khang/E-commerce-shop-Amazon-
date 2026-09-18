@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Upload, Loader2, Camera, ImageIcon } from 'lucide-react';
@@ -15,6 +16,7 @@ type VisualSearchModalProps = {
 };
 
 export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
+  const { t } = useTranslation('product');
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -35,11 +37,11 @@ export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
     setError(null);
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError('Please upload a JPEG, PNG, or WebP image.');
+      setError(t('visual.invalidType'));
       return;
     }
     if (file.size > MAX_SIZE) {
-      setError('Image must be under 5MB.');
+      setError(t('visual.tooLarge'));
       return;
     }
 
@@ -53,7 +55,7 @@ export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
         navigate(ROUTES.PRODUCTS, { state: { visualSearch: result } });
       },
       onError: () => {
-        setError('Visual search failed. Please try again.');
+        setError(t('visual.failed'));
       },
     });
   }
@@ -92,7 +94,7 @@ export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
             <div className="flex items-center justify-between border-b border-border-default px-5 py-4">
               <div className="flex items-center gap-2.5">
                 <Camera className="h-5 w-5 text-brand" />
-                <h2 className="text-lg font-semibold text-text-primary">Search by Image</h2>
+                <h2 className="text-lg font-semibold text-text-primary">{t('visual.title')}</h2>
               </div>
               <button
                 onClick={handleClose}
@@ -109,12 +111,12 @@ export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
                   {preview && (
                     <img
                       src={preview}
-                      alt="Uploaded"
+                      alt={t('visual.uploadedAlt')}
                       className="h-32 w-32 rounded-xl object-cover border border-border-default"
                     />
                   )}
                   <Loader2 className="h-8 w-8 animate-spin text-brand" />
-                  <p className="text-sm text-text-secondary">Analyzing image with AI...</p>
+                  <p className="text-sm text-text-secondary">{t('visual.analyzing')}</p>
                 </div>
               ) : (
                 <div
@@ -137,10 +139,10 @@ export function VisualSearchModal({ open, onClose }: VisualSearchModalProps) {
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-text-primary">
-                      Drop an image here or click to browse
+                      {t('visual.dropHint')}
                     </p>
                     <p className="mt-1 text-xs text-text-muted">
-                      JPEG, PNG, or WebP — max 5MB
+                      {t('visual.formatHint')}
                     </p>
                   </div>
                 </div>

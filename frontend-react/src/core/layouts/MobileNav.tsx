@@ -1,12 +1,15 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, User, Package, MapPin, MessageSquare, Heart, LogOut, Shield, Store, Truck } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
 import { useCategories } from '@/features/product';
 import { ROUTES } from '@/common/constants/routes';
 import { Drawer } from '@/common/components/ui/Drawer';
 import { ThemeToggle } from '@/common/components/ui/ThemeToggle';
+import { LanguageSwitcher } from '@/common/i18n';
 
 export function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation('nav');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const { mutate: logout } = useLogout();
@@ -25,19 +28,19 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
   }
 
   return (
-    <Drawer open={open} onClose={onClose} side="left" title="Menu">
+    <Drawer open={open} onClose={onClose} side="left" title={t('menu.title')}>
       <div className="flex flex-col gap-6">
         <form onSubmit={handleSearch} className="relative">
           <input
             name="search"
             type="text"
-            placeholder="Search products..."
+            placeholder={t('search.placeholder')}
             className="shop-input pr-10"
           />
           <button
             type="submit"
             className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-brand transition-colors"
-            aria-label="Search"
+            aria-label={t('search.action')}
           >
             <Search className="h-4 w-4" />
           </button>
@@ -60,28 +63,33 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
               onClick={onClose}
               className="flex-1 rounded-lg border border-border-brand px-3 py-2 text-center text-sm font-medium text-text-brand hover:bg-brand-light transition-colors"
             >
-              Sign In
+              {t('auth.signIn')}
             </Link>
             <Link
               to={ROUTES.REGISTER}
               onClick={onClose}
               className="flex-1 rounded-lg bg-brand px-3 py-2 text-center text-sm font-medium text-white hover:bg-brand-hover transition-colors"
             >
-              Register
+              {t('auth.register')}
             </Link>
           </div>
         )}
 
         <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Appearance</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">{t('sections.appearance')}</p>
           <ThemeToggle />
         </div>
 
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">{t('sections.language')}</p>
+          <LanguageSwitcher />
+        </div>
+
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">Shop</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('sections.shop')}</p>
           <nav className="flex flex-col">
             <MobileNavLink to={ROUTES.PRODUCTS} onClick={onClose}>
-              All Products
+              {t('header.allProducts')}
             </MobileNavLink>
             {rootCategories.map((cat) => (
               <MobileNavLink key={cat.id} to={ROUTES.CATEGORY(cat.slug)} onClick={onClose}>
@@ -94,13 +102,13 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
         {isAuthenticated && (
           <>
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">Account</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('sections.account')}</p>
               <nav className="flex flex-col">
-                <MobileNavLink to={ROUTES.PROFILE} icon={User} onClick={onClose}>My Profile</MobileNavLink>
-                <MobileNavLink to={ROUTES.ORDERS} icon={Package} onClick={onClose}>Orders</MobileNavLink>
-                <MobileNavLink to={ROUTES.ADDRESSES} icon={MapPin} onClick={onClose}>Addresses</MobileNavLink>
-                <MobileNavLink to={ROUTES.MY_REVIEWS} icon={MessageSquare} onClick={onClose}>My Reviews</MobileNavLink>
-                <MobileNavLink to={ROUTES.WISHLIST} icon={Heart} onClick={onClose}>Wishlist</MobileNavLink>
+                <MobileNavLink to={ROUTES.PROFILE} icon={User} onClick={onClose}>{t('account.myProfile')}</MobileNavLink>
+                <MobileNavLink to={ROUTES.ORDERS} icon={Package} onClick={onClose}>{t('account.orders')}</MobileNavLink>
+                <MobileNavLink to={ROUTES.ADDRESSES} icon={MapPin} onClick={onClose}>{t('account.addresses')}</MobileNavLink>
+                <MobileNavLink to={ROUTES.MY_REVIEWS} icon={MessageSquare} onClick={onClose}>{t('account.myReviews')}</MobileNavLink>
+                <MobileNavLink to={ROUTES.WISHLIST} icon={Heart} onClick={onClose}>{t('account.wishlist')}</MobileNavLink>
               </nav>
             </div>
 
@@ -111,7 +119,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-error-500 hover:bg-surface-hover transition-colors"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {t('account.logout')}
             </button>
           </>
         )}
@@ -144,12 +152,13 @@ function MobileNavLink({
 }
 
 const mobilePortalConfig = [
-  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, label: 'Admin Portal', icon: Shield, bg: 'bg-slate-50', text: 'text-slate-700' },
-  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, label: 'Seller Center', icon: Store, bg: 'bg-amber-50', text: 'text-amber-800' },
-  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, label: 'Shipper Portal', icon: Truck, bg: 'bg-emerald-50', text: 'text-emerald-800' },
+  { role: 'admin', to: ROUTES.ADMIN_DASHBOARD, labelKey: 'portals.adminPortal', icon: Shield, bg: 'bg-slate-50', text: 'text-slate-700' },
+  { role: 'seller', to: ROUTES.SELLER_DASHBOARD, labelKey: 'portals.sellerCenter', icon: Store, bg: 'bg-amber-50', text: 'text-amber-800' },
+  { role: 'shipper', to: ROUTES.SHIPPER_DASHBOARD, labelKey: 'portals.shipperPortal', icon: Truck, bg: 'bg-emerald-50', text: 'text-emerald-800' },
 ];
 
 function MobilePortalLinks({ role, onClose }: { role?: string; onClose: () => void }) {
+  const { t } = useTranslation('nav');
   if (!role || role === 'customer') return null;
 
   const visible = role === 'admin'
@@ -160,7 +169,7 @@ function MobilePortalLinks({ role, onClose }: { role?: string; onClose: () => vo
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">Manage</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('sections.manage')}</p>
       <nav className="flex flex-col gap-1">
         {visible.map((portal) => {
           const Icon = portal.icon;
@@ -172,7 +181,7 @@ function MobilePortalLinks({ role, onClose }: { role?: string; onClose: () => vo
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${portal.bg} ${portal.text}`}
             >
               <Icon className="h-4 w-4" />
-              {portal.label}
+              {t(portal.labelKey, { defaultValue: portal.labelKey })}
             </Link>
           );
         })}

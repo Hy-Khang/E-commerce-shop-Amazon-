@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminCategoryService } from '../services/admin-product.service';
 import { categoryKeys } from './useCategories';
 import { showSuccessToast } from '@/common/components/feedback/toast';
-import { useTranslation } from '@/common/i18n';
+import { useTranslation } from 'react-i18next';
 import type { AdminCategoryListParams, CreateCategoryRequest, UpdateCategoryRequest } from '../types/product.types';
 
 export const adminCategoryKeys = {
@@ -37,21 +37,21 @@ export function useAdminCategory(id: number) {
 
 export function useCreateCategory() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: (data: CreateCategoryRequest) => adminCategoryService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminCategoryKeys.all });
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
-      showSuccessToast(t((m) => m.toast.category.created));
+      showSuccessToast(t('category.created'));
     },
   });
 }
 
 export function useUpdateCategory() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateCategoryRequest }) =>
@@ -59,21 +59,21 @@ export function useUpdateCategory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminCategoryKeys.all });
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
-      showSuccessToast(t((m) => m.toast.category.updated));
+      showSuccessToast(t('category.updated'));
     },
   });
 }
 
 export function useDeleteCategory() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('toast');
 
   return useMutation({
     mutationFn: (id: number) => adminCategoryService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminCategoryKeys.all });
       queryClient.invalidateQueries({ queryKey: categoryKeys.all });
-      showSuccessToast(t((m) => m.toast.category.deleted));
+      showSuccessToast(t('category.deleted'));
     },
   });
 }

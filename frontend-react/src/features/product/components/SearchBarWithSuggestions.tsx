@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, Package, FolderTree, Store, Camera } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { getImageUrl } from '@/common/utils/format.util';
@@ -8,6 +9,7 @@ import { VisualSearchModal } from './VisualSearchModal';
 import type { SearchSuggestions } from '../types/product.types';
 
 export function SearchBarWithSuggestions() {
+  const { t } = useTranslation('product');
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
@@ -88,7 +90,7 @@ export function SearchBarWithSuggestions() {
           <button
             type="submit"
             className="flex shrink-0 items-center justify-center pl-4 text-text-muted hover:text-text-secondary transition-colors"
-            aria-label="Search"
+            aria-label={t('search.search')}
           >
             <Search className="h-[18px] w-[18px]" />
           </button>
@@ -99,7 +101,7 @@ export function SearchBarWithSuggestions() {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
             onKeyDown={handleKeyDown}
-            placeholder="Search for products..."
+            placeholder={t('search.placeholder')}
             className="w-full bg-transparent py-2.5 pl-3 pr-1 text-sm text-text-primary placeholder:text-text-muted outline-none"
             role="combobox"
             aria-expanded={showDropdown}
@@ -110,8 +112,8 @@ export function SearchBarWithSuggestions() {
             type="button"
             onClick={() => setVisualSearchOpen(true)}
             className="flex shrink-0 items-center justify-center pr-4 text-text-muted hover:text-text-secondary transition-colors"
-            aria-label="Search by image"
-            title="Search by image"
+            aria-label={t('search.byImage')}
+            title={t('search.byImage')}
           >
             <Camera className="h-[18px] w-[18px]" />
           </button>
@@ -122,7 +124,7 @@ export function SearchBarWithSuggestions() {
         <div className="absolute top-full left-0 right-0 z-50 mt-1.5 overflow-hidden rounded-xl border border-border-default bg-elevated shadow-lg">
           <SuggestionGroup
             icon={<Package className="h-3.5 w-3.5" />}
-            label="Products"
+            label={t('search.products')}
             items={suggestions!.products}
             type="product"
             query={query}
@@ -139,7 +141,7 @@ export function SearchBarWithSuggestions() {
           />
           <SuggestionGroup
             icon={<FolderTree className="h-3.5 w-3.5" />}
-            label="Categories"
+            label={t('search.categories')}
             items={suggestions!.categories}
             type="category"
             query={query}
@@ -149,7 +151,7 @@ export function SearchBarWithSuggestions() {
           />
           <SuggestionGroup
             icon={<Store className="h-3.5 w-3.5" />}
-            label="Shops"
+            label={t('search.shops')}
             items={suggestions!.shops}
             type="shop"
             query={query}

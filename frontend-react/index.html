@@ -25,6 +25,14 @@
         if (dark) document.documentElement.classList.add('dark');
       } catch (e) { /* default: light */ }
     })();
+    // Set <html lang> before paint from the persisted i18next language (plain string,
+    // key 'i18nextLng'), falling back to the browser language, else 'en'.
+    (function () {
+      try {
+        var lng = localStorage.getItem('i18nextLng') || navigator.language || 'en';
+        document.documentElement.lang = lng.split('-')[0] === 'vi' ? 'vi' : 'en';
+      } catch (e) { /* default: en */ }
+    })();
   </script>
 </head>
 
