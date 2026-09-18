@@ -52,13 +52,27 @@
     "loading": "Đang tải...",
     "noResults": "Không tìm thấy kết quả",
     "tabProvince": "Tỉnh/Thành phố",
-    "tabDistrict": "Quận/Huyện",
     "tabWard": "Phường/Xã"
   },
   "mapPicker": {
     "label": "Ghim trên bản đồ",
     "findOnMap": "Tìm trên bản đồ",
     "selected": "Đã chọn: {{lat}}, {{lng}}",
-    "hint": "Nhấp vào bản đồ hoặc dùng \"Tìm trên bản đồ\" để đặt tọa độ giao hàng"
+    "hint": "Nhấp vào bản đồ hoặc dùng \"Tìm trên bản đồ\" để đặt tọa độ giao hàng",
+    "notFound": "Không tìm thấy địa chỉ này trên bản đồ. Hãy thử địa chỉ khái quát hơn, hoặc nhấp vào bản đồ để ghim vị trí.",
+    "geocodeError": "Tìm kiếm bản đồ hiện không khả dụng. Vui lòng nhấp vào bản đồ để ghim vị trí."
+  },
+  "security": {
+    "currentPassword": "Mật khẩu hiện tại",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu mới",
+    "changePassword": "Đổi mật khẩu",
+    "changing": "Đang đổi...",
+    "setPassword": "Đặt mật khẩu",
+    "setting": "Đang đặt...",
+    "confirmSetPassword": "Xác nhận mật khẩu",
+    "successChange": "Đổi mật khẩu thành công. Bạn sẽ được đăng xuất.",
+    "successSet": "Đặt mật khẩu thành công. Bạn sẽ được đăng xuất.",
+    "socialMessage": "Bạn đã đăng nhập bằng tài khoản mạng xã hội và chưa có mật khẩu. Hãy thiết lập mật khẩu để có thể đăng nhập bằng email."
   }
 }

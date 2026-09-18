@@ -5,7 +5,11 @@ import { useTranslation } from 'react-i18next';
 import '@/common/components/map/leaflet-setup';
 import { addressPinIcon, VIETNAM_BOUNDS, VIETNAM_MIN_ZOOM } from '@/common/components/map/map-icons';
 import { BaseTileLayer } from '@/common/components/map/BaseTileLayer';
+import { MapFullscreenControl } from '@/common/components/map/MapFullscreenControl';
+import { useMapFullscreen } from '@/common/components/map/useMapFullscreen';
 import { Button } from '@/common/components/ui/Button';
+import { showWarningToast, showErrorToast } from '@/common/components/feedback/toast';
+import { geocodeAddress } from '../utils/geocode.util';
 
 function ClickHandler({ onSelect }: { onSelect: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -34,13 +38,15 @@ function FlyTo({ position }: { position: [number, number] | null }) {
 interface Props {
   latitude: number | null;
   longitude: number | null;
-  addressText?: string;
+  addressLine?: string;
+  city?: string;
   onChange: (lat: number, lng: number) => void;
   externalFlyTo?: [number, number] | null;
 }
 
-export function AddressMapPicker({ latitude, longitude, addressText, onChange, externalFlyTo }: Props) {
+export function AddressMapPicker({ latitude, longitude, addressLine, city, onChange, externalFlyTo }: Props) {
   const { t } = useTranslation('userProfile');
+  const { isFullscreen, toggle } = useMapFullscreen();
   const [searching, setSearching] = useState(false);
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
 
@@ -67,31 +73,32 @@ export function AddressMapPicker({ latitude, longitude, addressText, onChange, e
     [onChange],
   );
 
+  const hasAddress = Boolean(addressLine?.trim() || city?.trim());
+
   async function handleGeocode() {
-    if (!addressText?.trim()) return;
+    if (!hasAddress) return;
     setSearching(true);
     try {
-      const query = encodeURIComponent(addressText.trim());
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
-      );
-      const data = await res.json();
-      if (data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lng = parseFloat(data[0].lon);
-        onChange(lat, lng);
-        setFlyTarget([lat, lng]);
+      const hit = await geocodeAddress(addressLine ?? '', city ?? '');
+      if (hit) {
+        onChange(hit.lat, hit.lng);
+        setFlyTarget([hit.lat, hit.lng]);
+      } else {
+        // Request succeeded but no location matched — tell the user instead of
+        // silently doing nothing (they can still click the map to pin manually).
+        showWarningToast(t('mapPicker.notFound'));
       }
-    } catch {
-      // Geocoding failed silently — user can still click the map
+    } catch (err) {
+      // Network / service error — surface it rather than swallowing.
+      showErrorToast(err, t('mapPicker.geocodeError'));
     } finally {
       setSearching(false);
     }
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
+    <div className={isFullscreen ? 'fixed inset-0 z-[9999] flex flex-col gap-3 bg-surface p-4' : 'space-y-2'}>
+      <div className="flex items-center justify-between shrink-0">
         <label className="text-sm font-medium text-text-primary">
           <MapPin className="mr-1 inline-block h-3.5 w-3.5" />
           {t('mapPicker.label')}
@@ -101,7 +108,7 @@ export function AddressMapPicker({ latitude, longitude, addressText, onChange, e
           variant="secondary"
           size="sm"
           onClick={handleGeocode}
-          disabled={!addressText?.trim() || searching}
+          disabled={!hasAddress || searching}
         >
           {searching ? (
             <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -112,9 +119,10 @@ export function AddressMapPicker({ latitude, longitude, addressText, onChange, e
         </Button>
       </div>
 
-      <div className="relative z-0 h-[220px] w-full overflow-hidden rounded-lg ring-1 ring-border-default">
-        <MapContainer center={center} zoom={position ? 16 : 12} scrollWheelZoom minZoom={VIETNAM_MIN_ZOOM} maxBounds={VIETNAM_BOUNDS} maxBoundsViscosity={1.0} className="h-full w-full">
+      <div className={`relative z-0 w-full overflow-hidden rounded-lg ring-1 ring-border-default ${isFullscreen ? 'flex-1' : 'h-[220px]'}`}>
+        <MapContainer center={center} zoom={position ? 16 : 12} scrollWheelZoom zoomAnimation={false} minZoom={VIETNAM_MIN_ZOOM} maxBounds={VIETNAM_BOUNDS} maxBoundsViscosity={1.0} className="h-full w-full">
           <BaseTileLayer />
+          <MapFullscreenControl isFullscreen={isFullscreen} onToggle={toggle} />
           <ClickHandler onSelect={handleSelect} />
           <FlyTo position={flyTarget} />
           {position && <Marker position={position} icon={addressPinIcon} />}

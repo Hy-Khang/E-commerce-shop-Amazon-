@@ -20,7 +20,13 @@
     "remove": "Remove from comparison",
     "add": "Add to comparison",
     "blocked": "Only products in the same category can be compared (up to 4)",
-    "compare": "Compare"
+    "compare": "Compare",
+    "toast": {
+      "removed": "Removed from comparison",
+      "added": "Added to comparison",
+      "full": "You can compare up to {{max}} products",
+      "category": "Only products in the same category can be compared"
+    }
   },
   "rows": {
     "price": "Price",

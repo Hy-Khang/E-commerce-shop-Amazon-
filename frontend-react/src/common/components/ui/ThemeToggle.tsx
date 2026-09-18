@@ -30,7 +30,7 @@ export function ThemeToggle() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setIsOpen((v) => !v)}
-        className="rounded-lg p-2 text-text-secondary hover:bg-surface-hover transition-colors"
+        className="flex items-center justify-center rounded-lg p-2 text-text-secondary hover:bg-surface-hover transition-colors"
         aria-label="Change theme"
         aria-haspopup="menu"
         aria-expanded={isOpen}

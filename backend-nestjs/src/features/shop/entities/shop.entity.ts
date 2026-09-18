@@ -35,6 +35,22 @@ export class Shop {
   banner_url: string | null;
 
   /**
+   * Pickup point (Module 16 — Order Tracking). The shop's warehouse/pickup
+   * address + geo-coordinates. When a shipper accepts an order, this seeds the
+   * first tracking point so the package starts on the map at the shop (the
+   * shipper then updates it manually). All nullable — a shop that never set a
+   * pickup location simply has no initial marker (backward compatible).
+   */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  pickup_address: string | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  latitude: number | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  longitude: number | null;
+
+  /**
    * Storefront decoration (Shop Decoration block builder). A versioned JSON
    * envelope `{ version, theme?, blocks[] }` stored as a raw NVARCHAR(MAX)
    * string (repo convention — manual JSON.stringify/parse in the service, like

@@ -36,14 +36,6 @@ interface Props {
   onPlaced?: (data: AiOrderPlaced) => void;
 }
 
-const PAYMENT_OPTIONS: { value: PaymentMethod; labelKey: string }[] = [
-  { value: 'cod', labelKey: 'checkoutProposal.cod' },
-  { value: 'vnpay', labelKey: 'payment.transactions.gateway.vnpay' }, // Won't map properly, just use hardcode for VNPay/MoMo
-];
-
-// Let's do it inside the component for translation
-
-
 /**
  * Mini-checkout confirmation card. The agent only *proposes* — this card shows
  * the advisory totals and lets the customer pick address + payment, then calls
@@ -280,11 +272,10 @@ export function AiCheckoutProposalCard({ proposal, onNavigate, onPlaced }: Props
               key={opt.value}
               type="button"
               onClick={() => setMethod(opt.value)}
-              className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
-                method === opt.value
+              className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${method === opt.value
                   ? 'border-border-brand bg-brand-light text-text-brand'
                   : 'border-border-default text-text-secondary hover:border-border-strong'
-              }`}
+                }`}
             >
               {opt.label}
             </button>

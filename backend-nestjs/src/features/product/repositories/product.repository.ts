@@ -363,8 +363,15 @@ export class ProductRepository {
 
     if (attrs.category) {
       params.vsCat = `%${attrs.category}%`;
-      orClauses.push('category.name ILIKE :vsCat');
-      scoreExprs.push('CASE WHEN category.name ILIKE :vsCat THEN 5 ELSE 0 END');
+      // The catalog's categories are coarse (e.g. "Sách", "Nhà cửa & Đời sống"),
+      // so also match the detected product type against the product name/description
+      // where the specific type noun (e.g. "Sổ tay") actually lives.
+      orClauses.push(
+        '(category.name ILIKE :vsCat OR product.name ILIKE :vsCat OR product.description ILIKE :vsCat)',
+      );
+      scoreExprs.push(
+        'CASE WHEN category.name ILIKE :vsCat THEN 5 WHEN product.name ILIKE :vsCat THEN 4 WHEN product.description ILIKE :vsCat THEN 2 ELSE 0 END',
+      );
     }
 
     if (attrs.color) {

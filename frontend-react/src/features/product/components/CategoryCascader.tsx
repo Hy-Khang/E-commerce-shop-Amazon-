@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ChevronRight, Search, X, Check } from 'lucide-react';
+import { sortCategoriesOtherLast } from '../utils/product.util';
 import type { Category } from '../types/product.types';
 
 interface CategoryCascaderProps {
@@ -50,7 +51,10 @@ export function CategoryCascader({ categories, value, onChange, error, label = '
   const [tempSelections, setTempSelections] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const roots = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
+  const roots = useMemo(
+    () => sortCategoriesOtherLast(categories.filter((c) => !c.parent_id)),
+    [categories],
+  );
 
   const flatList = useMemo(() => flattenCategories(roots), [roots]);
 
@@ -87,7 +91,7 @@ export function CategoryCascader({ categories, value, onChange, error, label = '
     for (let i = 0; i < level; i++) {
       const selected = current.find((c) => c.id === tempSelections[i]);
       if (!selected?.children?.length) return [];
-      current = selected.children;
+      current = sortCategoriesOtherLast(selected.children);
     }
     return current;
   }

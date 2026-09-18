@@ -76,6 +76,7 @@ import { InsufficientStockException } from '../../common/exceptions/insufficient
 import { IPaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { ShopService } from '../shop/shop.service';
 import { FlashSaleService } from '../flash-sale/flash-sale.service';
+import { ShippingService } from './shipping.service';
 import { ActorType } from '../notification/types/notification.types';
 
 @Injectable()
@@ -96,6 +97,7 @@ export class OrderService {
     private readonly commissionService: CommissionService,
     private readonly shopService: ShopService,
     private readonly flashSaleService: FlashSaleService,
+    private readonly shippingService: ShippingService,
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
   ) {}
@@ -278,10 +280,19 @@ export class OrderService {
       0,
     );
 
+    // ── Distance-based shipping (H1): per-shop fee from the shop's pickup point
+    // to the delivery address. Falls back to the flat fee when either side has
+    // no coordinates. Same resolver used by `previewCheckout` so totals match.
+    const shippingByShop = await this.shippingService.computeShippingByShop(
+      address.latitude != null && address.longitude != null
+        ? { latitude: Number(address.latitude), longitude: Number(address.longitude) }
+        : null,
+      [...shopGroups.keys()],
+    );
+
     // ── Transaction: create N orders (1 per shop) + items, clear cart ──
 
     const orderGroupId = randomUUID();
-    const shippingFee = DEFAULT_SHIPPING_FEE;
     const createdOrders: Order[] = [];
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -301,6 +312,7 @@ export class OrderService {
           usages,
         } = discountByShop.get(shopId)!;
         const shopCoinDiscount = coinByShop.get(shopId) ?? 0;
+        const shippingFee = shippingByShop.get(shopId) ?? DEFAULT_SHIPPING_FEE;
         const shopTotal =
           shopItemsTotal - shopDiscount - shopCoinDiscount + shippingFee;
 
@@ -520,7 +532,22 @@ export class OrderService {
       validatedCoins,
     );
 
-    const shippingFee = DEFAULT_SHIPPING_FEE;
+    // Distance-based shipping (H1) — same resolver as checkout. The address is
+    // optional in the preview body: with a selected address the estimate is
+    // exact; without one it falls back to the flat fee (per shop).
+    const previewAddress = dto.address_id
+      ? await this.userProfileService.findAddressById(userId, dto.address_id)
+      : null;
+    const shippingByShop = await this.shippingService.computeShippingByShop(
+      previewAddress?.latitude != null && previewAddress?.longitude != null
+        ? {
+            latitude: Number(previewAddress.latitude),
+            longitude: Number(previewAddress.longitude),
+          }
+        : null,
+      [...shopGroups.keys()],
+    );
+
     const shops: CheckoutPreviewShopDto[] = [];
     let subtotal = 0;
     let discountTotal = 0;
@@ -530,6 +557,7 @@ export class OrderService {
     for (const [shopId, group] of shopGroups) {
       const d = discountByShop.get(shopId)!;
       const coin = coinByShop.get(shopId) ?? 0;
+      const shippingFee = shippingByShop.get(shopId) ?? DEFAULT_SHIPPING_FEE;
       const total = group.itemsTotal - d.discount - coin + shippingFee;
       subtotal += group.itemsTotal;
       discountTotal += d.discount;
@@ -1171,6 +1199,11 @@ export class OrderService {
 
     const order = await this.orderRepository.findByIdWithItemsAndUser(orderId);
 
+    // Seed the first tracking point at the shop's pickup location so the package
+    // starts on the map at the shop (the shipper then updates it manually).
+    // Best-effort — a missing/unset pickup location just means no initial marker.
+    await this.seedPickupLocationSafe(order!);
+
     this.eventEmitter.emit('order.status_updated', {
       orderId: order!.id,
       userId: order!.user_id,
@@ -1591,6 +1624,30 @@ export class OrderService {
       note: h.note,
       createdAt: h.created_at,
     }));
+  }
+
+  /**
+   * Seed the first tracking point from the order's shop pickup coordinates when
+   * a shipper accepts the order, so the package appears at the shop on the map
+   * before the shipper's first manual update. Best-effort: any failure (no shop,
+   * no coordinates set) is logged and never breaks the accept flow.
+   */
+  private async seedPickupLocationSafe(order: Order): Promise<void> {
+    try {
+      const shop = await this.shopService.findShopById(order.shop_id);
+      if (shop?.latitude == null || shop?.longitude == null) return;
+      await this.trackingLocationRepository.insertLocation(
+        order.id,
+        Number(shop.latitude),
+        Number(shop.longitude),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Could not seed pickup location for order #${order.id}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   private async resolveShipperLocation(

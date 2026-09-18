@@ -131,6 +131,8 @@ export interface PreviewOrderRequest {
   coupon_code?: string;
   coupon_codes?: string[];
   coins_to_redeem?: number;
+  /** Selected delivery address — enables exact distance-based shipping. */
+  address_id?: number;
 }
 
 export interface OrderListItemWithItems extends OrderListItem {

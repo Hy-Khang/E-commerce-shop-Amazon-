@@ -19,6 +19,8 @@ import { CoinService } from '../../coin/coin.service';
 import { SettingsService } from '../../settings/settings.service';
 import { CommissionService } from '../../seller-finance/commission.service';
 import { ShopService } from '../../shop/shop.service';
+import { ShippingService } from '../shipping.service';
+import { DEFAULT_SHIPPING_FEE } from '../types/order.types';
 import { FlashSaleService } from '../../flash-sale/flash-sale.service';
 import {
   PaymentMethod,
@@ -174,6 +176,20 @@ describe('OrderService', () => {
             getActiveFlashPriceMap: jest.fn().mockResolvedValue(new Map()),
             consume: jest.fn(),
             reverse: jest.fn(),
+          },
+        },
+        {
+          provide: ShippingService,
+          useValue: {
+            // Default to the flat fallback per shop so existing fee expectations
+            // (30000/shop) hold; distance logic is covered in shipping.util.spec.
+            computeShippingByShop: jest
+              .fn()
+              .mockImplementation((_dest: unknown, shopIds: number[]) => {
+                const map = new Map<number, number>();
+                for (const id of shopIds) map.set(id, DEFAULT_SHIPPING_FEE);
+                return Promise.resolve(map);
+              }),
           },
         },
         {

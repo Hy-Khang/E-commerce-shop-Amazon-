@@ -70,6 +70,7 @@ export function OrderTrackingMap({ shipperLocation, deliveryLocation }: Props) {
           center={center}
           zoom={13}
           scrollWheelZoom
+          zoomAnimation={false}
           minZoom={VIETNAM_MIN_ZOOM}
           maxBounds={VIETNAM_BOUNDS}
           maxBoundsViscosity={1.0}

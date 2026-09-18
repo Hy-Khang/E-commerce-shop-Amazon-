@@ -3,8 +3,7 @@ import { locationService } from '../services/location.service';
 
 export const locationKeys = {
   provinces: ['locations', 'provinces'] as const,
-  districts: (provinceCode: number) => ['locations', 'districts', provinceCode] as const,
-  wards: (districtCode: number) => ['locations', 'wards', districtCode] as const,
+  wards: (provinceCode: number) => ['locations', 'wards', provinceCode] as const,
 };
 
 export function useProvinces() {
@@ -15,20 +14,12 @@ export function useProvinces() {
   });
 }
 
-export function useDistricts(provinceCode: number | null) {
+// Post-2025 hierarchy: wards are fetched directly for a province (no district).
+export function useWards(provinceCode: number | null) {
   return useQuery({
-    queryKey: locationKeys.districts(provinceCode!),
-    queryFn: () => locationService.getDistricts(provinceCode!),
+    queryKey: locationKeys.wards(provinceCode!),
+    queryFn: () => locationService.getWards(provinceCode!),
     enabled: provinceCode != null,
-    staleTime: Infinity,
-  });
-}
-
-export function useWards(districtCode: number | null) {
-  return useQuery({
-    queryKey: locationKeys.wards(districtCode!),
-    queryFn: () => locationService.getWards(districtCode!),
-    enabled: districtCode != null,
     staleTime: Infinity,
   });
 }

@@ -19,9 +19,13 @@ export class CouponUsageRepository {
   ): Promise<number> {
     const result = await this.repo
       .createQueryBuilder('usage')
-      .innerJoin('usage.order', 'order')
+      // Alias must NOT be the SQL reserved word `order`: TypeORM auto-escapes
+      // `alias.col` inside .where() but inserts raw .select() strings verbatim,
+      // so an unquoted `order.` in the COUNT expression is a Postgres syntax
+      // error (SQL Server tolerated it). Use a non-reserved alias instead.
+      .innerJoin('usage.order', 'ord')
       .select(
-        'COUNT(DISTINCT COALESCE(order.order_group_id, order.id::text))',
+        'COUNT(DISTINCT COALESCE(ord.order_group_id, ord.id::text))',
         'count',
       )
       .where('usage.user_id = :userId', { userId })

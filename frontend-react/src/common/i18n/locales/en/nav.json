@@ -23,10 +23,12 @@
   },
   "account": {
     "myProfile": "My Profile",
-    "orders": "Orders",
-    "addresses": "Addresses",
+    "orders": "My Orders",
+    "addresses": "Shipping Addresses",
     "myReviews": "My Reviews",
-    "wishlist": "Wishlist",
+    "wishlist": "My Wishlist",
+    "notifications": "My Notifications",
+    "coins": "My Coins",
     "becomeSeller": "Become a seller",
     "logout": "Logout",
     "loggingOut": "Logging out..."

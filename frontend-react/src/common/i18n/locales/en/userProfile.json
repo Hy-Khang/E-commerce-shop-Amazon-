@@ -52,13 +52,27 @@
     "loading": "Loading...",
     "noResults": "No results found",
     "tabProvince": "Province/City",
-    "tabDistrict": "District",
     "tabWard": "Ward"
   },
   "mapPicker": {
     "label": "Pin on Map",
     "findOnMap": "Find on map",
     "selected": "Selected: {{lat}}, {{lng}}",
-    "hint": "Click the map or use \"Find on map\" to set delivery coordinates"
+    "hint": "Click the map or use \"Find on map\" to set delivery coordinates",
+    "notFound": "Couldn't find that address on the map. Try a less specific address, or click the map to pin the location.",
+    "geocodeError": "Map search is unavailable right now. Please click the map to pin the location."
+  },
+  "security": {
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "changePassword": "Change password",
+    "changing": "Changing...",
+    "setPassword": "Set password",
+    "setting": "Setting...",
+    "confirmSetPassword": "Confirm password",
+    "successChange": "Password changed successfully. You will be logged out.",
+    "successSet": "Password set successfully. You will be logged out.",
+    "socialMessage": "You signed in with a social account and don't have a password yet. Set one to also sign in with email and password."
   }
 }

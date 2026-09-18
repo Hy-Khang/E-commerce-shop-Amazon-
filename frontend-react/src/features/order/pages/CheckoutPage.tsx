@@ -1,14 +1,20 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MapPin, CreditCard, Tag, Loader2 } from 'lucide-react';
+import { MapPin, CreditCard, Tag, Loader2, Plus } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { formatPrice } from '@/common/utils/format.util';
 import { useEnumLabel } from '@/common/i18n';
 import { showErrorToast } from '@/common/components/feedback/toast';
+import { Drawer } from '@/common/components/ui/Drawer';
 import { ApiError } from '@/core/api/api.types';
+import {
+  AddressForm,
+  useCreateAddress,
+  type AddressFormData,
+} from '@/features/user-profile';
 import { useCart, cartSignature, groupItemsByShop } from '@/features/cart';
 import {
   CouponSelectorModal,
@@ -40,6 +46,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const { data: cart, isLoading: cartLoading } = useCart();
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
+  const createAddress = useCreateAddress();
   const checkout = useCheckout();
   const createPayment = useCreatePayment();
   // Voucher selection is shared with the Cart page via a store, so choices made
@@ -61,13 +68,15 @@ export default function CheckoutPage() {
     scope: 'platform',
   });
 
+  // Inline "add address" drawer — lets a first-time (or returning) user add a
+  // delivery address without leaving checkout.
+  const [showAddressForm, setShowAddressForm] = useState(false);
+
   const platformCoupon = appliedCoupons.find((c) => c.validation.shop_id == null);
   const shopCouponFor = (shopId: number | null) =>
     shopId == null
       ? undefined
       : appliedCoupons.find((c) => c.validation.shop_id === shopId);
-
-  const defaultAddress = addresses?.find((a) => a.is_default);
 
   const {
     register,
@@ -84,6 +93,26 @@ export default function CheckoutPage() {
 
   const selectedAddressId = useWatch({ control, name: 'address_id' });
   const paymentMethod = useWatch({ control, name: 'payment_method' });
+
+  // Pre-select the default address (or the only one) once addresses load.
+  // Runs in an effect — not during render — so the useWatch subscription picks
+  // up the change reliably. Only fills an empty selection, never overrides the
+  // user's own pick.
+  useEffect(() => {
+    if (selectedAddressId || !addresses || addresses.length === 0) return;
+    const preselect = addresses.find((a) => a.is_default) ?? addresses[0];
+    setValue('address_id', preselect.id, { shouldValidate: true });
+  }, [addresses, selectedAddressId, setValue]);
+
+  function handleCreateAddress(data: AddressFormData) {
+    createAddress.mutate(data, {
+      onSuccess: (newAddress) => {
+        setShowAddressForm(false);
+        // Select the freshly added address so the user can order right away.
+        setValue('address_id', newAddress.id, { shouldValidate: true });
+      },
+    });
+  }
 
   const isProcessing = checkout.isPending || createPayment.isPending;
 
@@ -122,6 +151,7 @@ export default function CheckoutPage() {
     cartSig,
     effectiveCoins,
     hasCartItems,
+    selectedAddressId,
   );
 
   function onSubmit(data: CheckoutFormData) {
@@ -183,10 +213,6 @@ export default function CheckoutPage() {
         </button>
       </div>
     );
-  }
-
-  if (defaultAddress && !selectedAddressId) {
-    setValue('address_id', defaultAddress.id);
   }
 
   const subtotal = cart.items.reduce((sum, item) => {
@@ -272,14 +298,34 @@ export default function CheckoutPage() {
           <div className="space-y-6 lg:col-span-2">
             {/* Shipping Address */}
             <div className="rounded-xl border border-border-default bg-elevated p-6">
-              <div className="mb-4 flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-text-secondary" />
-                <h2 className="text-lg font-semibold text-text-primary">{t('checkout.shippingAddress')}</h2>
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-text-secondary" />
+                  <h2 className="text-lg font-semibold text-text-primary">{t('checkout.shippingAddress')}</h2>
+                </div>
+                {addresses && addresses.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddressForm(true)}
+                    className="flex items-center gap-1.5 rounded-lg border border-border-brand px-3 py-1.5 text-xs font-semibold text-text-brand transition-colors hover:bg-brand-light"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    {t('checkout.addAddress')}
+                  </button>
+                )}
               </div>
 
               {!addresses || addresses.length === 0 ? (
-                <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                  {t('checkout.noAddresses')}
+                <div className="rounded-lg border-2 border-dashed border-border-default bg-surface-hover/50 p-8 text-center">
+                  <p className="text-sm text-text-secondary">{t('checkout.noAddresses')}</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddressForm(true)}
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-hover shadow-xs"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('checkout.addFirstAddress')}
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -496,6 +542,23 @@ export default function CheckoutPage() {
         scope={voucher.scope}
         title={voucher.scope === 'platform' ? t('checkout.voucherModal.platform') : t('checkout.voucherModal.shop')}
       />
+
+      {/* Inline add-address drawer — reuses the profile AddressForm so a user
+          can add a delivery address without leaving checkout. */}
+      <Drawer
+        open={showAddressForm}
+        onClose={() => setShowAddressForm(false)}
+        title={t('checkout.addAddressTitle')}
+        variant="modal"
+        size="xl"
+      >
+        <AddressForm
+          onSubmit={handleCreateAddress}
+          onClose={() => setShowAddressForm(false)}
+          isPending={createAddress.isPending}
+          error={createAddress.error}
+        />
+      </Drawer>
     </div>
   );
 }

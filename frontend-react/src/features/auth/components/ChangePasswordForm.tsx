@@ -11,6 +11,7 @@ import { useSetPassword } from '../hooks/useSetPassword';
 import { useAuthStore } from '../stores/auth.store';
 import { ApiError } from '@/core/api/api.types';
 import { Button } from '@/common/components/ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export function ChangePasswordForm() {
   const user = useAuthStore((s) => s.user);
@@ -23,6 +24,7 @@ export function ChangePasswordForm() {
 }
 
 function ChangePasswordMode() {
+  const { t } = useTranslation('userProfile');
   const {
     register,
     handleSubmit,
@@ -42,19 +44,19 @@ function ChangePasswordMode() {
     >
       {error && (
         <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-600">
-          {error instanceof ApiError ? error.message : 'An unexpected error occurred'}
+          {error instanceof ApiError ? error.message : t('errorFallback')}
         </div>
       )}
 
       {isSuccess && (
         <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-          Password changed successfully. You will be logged out.
+          {t('security.successChange')}
         </div>
       )}
 
       <div>
         <label htmlFor="current_password" className="block text-sm font-medium text-text-secondary">
-          Current password
+          {t('security.currentPassword')}
         </label>
         <input
           id="current_password"
@@ -70,7 +72,7 @@ function ChangePasswordMode() {
 
       <div>
         <label htmlFor="new_password" className="block text-sm font-medium text-text-secondary">
-          New password
+          {t('security.newPassword')}
         </label>
         <input
           id="new_password"
@@ -86,7 +88,7 @@ function ChangePasswordMode() {
 
       <div>
         <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary">
-          Confirm new password
+          {t('security.confirmPassword')}
         </label>
         <input
           id="confirmPassword"
@@ -101,13 +103,14 @@ function ChangePasswordMode() {
       </div>
 
       <Button type="submit" variant="brand" loading={isPending}>
-        {isPending ? 'Changing...' : 'Change password'}
+        {isPending ? t('security.changing') : t('security.changePassword')}
       </Button>
     </form>
   );
 }
 
 function SetPasswordMode() {
+  const { t } = useTranslation('userProfile');
   const {
     register,
     handleSubmit,
@@ -124,25 +127,24 @@ function SetPasswordMode() {
       className="space-y-4"
     >
       <div className="rounded-md bg-sky-50 p-3 text-sm text-sky-700">
-        You signed in with a social account and don&apos;t have a password yet. Set one to also sign
-        in with email and password.
+        {t('security.socialMessage')}
       </div>
 
       {error && (
         <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-600">
-          {error instanceof ApiError ? error.message : 'An unexpected error occurred'}
+          {error instanceof ApiError ? error.message : t('errorFallback')}
         </div>
       )}
 
       {isSuccess && (
         <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-          Password set successfully. You will be logged out.
+          {t('security.successSet')}
         </div>
       )}
 
       <div>
         <label htmlFor="new_password" className="block text-sm font-medium text-text-secondary">
-          Password
+          {t('security.setPassword')}
         </label>
         <input
           id="new_password"
@@ -158,7 +160,7 @@ function SetPasswordMode() {
 
       <div>
         <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary">
-          Confirm password
+          {t('security.confirmSetPassword')}
         </label>
         <input
           id="confirmPassword"
@@ -173,7 +175,7 @@ function SetPasswordMode() {
       </div>
 
       <Button type="submit" variant="brand" loading={isPending}>
-        {isPending ? 'Setting...' : 'Set password'}
+        {isPending ? t('security.setting') : t('security.setPassword')}
       </Button>
     </form>
   );

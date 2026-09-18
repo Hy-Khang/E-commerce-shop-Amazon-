@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useForm, useWatch, type Control, type UseFormRegister, type UseFormSetValue, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ImageUpload } from '@/features/product';
+import { AddressMapPicker, LocationPicker, geocodeAddress, type LocationValue } from '@/features/user-profile';
 import { ApiError } from '@/core/api/api.types';
 import { useMyShop, useCreateMyShop, useUpdateMyShop } from '../hooks/useMyShop';
 import { ShopProfilePreview } from './ShopProfilePreview';
@@ -19,6 +21,9 @@ type ShopFormValues = {
   description?: string;
   logo_url?: string;
   banner_url?: string;
+  pickup_address?: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 export function ShopSettingsForm() {
@@ -52,7 +57,7 @@ function CreateShopView({ create }: { create: ReturnType<typeof useCreateMyShop>
     formState: { errors },
   } = useForm<CreateShopFormData>({
     resolver: zodResolver(createShopSchema),
-    defaultValues: { name: '', description: '', logo_url: '', banner_url: '' },
+    defaultValues: { name: '', description: '', logo_url: '', banner_url: '', pickup_address: '', latitude: undefined, longitude: undefined },
   });
 
   const [name, logoUrl, bannerUrl] = useWatch({ control, name: ['name', 'logo_url', 'banner_url'] });
@@ -63,6 +68,9 @@ function CreateShopView({ create }: { create: ReturnType<typeof useCreateMyShop>
       description: data.description || undefined,
       logo_url: data.logo_url || undefined,
       banner_url: data.banner_url || undefined,
+      pickup_address: data.pickup_address || undefined,
+      latitude: data.latitude,
+      longitude: data.longitude,
     });
   }
 
@@ -85,6 +93,7 @@ function CreateShopView({ create }: { create: ReturnType<typeof useCreateMyShop>
           control={control as unknown as Control<ShopFormValues>}
           setValue={setValue as unknown as UseFormSetValue<ShopFormValues>}
           errors={errors as FieldErrors<ShopFormValues>}
+          initialPickupAddress=""
         />
         <button
           type="submit"
@@ -118,6 +127,9 @@ function UpdateShopView({
       description: shop.description ?? '',
       logo_url: shop.logo_url ?? '',
       banner_url: shop.banner_url ?? '',
+      pickup_address: shop.pickup_address ?? '',
+      latitude: shop.latitude ?? undefined,
+      longitude: shop.longitude ?? undefined,
     },
   });
 
@@ -129,6 +141,9 @@ function UpdateShopView({
       description: data.description || undefined,
       logo_url: data.logo_url || undefined,
       banner_url: data.banner_url || undefined,
+      pickup_address: data.pickup_address || undefined,
+      latitude: data.latitude,
+      longitude: data.longitude,
     });
   }
 
@@ -161,6 +176,7 @@ function UpdateShopView({
           control={control as unknown as Control<ShopFormValues>}
           setValue={setValue as unknown as UseFormSetValue<ShopFormValues>}
           errors={errors as FieldErrors<ShopFormValues>}
+          initialPickupAddress={shop.pickup_address ?? ''}
         />
         <button
           type="submit"
@@ -179,11 +195,13 @@ function ShopFormFields({
   control,
   setValue,
   errors,
+  initialPickupAddress,
 }: {
   register: UseFormRegister<ShopFormValues>;
   control: Control<ShopFormValues>;
   setValue: UseFormSetValue<ShopFormValues>;
   errors: FieldErrors<ShopFormValues>;
+  initialPickupAddress: string;
 }) {
   const description = useWatch({ control, name: 'description' }) ?? '';
   const logoUrl = useWatch({ control, name: 'logo_url' });
@@ -232,6 +250,120 @@ function ShopFormFields({
           onClear={() => setValue('banner_url', '', { shouldDirty: true })}
         />
       </div>
+
+      <ShopPickupField
+        control={control}
+        setValue={setValue}
+        initialPickupAddress={initialPickupAddress}
+      />
     </>
+  );
+}
+
+/**
+ * Pickup location editor — mirrors the customer address form: a cascading
+ * Province/Ward picker + an "address details" line combine into the single
+ * `pickup_address` string, and picking a ward auto-geocodes the map marker
+ * (which the seller can then fine-tune by clicking). Only writes to the form
+ * (marking it dirty) when the seller actually changes something, so an
+ * untouched shop keeps its saved pickup address.
+ */
+function ShopPickupField({
+  control,
+  setValue,
+  initialPickupAddress,
+}: {
+  control: Control<ShopFormValues>;
+  setValue: UseFormSetValue<ShopFormValues>;
+  initialPickupAddress: string;
+}) {
+  const latitude = useWatch({ control, name: 'latitude' });
+  const longitude = useWatch({ control, name: 'longitude' });
+
+  const [location, setLocation] = useState<LocationValue>({ province: null, ward: null });
+  const [detail, setDetail] = useState('');
+  const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
+
+  const cityValue =
+    location.ward && location.province
+      ? `${location.ward.name}, ${location.province.name}`
+      : location.province
+        ? location.province.name
+        : '';
+
+  function commit(nextDetail: string, city: string) {
+    const combined = [nextDetail, city].filter(Boolean).join(', ');
+    setValue('pickup_address', combined, { shouldDirty: true });
+  }
+
+  async function autoGeocode(city: string) {
+    try {
+      const hit = await geocodeAddress('', city);
+      if (hit) {
+        setValue('latitude', hit.lat, { shouldDirty: true });
+        setValue('longitude', hit.lng, { shouldDirty: true });
+        setFlyTarget([hit.lat, hit.lng]);
+      }
+    } catch {
+      // Silent — the seller can still click the map to pin the location.
+    }
+  }
+
+  function handleLocationChange(next: LocationValue) {
+    setLocation(next);
+    const city =
+      next.ward && next.province
+        ? `${next.ward.name}, ${next.province.name}`
+        : next.province
+          ? next.province.name
+          : '';
+    commit(detail, city);
+    if (next.ward && next.province) autoGeocode(city);
+  }
+
+  return (
+    <div className="border-t border-slate-200 pt-5 dark:border-slate-800">
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Pickup Location</label>
+      <p className="mt-0.5 mb-3 text-xs text-slate-500 dark:text-slate-400">
+        Where couriers pick up orders. Choosing a ward pins it on the map — the package starts here in order tracking.
+      </p>
+
+      <div className="space-y-3">
+        <LocationPicker
+          value={location}
+          onChange={handleLocationChange}
+          initialDisplayText={initialPickupAddress}
+          variant="portal"
+        />
+
+        <div>
+          <label htmlFor="pickup_detail" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Address details
+          </label>
+          <input
+            id="pickup_detail"
+            value={detail}
+            onChange={(e) => {
+              setDetail(e.target.value);
+              commit(e.target.value, cityValue);
+            }}
+            placeholder="House number, street name..."
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          />
+        </div>
+
+        <AddressMapPicker
+          latitude={latitude ?? null}
+          longitude={longitude ?? null}
+          addressLine={detail}
+          city={cityValue}
+          externalFlyTo={flyTarget}
+          onChange={(lat, lng) => {
+            setValue('latitude', lat, { shouldDirty: true });
+            setValue('longitude', lng, { shouldDirty: true });
+          }}
+        />
+      </div>
+    </div>
   );
 }
