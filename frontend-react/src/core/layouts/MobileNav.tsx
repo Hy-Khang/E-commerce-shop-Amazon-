@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, User, Package, MapPin, MessageSquare, Heart, LogOut, Shield, Store, Truck } from 'lucide-react';
 import { useAuthStore, useLogout } from '@/features/auth';
-import { useCategories } from '@/features/product';
+import { useCategories, sortCategoriesOtherLast } from '@/features/product';
 import { ROUTES } from '@/common/constants/routes';
 import { Drawer } from '@/common/components/ui/Drawer';
 import { ThemeToggle } from '@/common/components/ui/ThemeToggle';
@@ -15,7 +15,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
   const { mutate: logout } = useLogout();
   const { data: categories } = useCategories();
   const navigate = useNavigate();
-  const rootCategories = categories?.filter((c) => !c.parent_id)?.slice(0, 10) ?? [];
+  const rootCategories = sortCategoriesOtherLast(categories?.filter((c) => !c.parent_id) ?? []).slice(0, 10);
 
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

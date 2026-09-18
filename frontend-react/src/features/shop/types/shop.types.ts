@@ -12,6 +12,10 @@ export interface Shop {
   description: string | null;
   logo_url: string | null;
   banner_url: string | null;
+  /** Pickup point (Order Tracking origin). Seller-only; absent on public profiles. */
+  pickup_address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   /** Parsed storefront decoration (null = default layout). */
   decoration_config: DecorationConfig | null;
   status: ShopStatus;
@@ -41,6 +45,9 @@ export interface CreateShopRequest {
   description?: string;
   logo_url?: string;
   banner_url?: string;
+  pickup_address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface UpdateShopRequest {
@@ -48,15 +55,25 @@ export interface UpdateShopRequest {
   description?: string;
   logo_url?: string;
   banner_url?: string;
+  pickup_address?: string;
+  latitude?: number;
+  longitude?: number;
   /** Save a decoration layout, or `null` to reset to the default. */
   decoration_config?: DecorationConfig | null;
 }
+
+const pickupFields = {
+  pickup_address: z.string().max(255).optional().or(z.literal('')),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+};
 
 export const createShopSchema = z.object({
   name: z.string().min(1, 'Shop name is required').max(100),
   description: z.string().max(2000).optional().or(z.literal('')),
   logo_url: z.string().url().optional().or(z.literal('')),
   banner_url: z.string().url().optional().or(z.literal('')),
+  ...pickupFields,
 });
 
 export type CreateShopFormData = z.infer<typeof createShopSchema>;
@@ -66,6 +83,7 @@ export const updateShopSchema = z.object({
   description: z.string().max(2000).optional().or(z.literal('')),
   logo_url: z.string().url().optional().or(z.literal('')),
   banner_url: z.string().url().optional().or(z.literal('')),
+  ...pickupFields,
 });
 
 export type UpdateShopFormData = z.infer<typeof updateShopSchema>;

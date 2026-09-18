@@ -27,17 +27,17 @@ export function CompareToggleButton({ product }: Props) {
 
     if (active) {
       remove(product.id);
-      toast.info(t('toggle.toast.removed', { ns: 'toast' })); // Use compare ns for now, wait we added it to toast
+      toast.info(t('toggle.toast.removed'));
       return;
     }
 
     const result = add(product.id, product.category_id);
     if (result === 'added') {
-      toast.success(t('toggle.toast.added', { ns: 'toast' })); // Use toast NS since we added it to toast.json
+      toast.success(t('toggle.toast.added'));
     } else if (result === 'full') {
-      toast.error(t('toggle.toast.full', { max: MAX_COMPARE, ns: 'toast' }));
+      toast.error(t('toggle.toast.full', { max: MAX_COMPARE }));
     } else {
-      toast.error(t('toggle.toast.category', { ns: 'toast' }));
+      toast.error(t('toggle.toast.category'));
     }
   };
 
@@ -54,13 +54,12 @@ export function CompareToggleButton({ product }: Props) {
             ? t('toggle.blocked')
             : t('toggle.add')
       }
-      className={`rounded-full p-1.5 shadow-sm ring-1 transition-colors ${
-        active
+      className={`rounded-full p-1.5 shadow-sm ring-1 transition-colors ${active
           ? 'bg-brand text-white ring-brand'
           : blocked
             ? 'bg-white/90 text-text-muted ring-border-default'
             : 'bg-white/90 text-text-secondary ring-border-default hover:bg-brand-light hover:text-text-brand'
-      }`}
+        }`}
     >
       <Scale className="h-4 w-4" />
     </button>

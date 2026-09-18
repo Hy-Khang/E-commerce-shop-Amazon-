@@ -97,8 +97,17 @@ export class ShopService {
       });
     }
     const { shop, productCount, avgRating, totalSales } = result;
+    // Pickup coordinates/address are internal (Order Tracking origin) — never
+    // expose them on the public storefront profile.
+    const publicShop = { ...this.withParsedDecoration(shop) } as Record<
+      string,
+      unknown
+    >;
+    delete publicShop.pickup_address;
+    delete publicShop.latitude;
+    delete publicShop.longitude;
     return {
-      ...this.withParsedDecoration(shop),
+      ...publicShop,
       product_count: productCount,
       average_rating: avgRating,
       total_sales: totalSales,
@@ -142,6 +151,9 @@ export class ShopService {
         description: dto.description ?? null,
         logo_url: dto.logo_url ?? null,
         banner_url: dto.banner_url ?? null,
+        pickup_address: dto.pickup_address ?? null,
+        latitude: dto.latitude ?? null,
+        longitude: dto.longitude ?? null,
         status: ShopStatus.PendingVerification,
       });
       this.logger.log(

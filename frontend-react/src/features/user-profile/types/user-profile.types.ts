@@ -50,16 +50,17 @@ export interface UpdateAddressRequest {
   longitude?: number;
 }
 
-// --- Location types (Vietnam provinces API) ---
+// --- Location types (Vietnam provinces API v2 — post-2025 merger, 2-tier) ---
 
 export interface LocationItem {
   code: number;
   name: string;
 }
 
+// After the July 2025 provincial merger the administrative hierarchy is 2-tier:
+// Province/City → Ward/Commune (the district level was abolished).
 export interface LocationValue {
   province: LocationItem | null;
-  district: LocationItem | null;
   ward: LocationItem | null;
 }
 

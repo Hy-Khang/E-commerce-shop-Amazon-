@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { User, MapPin, ShoppingCart, MessageSquare, Heart, Bell, Coins } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useProfile } from '@/features/user-profile';
 import { useOrders } from '@/features/order';
 import { useWishlist } from '@/features/wishlist';
@@ -7,6 +8,7 @@ import { useMyReviews } from '@/features/review';
 import { useNotificationStore } from '@/features/notification';
 
 export default function AccountLayout() {
+  const { t } = useTranslation('nav');
   const { data: profile } = useProfile();
 
   // Fetch count query parameters with a limit of 1 to keep them lightweight
@@ -31,42 +33,42 @@ export default function AccountLayout() {
   const navItems = [
     {
       to: '/profile',
-      label: 'My Profile',
+      label: t('account.myProfile'),
       icon: User,
       exact: true,
     },
     {
       to: '/profile/addresses',
-      label: 'Shipping Addresses',
+      label: t('account.addresses'),
       icon: MapPin,
     },
     {
       to: '/orders',
-      label: 'My Orders',
+      label: t('account.orders'),
       icon: ShoppingCart,
       count: ordersCount,
     },
     {
       to: '/notifications',
-      label: 'My Notifications',
+      label: t('account.notifications'),
       icon: Bell,
       count: notificationUnreadCount,
     },
     {
       to: '/profile/reviews',
-      label: 'My Reviews',
+      label: t('account.myReviews'),
       icon: MessageSquare,
       count: reviewsCount,
     },
     {
       to: '/wishlist',
-      label: 'My Wishlist',
+      label: t('account.wishlist'),
       icon: Heart,
       count: wishlistCount,
     },
     {
       to: '/wallet',
-      label: 'My Coins',
+      label: t('account.coins'),
       icon: Coins,
       // No count badge — a raw balance (e.g. 15000) doesn't belong in a count pill.
     },

@@ -20,6 +20,15 @@ export class ShopResponseDto {
   @ApiPropertyOptional()
   banner_url: string | null;
 
+  @ApiPropertyOptional({ description: 'Shop pickup address (Order Tracking origin)' })
+  pickup_address: string | null;
+
+  @ApiPropertyOptional({ description: 'Pickup latitude' })
+  latitude: number | null;
+
+  @ApiPropertyOptional({ description: 'Pickup longitude' })
+  longitude: number | null;
+
   @ApiPropertyOptional({
     type: DecorationConfigDto,
     nullable: true,

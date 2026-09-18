@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { ROUTES } from '@/common/constants/routes';
 import { useCategories } from '../hooks/useCategories';
+import { sortCategoriesOtherLast } from '../utils/product.util';
 import type { Category } from '../types/product.types';
 
 const MAX_VISIBLE_CHILDREN = 3;
@@ -41,9 +42,13 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
   const isActive = category.slug === activeSlug;
   const hasChildren = !!category.children?.length;
   const totalChildren = category.children?.length ?? 0;
+  const sortedChildren = useMemo(
+    () => (category.children ? sortCategoriesOtherLast(category.children) : []),
+    [category.children],
+  );
   const visibleChildren = showAll
-    ? category.children!
-    : category.children?.slice(0, MAX_VISIBLE_CHILDREN);
+    ? sortedChildren
+    : sortedChildren.slice(0, MAX_VISIBLE_CHILDREN);
   const hiddenCount = totalChildren - MAX_VISIBLE_CHILDREN;
 
   return (
@@ -76,7 +81,7 @@ function CategoryNode({ category, activeSlug, depth = 0, defaultExpanded = false
 
       {hasChildren && expanded && (
         <ul className="ml-2">
-          {visibleChildren!.map((child) => (
+          {visibleChildren.map((child) => (
             <CategoryNode
               key={child.id}
               category={child}
@@ -140,7 +145,7 @@ export function CategorySidebar() {
     <nav>
       <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">{t('categorySidebar.title')}</h3>
       <ul className="space-y-0.5">
-        {categories.filter((cat) => cat.parent_id === null).map((cat) => (
+        {sortCategoriesOtherLast(categories.filter((cat) => cat.parent_id === null)).map((cat) => (
           <CategoryNode
             key={cat.id}
             category={cat}

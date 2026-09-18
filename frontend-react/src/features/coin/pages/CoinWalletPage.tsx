@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Coins, Clock, Loader2 } from 'lucide-react';
-import { formatDate } from '@/common/utils/format.util';
 import { Pagination } from '@/common/components/data/Pagination';
 import { useTranslation } from 'react-i18next';
 import { useFormat } from '@/common/i18n/useFormat';
@@ -21,7 +20,7 @@ const TXN_META: Record<
 
 export default function CoinWalletPage() {
   const { t } = useTranslation('coin');
-  const { formatDate, formatNumber } = useFormat();
+  const { formatDate } = useFormat();
   const [page, setPage] = useState(1);
   const { data: balance, isLoading: balanceLoading } = useCoinBalance();
   const { data: txns, isLoading: txnsLoading } = useCoinTransactions(page);
@@ -78,11 +77,11 @@ export default function CoinWalletPage() {
         ) : (
           <>
             <ul className="divide-y divide-border-default">
-              {txns.data.map((t) => {
-                const meta = TXN_META[t.type];
+              {txns.data.map((txn) => {
+                const meta = TXN_META[txn.type];
                 return (
                   <li
-                    key={t.id}
+                    key={txn.id}
                     className="flex items-center justify-between py-3"
                   >
                     <div>
@@ -90,12 +89,12 @@ export default function CoinWalletPage() {
                         {t(`wallet.types.${meta.labelKey}` as any)}
                       </p>
                       <p className="text-xs text-text-muted">
-                        {t.note ?? '—'} · {formatDate(t.created_at)}
+                        {txn.note ?? '—'} · {formatDate(txn.created_at)}
                       </p>
                     </div>
                     <span className={`text-sm font-bold ${meta.className}`}>
                       {meta.sign}
-                      {t('wallet.balance', { count: t.amount })}
+                      {t('wallet.balance', { count: txn.amount })}
                     </span>
                   </li>
                 );

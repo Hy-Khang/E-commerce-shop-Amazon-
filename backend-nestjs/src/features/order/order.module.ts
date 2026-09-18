@@ -5,6 +5,7 @@ import { AdminOrderController } from './admin-order.controller';
 import { SellerOrderController } from './seller-order.controller';
 import { ShipperOrderController } from './shipper-order.controller';
 import { OrderService } from './order.service';
+import { ShippingService } from './shipping.service';
 import { OrderScheduler } from './order.scheduler';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
@@ -52,6 +53,7 @@ import { FlashSaleModule } from '../flash-sale/flash-sale.module';
   ],
   providers: [
     OrderService,
+    ShippingService,
     OrderScheduler,
     OrderPaymentListener,
     OrderTrackingListener,

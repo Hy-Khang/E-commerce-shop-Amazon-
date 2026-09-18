@@ -18,13 +18,15 @@ export function usePreviewCheckout(
   cartSig: string,
   coins = 0,
   enabled = true,
+  addressId?: number,
 ) {
   return useQuery({
-    queryKey: orderKeys.preview(codes, cartSig, coins),
+    queryKey: orderKeys.preview(codes, cartSig, coins, addressId),
     queryFn: () =>
       orderService.preview({
         coupon_codes: codes,
         coins_to_redeem: coins > 0 ? coins : undefined,
+        address_id: addressId,
       }),
     enabled,
     staleTime: 0,

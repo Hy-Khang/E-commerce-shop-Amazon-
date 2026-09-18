@@ -23,10 +23,12 @@
   },
   "account": {
     "myProfile": "Hồ sơ của tôi",
-    "orders": "Đơn hàng",
-    "addresses": "Địa chỉ",
+    "orders": "Đơn hàng của tôi",
+    "addresses": "Địa chỉ giao hàng",
     "myReviews": "Đánh giá của tôi",
-    "wishlist": "Yêu thích",
+    "wishlist": "Yêu thích của tôi",
+    "notifications": "Thông báo của tôi",
+    "coins": "Xu của tôi",
     "becomeSeller": "Trở thành người bán",
     "logout": "Đăng xuất",
     "loggingOut": "Đang đăng xuất..."

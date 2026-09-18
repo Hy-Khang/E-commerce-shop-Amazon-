@@ -22,3 +22,4 @@ export { AddressCard } from './components/AddressCard';
 export { AddressForm } from './components/AddressForm';
 export { AddressMapPicker } from './components/AddressMapPicker';
 export { LocationPicker } from './components/LocationPicker';
+export { geocodeAddress } from './utils/geocode.util';

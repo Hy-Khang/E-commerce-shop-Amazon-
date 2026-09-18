@@ -88,7 +88,7 @@ export function ShipperLocationUpdater({ orderId, currentLocation, deliveryLocat
         )}
       </div>
       <div className={`w-full overflow-hidden rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 ${isFullscreen ? 'flex-1' : 'h-[300px]'}`}>
-        <MapContainer center={center} zoom={14} scrollWheelZoom minZoom={VIETNAM_MIN_ZOOM} maxBounds={VIETNAM_BOUNDS} maxBoundsViscosity={1.0} className="h-full w-full">
+        <MapContainer center={center} zoom={14} scrollWheelZoom zoomAnimation={false} minZoom={VIETNAM_MIN_ZOOM} maxBounds={VIETNAM_BOUNDS} maxBoundsViscosity={1.0} className="h-full w-full">
           <BaseTileLayer />
           <VietnamBorderHighlight />
           <MapFullscreenControl isFullscreen={isFullscreen} onToggle={toggle} />

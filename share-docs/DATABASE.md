@@ -164,6 +164,9 @@
 | description | NVARCHAR(MAX) | NULL |
 | logo_url | NVARCHAR(500) | NULL |
 | banner_url | NVARCHAR(500) | NULL |
+| pickup_address | NVARCHAR(255) | NULL — human-readable pickup point (Order Tracking origin) |
+| latitude | DECIMAL(10,7) | NULL — pickup geo-coordinate (seeds the first tracking point on shipper accept) |
+| longitude | DECIMAL(10,7) | NULL — pickup geo-coordinate |
 | decoration_config | NVARCHAR(MAX) | NULL — **JSON** storefront decoration (Shop Decoration block builder); NULL = default layout |
 | status | NVARCHAR(30) | NOT NULL, DEFAULT `'pending_verification'`, CHECK IN (`pending_verification`, `active`, `suspended`, `banned`) |
 | verified_at | DATETIME2 | NULL — set when admin approves (preserved permanently) |
@@ -176,6 +179,7 @@
 > **1:1 with users:** Each seller has exactly one shop. UNIQUE constraint on `user_id` enforces this. Race condition on concurrent POST handled by catching SQL Server error 2627/2601 → mapped to SHOP_002.
 > **Status lifecycle:** `pending_verification` → `active` → `suspended`/`banned`. `verified_at`/`verified_by` are set once on first approval and preserved permanently. `suspended_at`/`banned_at` are overwritten on each state change.
 > **Public visibility:** Products from shops with `status != 'active'` are hidden from the public storefront. All public product queries join shops and filter `shops.status = 'active'`.
+> **Pickup location (`pickup_address` / `latitude` / `longitude`, Module 16):** The shop's pickup point, set by the seller in Shop Settings (map picker). All nullable — backward compatible. When a shipper **accepts** an order, `OrderService.seedPickupLocationSafe` inserts the shop's coordinates as the **first** `order_tracking_locations` row so the package appears on the tracking map at the shop before the shipper's first manual update (best-effort — no coordinates set ⇒ no initial marker). These fields are **stripped from the public `GET /shops/:slug` profile** (internal pickup origin) but returned by the seller-only `GET /seller/shop`.
 > **Shop Decoration (`decoration_config`):** A versioned JSON envelope `{ version: 1, theme?: { accent? }, blocks: [{ id, type, data }] }` describing the seller's customized storefront (block-based page builder). Stored as a raw `NVARCHAR(MAX)` string (repo JSON convention — manual `JSON.stringify`/`JSON.parse` in the service, like `orders.shipping_address` / `ai_messages.actions`), not a TypeORM transformer. Block types: `hero` / `rich_text` / `image` / `product_grid` (extensible — a `video` block can be added later without a schema/column change). Validated at write via nested class-validator DTOs (≤20 blocks, hero 1–5 images, grid 1–12 product ids, serialized ≤16 KB → `SHOP_006`); parsed defensively on read (malformed → `null`). NULL = default layout, so existing shops are unaffected. Added by migration `1756900000000-AddDecorationConfigToShops` (dev auto-adds via `synchronize`).
 
 ---
@@ -296,6 +300,7 @@
 > - `payment_status` is independent from `status` — a paid order can still be cancelled (triggers refund flow).
 > - `coupon_code` and `discount_amount` are snapshots — immune to coupon edits/deletions after checkout. Discount is proportionally distributed across sub-orders: `shopDiscount = (shopItemsTotal / totalItemsAmount) × discountAmount`.
 > - **Formula:** `total_amount = shopItemsTotal - discount_amount - coin_discount + shipping_fee` (per sub-order). `coin_discount` (Module 23) is the Xu redeemed on this sub-order, distributed by headroom; reversed as a fresh Xu batch on cancel.
+> - **`shipping_fee` (distance-based, H1):** Computed per shop by `ShippingService.computeShippingByShop` from the Haversine distance between the shop's pickup point (`shops.latitude/longitude`) and the delivery address (`addresses.latitude/longitude`) — a flat base for the first 5 km, then a per-km fee, rounded to 1.000 ₫ and clamped to `[15.000, 60.000]`. Falls back to the flat `DEFAULT_SHIPPING_FEE = 30.000 ₫` when either side has no coordinates. `checkout` and `POST /orders/preview` share the same resolver so the estimate matches the charge. Coordinate-only → immune to the 2025 province merger; a carrier-API strategy (GHN/GHTK) can wrap it later without touching checkout.
 > - Enums stored as string columns for readability and easy migration.
 > - **Order completion flow:** `delivered` is no longer terminal. Customer can confirm receipt (`completed`) or request return (`return_requested`). Orders auto-complete 7 days after `delivered_at` via hourly cron. Revenue (dashboard) and review eligibility require `completed` status.
 > - **`delivered_at`** is set when order transitions to `delivered` (admin, seller, or shipper). Used by auto-complete cron to find orders past the 7-day window.

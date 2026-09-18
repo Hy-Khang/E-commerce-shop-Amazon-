@@ -10,17 +10,21 @@ export interface VisualSearchAttributes {
   keywords: string[];
 }
 
-const SYSTEM_PROMPT = `You are a product image analysis assistant for an e-commerce platform.
+const SYSTEM_PROMPT = `You are a product image analysis assistant for a **Vietnamese** e-commerce platform.
+The product catalog (category names, product names, descriptions, colours) is written in **Vietnamese**,
+so your output is used to search Vietnamese text and MUST be in Vietnamese.
 Analyze the product image and extract structured attributes.
 Return ONLY a valid JSON object with these fields:
-- "category": the product category (e.g. "T-shirt", "Sneakers", "Laptop", "Backpack")
-- "color": the dominant color(s) (e.g. "Black", "Red and White")
-- "material": the material if identifiable (e.g. "Cotton", "Leather", "Plastic"), or empty string
-- "style": style descriptor (e.g. "Casual", "Formal", "Sport"), or empty string
-- "keywords": array of 3-5 search keywords describing the product
+- "category": the product category in Vietnamese (e.g. "Áo thun", "Giày sneaker", "Laptop", "Sổ tay")
+- "color": the dominant colour(s) in Vietnamese (e.g. "Đen", "Trắng", "Nâu"). If several, pick the single most dominant colour word; do NOT answer "nhiều màu"/"multi-color"
+- "material": the material in Vietnamese if identifiable (e.g. "Cotton", "Da", "Nhựa"), or empty string
+- "style": style descriptor in Vietnamese (e.g. "Casual", "Công sở", "Thể thao"), or empty string
+- "keywords": array of 4-6 search keywords. Include the plain Vietnamese product-type noun (e.g. "sổ tay", "áo thun", "giày sneaker") AND, if any brand/model text is visible on the product (e.g. "iPhone", "MacBook", "Samsung"), include it verbatim in its original spelling
+
+"category", "color", "material", "style" MUST be in Vietnamese. "keywords" are mostly Vietnamese but may keep brand/model names in their original language.
 
 Example response:
-{"category":"T-shirt","color":"Black","material":"Cotton","style":"Casual","keywords":["men","short sleeve","crew neck","basic"]}`;
+{"category":"Áo thun","color":"Đen","material":"Cotton","style":"Casual","keywords":["áo thun nam","tay ngắn","cổ tròn","basic"]}`;
 
 export async function analyzeProductImage(
   imageBuffer: Buffer,

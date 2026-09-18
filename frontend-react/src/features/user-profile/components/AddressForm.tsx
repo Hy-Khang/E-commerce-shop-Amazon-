@@ -8,6 +8,7 @@ import { FormInput } from '@/common/components/form/FormInput';
 import { Button } from '@/common/components/ui/Button';
 import { LocationPicker } from './LocationPicker';
 import { AddressMapPicker } from './AddressMapPicker';
+import { geocodeAddress } from '../utils/geocode.util';
 
 interface Props {
   address?: Address;
@@ -40,7 +41,6 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
 
   const [location, setLocation] = useState<LocationValue>({
     province: null,
-    district: null,
     ward: null,
   });
   const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
@@ -63,27 +63,21 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
   const [prevAddressId, setPrevAddressId] = useState(address?.id);
   if (address?.id !== prevAddressId) {
     setPrevAddressId(address?.id);
-    setLocation({ province: null, district: null, ward: null });
+    setLocation({ province: null, ward: null });
   }
 
   const addressLine = useWatch({ control, name: 'address_line' });
   const city = useWatch({ control, name: 'city' });
   const lat = useWatch({ control, name: 'latitude' });
   const lng = useWatch({ control, name: 'longitude' });
-  const addressText = [addressLine, city].filter(Boolean).join(', ');
 
-  async function autoGeocode(query: string) {
+  async function autoGeocode(cityValue: string) {
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
-      );
-      const data = await res.json();
-      if (data.length > 0) {
-        const newLat = parseFloat(data[0].lat);
-        const newLng = parseFloat(data[0].lon);
-        setValue('latitude', newLat, { shouldDirty: true });
-        setValue('longitude', newLng, { shouldDirty: true });
-        setFlyTarget([newLat, newLng]);
+      const hit = await geocodeAddress('', cityValue);
+      if (hit) {
+        setValue('latitude', hit.lat, { shouldDirty: true });
+        setValue('longitude', hit.lng, { shouldDirty: true });
+        setFlyTarget([hit.lat, hit.lng]);
       }
     } catch {
       // Silent fail — user can still use "Find on map" or click the map
@@ -92,18 +86,12 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
 
   function handleLocationChange(newLocation: LocationValue) {
     setLocation(newLocation);
-    if (newLocation.ward && newLocation.district && newLocation.province) {
-      const cityValue = `${newLocation.ward.name}, ${newLocation.district.name}, ${newLocation.province.name}`;
+    if (newLocation.ward && newLocation.province) {
+      const cityValue = `${newLocation.ward.name}, ${newLocation.province.name}`;
       setValue('city', cityValue, { shouldDirty: true, shouldValidate: true });
-      autoGeocode(`${cityValue}, Vietnam`);
+      autoGeocode(cityValue);
     } else if (newLocation.province) {
-      const partial = [
-        newLocation.district?.name,
-        newLocation.province.name,
-      ]
-        .filter(Boolean)
-        .join(', ');
-      setValue('city', partial, { shouldDirty: true });
+      setValue('city', newLocation.province.name, { shouldDirty: true });
     } else {
       setValue('city', '', { shouldDirty: true });
     }
@@ -153,7 +141,8 @@ export function AddressForm({ address, onSubmit, onClose, isPending, error }: Pr
           <AddressMapPicker
             latitude={lat ?? null}
             longitude={lng ?? null}
-            addressText={addressText}
+            addressLine={addressLine}
+            city={city}
             onChange={(newLat, newLng) => {
               setValue('latitude', newLat, { shouldDirty: true });
               setValue('longitude', newLng, { shouldDirty: true });

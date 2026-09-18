@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Menu, HelpCircle, Shield, Store, Truck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '@/features/auth';
-import { useCategories, SearchBarWithSuggestions } from '@/features/product';
+import { useCategories, SearchBarWithSuggestions, sortCategoriesOtherLast } from '@/features/product';
 import { CartBadge } from '@/features/cart';
 import { WishlistBadge } from '@/features/wishlist';
 import { NotificationBell } from '@/features/notification';
@@ -80,7 +80,7 @@ export function Header() {
 function NavBar() {
   const { t } = useTranslation('nav');
   const { data: categories } = useCategories();
-  const rootCategories = categories?.filter((c) => !c.parent_id)?.slice(0, 8) ?? [];
+  const rootCategories = sortCategoriesOtherLast(categories?.filter((c) => !c.parent_id) ?? []).slice(0, 8);
 
   return (
     <nav className="hidden border-b border-border-default/50 md:block">

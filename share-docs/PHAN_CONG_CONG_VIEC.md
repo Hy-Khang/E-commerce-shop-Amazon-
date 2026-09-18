@@ -6,7 +6,7 @@
 
 | Tên | Git author | Email |
 |-----|------------|-------|
-| **Ngô Hy Khang** (725000187) | `Hy-Khang` | khangngodev@gmail.com · nhoxship35789@gmail.com |
+| **Ngô Hy Khang** (725000187) | `Hy-Khang` | khangngodev@gmail.com |
 | **Bùi Minh Tuấn** (725000686) | `minhtuan1012bt-coder` | minhtuan1012bt@gmail.com |
 
 ---

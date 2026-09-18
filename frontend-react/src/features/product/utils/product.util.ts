@@ -43,6 +43,24 @@ export function getLowestPriceVariant(product: ProductListItem): ProductVariant 
   );
 }
 
+/**
+ * Reorders a list of sibling categories so that the catch-all "Khác" / "Other"
+ * category always sinks to the bottom, while every other category keeps its
+ * original relative order (stable). Case/accent-insensitive name match.
+ */
+export function sortCategoriesOtherLast<T extends { name: string }>(categories: T[]): T[] {
+  const isOther = (name: string) => {
+    const normalized = name.trim().toLowerCase();
+    return normalized === 'khác' || normalized === 'khac' || normalized === 'other';
+  };
+  return [...categories].sort((a, b) => {
+    const aOther = isOther(a.name);
+    const bOther = isOther(b.name);
+    if (aOther === bOther) return 0;
+    return aOther ? 1 : -1;
+  });
+}
+
 export interface FlatCategoryOption {
   id: number;
   label: string;
@@ -54,7 +72,7 @@ export function flattenCategoryTree(
   depth = 0,
 ): FlatCategoryOption[] {
   const result: FlatCategoryOption[] = [];
-  for (const cat of categories) {
+  for (const cat of sortCategoriesOtherLast(categories)) {
     result.push({ id: cat.id, label: `${'— '.repeat(depth)}${cat.name}` });
     if (cat.children?.length) {
       result.push(...flattenCategoryTree(cat.children, depth + 1));

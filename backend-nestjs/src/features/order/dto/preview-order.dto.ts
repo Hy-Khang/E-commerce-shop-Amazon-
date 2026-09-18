@@ -52,4 +52,14 @@ export class PreviewOrderDto {
   @IsInt()
   @Min(0)
   coins_to_redeem?: number;
+
+  @ApiPropertyOptional({
+    example: 12,
+    description:
+      'Selected delivery address — enables exact distance-based shipping in the estimate (omit → flat fallback fee)',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  address_id?: number;
 }

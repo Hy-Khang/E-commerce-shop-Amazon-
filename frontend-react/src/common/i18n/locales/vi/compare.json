@@ -20,7 +20,13 @@
     "remove": "Xóa khỏi so sánh",
     "add": "Thêm vào so sánh",
     "blocked": "Chỉ có thể so sánh các sản phẩm cùng danh mục (tối đa 4)",
-    "compare": "So sánh"
+    "compare": "So sánh",
+    "toast": {
+      "removed": "Đã xóa khỏi so sánh",
+      "added": "Đã thêm vào so sánh",
+      "full": "Bạn chỉ có thể so sánh tối đa {{max}} sản phẩm",
+      "category": "Chỉ có thể so sánh các sản phẩm cùng danh mục"
+    }
   },
   "rows": {
     "price": "Giá",

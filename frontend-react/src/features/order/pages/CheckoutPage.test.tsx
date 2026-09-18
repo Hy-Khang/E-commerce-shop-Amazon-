@@ -31,6 +31,12 @@ vi.mock('@/features/cart', () => ({
   ],
 }));
 vi.mock('@/features/payment', () => ({ useCreatePayment: h.useCreatePayment }));
+// Inline add-address drawer — stub the reused profile pieces so the page under
+// test doesn't need a QueryClient/Leaflet (the drawer stays closed here anyway).
+vi.mock('@/features/user-profile', () => ({
+  AddressForm: () => <div />,
+  useCreateAddress: () => ({ mutate: vi.fn(), isPending: false, error: null }),
+}));
 vi.mock('../hooks/useCheckout', () => ({ useCheckout: h.useCheckout }));
 vi.mock('../hooks/useAddresses', () => ({ useAddresses: h.useAddresses }));
 vi.mock('../hooks/usePreviewCheckout', () => ({

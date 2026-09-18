@@ -62,6 +62,7 @@ export {
   generateSlug,
   getLowestPriceVariant,
   flattenCategoryTree,
+  sortCategoriesOtherLast,
 } from './utils/product.util';
 export type { FlatCategoryOption } from './utils/product.util';
 
