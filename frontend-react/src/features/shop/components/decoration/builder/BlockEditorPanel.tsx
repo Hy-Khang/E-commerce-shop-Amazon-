@@ -4,6 +4,7 @@ import { HeroBlockEditor } from './HeroBlockEditor';
 import { RichTextBlockEditor } from './RichTextBlockEditor';
 import { ImageBlockEditor } from './ImageBlockEditor';
 import { ProductGridBlockEditor } from './ProductGridBlockEditor';
+import { BestSellersBlockEditor } from './BestSellersBlockEditor';
 
 interface Props {
   block: AnyBlock | null;
@@ -52,6 +53,12 @@ export function BlockEditorPanel({ block, onChange }: Props) {
         <ProductGridBlockEditor
           data={block.data}
           onChange={(data: BlockDataMap['product_grid']) => update(block, data)}
+        />
+      )}
+      {block.type === 'best_sellers' && (
+        <BestSellersBlockEditor
+          data={block.data}
+          onChange={(data: BlockDataMap['best_sellers']) => update(block, data)}
         />
       )}
     </div>

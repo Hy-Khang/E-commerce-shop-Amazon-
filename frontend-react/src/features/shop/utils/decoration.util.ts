@@ -26,6 +26,8 @@ export function createBlock(type: BlockType): AnyBlock {
       return { id, type, data: { url: '', alt: '', ratio: 'wide' } };
     case 'product_grid':
       return { id, type, data: { title: '', product_ids: [], columns: 4 } };
+    case 'best_sellers':
+      return { id, type, data: { title: 'Best sellers', limit: 4, columns: 4 } };
   }
 }
 

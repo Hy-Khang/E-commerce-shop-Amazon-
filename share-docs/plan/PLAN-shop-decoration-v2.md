@@ -30,13 +30,13 @@ Tất cả **tương thích ngược** (config cũ vẫn chạy), giữ kiến t
 
 | Phase | Nội dung | Trạng thái |
 |:-----:|----------|:----------:|
-| A | BE: cho phép lưu block `best_sellers` | ⬜ |
-| B | FE: schema + render context dùng chung | ⬜ |
-| C | FE: Best-sellers block (hook + block + editor + wiring) | ⬜ |
-| D | FE: Quick-start templates (presets + gallery + confirm) | ⬜ |
-| E | FE: Rich preview (mock storefront + placeholder) | ⬜ |
-| F | Barrel + Docs | ⬜ |
-| G | Verification (typecheck/lint + manual) | ⬜ |
+| A | BE: cho phép lưu block `best_sellers` | ✅ |
+| B | FE: schema + render context dùng chung | ✅ |
+| C | FE: Best-sellers block (hook + block + editor + wiring) | ✅ |
+| D | FE: Quick-start templates (presets + gallery + confirm) | ✅ |
+| E | FE: Rich preview (mock storefront + placeholder) | ✅ |
+| F | Barrel + Docs | ✅ |
+| G | Verification (typecheck/lint + manual) | 🟡 |
 
 **Chú thích trạng thái:** ⬜ chưa làm · 🟡 đang làm · ✅ xong · ⛔ blocked
 
@@ -88,21 +88,21 @@ Tất cả **tương thích ngược** (config cũ vẫn chạy), giữ kiến t
 - [ ] Guard: placeholder/sample **chỉ khi `preview===true`**
 
 ### Phase F — Barrel + Docs
-- [ ] `features/shop/index.ts` — export bổ sung nếu cross-feature cần
-- [ ] `share-docs/API_SPEC.md` — thêm `best_sellers` vào danh sách block types; ghi chú hydrate qua `GET /products?shop_id=&sort=best_selling`
-- [ ] `share-docs/DATABASE.md` §2.3 — cập nhật danh sách block types
-- [ ] `share-docs/PROJECT_MODULES.md` Module 26 — best_sellers + templates + rich preview
-- [ ] `context.md` (FE + BE shop) — best_sellers, presets, preview samples, render context
+- [x] `features/shop/index.ts` — export `BestSellersBlockData`, `DecorationRenderContext`, `BEST_SELLERS_LIMITS`
+- [x] `share-docs/API_SPEC.md` — thêm `best_sellers` vào danh sách block types; ghi chú hydrate qua `GET /products?shop_id=&sort=best_selling`
+- [x] `share-docs/DATABASE.md` §2.3 — cập nhật danh sách block types
+- [x] `share-docs/PROJECT_MODULES.md` Module 26 — best_sellers + templates + rich preview
+- [x] `context.md` (FE + BE shop) — best_sellers, presets, preview samples, render context
 
 ### Phase G — Verification
-- [ ] BE `tsc --noEmit` + `eslint` trên `decoration-config.dto.ts`
-- [ ] BE: `PATCH /seller/shop` lưu block `best_sellers` → 200; limit sai (vd 5) → `422`
-- [ ] FE `tsc --noEmit -p tsconfig.app.json` + `eslint` file mới/sửa
-- [ ] Manual: best-sellers hiện top bán chạy thật ở `/shops/:slug`; shop chưa có đơn → empty-state (không crash)
-- [ ] Manual: templates áp đúng + confirm khi có block; Reset về mặc định
-- [ ] Manual: preview luôn có header+block+All Products mẫu; block trống → placeholder
-- [ ] Manual: trang công khai block rỗng KHÔNG hiện sản phẩm giả
-- [ ] Backward-compat: `decoration_config = null` → layout mặc định như cũ
+- [x] BE `tsc --noEmit` + `eslint` trên `decoration-config.dto.ts` → sạch
+- [x] BE: DTO validate `best_sellers` (reproduce ValidationPipe: `plainToInstance`+`validateSync`) — limit 4/8/12 + data rỗng → hợp lệ (200-path); limit=5 / columns=5 / field lạ / title>80 → reject (422 VALIDATION_001). 8/8 PASS
+- [x] FE `tsc --noEmit -p tsconfig.app.json` + `eslint` toàn bộ file mới/sửa → sạch
+- [ ] Manual (runtime/browser): best-sellers hiện top bán chạy thật ở `/shops/:slug`; shop chưa có đơn → empty-state (không crash)
+- [ ] Manual (runtime/browser): templates áp đúng + confirm khi có block; Reset về mặc định
+- [ ] Manual (runtime/browser): preview luôn có header+block+All Products mẫu; block trống → placeholder
+- [ ] Manual (runtime/browser): trang công khai block rỗng KHÔNG hiện sản phẩm giả
+- [ ] Backward-compat (runtime): `decoration_config = null` → layout mặc định như cũ
 
 ---
 

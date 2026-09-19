@@ -1106,15 +1106,17 @@ Cho phép **Seller tùy biến giao diện storefront** của shop mình bằng 
 
 ### Chức năng
 
-- Seller thêm / sắp xếp / xóa các **khối** trong Seller Center (`/seller/shop/decoration`), có **live preview** dùng đúng component storefront.
-- Loại khối phase này: **`hero`** (slideshow 1–5 ảnh + heading/tagline/CTA), **`rich_text`** (văn bản thuần, plain-text — chống XSS), **`image`** (banner ảnh đơn), **`product_grid`** (ghim ≤12 sản phẩm của shop, hydrate qua `GET /products?ids=`).
+- Seller thêm / sắp xếp / xóa các **khối** trong Seller Center (`/seller/shop/decoration`), có **rich live preview** — dựng nguyên **mini-storefront** (header giả banner+logo+tên → block → "All Products" mẫu), khối chưa cấu hình hiện **placeholder** ảnh/sản phẩm mẫu để dễ hình dung.
+- **Quick-start templates:** bộ mẫu layout có sẵn (Clean & Simple, Brand Story, Big Sale, Best-Seller Showcase, Minimal Welcome), bấm 1 phát ra layout hoàn chỉnh; áp mẫu = **thay toàn bộ config, có hộp xác nhận** khi đang có block.
+- Loại khối phase này: **`hero`** (slideshow 1–5 ảnh + heading/tagline/CTA), **`rich_text`** (văn bản thuần, plain-text — chống XSS), **`image`** (banner ảnh đơn), **`product_grid`** (ghim ≤12 sản phẩm của shop, hydrate qua `GET /products?ids=`), **`best_sellers`** (tự động hiện top sản phẩm bán chạy của shop, KHÔNG ghim tay — hydrate qua `GET /products?shop_id=&sort=best_selling&limit=4|8|12`).
 - **Theme accent** (màu nhấn) áp cho nút trong các khối (CSS var scoped `--shop-accent`).
 - **Bổ sung, không thay thế:** khối trang trí render **phía trên**, danh mục "All Products" **luôn** hiển thị bên dưới → shop chỉ thêm 1 hero vẫn còn đủ sản phẩm.
 - **Tương thích ngược:** `decoration_config = NULL` → layout mặc định như cũ. Reset về mặc định = gửi `null`.
 
 ### Ghi chú kỹ thuật
 
-- **Không thêm bảng / endpoint:** 1 cột JSON `shops.decoration_config` (NVARCHAR(MAX), nullable) + tái dùng `PATCH /seller/shop` (ghi), `GET /shops/:slug` & `GET /seller/shop` (đọc), `GET /products?ids=` (hydrate sản phẩm ghim).
+- **Không thêm bảng / endpoint:** 1 cột JSON `shops.decoration_config` (NVARCHAR(MAX), nullable) + tái dùng `PATCH /seller/shop` (ghi), `GET /shops/:slug` & `GET /seller/shop` (đọc), `GET /products?ids=` (hydrate sản phẩm ghim), `GET /products?shop_id=&sort=best_selling` (hydrate khối `best_sellers` — endpoint sẵn có, không thêm mới).
+- **Rich preview an toàn:** sample/placeholder **chỉ bật khi `preview===true`** (render context, chỉ builder truyền) — trang công khai không bao giờ lộ sản phẩm giả. Presets sinh id mới mỗi lần `build()` và ưu tiên `best_sellers` (tự đầy) hơn `product_grid` rỗng nên mọi mẫu đều lưu được ngay.
 - **Schema:** envelope có version `{ version: 1, theme?, blocks: [{ id, type, data }] }` — mở rộng được (thêm khối `video`… sau chỉ cần 1 union entry + 1 registry + 1 editor + 1 DTO branch, không đổi cột/endpoint).
 - **Validate ghi:** nested class-validator DTO + custom `@ValidatorConstraint` (validate `data` theo `type`, mẫu `common/validators/is-image-path`) → `422 VALIDATION_001`; cap 16 KB serialized → `SHOP_006 (400)`.
 - **Resilience khi đọc/render:** service parse JSON bọc try/catch (malformed → `null`); FE renderer switch theo `version`, registry-driven, bỏ qua khối lạ, mỗi khối bọc error boundary.

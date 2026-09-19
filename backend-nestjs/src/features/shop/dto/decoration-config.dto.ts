@@ -36,6 +36,7 @@ export const BLOCK_TYPES = [
   'rich_text',
   'image',
   'product_grid',
+  'best_sellers',
 ] as const;
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
@@ -45,6 +46,8 @@ export const DECORATION_LIMITS = {
   HERO_MAX_IMAGES: 5,
   GRID_MIN_IDS: 1,
   GRID_MAX_IDS: 12,
+  /** Allowed item counts for the auto best-sellers block (mirrored on the FE). */
+  BEST_SELLERS_LIMITS: [4, 8, 12],
   /** Serialized JSON byte cap (enforced in the service, not the DTO). */
   MAX_BYTES: 16 * 1024,
 } as const;
@@ -168,12 +171,31 @@ class ProductGridBlockDataDto {
   columns?: 2 | 3 | 4;
 }
 
+class BestSellersBlockDataDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  title?: string;
+
+  @ApiPropertyOptional({ enum: DECORATION_LIMITS.BEST_SELLERS_LIMITS })
+  @IsOptional()
+  @IsIn(DECORATION_LIMITS.BEST_SELLERS_LIMITS)
+  limit?: number;
+
+  @ApiPropertyOptional({ enum: [2, 3, 4] })
+  @IsOptional()
+  @IsIn([2, 3, 4])
+  columns?: 2 | 3 | 4;
+}
+
 /** Maps a block type to the DTO class that validates its `data` payload. */
 const BLOCK_DATA_DTOS: Record<BlockType, new () => object> = {
   hero: HeroBlockDataDto,
   rich_text: RichTextBlockDataDto,
   image: ImageBlockDataDto,
   product_grid: ProductGridBlockDataDto,
+  best_sellers: BestSellersBlockDataDto,
 };
 
 /**
