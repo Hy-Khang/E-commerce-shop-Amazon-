@@ -31,7 +31,10 @@ export default function ShopProfilePage() {
       <ShopHeader shop={shop} />
 
       {decoration && decoration.blocks.length > 0 && (
-        <ShopDecorationRenderer config={decoration} />
+        <ShopDecorationRenderer
+          config={decoration}
+          context={{ shopId: shop.id, shopSlug: shop.slug }}
+        />
       )}
 
       <div>

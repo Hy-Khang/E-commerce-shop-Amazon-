@@ -242,7 +242,9 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 | GET | `/shops/:slug` | Get shop profile with stats (product_count, average_rating, total_sales) + parsed `decoration_config` | Public |
 | GET | `/shops/:slug/products` | List shop's products (paginated, filtered) | Public |
 
-> **Shop Decoration (`decoration_config`):** `GET /shops/:slug` and `GET /seller/shop` return `decoration_config` as a **parsed object** (`{ version, theme?, blocks[] }`) or `null` (default layout / never decorated / malformed → degraded to null). The storefront renders decoration blocks **above** the always-present "All Products" catalog (decoration is additive, never a replacement). Block types: `hero` / `rich_text` / `image` / `product_grid`.
+> **Shop Decoration (`decoration_config`):** `GET /shops/:slug` and `GET /seller/shop` return `decoration_config` as a **parsed object** (`{ version, theme?, blocks[] }`) or `null` (default layout / never decorated / malformed → degraded to null). The storefront renders decoration blocks **above** the always-present "All Products" catalog (decoration is additive, never a replacement). Block types: `hero` / `rich_text` / `image` / `product_grid` / `best_sellers`.
+>
+> **Auto best-sellers block (`best_sellers`):** an auto-populated block (no manual pinning) — the frontend hydrates it via the existing catalog endpoint `GET /products?shop_id=<id>&sort=best_selling&order=desc&limit=<4|8|12>` (no new endpoint), rendered with the same product cards as the listing. Its stored `data` is only `{ title?, limit?: 4|8|12, columns?: 2|3|4 }`. On the public storefront a shop with no sales shows a small empty state; sample products only ever appear in the seller's builder preview, never to shoppers.
 
 ### Seller Shop — `/api/v1/seller/shop`
 
@@ -254,7 +256,7 @@ The `PermissionsGuard` resolves the user's role → looks up permissions via `ro
 
 > **Pickup location (`PATCH`/`POST /seller/shop`, Module 16):** the body accepts optional `pickup_address` (≤255 chars), `latitude` (−90..90), `longitude` (−180..180) — the shop's pickup point, set via a map picker in Shop Settings. When a shipper accepts an order, these seed the first `order_tracking_locations` point so the package starts on the tracking map at the shop. Returned by `GET /seller/shop` but **omitted from the public `GET /shops/:slug`** (internal origin).
 >
-> **Updating decoration (`PATCH /seller/shop`):** the body accepts an optional `decoration_config` — a full validated envelope `{ version: 1, theme?: { accent? }, blocks: [{ id, type, data }] }` to save the layout, or `null` to reset to the default. Validated by nested class-validator DTOs (unknown block type / extra field / >20 blocks / hero not 1–5 images / grid not 1–12 unique ids → `422 VALIDATION_001` + `details[]`); the serialized JSON is additionally capped at 16 KB (`SHOP_006`). Omitting the key leaves the existing decoration unchanged. `product_grid` pins reference the seller's own product ids and are hydrated for the storefront via `GET /products?ids=` (visibility-filtered).
+> **Updating decoration (`PATCH /seller/shop`):** the body accepts an optional `decoration_config` — a full validated envelope `{ version: 1, theme?: { accent? }, blocks: [{ id, type, data }] }` to save the layout, or `null` to reset to the default. Validated by nested class-validator DTOs (unknown block type / extra field / >20 blocks / hero not 1–5 images / grid not 1–12 unique ids / `best_sellers` limit not in `[4,8,12]` → `422 VALIDATION_001` + `details[]`); the serialized JSON is additionally capped at 16 KB (`SHOP_006`). Omitting the key leaves the existing decoration unchanged. `product_grid` pins reference the seller's own product ids and are hydrated for the storefront via `GET /products?ids=` (visibility-filtered); the auto `best_sellers` block stores no product ids and hydrates via `GET /products?shop_id=&sort=best_selling` at render time.
 
 ### Cart — `/api/v1/cart`
 

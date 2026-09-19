@@ -42,6 +42,8 @@ export type {
   RichTextBlockData,
   ImageBlockData,
   ProductGridBlockData,
+  BestSellersBlockData,
+  DecorationRenderContext,
 } from './types/decoration.types';
 export {
   decorationConfigSchema,
@@ -50,4 +52,5 @@ export {
   DECORATION_VERSION,
   BLOCK_TYPES,
   BLOCK_TYPE_LABELS,
+  BEST_SELLERS_LIMITS,
 } from './types/decoration.types';

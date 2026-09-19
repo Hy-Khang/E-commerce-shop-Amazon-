@@ -1,7 +1,10 @@
+import { ImageIcon } from 'lucide-react';
 import type { ImageBlockData } from '../../../types/decoration.types';
 
 interface Props {
   data: ImageBlockData;
+  /** Builder preview only — shows a placeholder frame when no image is set. */
+  preview?: boolean;
 }
 
 const RATIO_CLASS: Record<NonNullable<ImageBlockData['ratio']>, string> = {
@@ -11,10 +14,19 @@ const RATIO_CLASS: Record<NonNullable<ImageBlockData['ratio']>, string> = {
 };
 
 /** A single image banner, optionally linking somewhere. Storefront tokens. */
-export function ImageBlock({ data }: Props) {
-  if (!data.url) return null;
-
+export function ImageBlock({ data, preview }: Props) {
   const ratio = RATIO_CLASS[data.ratio ?? 'wide'];
+
+  if (!data.url) {
+    if (!preview) return null;
+    return (
+      <div
+        className={`flex w-full items-center justify-center rounded-xl border border-dashed border-border-default bg-surface-hover text-text-muted ${ratio}`}
+      >
+        <ImageIcon className="h-8 w-8" />
+      </div>
+    );
+  }
   const img = (
     <img
       src={data.url}

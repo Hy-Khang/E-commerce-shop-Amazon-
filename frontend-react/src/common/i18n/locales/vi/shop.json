@@ -19,5 +19,8 @@
   },
   "productGrid": {
     "emptyState": "Các sản phẩm này sẽ xuất hiện khi có sẵn."
+  },
+  "bestSellers": {
+    "emptyState": "Sản phẩm bán chạy sẽ xuất hiện ở đây khi cửa hàng có đơn."
   }
 }

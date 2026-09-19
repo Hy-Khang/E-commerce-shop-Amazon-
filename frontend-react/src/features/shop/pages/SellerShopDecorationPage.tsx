@@ -21,6 +21,7 @@ import { BlockListEditor } from '../components/decoration/builder/BlockListEdito
 import { BlockEditorPanel } from '../components/decoration/builder/BlockEditorPanel';
 import { ThemeEditor } from '../components/decoration/builder/ThemeEditor';
 import { DecorationPreview } from '../components/decoration/builder/DecorationPreview';
+import { PresetGallery } from '../components/decoration/builder/PresetGallery';
 
 const primaryBtn =
   'inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50';
@@ -150,6 +151,15 @@ export default function SellerShopDecorationPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-900 dark:ring-white/10">
+            <PresetGallery
+              hasBlocks={blocks.length > 0}
+              onApply={(cfg) => {
+                setConfig(cfg);
+                setSelectedId(null);
+              }}
+            />
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-900 dark:ring-white/10">
             <BlockListEditor
               blocks={blocks}
               selectedId={selectedId}
@@ -171,7 +181,7 @@ export default function SellerShopDecorationPage() {
         </div>
 
         <div className="lg:sticky lg:top-6 lg:self-start">
-          <DecorationPreview config={config} />
+          <DecorationPreview config={config} shop={shop} />
         </div>
       </div>
     </div>

@@ -8,7 +8,13 @@ import { z } from 'zod';
 
 export const DECORATION_VERSION = 1;
 
-export const BLOCK_TYPES = ['hero', 'rich_text', 'image', 'product_grid'] as const;
+export const BLOCK_TYPES = [
+  'hero',
+  'rich_text',
+  'image',
+  'product_grid',
+  'best_sellers',
+] as const;
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
 export const DECORATION_LIMITS = {
@@ -19,11 +25,15 @@ export const DECORATION_LIMITS = {
   GRID_MAX_IDS: 12,
 } as const;
 
+/** Allowed item counts for the auto best-sellers block (mirrors the BE DTO). */
+export const BEST_SELLERS_LIMITS = [4, 8, 12] as const;
+
 export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   hero: 'Hero slideshow',
   rich_text: 'Text block',
   image: 'Image banner',
   product_grid: 'Product grid',
+  best_sellers: 'Best sellers',
 };
 
 // ─── Per-type data shapes ───
@@ -55,11 +65,18 @@ export interface ProductGridBlockData {
   columns?: 2 | 3 | 4;
 }
 
+export interface BestSellersBlockData {
+  title?: string;
+  limit?: 4 | 8 | 12;
+  columns?: 2 | 3 | 4;
+}
+
 export interface BlockDataMap {
   hero: HeroBlockData;
   rich_text: RichTextBlockData;
   image: ImageBlockData;
   product_grid: ProductGridBlockData;
+  best_sellers: BestSellersBlockData;
 }
 
 export interface Block<T extends BlockType = BlockType> {
@@ -78,6 +95,19 @@ export interface DecorationConfig {
   version: number;
   theme?: DecorationTheme;
   blocks: AnyBlock[];
+}
+
+/**
+ * Threaded through the renderer to each block. `shopId` lets the auto
+ * best-sellers block query the shop's top sellers; `preview` (builder only)
+ * switches blocks to sample/placeholder content so an unconfigured block is
+ * still visible. On the public storefront `preview` is never set, so sample
+ * data never leaks to shoppers.
+ */
+export interface DecorationRenderContext {
+  shopId?: number;
+  shopSlug?: string;
+  preview?: boolean;
 }
 
 // ─── Zod schemas (validate before save; also used to guard-parse on render) ───
@@ -127,6 +157,12 @@ const productGridDataSchema = z.object({
   columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).optional(),
 });
 
+const bestSellersDataSchema = z.object({
+  title: z.string().max(80).optional(),
+  limit: z.union([z.literal(4), z.literal(8), z.literal(12)]).optional(),
+  columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).optional(),
+});
+
 const blockSchema = z.discriminatedUnion('type', [
   z.object({ id: z.string().min(6).max(40), type: z.literal('hero'), data: heroDataSchema }),
   z.object({ id: z.string().min(6).max(40), type: z.literal('rich_text'), data: richTextDataSchema }),
@@ -135,6 +171,11 @@ const blockSchema = z.discriminatedUnion('type', [
     id: z.string().min(6).max(40),
     type: z.literal('product_grid'),
     data: productGridDataSchema,
+  }),
+  z.object({
+    id: z.string().min(6).max(40),
+    type: z.literal('best_sellers'),
+    data: bestSellersDataSchema,
   }),
 ]);
 

@@ -2,18 +2,22 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import type { HeroBlockData } from '../../../types/decoration.types';
+import { PLACEHOLDER_HERO_IMAGE } from '../../../utils/decoration-preview-samples';
 
 interface Props {
   data: HeroBlockData;
+  /** Builder preview only — falls back to a placeholder image when none set. */
+  preview?: boolean;
 }
 
 /**
  * Full-width hero slideshow. Cross-fades through `images` (autoplay unless
  * disabled), with an optional heading/tagline/CTA overlay. Storefront tokens.
  */
-export function HeroBlock({ data }: Props) {
+export function HeroBlock({ data, preview }: Props) {
   const { t } = useTranslation('shop');
-  const images = data.images.filter(Boolean);
+  const realImages = data.images.filter(Boolean);
+  const images = realImages.length > 0 ? realImages : preview ? [PLACEHOLDER_HERO_IMAGE] : [];
   const [index, setIndex] = useState(0);
   const autoplay = data.autoplay !== false && images.length > 1;
 
